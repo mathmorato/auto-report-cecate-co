@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoReport CECATE - Plataforma Modular de Automação de Relatórios</title>
+  
+  <!-- SEO & Metadados -->
+  <meta name="description" content="Plataforma modular e inteligente para automação da escrita e geração de relatórios técnicos, de auditoria e executivos.">
+  <meta name="keywords" content="relatorios, automacao, cecate, relatorio tecnico, auditoria, kpis, gerador de relatorio">
+  
+  <!-- Fontes Google (Plus Jakarta Sans & Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Estilos da Aplicação e Impressão -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- ==========================================
+         SIDEBAR DE NAVEGAÇÃO
+         ========================================== -->
+    <aside class="sidebar">
+      <div class="brand-section">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <h1 class="brand-title">AutoReport</h1>
+          <div class="brand-subtitle">CECATE Automação</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a href="#dashboard" class="nav-item active" data-view="dashboard" id="nav-dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="#studio" class="nav-item" data-view="studio" id="nav-studio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span>Estúdio de Criação</span>
+          <span class="nav-badge">IA</span>
+        </a>
+
+        <a href="#templates" class="nav-item" data-view="templates" id="nav-templates">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Modelos / Templates</span>
+        </a>
+
+        <a href="#history" class="nav-item" data-view="history" id="nav-history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 14 14"></polyline>
+          </svg>
+          <span>Histórico & Arquivo</span>
+        </a>
+
+        <a href="#settings" class="nav-item" data-view="settings" id="nav-settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Configurações</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status">
+          <div class="status-dot"></div>
+          <span>Motor de Redação Ativo</span>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-muted);">AutoReport v2.5 • CECATE</div>
+      </div>
+    </aside>
+
+    <!-- ==========================================
+         CONTEÚDO PRINCIPAL & TOPBAR
+         ========================================== -->
+    <div class="main-wrapper">
+      
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h2 class="page-title" id="page-current-title">Painel de Controle & Visão Geral</h2>
+        </div>
+        
+        <div class="topbar-right">
+          <button class="btn btn-secondary btn-sm" id="theme-toggle-btn">🌙 Modo Escuro</button>
+          <button class="btn btn-gradient btn-sm" onclick="app.navigateTo('studio')">⚡ Novo Relatório</button>
+        </div>
+      </header>
+
+      <!-- Área de Visualização Dinâmica (SPA Views) -->
+      <main class="content-area">
+
+        <!-- ==========================================
+             VIEW: DASHBOARD
+             ========================================== -->
+        <section class="view-section active" id="view-dashboard">
+          
+          <!-- Hero Banner -->
+          <div class="dashboard-hero">
+            <div class="hero-text">
+              <h2>Automação Inteligente de Relatórios Técnicos</h2>
+              <p>Elabore, estruture e padronize relatórios de auditoria, conformidade e desempenho em minutos com blocos modulares e assistência inteligente de redação.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-gradient" onclick="app.navigateTo('studio')">Abrir Estúdio de Criação →</button>
+            </div>
+          </div>
+
+          <!-- Grade de Métricas -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon">📑</div>
+              <div class="metric-info">
+                <h4>Relatórios Arquivados</h4>
+                <div class="metric-value" id="dash-total-reports">0</div>
+                <div class="metric-trend">↑ Sincronizado localmente</div>
+              </div>
+            </div>
+
+            <div class="metric-card cyan">
+              <div class="metric-icon">⏱️</div>
+              <div class="metric-info">
+                <h4>Tempo Médio Economizado</h4>
+                <div class="metric-value">85%</div>
+                <div class="metric-trend">Redução no ciclo de escrita</div>
+              </div>
+            </div>
+
+            <div class="metric-card green">
+              <div class="metric-icon">🧩</div>
+              <div class="metric-info">
+                <h4>Modelos Prontos</h4>
+                <div class="metric-value">4</div>
+                <div class="metric-trend">Totalmente customizáveis</div>
+              </div>
+            </div>
+
+            <div class="metric-card purple">
+              <div class="metric-icon">🎯</div>
+              <div class="metric-info">
+                <h4>Conformidade CECATE</h4>
+                <div class="metric-value">100%</div>
+                <div class="metric-trend">Padrão A4 & Normativo</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Relatórios Recentes -->
+          <div class="glass-card">
+            <div class="card-header">
+              <h3 class="card-title">📄 Relatórios Gerados Recentemente</h3>
+              <button class="btn btn-secondary btn-sm" onclick="app.navigateTo('history')">Ver Histórico Completo</button>
+            </div>
+            
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Título do Documento</th>
+                    <th>Categoria</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-recent-reports-body">
+                  <!-- Inserido dinamicamente pelo app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW: REPORT STUDIO (GERADOR & EDITOR)
+             ========================================== -->
+        <section class="view-section" id="view-studio">
+          
+          <div class="studio-container">
+            
+            <!-- Painel Esquerdo: Editor Modular -->
+            <div class="editor-panel">
+              <div class="editor-header">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <span style="font-size:1.2rem;">⚡</span>
+                  <strong>Configuração & Redação Modular</strong>
+                </div>
+                <div style="display:flex; gap:0.5rem;">
+                  <button class="btn btn-secondary btn-sm" onclick="app.saveReportToHistory()">💾 Salvar</button>
+                  <button class="btn btn-gradient btn-sm" onclick="app.triggerFullAutomation()">✨ Auto-Escrever</button>
+                </div>
+              </div>
+
+              <!-- Toolbar de IA & Tom -->
+              <div class="ai-writer-toolbar">
+                <div class="ai-toolbar-header">
+                  <span style="font-size:0.85rem; font-weight:700; color:var(--text-primary);">🎯 Tom de Redação do Relatório:</span>
+                  <span class="badge badge-primary">Motor IA CECATE</span>
+                </div>
+                <div class="ai-controls-row">
+                  <button class="btn btn-primary btn-sm btn-tone" data-tone="executive" onclick="app.setTone('executive')">Executivo</button>
+                  <button class="btn btn-secondary btn-sm btn-tone" data-tone="technical" onclick="app.setTone('technical')">Técnico</button>
+                  <button class="btn btn-secondary btn-sm btn-tone" data-tone="formal" onclick="app.setTone('formal')">Institucional</button>
+                  <button class="btn btn-secondary btn-sm btn-tone" data-tone="didactic" onclick="app.setTone('didactic')">Didático</button>
+                </div>
+              </div>
+
+              <!-- Abas do Editor -->
+              <div class="editor-tabs">
+                <button class="editor-tab-btn active" id="tab-btn-meta" onclick="document.getElementById('panel-meta').style.display='block'; document.getElementById('panel-blocks').style.display='none'; this.classList.add('active'); document.getElementById('tab-btn-blocks').classList.remove('active');">
+                  1. Metadados & Parâmetros
+                </button>
+                <button class="editor-tab-btn" id="tab-btn-blocks" onclick="document.getElementById('panel-blocks').style.display='block'; document.getElementById('panel-meta').style.display='none'; this.classList.add('active'); document.getElementById('tab-btn-meta').classList.remove('active');">
+                  2. Blocos de Conteúdo
+                </button>
+              </div>
+
+              <!-- Corpo do Editor -->
+              <div class="editor-body">
+                
+                <!-- Subpainel: Metadados -->
+                <div id="panel-meta">
+                  <div class="form-group">
+                    <label class="form-label">Instituição / Organização:</label>
+                    <input type="text" id="meta-orgName" class="form-control" oninput="app.syncMetaFromForm()">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Título do Relatório:</label>
+                    <input type="text" id="meta-reportTitle" class="form-control" oninput="app.syncMetaFromForm()">
+                  </div>
+
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                      <label class="form-label">Responsável Técnico:</label>
+                      <input type="text" id="meta-responsible" class="form-control" oninput="app.syncMetaFromForm()">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Departamento / Unidade:</label>
+                      <input type="text" id="meta-department" class="form-control" oninput="app.syncMetaFromForm()">
+                    </div>
+                  </div>
+
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                      <label class="form-label">Data de Emissão:</label>
+                      <input type="date" id="meta-date" class="form-control" oninput="app.syncMetaFromForm()">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Código de Referência:</label>
+                      <input type="text" id="meta-referenceCode" class="form-control" oninput="app.syncMetaFromForm()">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Período / Ciclo Avaliado:</label>
+                    <input type="text" id="meta-period" class="form-control" placeholder="Ex: Agosto de 2026" oninput="app.syncMetaFromForm()">
+                  </div>
+
+                  <!-- Seção de Indicadores Numéricos -->
+                  <div style="margin-top:1.5rem; border-top:1px solid var(--border-color); padding-top:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                      <label class="form-label" style="margin:0;">📊 Indicadores-Chave (KPIs):</label>
+                      <button class="btn btn-secondary btn-sm" onclick="app.addKpiItem()">+ Adicionar KPI</button>
+                    </div>
+                    <div id="kpi-inputs-container">
+                      <!-- Renderizado via app.js -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Subpainel: Blocos Modulares -->
+                <div id="panel-blocks" style="display:none;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <span style="font-size:0.85rem; color:var(--text-secondary);">Arraste ou ordene as seções do documento:</span>
+                    <button class="btn btn-primary btn-sm" onclick="app.openAddBlockModal()">+ Inserir Bloco</button>
+                  </div>
+
+                  <div class="modular-blocks-list" id="modular-blocks-container">
+                    <!-- Inserido dinamicamente pelo app.js -->
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Painel Direito: Pré-visualização A4 em Tempo Real -->
+            <div class="preview-panel">
+              <div class="preview-header">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <span>👁️</span>
+                  <strong>Prévia A4 ao Vivo</strong>
+                </div>
+                <div class="preview-controls">
+                  <button class="btn btn-secondary btn-sm" onclick="app.downloadMarkdown()" title="Exportar Markdown">.MD</button>
+                  <button class="btn btn-secondary btn-sm" onclick="app.downloadHTML()" title="Baixar Arquivo HTML">.HTML</button>
+                  <button class="btn btn-gradient btn-sm" onclick="app.printReport()">🖨️ Imprimir / PDF</button>
+                </div>
+              </div>
+
+              <div class="preview-viewport">
+                <div class="a4-sheet" id="a4-preview-content">
+                  <!-- Documento renderizado dinamicamente pelo app.js -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW: MODELOS & TEMPLATES
+             ========================================== -->
+        <section class="view-section" id="view-templates">
+          <div style="margin-bottom: 1.5rem;">
+            <h2>Biblioteca de Modelos Pré-Configurados</h2>
+            <p style="color:var(--text-secondary); font-size:0.95rem;">Selecione um modelo especializado para iniciar um novo relatório estruturado.</p>
+          </div>
+
+          <div class="templates-grid" id="templates-grid-container">
+            <!-- Renderizado dinamicamente pelo app.js -->
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW: HISTÓRICO & ARQUIVO
+             ========================================== -->
+        <section class="view-section" id="view-history">
+          <div style="margin-bottom: 1.5rem;">
+            <h2>Arquivo de Relatórios Salvos</h2>
+            <p style="color:var(--text-secondary); font-size:0.95rem;">Gerencie, edite e exporte os relatórios criados na plataforma.</p>
+          </div>
+
+          <div class="glass-card">
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Título</th>
+                    <th>Responsável</th>
+                    <th>Categoria</th>
+                    <th>Data de Salvamento</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  <!-- Renderizado dinamicamente pelo app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW: CONFIGURAÇÕES
+             ========================================== -->
+        <section class="view-section" id="view-settings">
+          <div style="margin-bottom: 1.5rem;">
+            <h2>Configurações Globais & Identidade</h2>
+            <p style="color:var(--text-secondary); font-size:0.95rem;">Defina os padrões institucionais e preferências padrão para novos relatórios.</p>
+          </div>
+
+          <div class="glass-card" style="max-width:700px;">
+            <form id="global-settings-form">
+              <div class="form-group">
+                <label class="form-label">Nome Padrão da Organização / Empresa:</label>
+                <input type="text" id="setting-org-name" class="form-control" value="CECATE Soluções Tecnológicas">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Departamento / Unidade Padrão:</label>
+                <input type="text" id="setting-dept-name" class="form-control" value="Governança & Inovação">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Cargo / Responsável de Assinatura Padrão:</label>
+                <input type="text" id="setting-signer-name" class="form-control" value="Coordenação Geral">
+              </div>
+
+              <div style="margin-top:1.5rem;">
+                <button type="submit" class="btn btn-primary">Salvar Configurações</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: ADICIONAR BLOCO MODULAR
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-add-block">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>🧩 Escolha o Tipo de Bloco Modular</h3>
+        <button class="btn btn-secondary btn-sm modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="available-block-types-list">
+        <!-- Renderizado dinamicamente pelo app.js -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: EDITAR DADOS DA TABELA
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-edit-table">
+    <div class="modal-container" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3>📋 Editar Tabela de Dados</h3>
+        <button class="btn btn-secondary btn-sm modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+          <span style="font-size:0.85rem; color:var(--text-secondary);">Edite os cabeçalhos e linhas da tabela:</span>
+          <button class="btn btn-secondary btn-sm" onclick="app.addTableRowModal()">+ Adicionar Linha</button>
+        </div>
+        <div id="table-editor-container" style="overflow-x:auto;">
+          <!-- Tabela editável gerada dinamicamente -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary modal-close">Cancelar</button>
+        <button class="btn btn-primary" onclick="app.saveTableModalData()">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container de Toasts -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts da Aplicação -->
+  <script src="js/templates.js"></script>
+  <script src="js/reportEngine.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
