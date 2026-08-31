@@ -292,6 +292,84 @@ const REPORT_TEMPLATES = [
         ]
       }
     ]
+  },
+  {
+    id: "training_capacity",
+    title: "Capacitação & Treinamento CECATE",
+    category: "Capacitação",
+    icon: "🎓",
+    badge: "Oficial",
+    description: "Relatório consolidado de execução de curso ou capacitação técnica: ementa, frequência, taxa de conclusão e avaliação.",
+    defaultMeta: {
+      orgName: "CECATE Academia & Treinamentos",
+      reportTitle: "Relatório de Conclusão e Avaliação de Capacitação Técnica",
+      responsible: "Prof. Dr. Marcos Souza",
+      department: "Desenvolvimento de Talentos & Capacitação",
+      date: new Date().toISOString().split('T')[0],
+      referenceCode: "CAP-2026-001"
+    },
+    defaultKpis: [
+      { label: "Taxa de Conclusão", value: "95.8%", status: "success" },
+      { label: "Total de Capacitados", value: "24 alunos", status: "success" },
+      { label: "Carga Horária Cumprida", value: "40 horas", status: "success" },
+      { label: "Satisfação (NPS)", value: "9.6 / 10", status: "success" }
+    ],
+    blocks: [
+      {
+        id: "b_exec_summary",
+        type: "executive_summary",
+        title: "1. Sumário Executivo da Capacitação",
+        content: "O presente relatório técnico atesta a realização da capacitação **{titulo}** promovida pela **{empresa}** no período de **{periodo}**, sob a facilitação e coordenação de **{responsavel}** ({departamento}). O curso teve como propósito nivelar competências técnicas e alinhar padrões metodológicos operacionais."
+      },
+      {
+        id: "b_kpis",
+        type: "kpi_metrics",
+        title: "2. Indicadores de Desempenho do Treinamento",
+        kpis: [
+          { label: "Taxa de Conclusão", value: "95.8%", change: "Meta: >90%" },
+          { label: "Participantes Concluintes", value: "24", change: "De 25 inscritos" },
+          { label: "Carga Horária Total", value: "40h", change: "100% ministrado" },
+          { label: "Índice de Satisfação", value: "9.6 / 10", change: "+0.4 vs média" }
+        ]
+      },
+      {
+        id: "b_diagnostic",
+        type: "ai_diagnostic",
+        title: "3. Parecer Pedagógico e Avaliação de Aprendizado",
+        content: "A turma demonstrou engajamento exemplar durante as atividades práticas e workshops interativos. As métricas de absorção conceitual e testes de fixação superaram os benchmarks institucionais, habilitando os participantes a aplicarem as diretrizes de automação e boas práticas em seus respectivos departamentos."
+      },
+      {
+        id: "b_findings_table",
+        type: "data_table",
+        title: "4. Módulos Ministrados e Controle de Frequência",
+        headers: ["Módulo", "Conteúdo Abordado", "Carga Horária", "Frequência Média", "Status"],
+        rows: [
+          ["Módulo 01", "Fundamentos, Normas e Arquitetura de Processos", "08h", "100%", "Concluído"],
+          ["Módulo 02", "Práticas de Automação de Documentos & Relatórios", "12h", "96%", "Concluído"],
+          ["Módulo 03", "Análise de Indicadores e Governança Operacional", "10h", "96%", "Concluído"],
+          ["Módulo 04", "Laboratório Prático e Apresentação de Projetos", "10h", "100%", "Concluído"]
+        ]
+      },
+      {
+        id: "b_recommendations",
+        type: "recommendations",
+        title: "5. Recomendações e Próximos Passos",
+        items: [
+          "Disponibilizar o repositório de materiais complementares e gravações aos alunos no portal CECATE.",
+          "Aplicar pesquisa de eficácia do treinamento (Follow-up de 60 dias) para mensurar impacto prático no dia a dia.",
+          "Emitir certificados digitais autenticados para os 24 participantes concluintes."
+        ]
+      },
+      {
+        id: "b_signatures",
+        type: "signatures",
+        title: "6. Homologação e Emissão de Certificação",
+        signers: [
+          { name: "{responsavel}", role: "Instrutor / Especialista Responsável" },
+          { name: "Coordenação de Capacitação CECATE", role: "Superintendência Educacional" }
+        ]
+      }
+    ]
   }
 ];
 

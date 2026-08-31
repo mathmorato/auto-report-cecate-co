@@ -45,6 +45,15 @@
           <span>Dashboard</span>
         </a>
 
+        <a href="#trainings" class="nav-item" data-view="trainings" id="nav-trainings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+          </svg>
+          <span>Capacitações</span>
+          <span class="nav-badge" style="background:rgba(6, 182, 212, 0.18); color:#22d3ee;">Novo</span>
+        </a>
+
         <a href="#studio" class="nav-item" data-view="studio" id="nav-studio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
@@ -182,6 +191,122 @@
                 </thead>
                 <tbody id="dash-recent-reports-body">
                   <!-- Inserido dinamicamente pelo app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW: CAPACITAÇÕES & TREINAMENTOS
+             ========================================== -->
+        <section class="view-section" id="view-trainings">
+          
+          <!-- Hero / Header de Capacitações -->
+          <div class="dashboard-hero" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(99, 102, 241, 0.1)); border-color: rgba(6, 182, 212, 0.3);">
+            <div class="hero-text">
+              <h2>Gestão & Cadastro de Capacitações</h2>
+              <p>Cadastre turmas, controle cronogramas, instrutores, locais e gere relatórios técnicos oficiais de treinamento integrados ao ecossistema CECATE.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn btn-gradient" onclick="app.openNewTrainingModal()">+ Nova Capacitação</button>
+            </div>
+          </div>
+
+          <!-- Grade de Métricas das Capacitações -->
+          <div class="metrics-grid">
+            <div class="metric-card cyan">
+              <div class="metric-icon">🎓</div>
+              <div class="metric-info">
+                <h4>Total de Capacitações</h4>
+                <div class="metric-value" id="train-total-count">0</div>
+                <div class="metric-trend">Registradas no sistema</div>
+              </div>
+            </div>
+
+            <div class="metric-card green">
+              <div class="metric-icon">✅</div>
+              <div class="metric-info">
+                <h4>Concluídas</h4>
+                <div class="metric-value" id="train-completed-count">0</div>
+                <div class="metric-trend" style="color:var(--accent-success);">Turmas finalizadas</div>
+              </div>
+            </div>
+
+            <div class="metric-card purple">
+              <div class="metric-icon">🚀</div>
+              <div class="metric-info">
+                <h4>Em Andamento / Previstas</h4>
+                <div class="metric-value" id="train-active-count">0</div>
+                <div class="metric-trend">Ciclos ativos</div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon">👥</div>
+              <div class="metric-info">
+                <h4>Participantes Formados</h4>
+                <div class="metric-value" id="train-students-count">0</div>
+                <div class="metric-trend">Horas totais: <span id="train-total-hours" style="font-weight:700;">0h</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de Filtros & Ações -->
+          <div class="trainings-filter-bar">
+            <div class="trainings-filter-inputs">
+              <div class="search-input-wrapper">
+                <span class="search-icon-inside">🔍</span>
+                <input type="text" id="train-search-query" class="form-control form-control-sm" placeholder="Buscar por código, título, local ou instrutor..." oninput="app.filterTrainings()">
+              </div>
+
+              <select id="train-filter-status" class="form-control form-control-sm" style="width: auto;" onchange="app.filterTrainings()">
+                <option value="all">Status: Todos</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Planejada">Planejada</option>
+                <option value="Concluída">Concluída</option>
+                <option value="Cancelada">Cancelada</option>
+              </select>
+
+              <select id="train-filter-modality" class="form-control form-control-sm" style="width: auto;" onchange="app.filterTrainings()">
+                <option value="all">Modalidade: Todas</option>
+                <option value="Presencial">Presencial</option>
+                <option value="Online">Online / Remoto</option>
+                <option value="Híbrido">Híbrido</option>
+              </select>
+            </div>
+
+            <div class="trainings-action-group">
+              <button class="btn btn-secondary btn-sm" onclick="app.exportTrainingsCSV()" title="Exportar tabela para CSV">📥 Exportar CSV</button>
+              <button class="btn btn-primary btn-sm" onclick="app.openNewTrainingModal()">+ Nova Capacitação</button>
+            </div>
+          </div>
+
+          <!-- Tabela de Capacitações -->
+          <div class="glass-card">
+            <div class="card-header">
+              <h3 class="card-title">📚 Listagem de Capacitações Cadastradas</h3>
+              <span id="train-count-badge" class="badge badge-primary">0 registros</span>
+            </div>
+
+            <div class="data-table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Título da Capacitação</th>
+                    <th>Período / Data</th>
+                    <th>Local / Plataforma</th>
+                    <th>Instrutor</th>
+                    <th>Carga Horária</th>
+                    <th>Participantes</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="trainings-table-body">
+                  <!-- Renderizado dinamicamente pelo app.js -->
                 </tbody>
               </table>
             </div>
@@ -447,6 +572,174 @@
       <div class="modal-footer">
         <button class="btn btn-secondary modal-close">Cancelar</button>
         <button class="btn btn-primary" onclick="app.saveTableModalData()">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: CADASTRO & EDIÇÃO DE CAPACITAÇÃO
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-training-form">
+    <div class="modal-container" style="max-width: 850px;">
+      <div class="modal-header">
+        <h3 id="modal-training-form-title">🎓 Nova Capacitação CECATE</h3>
+        <button class="btn btn-secondary btn-sm modal-close">✕</button>
+      </div>
+      <form id="form-training-record" onsubmit="app.saveTrainingFromModal(event)">
+        <input type="hidden" id="train-id">
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+          
+          <!-- Linha 1: Código e Categoria -->
+          <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Código da Capacitação *:</label>
+              <div style="display:flex; gap:0.5rem;">
+                <input type="text" id="train-code" class="form-control" placeholder="Ex: CAP-2026-001" required>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.generateRandomTrainingCode()" title="Gerar Código Automático">⚡ Gerar</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Categoria / Área do Conhecimento *:</label>
+              <select id="train-category" class="form-control" required>
+                <option value="Tecnologia & Automação">Tecnologia & Automação</option>
+                <option value="Qualidade & Auditoria">Qualidade & Auditoria</option>
+                <option value="Segurança & Governança">Segurança & Governança</option>
+                <option value="Gestão & Liderança">Gestão & Liderança</option>
+                <option value="Operações & Manutenção">Operações & Manutenção</option>
+                <option value="Outros">Outros</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Linha 2: Título -->
+          <div class="form-group">
+            <label class="form-label">Título da Capacitação / Treinamento *:</label>
+            <input type="text" id="train-title" class="form-control" placeholder="Ex: Formação em Boas Práticas e Automação de Relatórios Técnicos" required>
+          </div>
+
+          <!-- Linha 3: Instrutor e Público-Alvo -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Instrutor / Facilitador *:</label>
+              <input type="text" id="train-instructor" class="form-control" placeholder="Ex: Prof. Dr. Marcos Souza" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Público-Alvo / Departamento:</label>
+              <input type="text" id="train-target" class="form-control" placeholder="Ex: Analistas, Técnicos de Automação, Gestores">
+            </div>
+          </div>
+
+          <!-- Linha 4: Datas e Horário -->
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Data de Início *:</label>
+              <input type="date" id="train-start-date" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Data de Término:</label>
+              <input type="date" id="train-end-date" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Horário / Turno:</label>
+              <input type="text" id="train-schedule" class="form-control" placeholder="Ex: 08:30 às 17:30 (Integral)">
+            </div>
+          </div>
+
+          <!-- Linha 5: Local, Modalidade e Status -->
+          <div style="display:grid; grid-template-columns: 1.5fr 1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Local / Sala / Plataforma *:</label>
+              <input type="text" id="train-location" class="form-control" placeholder="Ex: Auditório Principal CECATE / Sala 201 / Teams" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Modalidade *:</label>
+              <select id="train-modality" class="form-control" required>
+                <option value="Presencial">Presencial</option>
+                <option value="Online">Online / Remoto</option>
+                <option value="Híbrido">Híbrido</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Status *:</label>
+              <select id="train-status" class="form-control" required>
+                <option value="Planejada">Planejada</option>
+                <option value="Em Andamento">Em Andamento</option>
+                <option value="Concluída">Concluída</option>
+                <option value="Cancelada">Cancelada</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Linha 6: Carga Horária, Vagas, Inscritos e Concluintes -->
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem;">
+            <div class="form-group">
+              <label class="form-label">Carga Horária (h) *:</label>
+              <input type="number" id="train-hours" class="form-control" min="1" max="1000" placeholder="Ex: 40" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Vagas Totais:</label>
+              <input type="number" id="train-vacancies" class="form-control" min="1" placeholder="Ex: 30" value="30">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Inscritos:</label>
+              <input type="number" id="train-enrolled" class="form-control" min="0" placeholder="Ex: 28" value="0">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Concluintes:</label>
+              <input type="number" id="train-graduated" class="form-control" min="0" placeholder="Ex: 26" value="0">
+            </div>
+          </div>
+
+          <!-- Linha 7: Ementa e Objetivos -->
+          <div class="form-group">
+            <label class="form-label">Ementa / Conteúdo Programático / Objetivos:</label>
+            <textarea id="train-syllabus" class="form-control" rows="3" placeholder="Módulo 1: Introdução aos conceitos...&#10;Módulo 2: Automação aplicada...&#10;Módulo 3: Estudos de caso e práticas..."></textarea>
+          </div>
+
+          <!-- Linha 8: Observações e Requisitos -->
+          <div class="form-group">
+            <label class="form-label">Observações / Requisitos Prévios / Materiais:</label>
+            <textarea id="train-notes" class="form-control" rows="2" placeholder="Requisitos prévios, link de materiais, infraestrutura necessária ou critérios de aprovação..."></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Capacitação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: DETALHES DA CAPACITAÇÃO (FICHA TÉCNICA)
+       ========================================== -->
+  <div class="modal-backdrop" id="modal-training-details">
+    <div class="modal-container" style="max-width: 780px;">
+      <div class="modal-header">
+        <h3>📋 Ficha Técnica da Capacitação</h3>
+        <button class="btn btn-secondary btn-sm modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="training-details-content" style="max-height: 70vh; overflow-y: auto;">
+        <!-- Injetado dinamicamente via app.js -->
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <div>
+          <button class="btn btn-secondary modal-close">Fechar</button>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="btn btn-secondary btn-sm" id="btn-edit-from-details" onclick="">✏️ Editar Dados</button>
+          <button class="btn btn-gradient btn-sm" id="btn-report-from-details" onclick="">⚡ Gerar Relatório no Estúdio</button>
+        </div>
       </div>
     </div>
   </div>

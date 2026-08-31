@@ -6,6 +6,8 @@ class AutoReportApp {
   constructor() {
     this.currentReport = null;
     this.history = [];
+    this.trainings = [];
+    this.activeTrainingId = null;
     this.activeView = 'dashboard';
     this.currentTone = 'executive';
     this.zoomLevel = 100;
@@ -24,6 +26,7 @@ class AutoReportApp {
     this.applyTheme();
     this.bindEvents();
     this.renderDashboard();
+    this.renderTrainings();
     this.renderTemplates();
     this.renderHistory();
     this.loadDefaultTemplate('audit_compliance');
@@ -39,6 +42,96 @@ class AutoReportApp {
 
       const savedSettings = localStorage.getItem('autoreport_settings');
       if (savedSettings) this.orgSettings = { ...this.orgSettings, ...JSON.parse(savedSettings) };
+
+      const savedTrainings = localStorage.getItem('autoreport_trainings');
+      if (savedTrainings) {
+        this.trainings = JSON.parse(savedTrainings);
+      } else {
+        // Dados de demonstração padrão do CECATE
+        this.trainings = [
+          {
+            id: "train_101",
+            code: "CAP-2026-001",
+            title: "Formação Especializada em Automação de Relatórios com IA",
+            category: "Tecnologia & Automação",
+            instructor: "Prof. Dr. Marcos Souza",
+            target: "Analistas e Especialistas de Processos CECATE",
+            startDate: "2026-08-10",
+            endDate: "2026-08-28",
+            schedule: "08:30 às 17:30 (Sextas e Sábados)",
+            location: "Auditório Central CECATE & Lab 04",
+            modality: "Presencial",
+            status: "Concluída",
+            hours: 40,
+            vacancies: 25,
+            enrolled: 25,
+            graduated: 24,
+            syllabus: "Módulo 1: Arquitetura de Relatórios Inteligentes\nMódulo 2: Engenharia de Prompts e Diagnósticos Técnicos\nMódulo 3: Parametrização Modular e KPIs Dinâmicos\nMódulo 4: Workshop Prático e Homologação de Modelos",
+            notes: "Todos os concluintes receberam certificado digital e acesso prioritário aos modelos oficiais CECATE."
+          },
+          {
+            id: "train_102",
+            code: "CAP-2026-002",
+            title: "Auditoria de Processos e Conformidade Regulatória",
+            category: "Qualidade & Auditoria",
+            instructor: "Dra. Renata Calheiros",
+            target: "Auditores Internos e Líderes de Qualidade",
+            startDate: "2026-08-20",
+            endDate: "2026-09-10",
+            schedule: "19:00 às 22:00 (Terças e Quintas)",
+            location: "Sala 204 - Bloco B / Microsoft Teams",
+            modality: "Híbrido",
+            status: "Em Andamento",
+            hours: 32,
+            vacancies: 30,
+            enrolled: 28,
+            graduated: 0,
+            syllabus: "Módulo 1: Diretrizes de Conformidade e Gestão de Riscos\nMódulo 2: Mapeamento de Não-Conformidades Críticas\nMódulo 3: Planos de Ação e Evidências Documentais\nMódulo 4: Simulação de Auditoria de Campo",
+            notes: "Material de apoio disponível no portal acadêmico. Avaliação final agendada para 10/09."
+          },
+          {
+            id: "train_103",
+            code: "CAP-2026-003",
+            title: "Segurança Operacional, NR-10 e Gestão de Riscos Industriais",
+            category: "Segurança & Governança",
+            instructor: "Eng. Carlos Alberto Ribeiro",
+            target: "Técnicos de Campo e Inspetores de Manutenção",
+            startDate: "2026-09-15",
+            endDate: "2026-09-25",
+            schedule: "08:00 às 12:00 (Matutino)",
+            location: "Centro de Treinamento Técnico CECATE",
+            modality: "Presencial",
+            status: "Planejada",
+            hours: 20,
+            vacancies: 20,
+            enrolled: 16,
+            graduated: 0,
+            syllabus: "Módulo 1: Conceitos Fundamentais e Normas Regulamentadoras\nMódulo 2: Procedimentos de Bloqueio e Etiquetagem (LOTO)\nMódulo 3: Análise Preliminar de Risco (APR) e EPIs\nMódulo 4: Prática em Painéis Energizados",
+            notes: "Exige uso obrigatório de botas de segurança e capacete nas aulas práticas."
+          },
+          {
+            id: "train_104",
+            code: "CAP-2026-004",
+            title: "Governança de Dados, Dashboards & KPIs Técnicos",
+            category: "Gestão & Liderança",
+            instructor: "Mariana Vasconcelos",
+            target: "Gestores de Squads e Coordenadores de Projeto",
+            startDate: "2026-07-05",
+            endDate: "2026-07-20",
+            schedule: "14:00 às 18:00 (Online Ao Vivo)",
+            location: "Google Meet / Sala Virtual CECATE",
+            modality: "Online",
+            status: "Concluída",
+            hours: 16,
+            vacancies: 40,
+            enrolled: 40,
+            graduated: 38,
+            syllabus: "Módulo 1: Métricas de Eficiência, SLA e Produtividade\nMódulo 2: Construção de Indicadores Automatizados\nMódulo 3: Comunicação Executiva e Apresentação de Resultados",
+            notes: "Taxa de aprovação de 95%. Feedback excelente dos participantes (NPS 9.8)."
+          }
+        ];
+        this.saveStorage();
+      }
     } catch (e) {
       console.warn("Erro ao carregar dados do localStorage:", e);
     }
@@ -48,6 +141,7 @@ class AutoReportApp {
     try {
       localStorage.setItem('autoreport_history', JSON.stringify(this.history));
       localStorage.setItem('autoreport_settings', JSON.stringify(this.orgSettings));
+      localStorage.setItem('autoreport_trainings', JSON.stringify(this.trainings));
     } catch (e) {
       console.warn("Erro ao salvar dados no localStorage:", e);
     }
@@ -98,6 +192,7 @@ class AutoReportApp {
     // Atualizar título da barra superior
     const titleMap = {
       dashboard: "Painel de Controle & Visão Geral",
+      trainings: "Gestão & Cadastro de Capacitações CECATE",
       studio: "Estúdio de Criação & Automação de Relatórios",
       templates: "Biblioteca de Modelos Prontos",
       history: "Arquivo & Histórico de Relatórios Gerados",
@@ -108,6 +203,7 @@ class AutoReportApp {
 
     // Atualizações específicas por tela
     if (viewId === 'dashboard') this.renderDashboard();
+    if (viewId === 'trainings') this.renderTrainings();
     if (viewId === 'history') this.renderHistory();
     if (viewId === 'studio') this.updateLivePreview();
   }
@@ -776,6 +872,465 @@ class AutoReportApp {
       this.renderDashboard();
       this.showToast("Relatório excluído do histórico.");
     }
+  }
+
+  /* ==========================================================================
+     Capacitações & Treinamentos Management
+     ========================================================================== */
+  renderTrainings() {
+    // Calcular Métricas
+    const totalTrainings = this.trainings.length;
+    const completedTrainings = this.trainings.filter(t => t.status === 'Concluída').length;
+    const activeTrainings = this.trainings.filter(t => t.status === 'Em Andamento' || t.status === 'Planejada').length;
+    
+    // Alunos formados ou concluintes
+    const totalGraduated = this.trainings.reduce((sum, t) => sum + (parseInt(t.graduated) || (t.status === 'Concluída' ? parseInt(t.enrolled || 0) : 0)), 0);
+    const totalHours = this.trainings.reduce((sum, t) => sum + (parseInt(t.hours) || 0), 0);
+
+    const totalEl = document.getElementById('train-total-count');
+    const compEl = document.getElementById('train-completed-count');
+    const actEl = document.getElementById('train-active-count');
+    const studEl = document.getElementById('train-students-count');
+    const hourEl = document.getElementById('train-total-hours');
+    const badgeEl = document.getElementById('train-count-badge');
+
+    if (totalEl) totalEl.innerText = totalTrainings;
+    if (compEl) compEl.innerText = completedTrainings;
+    if (actEl) actEl.innerText = activeTrainings;
+    if (studEl) studEl.innerText = `${totalGraduated} alunos`;
+    if (hourEl) hourEl.innerText = `${totalHours}h`;
+    if (badgeEl) badgeEl.innerText = `${totalTrainings} registros`;
+
+    this.filterTrainings();
+  }
+
+  filterTrainings() {
+    const tableBody = document.getElementById('trainings-table-body');
+    if (!tableBody) return;
+
+    const query = (document.getElementById('train-search-query')?.value || '').toLowerCase().trim();
+    const statusFilter = document.getElementById('train-filter-status')?.value || 'all';
+    const modalityFilter = document.getElementById('train-filter-modality')?.value || 'all';
+
+    let filtered = this.trainings.filter(t => {
+      // Filtro de Texto
+      const matchesText = !query || 
+        (t.code && t.code.toLowerCase().includes(query)) ||
+        (t.title && t.title.toLowerCase().includes(query)) ||
+        (t.instructor && t.instructor.toLowerCase().includes(query)) ||
+        (t.location && t.location.toLowerCase().includes(query)) ||
+        (t.category && t.category.toLowerCase().includes(query));
+
+      // Filtro de Status
+      const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+
+      // Filtro de Modalidade
+      const matchesModality = modalityFilter === 'all' || t.modality === modalityFilter;
+
+      return matchesText && matchesStatus && matchesModality;
+    });
+
+    if (filtered.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align:center; padding: 2.5rem 1rem; color:var(--text-muted);">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+            <p>Nenhuma capacitação encontrada com os filtros selecionados.</p>
+            <button class="btn btn-secondary btn-sm" style="margin-top: 0.75rem;" onclick="document.getElementById('train-search-query').value=''; document.getElementById('train-filter-status').value='all'; document.getElementById('train-filter-modality').value='all'; app.filterTrainings();">Limpar Filtros</button>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tableBody.innerHTML = filtered.map(t => {
+      // Status Badge class
+      let statusBadgeClass = 'badge-status-planejada';
+      if (t.status === 'Concluída') statusBadgeClass = 'badge-status-concluida';
+      else if (t.status === 'Em Andamento') statusBadgeClass = 'badge-status-andamento';
+      else if (t.status === 'Cancelada') statusBadgeClass = 'badge-status-cancelada';
+
+      // Format Date
+      let dateDisplay = t.startDate ? new Date(t.startDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'A definir';
+      if (t.endDate && t.endDate !== t.startDate) {
+        dateDisplay += ` até ${new Date(t.endDate + 'T00:00:00').toLocaleDateString('pt-BR')}`;
+      }
+
+      // Format Attendees
+      let attendeesDisplay = `${t.enrolled || 0} / ${t.vacancies || '-'}`;
+      if (t.status === 'Concluída' && t.graduated !== undefined) {
+        attendeesDisplay += ` (${t.graduated} formados)`;
+      }
+
+      return `
+        <tr>
+          <td><span class="badge badge-primary" style="font-family:monospace; font-size:0.8rem;">${this.escapeHtml(t.code || 'CAP-00')}</span></td>
+          <td>
+            <strong style="color:var(--text-primary); cursor:pointer;" onclick="app.viewTrainingDetails('${t.id}')">${this.escapeHtml(t.title)}</strong>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${this.escapeHtml(t.category || 'Geral')} • ${this.escapeHtml(t.target || 'Público Geral')}</div>
+          </td>
+          <td style="font-size:0.85rem; white-space:nowrap;">${dateDisplay}</td>
+          <td>
+            <div style="font-size:0.85rem;">${this.escapeHtml(t.location || 'CECATE')}</div>
+            <span class="badge badge-modality" style="font-size:0.7rem; margin-top:2px;">${this.escapeHtml(t.modality || 'Presencial')}</span>
+          </td>
+          <td style="font-size:0.85rem; font-weight:500;">${this.escapeHtml(t.instructor || 'N/A')}</td>
+          <td><span class="badge badge-cyan">${t.hours || 0}h</span></td>
+          <td style="font-size:0.85rem;">${attendeesDisplay}</td>
+          <td><span class="badge ${statusBadgeClass}">${this.escapeHtml(t.status || 'Planejada')}</span></td>
+          <td style="text-align:right;">
+            <div style="display:inline-flex; gap:0.35rem;">
+              <button class="btn btn-secondary btn-sm" onclick="app.viewTrainingDetails('${t.id}')" title="Visualizar Ficha Técnica">👁️</button>
+              <button class="btn btn-secondary btn-sm" onclick="app.generateTrainingReport('${t.id}')" title="Gerar Relatório Técnico no Estúdio">⚡ Relatório</button>
+              <button class="btn btn-secondary btn-sm" onclick="app.openEditTrainingModal('${t.id}')" title="Editar Capacitação">✏️</button>
+              <button class="btn btn-danger btn-sm" onclick="app.deleteTraining('${t.id}')" title="Excluir">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  generateRandomTrainingCode() {
+    const year = new Date().getFullYear();
+    const count = this.trainings.length + 1;
+    const nextCode = `CAP-${year}-${String(count).padStart(3, '0')}`;
+    const codeInput = document.getElementById('train-code');
+    if (codeInput) codeInput.value = nextCode;
+  }
+
+  openNewTrainingModal() {
+    const form = document.getElementById('form-training-record');
+    if (form) form.reset();
+
+    const titleEl = document.getElementById('modal-training-form-title');
+    if (titleEl) titleEl.innerHTML = "🎓 Nova Capacitação CECATE";
+
+    document.getElementById('train-id').value = '';
+    this.generateRandomTrainingCode();
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('train-start-date').value = today;
+    document.getElementById('train-status').value = 'Planejada';
+    document.getElementById('train-modality').value = 'Presencial';
+    document.getElementById('train-vacancies').value = '30';
+    document.getElementById('train-enrolled').value = '0';
+    document.getElementById('train-graduated').value = '0';
+
+    this.openModal('modal-training-form');
+  }
+
+  openEditTrainingModal(id) {
+    const t = this.trainings.find(item => item.id === id);
+    if (!t) return;
+
+    this.closeModal('modal-training-details');
+
+    const titleEl = document.getElementById('modal-training-form-title');
+    if (titleEl) titleEl.innerHTML = `✏️ Editar Capacitação • ${t.code}`;
+
+    document.getElementById('train-id').value = t.id;
+    document.getElementById('train-code').value = t.code || '';
+    document.getElementById('train-category').value = t.category || 'Tecnologia & Automação';
+    document.getElementById('train-title').value = t.title || '';
+    document.getElementById('train-instructor').value = t.instructor || '';
+    document.getElementById('train-target').value = t.target || '';
+    document.getElementById('train-start-date').value = t.startDate || '';
+    document.getElementById('train-end-date').value = t.endDate || '';
+    document.getElementById('train-schedule').value = t.schedule || '';
+    document.getElementById('train-location').value = t.location || '';
+    document.getElementById('train-modality').value = t.modality || 'Presencial';
+    document.getElementById('train-status').value = t.status || 'Planejada';
+    document.getElementById('train-hours').value = t.hours || '';
+    document.getElementById('train-vacancies').value = t.vacancies || '';
+    document.getElementById('train-enrolled').value = t.enrolled || 0;
+    document.getElementById('train-graduated').value = t.graduated || 0;
+    document.getElementById('train-syllabus').value = t.syllabus || '';
+    document.getElementById('train-notes').value = t.notes || '';
+
+    this.openModal('modal-training-form');
+  }
+
+  saveTrainingFromModal(e) {
+    if (e) e.preventDefault();
+
+    const id = document.getElementById('train-id').value;
+    const code = document.getElementById('train-code').value.trim();
+    const title = document.getElementById('train-title').value.trim();
+    const category = document.getElementById('train-category').value;
+    const instructor = document.getElementById('train-instructor').value.trim();
+    const target = document.getElementById('train-target').value.trim();
+    const startDate = document.getElementById('train-start-date').value;
+    const endDate = document.getElementById('train-end-date').value;
+    const schedule = document.getElementById('train-schedule').value.trim();
+    const location = document.getElementById('train-location').value.trim();
+    const modality = document.getElementById('train-modality').value;
+    const status = document.getElementById('train-status').value;
+    const hours = parseInt(document.getElementById('train-hours').value) || 0;
+    const vacancies = parseInt(document.getElementById('train-vacancies').value) || 0;
+    const enrolled = parseInt(document.getElementById('train-enrolled').value) || 0;
+    const graduated = parseInt(document.getElementById('train-graduated').value) || 0;
+    const syllabus = document.getElementById('train-syllabus').value.trim();
+    const notes = document.getElementById('train-notes').value.trim();
+
+    if (!code || !title || !instructor || !location || !startDate) {
+      this.showToast("Por favor, preencha todos os campos obrigatórios (*).", "warning");
+      return;
+    }
+
+    if (id) {
+      // Edição
+      const idx = this.trainings.findIndex(item => item.id === id);
+      if (idx !== -1) {
+        this.trainings[idx] = {
+          ...this.trainings[idx],
+          code, title, category, instructor, target, startDate, endDate, schedule,
+          location, modality, status, hours, vacancies, enrolled, graduated, syllabus, notes,
+          updatedAt: new Date().toISOString()
+        };
+        this.showToast(`Capacitação ${code} atualizada com sucesso!`, 'success');
+      }
+    } else {
+      // Nova
+      const newTraining = {
+        id: `train_${Date.now()}`,
+        code, title, category, instructor, target, startDate, endDate, schedule,
+        location, modality, status, hours, vacancies, enrolled, graduated, syllabus, notes,
+        createdAt: new Date().toISOString()
+      };
+      this.trainings.unshift(newTraining);
+      this.showToast(`Nova capacitação ${code} cadastrada com sucesso!`, 'success');
+    }
+
+    this.saveStorage();
+    this.renderTrainings();
+    this.closeModal('modal-training-form');
+  }
+
+  deleteTraining(id) {
+    const t = this.trainings.find(item => item.id === id);
+    if (!t) return;
+
+    if (confirm(`Deseja realmente excluir a capacitação "${t.code} - ${t.title}"?`)) {
+      this.trainings = this.trainings.filter(item => item.id !== id);
+      this.saveStorage();
+      this.renderTrainings();
+      this.showToast(`Capacitação ${t.code} excluída.`);
+    }
+  }
+
+  viewTrainingDetails(id) {
+    const t = this.trainings.find(item => item.id === id);
+    if (!t) return;
+
+    this.activeTrainingId = id;
+    const container = document.getElementById('training-details-content');
+    if (!container) return;
+
+    let statusBadgeClass = 'badge-status-planejada';
+    if (t.status === 'Concluída') statusBadgeClass = 'badge-status-concluida';
+    else if (t.status === 'Em Andamento') statusBadgeClass = 'badge-status-andamento';
+    else if (t.status === 'Cancelada') statusBadgeClass = 'badge-status-cancelada';
+
+    let dateDisplay = t.startDate ? new Date(t.startDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'A definir';
+    if (t.endDate && t.endDate !== t.startDate) {
+      dateDisplay += ` até ${new Date(t.endDate + 'T00:00:00').toLocaleDateString('pt-BR')}`;
+    }
+
+    const completionRate = (t.enrolled > 0 && t.graduated) 
+      ? Math.min(100, Math.round((t.graduated / t.enrolled) * 100)) + '%' 
+      : (t.status === 'Concluída' ? '100%' : 'Em andamento');
+
+    container.innerHTML = `
+      <div class="training-detail-header">
+        <div>
+          <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.5rem;">
+            <span class="badge badge-primary" style="font-family:monospace; font-size:0.9rem;">${this.escapeHtml(t.code)}</span>
+            <span class="badge badge-cyan">${this.escapeHtml(t.category || 'Geral')}</span>
+            <span class="badge badge-modality">${this.escapeHtml(t.modality || 'Presencial')}</span>
+            <span class="badge ${statusBadgeClass}">${this.escapeHtml(t.status)}</span>
+          </div>
+          <h2 style="font-size:1.35rem; color:var(--text-primary); margin:0;">${this.escapeHtml(t.title)}</h2>
+        </div>
+      </div>
+
+      <div class="training-detail-grid">
+        <div class="training-detail-card">
+          <div class="training-detail-card-label">Instrutor / Facilitador</div>
+          <div class="training-detail-card-value">${this.escapeHtml(t.instructor || 'N/A')}</div>
+        </div>
+
+        <div class="training-detail-card">
+          <div class="training-detail-card-label">Local / Plataforma</div>
+          <div class="training-detail-card-value">${this.escapeHtml(t.location || 'CECATE')}</div>
+        </div>
+
+        <div class="training-detail-card">
+          <div class="training-detail-card-label">Período / Datas</div>
+          <div class="training-detail-card-value" style="font-size:0.95rem;">${dateDisplay}</div>
+        </div>
+
+        <div class="training-detail-card">
+          <div class="training-detail-card-label">Carga Horária</div>
+          <div class="training-detail-card-value" style="color:var(--accent-secondary);">${t.hours || 0} Horas</div>
+        </div>
+
+        <div class="training-detail-card">
+          <div class="training-detail-card-label">Inscritos / Vagas</div>
+          <div class="training-detail-card-value">${t.enrolled || 0} / ${t.vacancies || '-'}</div>
+        </div>
+
+        <div class="training-detail-card">
+          <div class="training-detail-card-label">Concluintes / Taxa</div>
+          <div class="training-detail-card-value" style="color:var(--accent-success);">${t.graduated || 0} (${completionRate})</div>
+        </div>
+      </div>
+
+      ${t.schedule ? `
+        <div style="margin-bottom:1rem; font-size:0.9rem;">
+          <strong style="color:var(--text-primary);">🕒 Horário / Turno:</strong> <span style="color:var(--text-secondary);">${this.escapeHtml(t.schedule)}</span>
+        </div>
+      ` : ''}
+
+      ${t.target ? `
+        <div style="margin-bottom:1rem; font-size:0.9rem;">
+          <strong style="color:var(--text-primary);">👥 Público-Alvo:</strong> <span style="color:var(--text-secondary);">${this.escapeHtml(t.target)}</span>
+        </div>
+      ` : ''}
+
+      ${t.syllabus ? `
+        <div>
+          <label class="form-label" style="font-weight:700; color:var(--text-primary); margin-bottom:0.4rem;">📖 Conteúdo Programático & Ementa:</label>
+          <div class="training-ementa-box" style="white-space: pre-line;">${this.escapeHtml(t.syllabus)}</div>
+        </div>
+      ` : ''}
+
+      ${t.notes ? `
+        <div style="margin-top:1rem;">
+          <label class="form-label" style="font-weight:700; color:var(--text-primary); margin-bottom:0.4rem;">📌 Observações & Requisitos:</label>
+          <div class="training-ementa-box" style="background:rgba(255,255,255,0.02); font-size:0.875rem; white-space: pre-line;">${this.escapeHtml(t.notes)}</div>
+        </div>
+      ` : ''}
+    `;
+
+    // Atualizar botões de ação do rodapé
+    const editBtn = document.getElementById('btn-edit-from-details');
+    const reportBtn = document.getElementById('btn-report-from-details');
+    if (editBtn) editBtn.onclick = () => this.openEditTrainingModal(id);
+    if (reportBtn) reportBtn.onclick = () => this.generateTrainingReport(id);
+
+    this.openModal('modal-training-details');
+  }
+
+  /**
+   * Integração com o Estúdio: Cria um relatório técnico completo com base na capacitação selecionada
+   */
+  generateTrainingReport(id) {
+    const t = this.trainings.find(item => item.id === id);
+    if (!t) return;
+
+    this.closeModal('modal-training-details');
+
+    const templateBase = REPORT_TEMPLATES.find(tpl => tpl.id === 'training_capacity') || REPORT_TEMPLATES[0];
+    const customReport = JSON.parse(JSON.stringify(templateBase));
+
+    // Configurar Metadados com base na capacitação
+    customReport.meta = {
+      orgName: this.orgSettings.defaultOrgName || "CECATE Soluções Tecnológicas",
+      reportTitle: `Relatório Técnico de Capacitação: ${t.title}`,
+      responsible: t.instructor || this.orgSettings.defaultSigner || "Coordenação Geral",
+      department: t.target || this.orgSettings.defaultDepartment || "Desenvolvimento de Talentos",
+      date: t.endDate || t.startDate || new Date().toISOString().split('T')[0],
+      referenceCode: t.code || "CAP-2026",
+      period: t.startDate ? `${t.startDate} a ${t.endDate || t.startDate}` : "Ciclo Vigente"
+    };
+
+    // Calcular KPIs
+    const completionRate = (t.enrolled > 0 && t.graduated) 
+      ? Math.min(100, Math.round((t.graduated / t.enrolled) * 100)) + '%' 
+      : '100%';
+
+    customReport.defaultKpis = [
+      { label: "Taxa de Conclusão", value: completionRate, status: "success" },
+      { label: "Alunos Capacitados", value: `${t.graduated || t.enrolled || 0} alunos`, status: "success" },
+      { label: "Carga Horária", value: `${t.hours || 0} horas`, status: "success" },
+      { label: "Modalidade / Local", value: `${t.modality || 'Presencial'}`, status: "success" }
+    ];
+
+    // Ajustar blocos com informações personalizadas
+    customReport.blocks.forEach(b => {
+      if (b.type === 'executive_summary') {
+        b.content = `O presente relatório técnico atesta a realização da capacitação **${t.title}** (${t.code}), executada no período de **${t.startDate || 'N/A'}** a **${t.endDate || t.startDate || 'N/A'}** no local **${t.location}** (${t.modality}). A facilitação foi conduzida por **${t.instructor}** para o público de **${t.target || 'Técnicos e Analistas'}**, totalizando **${t.hours} horas** de atividades teóricas e laboratoriais.`;
+      } else if (b.type === 'kpi_metrics') {
+        b.kpis = [
+          { label: "Taxa de Conclusão", value: completionRate, change: "Meta atingida" },
+          { label: "Total de Concluintes", value: `${t.graduated || t.enrolled || 0}`, change: `De ${t.enrolled || t.vacancies || 0} inscritos` },
+          { label: "Carga Horária", value: `${t.hours}h`, change: "100% ministrada" },
+          { label: "Status da Turma", value: `${t.status}`, change: t.category }
+        ];
+      } else if (b.type === 'data_table' && t.syllabus) {
+        // Tentar extrair módulos da ementa se houver
+        const lines = t.syllabus.split('\n').filter(l => l.trim().length > 0);
+        if (lines.length > 0) {
+          b.rows = lines.map((line, i) => [`Módulo 0${i+1}`, line.replace(/^Módulo \d+:? ?/i, ''), `${Math.round((t.hours || 40) / lines.length)}h`, "100%", "Concluído"]);
+        }
+      }
+    });
+
+    this.currentReport = customReport;
+    this.populateEditorForm();
+    this.renderModularBlocksEditor();
+    this.updateLivePreview();
+    this.navigateTo('studio');
+    this.showToast(`Relatório para "${t.code} - ${t.title}" gerado com sucesso no Estúdio!`, 'success');
+  }
+
+  exportTrainingsCSV() {
+    if (this.trainings.length === 0) {
+      this.showToast("Nenhuma capacitação para exportar.", "warning");
+      return;
+    }
+
+    const headers = ["Código", "Título", "Categoria", "Instrutor", "Público-Alvo", "Data Início", "Data Fim", "Local", "Modalidade", "Status", "Carga Horária (h)", "Vagas", "Inscritos", "Concluintes"];
+    
+    const rows = this.trainings.map(t => [
+      `"${t.code || ''}"`,
+      `"${(t.title || '').replace(/"/g, '""')}"`,
+      `"${t.category || ''}"`,
+      `"${(t.instructor || '').replace(/"/g, '""')}"`,
+      `"${(t.target || '').replace(/"/g, '""')}"`,
+      `"${t.startDate || ''}"`,
+      `"${t.endDate || ''}"`,
+      `"${(t.location || '').replace(/"/g, '""')}"`,
+      `"${t.modality || ''}"`,
+      `"${t.status || ''}"`,
+      t.hours || 0,
+      t.vacancies || 0,
+      t.enrolled || 0,
+      t.graduated || 0
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `cecate_capacitacoes_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    this.showToast("Planilha CSV exportada com sucesso!", "success");
+  }
+
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   /* ==========================================================================
