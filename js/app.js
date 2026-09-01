@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.8.9
+ * Versão: v.1.9.0
  */
 
 window.icons = {
@@ -437,6 +437,320 @@ class AutoReportApp {
 
     await window.db.saveTrainingFull(newTraining, 'Criação de nova capacitação em branco');
     this.openWizard(newId, 1);
+  }
+
+  /* ==========================================================================
+     IMPORTAÇÃO EM MASSA DE MUNICÍPIOS POR PLANILHA (.XLSX, .CSV)
+     ========================================================================== */
+  openImportMunicipalitiesModal(targetContext = 'wizard') {
+    this.munImportContext = targetContext;
+    this.munImportParsedData = null;
+    this.munImportSearchFilter = '';
+
+    const uploadStep = document.getElementById('mun-import-step-upload');
+    const procStep = document.getElementById('mun-import-step-processing');
+    const confStep = document.getElementById('mun-import-step-conference');
+    const backBtn = document.getElementById('mun-import-back-btn');
+    const confBtn = document.getElementById('mun-import-confirm-btn');
+    const fileInput = document.getElementById('mun-excel-file-input');
+
+    if (fileInput) fileInput.value = '';
+    if (uploadStep) uploadStep.style.display = 'block';
+    if (procStep) procStep.style.display = 'none';
+    if (confStep) confStep.style.display = 'none';
+    if (backBtn) backBtn.style.display = 'none';
+    if (confBtn) confBtn.style.display = 'none';
+
+    const modal = document.getElementById('modal-import-municipalities');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeImportMunicipalitiesModal() {
+    const modal = document.getElementById('modal-import-municipalities');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => modal.style.display = 'none', 200);
+    }
+    this.munImportParsedData = null;
+  }
+
+  backToSpreadsheetUploadStep() {
+    const uploadStep = document.getElementById('mun-import-step-upload');
+    const procStep = document.getElementById('mun-import-step-processing');
+    const confStep = document.getElementById('mun-import-step-conference');
+    const backBtn = document.getElementById('mun-import-back-btn');
+    const confBtn = document.getElementById('mun-import-confirm-btn');
+
+    if (uploadStep) uploadStep.style.display = 'block';
+    if (procStep) procStep.style.display = 'none';
+    if (confStep) confStep.style.display = 'none';
+    if (backBtn) backBtn.style.display = 'none';
+    if (confBtn) confBtn.style.display = 'none';
+  }
+
+  async onMunicipalitiesSpreadsheetSelected(file) {
+    if (!file || !window.excelParser) return;
+
+    const uploadStep = document.getElementById('mun-import-step-upload');
+    const procStep = document.getElementById('mun-import-step-processing');
+    const confStep = document.getElementById('mun-import-step-conference');
+    const backBtn = document.getElementById('mun-import-back-btn');
+    const confBtn = document.getElementById('mun-import-confirm-btn');
+    const statusText = document.getElementById('mun-import-processing-status');
+
+    if (uploadStep) uploadStep.style.display = 'none';
+    if (procStep) procStep.style.display = 'block';
+    if (statusText) statusText.textContent = `Lendo "${file.name}" e validando dados municipais...`;
+
+    try {
+      let poloName = 'Polo Regional';
+      let poloUf = 'GO';
+      let existingMuns = [];
+
+      if (this.munImportContext === 'wizard' && this.currentTraining) {
+        poloName = this.currentTraining.polo || 'Polo Regional';
+        poloUf = this.currentTraining.uf || 'GO';
+        existingMuns = this.currentTraining.municipalities || [];
+      } else if (window.db) {
+        existingMuns = (await window.db.getAll('municipalities')) || [];
+      }
+
+      const poloLabel = document.getElementById('mun-import-polo-name');
+      if (poloLabel) poloLabel.textContent = `${poloName} (${poloUf})`;
+
+      // Executar parsing e cálculo em lote
+      const parsed = await window.excelParser.parseMunicipalitiesSpreadsheet(file, poloName, poloUf, existingMuns);
+      this.munImportParsedData = parsed;
+
+      setTimeout(() => {
+        if (procStep) procStep.style.display = 'none';
+        if (confStep) confStep.style.display = 'block';
+        if (backBtn) backBtn.style.display = 'inline-flex';
+        if (confBtn) confBtn.style.display = 'inline-flex';
+
+        this.renderMunicipalitiesImportConference();
+      }, 400);
+
+    } catch (err) {
+      console.error('Erro ao processar planilha de municípios:', err);
+      this.showToast(`Erro ao ler planilha: ${err.message}`, 'error');
+      this.backToSpreadsheetUploadStep();
+    }
+  }
+
+  renderMunicipalitiesImportConference(searchTerm = this.munImportSearchFilter || '') {
+    if (!this.munImportParsedData) return;
+    const { validRows, invalidRows, stats } = this.munImportParsedData;
+
+    // Atualizar Contadores do Topo
+    const elTotal = document.getElementById('mun-stat-total');
+    const elNew = document.getElementById('mun-stat-new');
+    const elExist = document.getElementById('mun-stat-existing');
+    const elUpdate = document.getElementById('mun-stat-update');
+    const elError = document.getElementById('mun-stat-error');
+    const elSelected = document.getElementById('mun-stat-selected');
+    const elConfirmBtnText = document.getElementById('mun-import-confirm-btn-text');
+
+    const selectedCount = validRows.filter(r => r.selected).length;
+
+    if (elTotal) elTotal.textContent = stats.total;
+    if (elNew) elNew.textContent = stats.newCount;
+    if (elExist) elExist.textContent = stats.alreadyExistsCount;
+    if (elUpdate) elUpdate.textContent = stats.updateCount;
+    if (elError) elError.textContent = stats.errorCount;
+    if (elSelected) elSelected.textContent = selectedCount;
+    if (elConfirmBtnText) elConfirmBtnText.textContent = `Importar Selecionados (${selectedCount})`;
+
+    // Banner de Avisos / Erros
+    const warnBox = document.getElementById('mun-import-warnings-box');
+    const warnList = document.getElementById('mun-import-warnings-list');
+    const warnTitle = document.getElementById('mun-import-warnings-title');
+
+    if (invalidRows && invalidRows.length > 0) {
+      if (warnBox) warnBox.style.display = 'block';
+      if (warnTitle) warnTitle.textContent = `${invalidRows.length} registro(s) precisam de atenção (não serão importados):`;
+      if (warnList) {
+        warnList.innerHTML = invalidRows.map(inv => `
+          <li><strong>Linha ${inv.lineNum}:</strong> ${inv.errors.join(' • ')} (${inv.rawName || 'Sem nome'}, ${inv.rawUf || 'Sem UF'})</li>
+        `).join('');
+      }
+    } else {
+      if (warnBox) warnBox.style.display = 'none';
+    }
+
+    // Filtragem de busca
+    const term = searchTerm.toLowerCase().trim();
+    const filteredRows = validRows.filter(r => {
+      if (!term) return true;
+      return (
+        r.name.toLowerCase().includes(term) ||
+        r.ibgeCode.includes(term) ||
+        r.uf.toLowerCase().includes(term) ||
+        r.status.toLowerCase().includes(term)
+      );
+    });
+
+    const tbody = document.getElementById('mun-import-table-tbody');
+    if (!tbody) return;
+
+    if (filteredRows.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">
+            Nenhum município corresponde aos critérios de busca.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filteredRows.map(r => {
+      let statusBadge = '';
+      if (r.status === 'new') {
+        statusBadge = '<span class="nav-badge badge-emerald font-bold">Novo</span>';
+      } else if (r.status === 'already_exists') {
+        statusBadge = '<span class="nav-badge badge-blue">Já cadastrado</span>';
+      } else if (r.status === 'update') {
+        statusBadge = `<span class="nav-badge badge-amber font-bold" title="${r.diffText}">Atualizar</span>`;
+      }
+
+      return `
+        <tr style="background:${r.selected ? 'rgba(59, 130, 246, 0.04)' : 'transparent'};">
+          <td style="text-align:center;">
+            <input type="checkbox" ${r.selected ? 'checked' : ''} onchange="app.toggleImportMunicipalityRow(${r.lineNum}, this.checked)">
+          </td>
+          <td style="text-align:center;">
+            <span class="font-mono" style="font-weight:700; color:var(--accent-blue-text); font-size:0.92rem;">${r.ibgeCode}</span>
+          </td>
+          <td>
+            <strong style="color:var(--text-primary); font-size:0.92rem;">${r.name}</strong>
+            ${r.isSede ? '<span class="nav-badge badge-amber" style="font-size:0.7rem; padding:0.1rem 0.4rem; margin-left:0.4rem; font-weight:700;">Sede</span>' : ''}
+            ${r.diffText ? `<div style="font-size:0.75rem; color:var(--accent-amber-text); margin-top:2px;">↳ ${r.diffText}</div>` : ''}
+          </td>
+          <td style="text-align:center;">
+            <span class="nav-badge badge-blue font-bold">${r.uf}</span>
+          </td>
+          <td style="text-align:right;">
+            <span class="font-mono" style="font-weight:700; color:${r.isSede ? 'var(--accent-amber-text)' : 'var(--accent-emerald-text)'}; font-size:0.95rem;">
+              ${r.isSede ? '0,0 km' : `${parseFloat(r.distanceKm || 0).toFixed(1).replace('.', ',')} km`}
+            </span>
+          </td>
+          <td style="text-align:center;">
+            ${statusBadge}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Atualizar estado do master checkbox
+    const masterCheck = document.getElementById('mun-import-master-check');
+    if (masterCheck) {
+      masterCheck.checked = validRows.length > 0 && validRows.every(r => r.selected);
+      masterCheck.indeterminate = validRows.some(r => r.selected) && !validRows.every(r => r.selected);
+    }
+  }
+
+  toggleAllImportMunicipalities(checked) {
+    if (!this.munImportParsedData) return;
+    this.munImportParsedData.validRows.forEach(r => {
+      r.selected = checked;
+    });
+    this.renderMunicipalitiesImportConference();
+  }
+
+  toggleImportMunicipalityRow(lineNum, checked) {
+    if (!this.munImportParsedData) return;
+    const row = this.munImportParsedData.validRows.find(r => r.lineNum === lineNum);
+    if (row) {
+      row.selected = checked;
+    }
+    this.renderMunicipalitiesImportConference();
+  }
+
+  filterImportMunicipalitiesTable(term) {
+    this.munImportSearchFilter = term;
+    this.renderMunicipalitiesImportConference(term);
+  }
+
+  async confirmImportMunicipalities() {
+    if (!this.munImportParsedData) return;
+    const selectedRows = this.munImportParsedData.validRows.filter(r => r.selected);
+
+    if (selectedRows.length === 0) {
+      this.showToast('Nenhum município foi selecionado para importação.', 'warning');
+      return;
+    }
+
+    try {
+      let insertedCount = 0;
+      let updatedCount = 0;
+
+      if (this.munImportContext === 'wizard' && this.currentTraining) {
+        if (!this.currentTraining.municipalities) {
+          this.currentTraining.municipalities = [];
+        }
+        const muns = this.currentTraining.municipalities;
+
+        selectedRows.forEach(r => {
+          const existingIdx = muns.findIndex(m => String(m.ibgeCode).trim() === String(r.ibgeCode).trim());
+          if (existingIdx !== -1) {
+            // Atualização
+            muns[existingIdx].name = r.name;
+            muns[existingIdx].uf = r.uf;
+            muns[existingIdx].distanceKm = r.distanceKm;
+            muns[existingIdx].isSede = r.isSede;
+            updatedCount++;
+          } else {
+            // Novo
+            muns.push({
+              id: `mun_imp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+              ibgeCode: String(r.ibgeCode).trim(),
+              name: r.name,
+              uf: r.uf,
+              distanceKm: r.distanceKm,
+              isSummoned: true,
+              isSede: r.isSede,
+              inscribedCACS: 2,
+              inscribedGestores: 2,
+              inscribedTotal: 4,
+              presentCACS: 0,
+              presentGestores: 0,
+              presentTotal: 0
+            });
+            insertedCount++;
+          }
+        });
+
+        this.ensurePoloInMunicipalities();
+        await window.db.saveTrainingFull(this.currentTraining, `Importação em massa de ${selectedRows.length} municípios via planilha Excel`);
+        this.renderMunicipalitiesStep();
+
+      } else if (window.db) {
+        // Salvar no Catálogo Geral de Municípios
+        for (const r of selectedRows) {
+          await window.db.put('municipalities', {
+            id: `mun_cat_${r.ibgeCode}`,
+            ibgeCode: String(r.ibgeCode).trim(),
+            name: r.name,
+            uf: r.uf,
+            distanceKm: r.distanceKm,
+            updatedAt: new Date().toISOString()
+          });
+          insertedCount++;
+        }
+        this.renderMunicipalitiesBank();
+      }
+
+      this.closeImportMunicipalitiesModal();
+      this.showToast(`✓ Importação concluída com sucesso! ${insertedCount} cadastrado(s), ${updatedCount} atualizado(s).`, 'success');
+
+    } catch (err) {
+      console.error('Erro ao salvar municípios importados:', err);
+      this.showToast(`Erro ao salvar no banco de dados: ${err.message}`, 'error');
+    }
   }
 
   /* ==========================================================================

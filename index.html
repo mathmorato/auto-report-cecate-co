@@ -571,8 +571,11 @@
                     </h3>
                     <p class="wizard-card-desc">Adicione os municípios convocados da microrregião e suas respectivas distâncias em km até o polo.</p>
                   </div>
-                  <div style="display:flex; gap:0.5rem;">
+                  <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                     <span id="wiz-muns-total-count" class="nav-badge badge-amber" style="align-self:center; font-weight:700;">0 Municípios</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openImportMunicipalitiesModal('wizard')" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Importar municípios em lote via planilha Excel (.xlsx, .csv)">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Importar Planilha
+                    </button>
                     <button class="btn btn-primary btn-sm" onclick="app.openMunicipalityInPageEditor(-1)" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Cadastrar Município
                     </button>
@@ -1032,9 +1035,16 @@
              VIEW: BANCO IBGE (5.570 MUNICÍPIOS)
              ========================================== -->
         <section class="view-section" id="view-municipalities">
-          <div style="margin-bottom: 1.5rem;">
-            <h2>Catálogo Territorial IBGE (5.570 Municípios)</h2>
-            <p style="color:var(--text-secondary); font-size:0.95rem;">Base de dados oficial do IBGE para auto-preenchimento e validação instantânea.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+            <div>
+              <h2 style="margin:0;">Catálogo Territorial IBGE (5.570 Municípios)</h2>
+              <p style="color:var(--text-secondary); font-size:0.95rem; margin:0.25rem 0 0 0;">Base de dados oficial do IBGE para auto-preenchimento e validação instantânea.</p>
+            </div>
+            <div>
+              <button type="button" class="btn btn-primary btn-sm" onclick="app.openImportMunicipalitiesModal('bank')" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Importar Planilha de Municípios
+              </button>
+            </div>
           </div>
 
           <div id="municipalities-bank-list">
@@ -1209,7 +1219,7 @@
 
       </main>
 
-      <!-- Rodapé Único Oficial da Aplicação com Logo CECATE e Versão v.1.8.9 -->
+      <!-- Rodapé Único Oficial da Aplicação com Logo CECATE e Versão v.1.9.0 -->
       <footer class="app-main-footer">
         <div class="footer-left" style="display:flex; align-items:center; gap:0.9rem;">
           <img src="assets/CECATE_Centro-Oeste_Logo_Negativo_Horizontal_Completa-PNG.png" alt="Logo CECATE Centro-Oeste" class="footer-logo footer-logo-dark" style="height:28px; width:auto; object-fit:contain;">
@@ -1219,7 +1229,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.8.9</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.9.0</span>
         </div>
       </footer>
     </div>
@@ -1684,6 +1694,181 @@
         <button class="btn btn-secondary" onclick="app.closeAddMunicipalityModal()">Cancelar</button>
         <button class="btn btn-gradient" onclick="app.confirmAddMunicipalityFromModal()">+ Adicionar à Lista</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: Importar Municípios por Planilha (.xlsx, .csv) -->
+  <div class="modal-backdrop" id="modal-import-municipalities" style="display:none;">
+    <div class="glass-card modal-content" style="max-width:960px; width:95%; margin: 4vh auto; padding:1.75rem; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">
+      
+      <!-- Cabeçalho do Modal -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; flex-shrink:0;">
+        <h3 style="margin:0; display:flex; align-items:center; gap:0.5rem; color:var(--text-primary);">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-blue);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Importar Municípios por Planilha</span>
+        </h3>
+        <button class="btn btn-secondary btn-sm" onclick="app.closeImportMunicipalitiesModal()" title="Fechar">✕</button>
+      </div>
+
+      <!-- Área de Conteúdo Dinâmico -->
+      <div style="flex:1; overflow-y:auto; padding-right:4px;">
+        
+        <!-- Passo 1: Upload da Planilha -->
+        <div id="mun-import-step-upload">
+          <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.25rem;">
+            Selecione uma planilha Excel (<strong>.xlsx</strong>, <strong>.xls</strong>) ou arquivo <strong>.csv</strong> estruturado com as colunas oficiais de identificação municipal.
+          </p>
+
+          <input type="file" id="mun-excel-file-input" accept=".xlsx, .xls, .csv" style="display:none;" onchange="app.onMunicipalitiesSpreadsheetSelected(this.files[0])">
+          
+          <div class="mun-import-dropzone" onclick="document.getElementById('mun-excel-file-input').click()" ondragover="event.preventDefault(); this.classList.add('dragover');" ondragleave="this.classList.remove('dragover');" ondrop="event.preventDefault(); this.classList.remove('dragover'); if(event.dataTransfer.files.length) app.onMunicipalitiesSpreadsheetSelected(event.dataTransfer.files[0]);">
+            <div style="display:flex; justify-content:center; margin-bottom:1rem; color:var(--accent-blue);">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            </div>
+            <h4 style="margin:0 0 0.4rem 0; color:var(--text-primary); font-size:1.1rem; font-weight:700;">Clique ou arraste sua planilha aqui</h4>
+            <p style="margin:0; font-size:0.85rem; color:var(--text-muted);">Suporta formatos .xlsx, .xls e .csv (até 5.570 municípios em lote)</p>
+          </div>
+
+          <!-- Card de Estrutura Esperada -->
+          <div style="margin-top:1.5rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1rem;">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <span>Estrutura Padrão da Planilha de Entrada:</span>
+            </div>
+            <div style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.75rem;">
+              A planilha deve conter 3 colunas principais (com ou sem cabeçalho):
+            </div>
+            <div class="table-responsive-wrapper" style="font-size:0.82rem;">
+              <table class="report-data-table">
+                <thead>
+                  <tr>
+                    <th>Coluna A (Código IBGE)</th>
+                    <th>Coluna B (Nome do Município)</th>
+                    <th>Coluna C (UF)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-mono" style="color:var(--accent-blue-text); font-weight:700;">5101258</td>
+                    <td>Araputanga</td>
+                    <td><span class="nav-badge badge-blue">MT</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-mono" style="color:var(--accent-blue-text); font-weight:700;">5102686</td>
+                    <td>Campos de Júlio</td>
+                    <td><span class="nav-badge badge-blue">MT</span></td>
+                  </tr>
+                  <tr>
+                    <td class="font-mono" style="color:var(--accent-blue-text); font-weight:700;">5103304</td>
+                    <td>Comodoro</td>
+                    <td><span class="nav-badge badge-blue">MT</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Passo 2: Processamento e Cálculo Geodésico -->
+        <div id="mun-import-step-processing" style="display:none; text-align:center; padding:3rem 1rem;">
+          <div style="display:inline-block; width:54px; height:54px; border:4px solid rgba(59,130,246,0.2); border-top-color:#3b82f6; border-radius:50%; animation:spin 0.8s linear infinite; margin-bottom:1.5rem;"></div>
+          <h4 style="margin:0 0 0.5rem 0; font-size:1.15rem; color:var(--text-primary); font-weight:700;">Processando municípios...</h4>
+          <p id="mun-import-processing-status" style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:1.5rem;">Identificando municípios e calculando distâncias ao polo...</p>
+          <div style="max-width:320px; margin:0 auto; height:6px; background:var(--bg-input); border-radius:10px; overflow:hidden;">
+            <div id="mun-import-progressbar" style="width:75%; height:100%; background:linear-gradient(90deg, #3b82f6, #60a5fa); border-radius:10px; transition:width 0.3s ease;"></div>
+          </div>
+        </div>
+
+        <!-- Passo 3: Janela de Conferência e Confirmação -->
+        <div id="mun-import-step-conference" style="display:none;">
+          
+          <!-- Grade de Métricas e Resumo Automático -->
+          <div class="mun-import-stats-grid">
+            <div class="mun-import-stat-card">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Total Encontrado</span>
+              <strong id="mun-stat-total" style="font-size:1.2rem; color:var(--text-primary);">0</strong>
+            </div>
+            <div class="mun-import-stat-card">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Novos</span>
+              <strong id="mun-stat-new" style="font-size:1.2rem; color:var(--accent-emerald-text);">0</strong>
+            </div>
+            <div class="mun-import-stat-card">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Já Cadastrados</span>
+              <strong id="mun-stat-existing" style="font-size:1.2rem; color:var(--accent-blue-text);">0</strong>
+            </div>
+            <div class="mun-import-stat-card">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Atualizações</span>
+              <strong id="mun-stat-update" style="font-size:1.2rem; color:var(--accent-amber-text);">0</strong>
+            </div>
+            <div class="mun-import-stat-card">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Com Erro</span>
+              <strong id="mun-stat-error" style="font-size:1.2rem; color:var(--accent-rose-text);">0</strong>
+            </div>
+            <div class="mun-import-stat-card" style="border-color:rgba(59, 130, 246, 0.4); background:rgba(59, 130, 246, 0.08);">
+              <span style="font-size:0.75rem; color:var(--accent-blue-text); font-weight:600;">Selecionados</span>
+              <strong id="mun-stat-selected" style="font-size:1.2rem; color:var(--accent-blue-text);">0</strong>
+            </div>
+          </div>
+
+          <!-- Alerta de Registros Inválidos / Erros -->
+          <div id="mun-import-warnings-box" style="display:none; margin-bottom:1rem; background:var(--accent-rose-bg); border:1px solid var(--accent-rose-border); border-radius:var(--radius-md); padding:0.85rem 1rem;">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--accent-rose-text); margin-bottom:0.4rem; display:flex; align-items:center; gap:0.4rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span id="mun-import-warnings-title">Registros com atenção necessária</span>
+            </div>
+            <ul id="mun-import-warnings-list" style="margin:0; padding-left:1.2rem; font-size:0.8rem; color:var(--accent-rose-text); max-height:80px; overflow-y:auto;">
+            </ul>
+          </div>
+
+          <!-- Barra de Busca Rápida na Conferência -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; gap:0.75rem; flex-wrap:wrap;">
+            <div style="font-size:0.85rem; color:var(--text-secondary);">
+              Marque os municípios que deseja salvar. Distâncias calculadas com base no polo <strong id="mun-import-polo-name" style="color:var(--text-primary);">-</strong>.
+            </div>
+            <div style="position:relative; min-width:220px;">
+              <input type="text" id="mun-import-search" class="form-control form-control-sm" placeholder="Buscar município ou código..." oninput="app.filterImportMunicipalitiesTable(this.value)">
+            </div>
+          </div>
+
+          <!-- Tabela de Conferência com Scroll -->
+          <div class="mun-table-preview-scroll">
+            <table class="report-data-table" style="margin:0;">
+              <thead>
+                <tr>
+                  <th style="width:40px; text-align:center;">
+                    <input type="checkbox" id="mun-import-master-check" checked onchange="app.toggleAllImportMunicipalities(this.checked)" title="Selecionar/Desmarcar todos">
+                  </th>
+                  <th style="width:120px; text-align:center;">Código IBGE</th>
+                  <th>Nome do Município</th>
+                  <th style="width:70px; text-align:center;">UF</th>
+                  <th style="width:140px; text-align:right;">Distância (km)</th>
+                  <th style="width:150px; text-align:center;">Situação</th>
+                </tr>
+              </thead>
+              <tbody id="mun-import-table-tbody">
+                <!-- Populado dinamicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rodapé de Ações do Modal -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1.25rem; border-top:1px solid var(--border-color); padding-top:1rem; flex-shrink:0;">
+        <div>
+          <button type="button" class="btn btn-secondary btn-sm" id="mun-import-back-btn" onclick="app.backToSpreadsheetUploadStep()" style="display:none; align-items:center; gap:0.35rem;">
+            ← Voltar para Upload
+          </button>
+        </div>
+        <div style="display:flex; gap:0.6rem;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeImportMunicipalitiesModal()">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-sm" id="mun-import-confirm-btn" onclick="app.confirmImportMunicipalities()" style="display:none; font-weight:700; align-items:center; gap:0.35rem;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span id="mun-import-confirm-btn-text">Importar Selecionados</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
