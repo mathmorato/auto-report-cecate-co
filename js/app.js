@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.0.5
+ * Versão: v.1.0.6
  */
 
 class AutoReportApp {
@@ -1189,7 +1189,7 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     EXCLUSÃO DE CAPACITAÇÕES (MODAL WEB MODERNO)
+     EXCLUSÃO DE CAPACITAÇÕES (MODAL WEB MODERNO COM BARRA DE CARREGAMENTO)
      ========================================================================== */
   async openConfirmDeleteModal(trainingId) {
     if (!window.db) return;
@@ -1221,6 +1221,26 @@ class AutoReportApp {
       `;
     }
 
+    // Resetar barra de progresso e reabilitar botões
+    const progressContainer = document.getElementById('modal-delete-progress-container');
+    const progressBar = document.getElementById('modal-delete-progress-bar');
+    const progressPercent = document.getElementById('modal-delete-progress-percent');
+    const progressStatus = document.getElementById('modal-delete-progress-status');
+    const confirmBtn = document.getElementById('modal-delete-confirm-btn');
+    const cancelBtn = document.getElementById('modal-delete-cancel-btn');
+    const closeBtn = document.getElementById('modal-delete-close-btn');
+
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressPercent) progressPercent.textContent = '0%';
+    if (progressStatus) progressStatus.innerHTML = '<span class="status-dot" style="background:#ef4444;"></span> Limpando registros...';
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = 'Sim, Excluir Relatório';
+    }
+    if (cancelBtn) cancelBtn.disabled = false;
+    if (closeBtn) closeBtn.disabled = false;
+
     const modal = document.getElementById('modal-confirm-delete');
     if (modal) {
       modal.style.display = 'flex';
@@ -1248,9 +1268,52 @@ class AutoReportApp {
     const training = await window.db.get('trainings', idToDelete);
     const num = training ? training.number : '';
 
+    const progressContainer = document.getElementById('modal-delete-progress-container');
+    const progressBar = document.getElementById('modal-delete-progress-bar');
+    const progressPercent = document.getElementById('modal-delete-progress-percent');
+    const progressStatus = document.getElementById('modal-delete-progress-status');
+    const confirmBtn = document.getElementById('modal-delete-confirm-btn');
+    const cancelBtn = document.getElementById('modal-delete-cancel-btn');
+    const closeBtn = document.getElementById('modal-delete-close-btn');
+
+    // Desabilitar botões e exibir barra
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '⏳ Excluindo...';
+    }
+    if (cancelBtn) cancelBtn.disabled = true;
+    if (closeBtn) closeBtn.disabled = true;
+    if (progressContainer) progressContainer.style.display = 'block';
+
+    const setProgress = (pct, text) => {
+      if (progressBar) progressBar.style.width = `${pct}%`;
+      if (progressPercent) progressPercent.textContent = `${pct}%`;
+      if (progressStatus) progressStatus.innerHTML = `<span class="status-dot" style="background:#ef4444;"></span> ${text}`;
+    };
+
     try {
-      this.closeConfirmDeleteModal();
+      // Fase 1: Limpeza de participantes e presenças
+      setProgress(25, 'Removendo participantes e listas de presença...');
+      await new Promise(r => setTimeout(r, 200));
+
+      // Fase 2: Limpeza de avaliações
+      setProgress(55, 'Excluindo respostas avaliativas e notas...');
+      await new Promise(r => setTimeout(r, 200));
+
+      // Fase 3: Limpeza de mídias e anexos
+      setProgress(80, 'Apagando fotografias e apêndices...');
+      await new Promise(r => setTimeout(r, 200));
+
+      // Fase 4: Exclusão no banco IndexedDB
+      setProgress(95, 'Limpando dados mestres no banco local...');
       await window.db.deleteTraining(idToDelete);
+      await new Promise(r => setTimeout(r, 150));
+
+      // Fase 5: Concluído
+      setProgress(100, '✓ Relatório excluído com sucesso!');
+      await new Promise(r => setTimeout(r, 300));
+
+      this.closeConfirmDeleteModal();
       this.showToast(`✓ Capacitação Nº ${num} excluída com sucesso!`, 'success');
       await this.refreshTrainingsList();
 
@@ -1265,6 +1328,12 @@ class AutoReportApp {
     } catch (err) {
       console.error('Erro ao excluir capacitação:', err);
       this.showToast(`Erro ao excluir: ${err.message}`, 'error');
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = 'Sim, Excluir Relatório';
+      }
+      if (cancelBtn) cancelBtn.disabled = false;
+      if (closeBtn) closeBtn.disabled = false;
     }
   }
 

@@ -84,7 +84,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.0.5</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.0.6</span> • CECATE</div>
       </div>
     </aside>
 
@@ -739,13 +739,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.0.5 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.0.6 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.0.5</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.0.6</span>
         </div>
       </footer>
     </div>
@@ -825,11 +825,11 @@
             <div style="font-size:0.78rem; color:var(--text-muted);">Confirmação de segurança</div>
           </div>
         </div>
-        <button class="modal-close-btn" onclick="app.closeConfirmDeleteModal()" title="Fechar">✕</button>
+        <button class="modal-close-btn" id="modal-delete-close-btn" onclick="app.closeConfirmDeleteModal()" title="Fechar">✕</button>
       </div>
 
       <div class="modal-body">
-        <p style="color:var(--text-secondary); font-size:0.92rem; line-height:1.5; margin-bottom:1.25rem;">
+        <p style="color:var(--text-secondary); font-size:0.92rem; line-height:1.5; margin-bottom:1.25rem;" id="modal-delete-warning-text">
           Tem certeza de que deseja excluir permanentemente o seguinte relatório de capacitação?
         </p>
 
@@ -843,15 +843,28 @@
           </div>
         </div>
 
-        <div class="audit-item critical" style="margin:0; padding:0.9rem 1rem; border-radius:var(--radius-md);">
+        <div class="audit-item critical" id="modal-delete-alert-box" style="margin:0; padding:0.9rem 1rem; border-radius:var(--radius-md);">
           <div style="font-size:0.83rem; line-height:1.45;">
             <strong>⚠️ Atenção - Ação Irreversível:</strong> Todos os participantes inscritos, registros de presença, avaliações, fotografias e apêndices vinculados a este evento serão excluídos do banco de dados local.
+          </div>
+        </div>
+
+        <!-- Barra de Carregamento da Exclusão -->
+        <div id="modal-delete-progress-container" style="display:none; margin-top:1.25rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.82rem; font-weight:600; color:var(--text-secondary); margin-bottom:0.45rem;">
+            <span id="modal-delete-progress-status" style="display:flex; align-items:center; gap:0.4rem;">
+              <span class="status-dot" style="background:#ef4444;"></span> Limpando registros...
+            </span>
+            <span id="modal-delete-progress-percent" style="color:#ef4444; font-family:monospace;">0%</span>
+          </div>
+          <div class="delete-progress-track">
+            <div class="delete-progress-fill" id="modal-delete-progress-bar" style="width:0%;"></div>
           </div>
         </div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="app.closeConfirmDeleteModal()">Cancelar</button>
+        <button class="btn btn-secondary" id="modal-delete-cancel-btn" onclick="app.closeConfirmDeleteModal()">Cancelar</button>
         <button class="btn btn-danger" id="modal-delete-confirm-btn" onclick="app.executeDeleteTrainingConfirmed()">
           Sim, Excluir Relatório
         </button>
