@@ -94,7 +94,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.4.8</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.4.9</span> • CECATE</div>
       </div>
     </aside>
 
@@ -366,15 +366,9 @@
                   </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">Público-Alvo:</label>
-                    <input type="text" id="wiz-train-target" class="form-control" placeholder="Ex: Gestores Municipais e Conselheiros CACS-FUNDEB">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Previsão de Participantes:</label>
-                    <input type="number" id="wiz-train-expected" class="form-control" placeholder="Ex: 88 (calculado automaticamente após convocação)">
-                  </div>
+                <div class="form-group">
+                  <label class="form-label">Público-Alvo:</label>
+                  <input type="text" id="wiz-train-target" class="form-control" placeholder="Ex: Gestores Municipais e Conselheiros CACS-FUNDEB">
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
@@ -509,6 +503,22 @@
                   <div style="display:flex; gap:0.5rem;">
                     <span id="wiz-muns-total-count" class="nav-badge" style="align-self:center;">0 Municípios</span>
                     <button class="btn btn-secondary btn-sm" onclick="app.addMunicipalityPrompt()">+ Cadastrar Município</button>
+                  </div>
+                </div>
+
+                <!-- Card de Previsão de Participantes Baseado nos Municípios Convocados (4x Número de Municípios) -->
+                <div style="background:var(--bg-input); border:1px solid var(--border-color); border-left:4px solid var(--accent-primary); border-radius:var(--radius-md); padding:1rem; margin-top:1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                  <div>
+                    <label class="form-label" style="margin-bottom:0.2rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
+                      👥 Previsão de Participantes:
+                    </label>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">
+                      Calculado automaticamente com base na quantidade de municípios convocados (<strong>4 participantes × número de municípios</strong>).
+                    </div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <input type="number" id="wiz-train-expected" class="form-control" style="width:120px; font-weight:700; text-align:center; font-size:1.05rem;" placeholder="Ex: 50" onchange="app.saveCurrentStepData()">
+                    <span style="font-size:0.85rem; color:var(--text-secondary); font-weight:600;">participantes</span>
                   </div>
                 </div>
 
@@ -976,13 +986,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.4.8 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.4.9 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.4.8</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.4.9</span>
         </div>
       </footer>
     </div>

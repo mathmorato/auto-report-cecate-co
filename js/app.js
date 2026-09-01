@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.4.8
+ * Versão: v.1.4.9
  */
 
 class AutoReportApp {
@@ -1626,8 +1626,19 @@ class AutoReportApp {
     const poloName = this.currentTraining.polo || 'Polo';
     const poloUf = this.currentTraining.uf || 'MT';
 
+    // Recalcular Previsão de Participantes (4 × quantidade de municípios convocados)
+    const autoExpected = muns.length * 4;
+    if (autoExpected > 0 || !this.currentTraining.expectedParticipants) {
+      this.currentTraining.expectedParticipants = autoExpected;
+    }
+
     const countEl = document.getElementById('wiz-muns-total-count');
     if (countEl) countEl.textContent = `${muns.length} Municípios Cadastrados`;
+
+    const expectedInput = document.getElementById('wiz-train-expected');
+    if (expectedInput) {
+      expectedInput.value = this.currentTraining.expectedParticipants || (muns.length * 4) || '';
+    }
 
     if (muns.length === 0) {
       container.innerHTML = `
