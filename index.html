@@ -85,7 +85,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.7.4</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.7.5</span> • CECATE</div>
       </div>
     </aside>
 
@@ -175,23 +175,39 @@
 
           <!-- Lista de Capacitações no Dashboard -->
           <div style="margin-top: 2rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:1rem;">
-              <div>
-                <h3 style="margin-bottom:0.25rem;">Banco de Capacitações & Relatórios</h3>
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                  <button class="btn btn-sm btn-secondary filter-tab-btn active" id="filter-dash-all" onclick="app.setDashboardFilter('all')">Todos</button>
-                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-hist" onclick="app.setDashboardFilter('historico')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="6" x2="15" y2="6"></line><line x1="9" y1="10" x2="15" y2="10"></line></svg> Histórico (Nº 6 a 14)
+            <div style="margin-bottom:1.5rem;">
+              <h3 style="margin-bottom:1rem;">Banco de Capacitações & Relatórios</h3>
+
+              <!-- Sub-abas de Filtro do Banco de Capacitações (Redesign estilo Equipe Técnica) -->
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; flex-wrap:wrap; gap:0.75rem;">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                  <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:var(--radius-sm); background:rgba(59, 130, 246, 0.12); color:#60a5fa; border:1px solid rgba(59, 130, 246, 0.25);">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                  </span>
+                  <span style="font-size:0.85rem; font-weight:600; color:var(--text-secondary);">Filtrar por Categoria:</span>
+                </div>
+
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                  <button type="button" class="btn btn-sm btn-secondary filter-tab-btn active" id="filter-dash-all" onclick="app.setDashboardFilter('all')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    Todos <span class="nav-badge" style="background:rgba(255,255,255,0.1); padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-all">0</span>
                   </button>
-                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-prog" onclick="app.setDashboardFilter('in_progress')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Em Andamento
+                  <button type="button" class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-hist" onclick="app.setDashboardFilter('historico')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    Histórico (Nº 6 a 14) <span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#fbbf24; padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-hist">0</span>
                   </button>
-                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-comp" onclick="app.setDashboardFilter('completed')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluídas
+                  <button type="button" class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-prog" onclick="app.setDashboardFilter('in_progress')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    Em Andamento <span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:#60a5fa; padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-prog">0</span>
                   </button>
+                  <button type="button" class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-comp" onclick="app.setDashboardFilter('completed')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Concluídas <span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#34d399; padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-comp">0</span>
+                  </button>
+
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.navigateTo('trainings')" style="margin-left:0.5rem;">Ver Todas as Capacitações</button>
                 </div>
               </div>
-              <button class="btn btn-secondary btn-sm" onclick="app.navigateTo('trainings')">Ver Todas as Capacitações</button>
             </div>
             <div id="dashboard-trainings-list">
               <!-- Renderizado dinamicamente pelo app.js -->
@@ -1100,13 +1116,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.7.4 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.7.5 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.7.4</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.7.5</span>
         </div>
       </footer>
     </div>

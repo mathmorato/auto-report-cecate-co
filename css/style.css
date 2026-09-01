@@ -1920,8 +1920,8 @@ textarea.form-control {
   transform: scale(1.01);
 }
 
-/* Styling for Institution Filter Sub-tabs */
-.team-tab-btn, .master-team-tab-btn {
+/* Styling for Institution and Category Filter Sub-tabs */
+.team-tab-btn, .master-team-tab-btn, .filter-tab-btn {
   border-radius: var(--radius-md) !important;
   font-size: 0.82rem !important;
   font-weight: 600 !important;
@@ -1932,13 +1932,13 @@ textarea.form-control {
   color: var(--text-secondary) !important;
 }
 
-.team-tab-btn:hover, .master-team-tab-btn:hover {
+.team-tab-btn:hover, .master-team-tab-btn:hover, .filter-tab-btn:hover {
   border-color: rgba(59, 130, 246, 0.4) !important;
   color: var(--text-primary) !important;
   transform: translateY(-1px);
 }
 
-.team-tab-btn.active, .master-team-tab-btn.active {
+.team-tab-btn.active, .master-team-tab-btn.active, .filter-tab-btn.active {
   background: rgba(59, 130, 246, 0.15) !important;
   border-color: rgba(59, 130, 246, 0.5) !important;
   color: #60a5fa !important;

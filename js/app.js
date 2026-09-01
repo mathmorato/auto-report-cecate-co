@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.7.4
+ * Versão: v.1.7.5
  */
 
 window.icons = {
@@ -190,6 +190,21 @@ class AutoReportApp {
 
     const elMunicipalities = document.getElementById('dash-total-municipalities');
     if (elMunicipalities) elMunicipalities.textContent = totalMuns;
+
+    // Atualizar badged counters das sub-abas de filtro
+    const cntAll = totalTrainings;
+    const cntHist = this.trainingList.filter(t => t.status === 'historico' || t.isHistorical).length;
+    const cntProg = this.trainingList.filter(t => t.status === 'in_progress' && !t.isHistorical).length;
+    const cntComp = this.trainingList.filter(t => (t.status === 'completed' || t.progressPercent === 100) && !t.isHistorical).length;
+
+    const elCntAll = document.getElementById('dash-count-all');
+    if (elCntAll) elCntAll.textContent = cntAll;
+    const elCntHist = document.getElementById('dash-count-hist');
+    if (elCntHist) elCntHist.textContent = cntHist;
+    const elCntProg = document.getElementById('dash-count-prog');
+    if (elCntProg) elCntProg.textContent = cntProg;
+    const elCntComp = document.getElementById('dash-count-comp');
+    if (elCntComp) elCntComp.textContent = cntComp;
 
     // Renderizar tabela de capacitações no dashboard respeitando filtro
     const container = document.getElementById('dashboard-trainings-list');
