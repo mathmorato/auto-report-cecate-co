@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.6.9
+ * Versão: v.1.7.0
  */
 
 window.icons = {
@@ -3004,7 +3004,9 @@ class AutoReportApp {
     // Detectar automaticamente o tipo de notificação se não especificado
     if (type === 'info') {
       const msgLower = message.toLowerCase();
-      if (message.includes('⚠️') || msgLower.includes('por favor') || msgLower.includes('atenção') || msgLower.includes('preencha') || msgLower.includes('obrigatório')) {
+      if (message.includes('🗑️') || msgLower.includes('removid') || msgLower.includes('excluíd') || msgLower.includes('excluid') || msgLower.includes('deletad') || msgLower.includes('desanexad')) {
+        type = 'delete';
+      } else if (message.includes('⚠️') || msgLower.includes('por favor') || msgLower.includes('atenção') || msgLower.includes('preencha') || msgLower.includes('obrigatório')) {
         type = 'warning';
       } else if (message.includes('✓') || message.includes('✨') || message.includes('💾') || msgLower.includes('sucesso')) {
         type = 'success';
@@ -3014,6 +3016,7 @@ class AutoReportApp {
     }
 
     const toastIcons = {
+      delete: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:8px; color:#ef4444; flex-shrink:0;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`,
       warning: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:8px; color:#f59e0b; flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
       success: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:8px; color:#10b981; flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
       error: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:8px; color:#ef4444; flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
@@ -3025,7 +3028,8 @@ class AutoReportApp {
     toast.style.display = 'flex';
     toast.style.alignItems = 'center';
 
-    if (type === 'success') toast.style.borderLeft = '4px solid var(--accent-success)';
+    if (type === 'delete') toast.style.borderLeft = '4px solid var(--accent-danger)';
+    else if (type === 'success') toast.style.borderLeft = '4px solid var(--accent-success)';
     else if (type === 'error') toast.style.borderLeft = '4px solid var(--accent-danger)';
     else if (type === 'warning') toast.style.borderLeft = '4px solid var(--accent-warning)';
     else toast.style.borderLeft = '4px solid var(--accent-secondary)';
