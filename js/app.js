@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.5.9
+ * Versão: v.1.6.0
  */
 
 window.icons = {
@@ -2829,6 +2829,22 @@ class AutoReportApp {
     const editActions = document.getElementById('settings-edit-mode-actions');
     if (viewActions) viewActions.style.display = isLocked ? 'block' : 'none';
     if (editActions) editActions.style.display = isLocked ? 'none' : 'flex';
+  }
+
+  openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => { modal.style.display = 'none'; }, 200);
+    }
   }
 
   requestEditGlobalSettings() {
