@@ -85,7 +85,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.7.7</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.7.8</span> • CECATE</div>
       </div>
     </aside>
 
@@ -189,12 +189,7 @@
 
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                   <button type="button" class="btn btn-sm btn-secondary filter-tab-btn active" id="filter-dash-all" onclick="app.setDashboardFilter('all')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                    Todos <span class="nav-badge" style="background:rgba(255,255,255,0.1); padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-all">0</span>
-                  </button>
-                  <button type="button" class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-hist" onclick="app.setDashboardFilter('historico')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                    Histórico (Nº 6 a 14) <span class="nav-badge" style="background:var(--accent-amber-bg); color:var(--accent-amber-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-hist">0</span>
+                    Todos <span class="nav-badge" id="dash-count-all">0</span>
                   </button>
                   <button type="button" class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-prog" onclick="app.setDashboardFilter('in_progress')" style="display:inline-flex; align-items:center; gap:0.35rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -461,8 +456,7 @@
 
                   <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                     <button type="button" class="btn btn-sm btn-secondary team-tab-btn active" id="team-tab-all" onclick="app.setTeamFilter('all')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                      Todos <span class="nav-badge" style="background:rgba(255,255,255,0.1); padding:0.1rem 0.4rem; font-size:0.75rem;" id="team-count-all">0</span>
+                      Todos <span class="nav-badge" id="team-count-all">0</span>
                     </button>
                     <button type="button" class="btn btn-sm btn-secondary team-tab-btn" id="team-tab-ufg" onclick="app.setTeamFilter('UFG')" style="display:inline-flex; align-items:center; gap:0.35rem;">
                       UFG - Coordenação & Técnica <span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#fbbf24; padding:0.1rem 0.4rem; font-size:0.75rem;" id="team-count-ufg">0</span>
@@ -977,8 +971,7 @@
 
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
               <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn active" id="master-team-tab-all" onclick="app.setMasterTeamFilter('all')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                Todos <span class="nav-badge" style="background:rgba(255,255,255,0.1); padding:0.1rem 0.4rem; font-size:0.75rem;" id="master-team-count-all">0</span>
+                Todos <span class="nav-badge" id="master-team-count-all">0</span>
               </button>
               <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn" id="master-team-tab-ufg" onclick="app.setMasterTeamFilter('UFG')" style="display:inline-flex; align-items:center; gap:0.35rem;">
                 UFG - Coordenação & Técnica <span class="nav-badge" style="background:var(--accent-amber-bg); color:var(--accent-amber-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="master-team-count-ufg">0</span>
@@ -1117,13 +1110,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.7.7 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.7.8 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.7.7</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.7.8</span>
         </div>
       </footer>
     </div>

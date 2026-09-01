@@ -1994,6 +1994,40 @@ textarea.form-control {
   box-shadow: 0 0 12px var(--accent-blue-bg) !important;
 }
 
+/* Styling for Counter Badge inside Filter Sub-tabs */
+.filter-tab-btn .nav-badge,
+.team-tab-btn .nav-badge,
+.master-team-tab-btn .nav-badge {
+  background: rgba(148, 163, 184, 0.2) !important;
+  color: var(--text-secondary) !important;
+  padding: 0.1rem 0.45rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  transition: all 0.2s ease !important;
+}
+
+.filter-tab-btn.active .nav-badge,
+.team-tab-btn.active .nav-badge,
+.master-team-tab-btn.active .nav-badge {
+  background: var(--accent-blue-border) !important;
+  color: #ffffff !important;
+}
+
+body.light-theme .filter-tab-btn .nav-badge,
+body.light-theme .team-tab-btn .nav-badge,
+body.light-theme .master-team-tab-btn .nav-badge {
+  background: rgba(100, 116, 139, 0.15) !important;
+  color: #334155 !important;
+}
+
+body.light-theme .filter-tab-btn.active .nav-badge,
+body.light-theme .team-tab-btn.active .nav-badge,
+body.light-theme .master-team-tab-btn.active .nav-badge {
+  background: #1e40af !important;      /* Deep Dark Blue for 12:1 contrast ratio */
+  color: #ffffff !important;
+}
+
 /* Badges & Status Indicators (High Contrast Theme-Aware) */
 .badge-status-amber, .badge-amber {
   background: var(--accent-amber-bg) !important;
