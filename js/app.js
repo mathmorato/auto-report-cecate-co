@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.5.1
+ * Versão: v.1.5.2
  */
 
 class AutoReportApp {
@@ -233,12 +233,6 @@ class AutoReportApp {
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                   <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="${isHist ? 'Visualizar dados' : 'Continuar edição'}">
                     ${isHist ? '🔍 Consultar' : '✏️ Continuar'}
-                  </button>
-                  <button class="btn btn-secondary btn-sm" onclick="app.openCloneModal('${t.id}')" title="Usar esta capacitação como modelo estrutural para nova">
-                    📋 Usar como Modelo
-                  </button>
-                  <button class="btn btn-gradient btn-sm" onclick="app.directDownloadDocx('${t.id}')" title="Gerar Relatório .docx Oficial">
-                    ⚡ Gerar .docx
                   </button>
                   ${isHist
                     ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b;" title="Registro do Histórico Protegido - Exclusão desabilitada">🔒 Protegido</span>`
@@ -2704,12 +2698,6 @@ class AutoReportApp {
                     <div style="display:flex; gap:0.4rem; justify-content:center; align-items:center;">
                       <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="${isHist ? 'Consultar' : 'Editar'}">
                         ${isHist ? '🔍 Consultar' : '✏️ Editar'}
-                      </button>
-                      <button class="btn btn-secondary btn-sm" onclick="app.openCloneModal('${t.id}')" title="Usar como modelo">
-                        📋 Modelo
-                      </button>
-                      <button class="btn btn-gradient btn-sm" onclick="app.directDownloadDocx('${t.id}')" title="Gerar .docx">
-                        ⚡ .docx
                       </button>
                       ${isHist
                         ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b;" title="Histórico protegido - exclusão desabilitada">🔒</span>`
