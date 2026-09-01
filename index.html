@@ -94,7 +94,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.4.3</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.4.4</span> • CECATE</div>
       </div>
     </aside>
 
@@ -424,6 +424,70 @@
                   <button type="button" class="btn btn-sm btn-secondary team-tab-btn" id="team-tab-fnde" onclick="app.setTeamFilter('FNDE')">
                     🏢 FNDE - Coordenações (<span id="team-count-fnde">0</span>)
                   </button>
+                </div>
+
+                <!-- Form Card Integrado In-Page para Etapa 2 (Sem Pop-up) -->
+                <div id="wizard-team-editor-card" style="display:none; margin-bottom:1.5rem; background:rgba(15, 23, 42, 0.95); border:1px solid rgba(245, 158, 11, 0.4); border-radius:var(--radius-lg); padding:1.25rem; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+                    <h4 style="margin:0; color:#fbbf24; display:flex; align-items:center; gap:0.5rem;">
+                      <span>👤</span> <span id="wizard-team-editor-title-text">Cadastrar Novo Integrante</span>
+                    </h4>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('wizard')">✕ Cancelar</button>
+                  </div>
+
+                  <input type="hidden" id="wizard-team-edit-index" value="-1">
+
+                  <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap:1rem; margin-bottom:1rem;">
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Pronome de Tratamento:</label>
+                      <select id="wizard-team-pronoun-select" class="form-control form-control-sm" onchange="app.updateInPagePreview('wizard')">
+                        <!-- OFFICIAL_PRONOUNS -->
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Titulação Acadêmica:</label>
+                      <select id="wizard-team-title-select" class="form-control form-control-sm" onchange="app.updateInPagePreview('wizard')">
+                        <!-- OFFICIAL_TITLES -->
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Nome do Integrante *:</label>
+                      <input type="text" id="wizard-team-name-input" class="form-control form-control-sm" placeholder="Ex: Willer Luciano Carvalho" oninput="app.updateInPagePreview('wizard')">
+                    </div>
+                  </div>
+
+                  <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem; margin-bottom:1rem;">
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Instituição *:</label>
+                      <select id="wizard-team-institution-select" class="form-control form-control-sm" onchange="app.onInPageInstitutionChange('wizard', this.value)">
+                        <option value="UFG">UFG (Universidade)</option>
+                        <option value="FNDE">FNDE (Governo Federal)</option>
+                        <option value="MEC">MEC (Ministério da Educação)</option>
+                        <option value="Outro">Outra Instituição</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Cargo / Função Oficial *:</label>
+                      <select id="wizard-team-role-select" class="form-control form-control-sm" onchange="app.onInPageRoleChange('wizard', this.value)">
+                        <!-- OFFICIAL_ROLES -->
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group" id="wizard-team-custom-role-group" style="display:none; margin-bottom:1rem;">
+                    <label class="form-label" style="font-size:0.8rem;">Nome do Cargo Personalizado:</label>
+                    <input type="text" id="wizard-team-custom-role-input" class="form-control form-control-sm" placeholder="Digite o título do cargo">
+                  </div>
+
+                  <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.65rem 1rem; border-radius:var(--radius-md); border:1px solid var(--border-color); flex-wrap:wrap; gap:0.5rem;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);">
+                      Assinatura no Relatório: <strong id="wizard-team-preview-text" style="color:#fbbf24; font-size:0.9rem;">-</strong>
+                    </div>
+                    <div style="display:flex; gap:0.5rem;">
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('wizard')">Cancelar</button>
+                      <button type="button" class="btn btn-primary btn-sm" onclick="app.saveTeamMemberInPage('wizard')" style="background:var(--accent-primary); border-color:var(--accent-primary); font-weight:700;">💾 Salvar Integrante</button>
+                    </div>
+                  </div>
                 </div>
 
                 <div id="wizard-team-list-container">
@@ -811,6 +875,70 @@
             <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn" id="master-team-tab-fnde" onclick="app.setMasterTeamFilter('FNDE')">
               🏢 FNDE - Coordenações (<span id="master-team-count-fnde">0</span>)
             </button>
+          </div>
+
+          <!-- Form Card Integrado In-Page para Catálogo Master (Sem Pop-up) -->
+          <div id="master-team-editor-card" style="display:none; margin-bottom:1.5rem; background:rgba(15, 23, 42, 0.95); border:1px solid rgba(245, 158, 11, 0.4); border-radius:var(--radius-lg); padding:1.25rem; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+              <h4 style="margin:0; color:#fbbf24; display:flex; align-items:center; gap:0.5rem;">
+                <span>👤</span> <span id="master-team-editor-title-text">Cadastrar Novo Integrante</span>
+              </h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('master')">✕ Cancelar</button>
+            </div>
+
+            <input type="hidden" id="master-team-edit-index" value="-1">
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap:1rem; margin-bottom:1rem;">
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.8rem;">Pronome de Tratamento:</label>
+                <select id="master-team-pronoun-select" class="form-control form-control-sm" onchange="app.updateInPagePreview('master')">
+                  <!-- OFFICIAL_PRONOUNS -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.8rem;">Titulação Acadêmica:</label>
+                <select id="master-team-title-select" class="form-control form-control-sm" onchange="app.updateInPagePreview('master')">
+                  <!-- OFFICIAL_TITLES -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.8rem;">Nome do Integrante *:</label>
+                <input type="text" id="master-team-name-input" class="form-control form-control-sm" placeholder="Ex: Willer Luciano Carvalho" oninput="app.updateInPagePreview('master')">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem; margin-bottom:1rem;">
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.8rem;">Instituição *:</label>
+                <select id="master-team-institution-select" class="form-control form-control-sm" onchange="app.onInPageInstitutionChange('master', this.value)">
+                  <option value="UFG">UFG (Universidade)</option>
+                  <option value="FNDE">FNDE (Governo Federal)</option>
+                  <option value="MEC">MEC (Ministério da Educação)</option>
+                  <option value="Outro">Outra Instituição</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.8rem;">Cargo / Função Oficial *:</label>
+                <select id="master-team-role-select" class="form-control form-control-sm" onchange="app.onInPageRoleChange('master', this.value)">
+                  <!-- OFFICIAL_ROLES -->
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" id="master-team-custom-role-group" style="display:none; margin-bottom:1rem;">
+              <label class="form-label" style="font-size:0.8rem;">Nome do Cargo Personalizado:</label>
+              <input type="text" id="master-team-custom-role-input" class="form-control form-control-sm" placeholder="Digite o título do cargo">
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.65rem 1rem; border-radius:var(--radius-md); border:1px solid var(--border-color); flex-wrap:wrap; gap:0.5rem;">
+              <div style="font-size:0.8rem; color:var(--text-muted);">
+                Assinatura no Relatório: <strong id="master-team-preview-text" style="color:#fbbf24; font-size:0.9rem;">-</strong>
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('master')">Cancelar</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="app.saveTeamMemberInPage('master')" style="background:var(--accent-primary); border-color:var(--accent-primary); font-weight:700;">💾 Salvar Integrante</button>
+              </div>
+            </div>
           </div>
 
           <div class="card p-0" id="master-team-list-container">
@@ -1250,83 +1378,6 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="app.closeAddMunicipalityModal()">Cancelar</button>
         <button class="btn btn-gradient" onclick="app.confirmAddMunicipalityFromModal()">+ Adicionar à Lista</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE CADASTRO E EDIÇÃO DE INTEGRANTE DA EQUIPE (UFG / FNDE) -->
-  <div class="modal-backdrop" id="modal-team-member-editor" style="display:none; z-index:11000;">
-    <div class="modal-content" style="max-width: 580px;">
-      <div class="modal-header">
-        <div style="display:flex; align-items:center; gap:0.75rem;">
-          <div style="width:40px; height:40px; border-radius:var(--radius-md); background:rgba(99, 102, 241, 0.15); color:var(--accent-secondary); display:flex; align-items:center; justify-content:center; font-size:1.25rem;">
-            👤
-          </div>
-          <div>
-            <h3 class="modal-title" id="team-modal-title-text">Cadastrar Integrante da Equipe</h3>
-            <p class="modal-subtitle">Configure o pronome de tratamento, titulação acadêmica, cargo e dados institucionais</p>
-          </div>
-        </div>
-        <button class="modal-close-btn" onclick="app.closeTeamMemberEditor()">✕</button>
-      </div>
-
-      <div class="modal-body" style="padding-top:1.25rem;">
-        <input type="hidden" id="team-modal-context" value="wizard">
-        <input type="hidden" id="team-modal-index" value="-1">
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
-          <div class="form-group">
-            <label class="form-label">Pronome de Tratamento:</label>
-            <select id="team-modal-pronoun-select" class="form-control" onchange="app.updateTeamModalPreview()">
-              <!-- Populado com OFFICIAL_PRONOUNS -->
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Titulação Acadêmica:</label>
-            <select id="team-modal-title-select" class="form-control" onchange="app.updateTeamModalPreview()">
-              <!-- Populado com OFFICIAL_TITLES -->
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group" style="margin-bottom:1rem;">
-          <label class="form-label">Nome do Integrante *:</label>
-          <input type="text" id="team-modal-name-input" class="form-control" placeholder="Ex: Willer Luciano Carvalho" oninput="app.updateTeamModalPreview()">
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem; margin-bottom:1rem;">
-          <div class="form-group">
-            <label class="form-label">Instituição *:</label>
-            <select id="team-modal-institution-select" class="form-control" onchange="app.onTeamModalInstitutionChange(this.value)">
-              <option value="UFG">UFG (Universidade)</option>
-              <option value="FNDE">FNDE (Governo Federal)</option>
-              <option value="MEC">MEC (Ministério da Educação)</option>
-              <option value="Outro">Outra Instituição</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Cargo / Função Oficial *:</label>
-            <select id="team-modal-role-select" class="form-control" onchange="app.onTeamModalRoleChange(this.value)">
-              <!-- Populado com OFFICIAL_ROLES -->
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group" id="team-modal-custom-role-group" style="display:none; margin-bottom:1rem;">
-          <label class="form-label">Nome do Cargo Personalizado:</label>
-          <input type="text" id="team-modal-custom-role-input" class="form-control" placeholder="Digite o título do cargo">
-        </div>
-
-        <!-- Card de Prévia do Nome Formatado Oficial -->
-        <div style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.75rem 1rem;">
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;">Prévia da Assinatura no Relatório:</div>
-          <div id="team-modal-preview-fullname" style="font-weight:700; color:var(--accent-primary); font-size:1rem;">-</div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="app.closeTeamMemberEditor()">Cancelar</button>
-        <button class="btn btn-gradient" onclick="app.confirmSaveTeamMemberFromModal()">💾 Salvar Integrante</button>
       </div>
     </div>
   </div>

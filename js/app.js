@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.4.3
+ * Versão: v.1.4.4
  */
 
 class AutoReportApp {
@@ -1412,12 +1412,222 @@ class AutoReportApp {
     }
   }
 
-  restoreMasterTeamDefault() {
-    if (confirm('Deseja restaurar o Catálogo Oficial Padrão do CECATE/UFG e FNDE?')) {
-      window.saveMasterTeam(window.DEFAULT_OFFICIAL_TEAM.map(m => ({ ...m })));
-      this.renderMasterTeamManagement();
-      this.showToast('🔄 Catálogo geral restaurado para a Equipe Oficial!', 'success');
+  /* ==========================================================================
+     GERENCIAMENTO DE INTEGRANTES IN-PAGE (DIRETO NO SISTEMA, SEM POPUP)
+     ========================================================================== */
+  openTeamMemberInPageEditor(context = 'wizard', index = -1) {
+    const card = document.getElementById(`${context}-team-editor-card`);
+    if (!card) return;
+
+    const editIndexEl = document.getElementById(`${context}-team-edit-index`);
+    if (editIndexEl) editIndexEl.value = index;
+
+    // Popular opções de Pronome
+    const pronounSelect = document.getElementById(`${context}-team-pronoun-select`);
+    if (pronounSelect) {
+      pronounSelect.innerHTML = (window.OFFICIAL_PRONOUNS || []).map(p => `
+        <option value="${p.value}">${p.label}</option>
+      `).join('');
     }
+
+    // Popular opções de Titulação
+    const titleSelect = document.getElementById(`${context}-team-title-select`);
+    if (titleSelect) {
+      titleSelect.innerHTML = (window.OFFICIAL_TITLES || []).map(t => `
+        <option value="${t.value}">${t.label}</option>
+      `).join('');
+    }
+
+    // Popular opções de Cargo
+    const roleSelect = document.getElementById(`${context}-team-role-select`);
+    const roleOptionsUFG = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'UFG');
+    const roleOptionsFNDE = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'FNDE');
+    if (roleSelect) {
+      roleSelect.innerHTML = `
+        <optgroup label="Universidade Federal de Goiás - UFG">
+          ${roleOptionsUFG.map(r => `<option value="${r.value}">${r.value}</option>`).join('')}
+        </optgroup>
+        <optgroup label="Fundo Nacional de Desenvolvimento da Educação - FNDE">
+          ${roleOptionsFNDE.map(r => `<option value="${r.value}">${r.value}</option>`).join('')}
+        </optgroup>
+        <option value="Outro Cargo">Outro Cargo / Função Personalizada...</option>
+      `;
+    }
+
+    const titleTextEl = document.getElementById(`${context}-team-editor-title-text`);
+    const nameInput = document.getElementById(`${context}-team-name-input`);
+    const instSelect = document.getElementById(`${context}-team-institution-select`);
+    const customRoleGroup = document.getElementById(`${context}-team-custom-role-group`);
+    const customRoleInput = document.getElementById(`${context}-team-custom-role-input`);
+
+    if (index >= 0) {
+      // Modo Edição
+      let member = null;
+      if (context === 'wizard') {
+        member = this.currentTraining?.team?.[index];
+      } else {
+        const masterTeam = window.getMasterTeam();
+        member = masterTeam[index];
+      }
+
+      if (member) {
+        if (titleTextEl) titleTextEl.textContent = `Editando Integrante: ${member.name || ''}`;
+        if (pronounSelect) pronounSelect.value = member.pronoun || '';
+        if (titleSelect) titleSelect.value = member.title || '';
+        if (nameInput) nameInput.value = member.name || '';
+        if (instSelect) instSelect.value = member.institution || 'UFG';
+
+        const roleMatch = (window.OFFICIAL_ROLES || []).some(r => r.value === member.role);
+        if (roleSelect) {
+          if (roleMatch) {
+            roleSelect.value = member.role;
+            if (customRoleGroup) customRoleGroup.style.display = 'none';
+          } else {
+            roleSelect.value = 'Outro Cargo';
+            if (customRoleGroup) customRoleGroup.style.display = 'block';
+            if (customRoleInput) customRoleInput.value = member.role || '';
+          }
+        }
+      }
+    } else {
+      // Modo Adição
+      if (titleTextEl) titleTextEl.textContent = `Cadastrar Novo Integrante da Equipe`;
+      if (pronounSelect) pronounSelect.value = 'Prof.';
+      if (titleSelect) titleSelect.value = 'Dr.';
+      if (nameInput) nameInput.value = '';
+      if (instSelect) instSelect.value = 'UFG';
+      if (roleSelect) roleSelect.value = 'Pesquisador e Equipe Técnica';
+      if (customRoleGroup) customRoleGroup.style.display = 'none';
+      if (customRoleInput) customRoleInput.value = '';
+    }
+
+    this.updateInPagePreview(context);
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (nameInput) nameInput.focus();
+  }
+
+  openTeamMemberEditor(context = 'wizard', index = -1) {
+    this.openTeamMemberInPageEditor(context, index);
+  }
+
+  closeTeamMemberInPageEditor(context = 'wizard') {
+    const card = document.getElementById(`${context}-team-editor-card`);
+    if (card) card.style.display = 'none';
+  }
+
+  updateInPagePreview(context = 'wizard') {
+    const pronoun = document.getElementById(`${context}-team-pronoun-select`)?.value || '';
+    const title = document.getElementById(`${context}-team-title-select`)?.value || '';
+    const name = document.getElementById(`${context}-team-name-input`)?.value || '';
+
+    const previewEl = document.getElementById(`${context}-team-preview-text`);
+    if (previewEl) {
+      const full = window.formatTeamMemberFullName({ pronoun, title, name });
+      previewEl.textContent = full || '(Informe o nome do integrante)';
+    }
+  }
+
+  onInPageInstitutionChange(context, val) {
+    const roleSelect = document.getElementById(`${context}-team-role-select`);
+    if (!roleSelect) return;
+
+    if (val === 'FNDE' && !roleSelect.value.includes('FNDE') && !roleSelect.value.includes('CGPTE') && !roleSelect.value.includes('CMATE') && !roleSelect.value.includes('COATE') && !roleSelect.value.includes('COACE')) {
+      roleSelect.value = 'Coordenador-Geral da Política do Transporte Escolar – CGPTE';
+    } else if (val === 'UFG' && (roleSelect.value.includes('CGPTE') || roleSelect.value.includes('CMATE') || roleSelect.value.includes('COATE') || roleSelect.value.includes('COACE'))) {
+      roleSelect.value = 'Pesquisador e Equipe Técnica';
+    }
+  }
+
+  onInPageRoleChange(context, val) {
+    const customRoleGroup = document.getElementById(`${context}-team-custom-role-group`);
+    const instSelect = document.getElementById(`${context}-team-institution-select`);
+
+    if (val === 'Outro Cargo') {
+      if (customRoleGroup) customRoleGroup.style.display = 'block';
+    } else {
+      if (customRoleGroup) customRoleGroup.style.display = 'none';
+      if (val.includes('CGPTE') || val.includes('CMATE') || val.includes('COATE') || val.includes('COACE') || val.includes('FNDE')) {
+        if (instSelect) instSelect.value = 'FNDE';
+      }
+    }
+  }
+
+  saveTeamMemberInPage(context = 'wizard') {
+    const editIndexEl = document.getElementById(`${context}-team-edit-index`);
+    const index = editIndexEl ? parseInt(editIndexEl.value) : -1;
+
+    const pronoun = (document.getElementById(`${context}-team-pronoun-select`)?.value || '').trim();
+    const title = (document.getElementById(`${context}-team-title-select`)?.value || '').trim();
+    const name = (document.getElementById(`${context}-team-name-input`)?.value || '').trim();
+    const institution = (document.getElementById(`${context}-team-institution-select`)?.value || 'UFG').trim();
+    let role = (document.getElementById(`${context}-team-role-select`)?.value || 'Equipe Técnica').trim();
+
+    if (role === 'Outro Cargo') {
+      const custom = (document.getElementById(`${context}-team-custom-role-input`)?.value || '').trim();
+      role = custom || 'Colaborador Técnico';
+    }
+
+    if (!name) {
+      alert('Por favor, informe o nome do integrante.');
+      document.getElementById(`${context}-team-name-input`)?.focus();
+      return;
+    }
+
+    const isFnde = institution === 'FNDE' || role.includes('FNDE') || role.includes('CGPTE') || role.includes('CMATE') || role.includes('COATE') || role.includes('COACE');
+    const isCoord = role.includes('Coordenador do Projeto');
+
+    const memberData = {
+      institutionGroup: isFnde ? 'FNDE' : 'UFG',
+      pronoun,
+      title,
+      name,
+      role,
+      institution,
+      type: isFnde ? 'fnde' : (isCoord ? 'coordenacao' : 'tecnica')
+    };
+    memberData.fullName = window.formatTeamMemberFullName(memberData);
+
+    if (context === 'wizard') {
+      if (!this.currentTraining) return;
+      if (!this.currentTraining.team) this.currentTraining.team = [];
+
+      if (index >= 0 && this.currentTraining.team[index]) {
+        this.currentTraining.team[index] = {
+          ...this.currentTraining.team[index],
+          ...memberData
+        };
+        this.showToast(`✓ Integrante ${memberData.fullName} atualizado com sucesso!`, 'success');
+      } else {
+        memberData.id = `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+        memberData.order = this.currentTraining.team.length;
+        this.currentTraining.team.push(memberData);
+        this.showToast(`👤 ${memberData.fullName} adicionado à equipe da capacitação!`, 'success');
+      }
+
+      this.renderTeamList();
+      this.saveCurrentStepData();
+    } else {
+      // Context: master
+      const masterTeam = window.getMasterTeam();
+      if (index >= 0 && masterTeam[index]) {
+        masterTeam[index] = {
+          ...masterTeam[index],
+          ...memberData
+        };
+        this.showToast(`✓ Integrante ${memberData.fullName} atualizado no catálogo geral!`, 'success');
+      } else {
+        memberData.id = `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+        memberData.order = masterTeam.length;
+        masterTeam.push(memberData);
+        this.showToast(`👤 ${memberData.fullName} adicionado ao catálogo geral de equipe!`, 'success');
+      }
+
+      window.saveMasterTeam(masterTeam);
+      this.renderMasterTeamManagement();
+    }
+
+    this.closeTeamMemberInPageEditor(context);
   }
 
   /* ==========================================================================
