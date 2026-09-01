@@ -15,6 +15,7 @@ class AutoReportApp {
     this.theme = localStorage.getItem('autoreport_theme') || 'light';
     this.metrics = null;
     this.currentTeamFilter = 'all';
+    this.currentMasterTeamFilter = 'all';
   }
 
   /**
@@ -93,6 +94,8 @@ class AutoReportApp {
       this.renderTrainingsList();
     } else if (viewId === 'municipalities') {
       this.renderMunicipalitiesBank();
+    } else if (viewId === 'team') {
+      this.renderMasterTeamManagement();
     }
   }
 
@@ -362,7 +365,7 @@ class AutoReportApp {
       locationAddress: '',
       status: 'in_progress',
       progressPercent: 0,
-      team: (window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m })),
+      team: (window.getMasterTeam ? window.getMasterTeam() : (window.DEFAULT_OFFICIAL_TEAM || [])).map(m => ({ ...m })),
       municipalities: [],
       courseModules: [
         { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, order: 0 },
@@ -604,7 +607,7 @@ class AutoReportApp {
           locationVenue: data.venue || 'Auditório Municipal',
           status: 'in_progress',
           progressPercent: 15,
-          team: (window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m })),
+          team: (window.getMasterTeam ? window.getMasterTeam() : (window.DEFAULT_OFFICIAL_TEAM || [])).map(m => ({ ...m })),
           municipalities: [],
           courseModules: [
             { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, order: 0 },
@@ -1152,7 +1155,7 @@ class AutoReportApp {
   restoreDefaultTeam() {
     if (!this.currentTraining) return;
     if (confirm('Deseja restaurar a Equipe Padrão Oficial do CECATE/UFG e FNDE? Todas as alterações manuais nesta capacitação serão redefinidas para o padrão.')) {
-      this.currentTraining.team = (window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m }));
+      this.currentTraining.team = (window.getMasterTeam ? window.getMasterTeam() : window.DEFAULT_OFFICIAL_TEAM).map(m => ({ ...m }));
       this.renderTeamList();
       this.saveCurrentStepData();
       this.showToast('🔄 Equipe padrão oficial CECATE (UFG) e FNDE restaurada com sucesso!', 'success');
@@ -1164,11 +1167,7 @@ class AutoReportApp {
     if (!container || !this.currentTraining) return;
 
     if (!this.currentTraining.team || this.currentTraining.team.length === 0) {
-      if (window.DEFAULT_OFFICIAL_TEAM && window.DEFAULT_OFFICIAL_TEAM.length > 0) {
-        this.currentTraining.team = window.DEFAULT_OFFICIAL_TEAM.map(m => ({ ...m }));
-      } else {
-        this.currentTraining.team = [];
-      }
+      this.currentTraining.team = (window.getMasterTeam ? window.getMasterTeam() : window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m }));
     }
 
     const team = this.currentTraining.team;
@@ -1202,27 +1201,8 @@ class AutoReportApp {
       return;
     }
 
-    const titleOptions = window.OFFICIAL_TITLE_PREFIXES || [
-      { value: 'Prof. Dr.', label: 'Prof. Dr. (Professor Doutor)' },
-      { value: 'Prof.ª Dra.', label: 'Prof.ª Dra. (Professora Doutora)' },
-      { value: 'Eng. M.Sc.', label: 'Eng. M.Sc. (Engenheiro Mestre)' },
-      { value: 'Eng. Dr.', label: 'Eng. Dr. (Engenheiro Doutor)' },
-      { value: 'Eng.ª M.Sc.', label: 'Eng.ª M.Sc. (Engenheira Mestre)' },
-      { value: 'Eng.ª Dra.', label: 'Eng.ª Dra. (Engenheira Doutora)' },
-      { value: 'Dr.', label: 'Dr. (Doutor)' },
-      { value: 'Dra.', label: 'Dra. (Doutora)' },
-      { value: 'M.Sc.', label: 'M.Sc. (Mestre)' },
-      { value: 'Esp.', label: 'Esp. (Especialista)' },
-      { value: 'Eng.', label: 'Eng. (Engenheiro/a)' },
-      { value: 'Prof.', label: 'Prof. (Professor)' },
-      { value: 'Prof.ª', label: 'Prof.ª (Professora)' },
-      { value: 'Pesquisadora Visitante Dra.', label: 'Pesquisadora Visitante Dra.' },
-      { value: 'Pesquisador Visitante', label: 'Pesquisador Visitante' },
-      { value: 'Sr.', label: 'Sr. (Senhor)' },
-      { value: 'Sra.', label: 'Sra. (Senhora)' },
-      { value: '', label: '(Sem titulação)' }
-    ];
-
+    const pronouns = window.OFFICIAL_PRONOUNS || [];
+    const titles = window.OFFICIAL_TITLES || [];
     const roleOptionsUFG = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'UFG');
     const roleOptionsFNDE = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'FNDE');
 
@@ -1231,24 +1211,31 @@ class AutoReportApp {
         <table class="report-data-table">
           <thead>
             <tr>
-              <th style="width:210px;">Titulação / Pronome</th>
-              <th style="min-width:230px;">Nome do Integrante</th>
-              <th style="width:110px;">Instituição</th>
-              <th style="min-width:320px;">Cargo / Função Oficial</th>
-              <th style="width:70px; text-align:center;">Ações</th>
+              <th style="width:170px;">Pronome</th>
+              <th style="width:150px;">Titulação</th>
+              <th style="min-width:210px;">Nome do Integrante</th>
+              <th style="width:100px;">Instituição</th>
+              <th style="min-width:300px;">Cargo / Função Oficial</th>
+              <th style="width:60px; text-align:center;">Ações</th>
             </tr>
           </thead>
           <tbody>
             ${displayList.map(item => {
               const idx = item.originalIndex;
-              const isFnde = item.institutionGroup === 'FNDE' || item.institution === 'FNDE' || item.type === 'fnde';
 
               return `
                 <tr>
                   <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateTeamMemberField(${idx}, 'titlePrefix', this.value)">
-                      ${titleOptions.map(t => `
-                        <option value="${t.value}" ${item.titlePrefix === t.value ? 'selected' : ''}>${t.label}</option>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateTeamMemberField(${idx}, 'pronoun', this.value)">
+                      ${pronouns.map(p => `
+                        <option value="${p.value}" ${item.pronoun === p.value ? 'selected' : ''}>${p.label}</option>
+                      `).join('')}
+                    </select>
+                  </td>
+                  <td>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateTeamMemberField(${idx}, 'title', this.value)">
+                      ${titles.map(t => `
+                        <option value="${t.value}" ${item.title === t.value ? 'selected' : ''}>${t.label}</option>
                       `).join('')}
                     </select>
                   </td>
@@ -1297,8 +1284,8 @@ class AutoReportApp {
     const member = this.currentTraining.team[index];
     member[field] = value;
 
-    if (field === 'titlePrefix' || field === 'name') {
-      member.fullName = `${member.titlePrefix ? member.titlePrefix + ' ' : ''}${member.name}`.trim();
+    if (field === 'pronoun' || field === 'title' || field === 'name') {
+      member.fullName = window.formatTeamMemberFullName(member);
     }
 
     if (field === 'institution') {
@@ -1326,26 +1313,29 @@ class AutoReportApp {
     const name = prompt('Nome do Novo Integrante:');
     if (!name || !name.trim()) return;
 
-    const prefix = prompt('Pronome de Tratamento / Titulação (Ex: Prof. Dr., Eng. M.Sc., Dra., ou deixe vazio):', 'Prof. Dr.') || '';
+    const pronoun = prompt('Pronome de Tratamento (Ex: Prof., Eng., Pesquisador Visitante, ou deixe vazio):', 'Prof.') || '';
+    const title = prompt('Titulação (Ex: Dr., Dra., M.Sc., Esp., ou deixe vazio):', 'Dr.') || '';
     const role = prompt('Cargo / Função:', 'Pesquisador e Equipe Técnica') || 'Equipe Técnica';
     const isFnde = role.includes('FNDE') || role.includes('CGPTE') || role.includes('CMATE') || role.includes('COATE') || role.includes('COACE');
     const institution = isFnde ? 'FNDE' : 'UFG';
 
-    this.currentTraining.team.push({
+    const newMember = {
       id: `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       institutionGroup: institution,
-      titlePrefix: prefix.trim(),
+      pronoun: pronoun.trim(),
+      title: title.trim(),
       name: name.trim(),
-      fullName: `${prefix.trim() ? prefix.trim() + ' ' : ''}${name.trim()}`,
       role: role.trim(),
       institution: institution,
       type: isFnde ? 'fnde' : (role.includes('Coordenador do Projeto') ? 'coordenacao' : 'tecnica'),
       order: this.currentTraining.team.length
-    });
+    };
+    newMember.fullName = window.formatTeamMemberFullName(newMember);
 
+    this.currentTraining.team.push(newMember);
     this.renderTeamList();
     this.saveCurrentStepData();
-    this.showToast(`👤 ${prefix ? prefix + ' ' : ''}${name.trim()} adicionado à equipe!`, 'success');
+    this.showToast(`👤 ${newMember.fullName} adicionado à equipe!`, 'success');
   }
 
   removeTeamMember(index) {
@@ -1355,6 +1345,196 @@ class AutoReportApp {
     this.renderTeamList();
     this.saveCurrentStepData();
     this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
+  }
+
+  /* ==========================================================================
+     VIEW GLOBAL: GERENCIAMENTO DA EQUIPE TÉCNICA (MASTER)
+     ========================================================================== */
+  setMasterTeamFilter(filter) {
+    this.currentMasterTeamFilter = filter;
+    document.querySelectorAll('.master-team-tab-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById(`master-team-tab-${filter.toLowerCase()}`);
+    if (activeBtn) activeBtn.classList.add('active');
+    this.renderMasterTeamManagement();
+  }
+
+  renderMasterTeamManagement() {
+    const container = document.getElementById('master-team-list-container');
+    if (!container) return;
+
+    const masterTeam = window.getMasterTeam();
+
+    const ufgCount = masterTeam.filter(m => (m.institutionGroup === 'UFG' || m.institution === 'UFG' || m.type === 'coordenacao' || m.type === 'tecnica')).length;
+    const fndeCount = masterTeam.filter(m => (m.institutionGroup === 'FNDE' || m.institution === 'FNDE' || m.type === 'fnde')).length;
+
+    const countAllEl = document.getElementById('master-team-count-all');
+    const countUfgEl = document.getElementById('master-team-count-ufg');
+    const countFndeEl = document.getElementById('master-team-count-fnde');
+
+    if (countAllEl) countAllEl.textContent = masterTeam.length;
+    if (countUfgEl) countUfgEl.textContent = ufgCount;
+    if (countFndeEl) countFndeEl.textContent = fndeCount;
+
+    let displayList = masterTeam.map((m, originalIndex) => ({ ...m, originalIndex }));
+    if (this.currentMasterTeamFilter === 'UFG') {
+      displayList = displayList.filter(m => (m.institutionGroup === 'UFG' || m.institution === 'UFG' || m.type === 'coordenacao' || m.type === 'tecnica'));
+    } else if (this.currentMasterTeamFilter === 'FNDE') {
+      displayList = displayList.filter(m => (m.institutionGroup === 'FNDE' || m.institution === 'FNDE' || m.type === 'fnde'));
+    }
+
+    const pronouns = window.OFFICIAL_PRONOUNS || [];
+    const titles = window.OFFICIAL_TITLES || [];
+    const roleOptionsUFG = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'UFG');
+    const roleOptionsFNDE = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'FNDE');
+
+    container.innerHTML = `
+      <div class="table-responsive-wrapper">
+        <table class="report-data-table">
+          <thead>
+            <tr>
+              <th style="width:170px;">Pronome</th>
+              <th style="width:150px;">Titulação</th>
+              <th style="min-width:210px;">Nome do Integrante</th>
+              <th style="width:110px;">Instituição</th>
+              <th style="min-width:320px;">Cargo / Função Oficial</th>
+              <th style="width:70px; text-align:center;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${displayList.map(item => {
+              const idx = item.originalIndex;
+
+              return `
+                <tr>
+                  <td>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateMasterTeamMemberField(${idx}, 'pronoun', this.value)">
+                      ${pronouns.map(p => `
+                        <option value="${p.value}" ${item.pronoun === p.value ? 'selected' : ''}>${p.label}</option>
+                      `).join('')}
+                    </select>
+                  </td>
+                  <td>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateMasterTeamMemberField(${idx}, 'title', this.value)">
+                      ${titles.map(t => `
+                        <option value="${t.value}" ${item.title === t.value ? 'selected' : ''}>${t.label}</option>
+                      `).join('')}
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" style="font-size:0.83rem; font-weight:700;" value="${item.name || ''}" placeholder="Nome do integrante" onchange="app.updateMasterTeamMemberField(${idx}, 'name', this.value)">
+                  </td>
+                  <td>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:700; color:var(--accent-secondary);" onchange="app.updateMasterTeamMemberField(${idx}, 'institution', this.value)">
+                      <option value="UFG" ${item.institution === 'UFG' ? 'selected' : ''}>UFG</option>
+                      <option value="FNDE" ${item.institution === 'FNDE' ? 'selected' : ''}>FNDE</option>
+                      <option value="MEC" ${item.institution === 'MEC' ? 'selected' : ''}>MEC</option>
+                      <option value="Outro" ${item.institution !== 'UFG' && item.institution !== 'FNDE' && item.institution !== 'MEC' ? 'selected' : ''}>Outro</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem;" onchange="app.updateMasterTeamMemberField(${idx}, 'role', this.value)">
+                      <optgroup label="Universidade Federal de Goiás - UFG">
+                        ${roleOptionsUFG.map(r => `
+                          <option value="${r.value}" ${item.role === r.value ? 'selected' : ''}>${r.value}</option>
+                        `).join('')}
+                      </optgroup>
+                      <optgroup label="Fundo Nacional de Desenvolvimento da Educação - FNDE">
+                        ${roleOptionsFNDE.map(r => `
+                          <option value="${r.value}" ${item.role === r.value ? 'selected' : ''}>${r.value}</option>
+                        `).join('')}
+                      </optgroup>
+                      ${!roleOptionsUFG.some(r => r.value === item.role) && !roleOptionsFNDE.some(r => r.value === item.role) ? `
+                        <option value="${item.role}" selected>${item.role}</option>
+                      ` : ''}
+                    </select>
+                  </td>
+                  <td style="text-align:center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMasterTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25);" title="Excluir do cadastro mestre">✕</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  updateMasterTeamMemberField(index, field, value) {
+    const masterTeam = window.getMasterTeam();
+    if (!masterTeam[index]) return;
+
+    masterTeam[index][field] = value;
+    if (field === 'pronoun' || field === 'title' || field === 'name') {
+      masterTeam[index].fullName = window.formatTeamMemberFullName(masterTeam[index]);
+    }
+
+    if (field === 'institution') {
+      masterTeam[index].institutionGroup = value;
+      if (value === 'FNDE') masterTeam[index].type = 'fnde';
+      else if (masterTeam[index].role?.includes('Coordenador do Projeto')) masterTeam[index].type = 'coordenacao';
+      else masterTeam[index].type = 'tecnica';
+    }
+
+    if (field === 'role') {
+      if (value.includes('CGPTE') || value.includes('CMATE') || value.includes('COATE') || value.includes('COACE') || value.includes('FNDE')) {
+        masterTeam[index].institution = 'FNDE';
+        masterTeam[index].institutionGroup = 'FNDE';
+        masterTeam[index].type = 'fnde';
+      }
+    }
+
+    window.saveMasterTeam(masterTeam);
+    this.showToast('✓ Cadastro da Equipe Técnica atualizado com sucesso!', 'success');
+  }
+
+  addMasterTeamMemberPrompt() {
+    const name = prompt('Nome Completo do Novo Integrante:');
+    if (!name || !name.trim()) return;
+
+    const pronoun = prompt('Pronome de Tratamento (Ex: Prof., Eng., Pesquisador Visitante, ou deixe vazio):', 'Prof.') || '';
+    const title = prompt('Titulação (Ex: Dr., Dra., M.Sc., Esp., ou deixe vazio):', 'Dr.') || '';
+    const role = prompt('Cargo / Função Oficial:', 'Pesquisador e Equipe Técnica') || 'Equipe Técnica';
+    const isFnde = role.includes('FNDE') || role.includes('CGPTE') || role.includes('CMATE') || role.includes('COATE') || role.includes('COACE');
+    const institution = isFnde ? 'FNDE' : 'UFG';
+
+    const masterTeam = window.getMasterTeam();
+    const newMember = {
+      id: `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      institutionGroup: institution,
+      pronoun: pronoun.trim(),
+      title: title.trim(),
+      name: name.trim(),
+      role: role.trim(),
+      institution: institution,
+      type: isFnde ? 'fnde' : (role.includes('Coordenador do Projeto') ? 'coordenacao' : 'tecnica'),
+      order: masterTeam.length
+    };
+    newMember.fullName = window.formatTeamMemberFullName(newMember);
+
+    masterTeam.push(newMember);
+    window.saveMasterTeam(masterTeam);
+    this.renderMasterTeamManagement();
+    this.showToast(`👤 ${newMember.fullName} adicionado ao catálogo geral!`, 'success');
+  }
+
+  removeMasterTeamMember(index) {
+    const masterTeam = window.getMasterTeam();
+    if (!masterTeam[index]) return;
+    const removedName = masterTeam[index].name;
+
+    masterTeam.splice(index, 1);
+    window.saveMasterTeam(masterTeam);
+    this.renderMasterTeamManagement();
+    this.showToast(`🗑️ Integrante ${removedName} removido do catálogo geral.`);
+  }
+
+  restoreMasterTeamDefault() {
+    if (confirm('Deseja restaurar o Catálogo Oficial Padrão do CECATE/UFG e FNDE?')) {
+      window.saveMasterTeam(window.DEFAULT_OFFICIAL_TEAM.map(m => ({ ...m })));
+      this.renderMasterTeamManagement();
+      this.showToast('🔄 Catálogo geral restaurado para a Equipe Oficial!', 'success');
+    }
   }
 
   /* ==========================================================================

@@ -70,6 +70,16 @@
           <span>Banco IBGE (5.570)</span>
         </a>
 
+        <a href="#team" class="nav-item" data-view="team" id="nav-team">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Equipe Técnica</span>
+        </a>
+
         <a href="#settings" class="nav-item" data-view="settings" id="nav-settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
@@ -84,7 +94,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.4.0</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.4.1</span> • CECATE</div>
       </div>
     </aside>
 
@@ -777,7 +787,38 @@
         </section>
 
         <!-- ==========================================
-             VIEW: CONFIGURAÇÕES
+            <!-- SEÇÃO: GERENCIAMENTO DE EQUIPE TÉCNICA (GLOBAL) -->
+        <section id="view-team" class="view-section">
+          <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+            <div>
+              <h2 class="view-title">👥 Catálogo Geral de Equipe Técnica & Participante</h2>
+              <p class="view-subtitle">Gerencie o cadastro padrão oficial dos integrantes da Universidade Federal de Goiás (UFG) e do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+            </div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.restoreMasterTeamDefault()">🔄 Restaurar Padrão Oficial</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="app.addMasterTeamMemberPrompt()">+ Adicionar Novo Integrante</button>
+            </div>
+          </div>
+
+          <!-- Sub-abas da Equipe Master -->
+          <div style="display:flex; gap:0.5rem; margin-bottom:1.25rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn active" id="master-team-tab-all" onclick="app.setMasterTeamFilter('all')">
+              📋 Todos (<span id="master-team-count-all">0</span>)
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn" id="master-team-tab-ufg" onclick="app.setMasterTeamFilter('UFG')">
+              🏛️ UFG - Coordenação & Técnica (<span id="master-team-count-ufg">0</span>)
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn" id="master-team-tab-fnde" onclick="app.setMasterTeamFilter('FNDE')">
+              🏢 FNDE - Coordenações (<span id="master-team-count-fnde">0</span>)
+            </button>
+          </div>
+
+          <div class="card p-0" id="master-team-list-container">
+            <!-- Tabela Master Renderizada Dinamicamente -->
+          </div>
+        </section>
+
+        <!-- SEÇÃO: CONFIGURAÇÕES -->
              ========================================== -->
         <section class="view-section" id="view-settings">
           <div style="margin-bottom: 1.5rem;">
@@ -811,13 +852,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.2.1 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.4.1 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.2.1</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.4.1</span>
         </div>
       </footer>
     </div>

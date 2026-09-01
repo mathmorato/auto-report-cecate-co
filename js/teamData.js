@@ -1,27 +1,30 @@
 /**
  * AutoReport CECATE - Catálogo Oficial de Equipe Participante (UFG & FNDE)
- * Versão: v.2.0.0
+ * Versão: v.1.4.1
  */
 
-window.OFFICIAL_TITLE_PREFIXES = [
-  { value: 'Prof. Dr.', label: 'Prof. Dr. (Professor Doutor)' },
-  { value: 'Prof.ª Dra.', label: 'Prof.ª Dra. (Professora Doutora)' },
-  { value: 'Eng. M.Sc.', label: 'Eng. M.Sc. (Engenheiro Mestre)' },
-  { value: 'Eng. Dr.', label: 'Eng. Dr. (Engenheiro Doutor)' },
-  { value: 'Eng.ª M.Sc.', label: 'Eng.ª M.Sc. (Engenheira Mestre)' },
-  { value: 'Eng.ª Dra.', label: 'Eng.ª Dra. (Engenheira Doutora)' },
+window.OFFICIAL_PRONOUNS = [
+  { value: 'Prof.', label: 'Prof. (Professor)' },
+  { value: 'Prof.ª', label: 'Prof.ª (Professora)' },
+  { value: 'Eng.', label: 'Eng. (Engenheiro/a)' },
+  { value: 'Eng.ª', label: 'Eng.ª (Engenheira)' },
+  { value: 'Pesquisador Visitante', label: 'Pesquisador Visitante' },
+  { value: 'Pesquisadora Visitante', label: 'Pesquisadora Visitante' },
+  { value: 'Sr.', label: 'Sr. (Senhor)' },
+  { value: 'Sra.', label: 'Sra. (Senhora)' },
+  { value: '', label: '(Nenhum pronome)' }
+];
+
+window.OFFICIAL_TITLES = [
   { value: 'Dr.', label: 'Dr. (Doutor)' },
   { value: 'Dra.', label: 'Dra. (Doutora)' },
   { value: 'M.Sc.', label: 'M.Sc. (Mestre)' },
   { value: 'Esp.', label: 'Esp. (Especialista)' },
-  { value: 'Eng.', label: 'Eng. (Engenheiro/a)' },
-  { value: 'Prof.', label: 'Prof. (Professor)' },
-  { value: 'Prof.ª', label: 'Prof.ª (Professora)' },
-  { value: 'Pesquisadora Visitante Dra.', label: 'Pesquisadora Visitante Dra.' },
-  { value: 'Pesquisador Visitante', label: 'Pesquisador Visitante' },
-  { value: 'Sr.', label: 'Sr. (Senhor)' },
-  { value: 'Sra.', label: 'Sra. (Senhora)' },
-  { value: '', label: '(Sem pronome/titulação)' }
+  { value: 'Bel.', label: 'Bel. (Bacharel)' },
+  { value: 'Grad.', label: 'Grad. (Graduado/a)' },
+  { value: 'Pós-Doutor', label: 'Pós-Doutor' },
+  { value: 'Pós-Doutora', label: 'Pós-Doutora' },
+  { value: '', label: '(Nenhuma titulação)' }
 ];
 
 window.OFFICIAL_ROLES = [
@@ -48,12 +51,22 @@ window.OFFICIAL_ROLES = [
   { value: 'Outro Cargo', group: 'Geral' }
 ];
 
+window.formatTeamMemberFullName = function(m) {
+  if (!m) return '';
+  const parts = [];
+  if (m.pronoun && m.pronoun.trim()) parts.push(m.pronoun.trim());
+  if (m.title && m.title.trim()) parts.push(m.title.trim());
+  if (m.name && m.name.trim()) parts.push(m.name.trim());
+  return parts.join(' ') || m.fullName || m.name || '';
+};
+
 window.DEFAULT_OFFICIAL_TEAM = [
   // 1. UNIVERSIDADE FEDERAL DE GOIÁS - UFG: Coordenador do Projeto
   {
     id: 'team_ufg_coord',
     institutionGroup: 'UFG',
-    titlePrefix: 'Prof. Dr.',
+    pronoun: 'Prof.',
+    title: 'Dr.',
     name: 'Willer Luciano Carvalho',
     fullName: 'Prof. Dr. Willer Luciano Carvalho',
     role: 'Coordenador do Projeto',
@@ -65,7 +78,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_ufg_1',
     institutionGroup: 'UFG',
-    titlePrefix: 'Eng. M.Sc.',
+    pronoun: 'Eng.',
+    title: 'M.Sc.',
     name: 'Lara Batista Ferreira de Lima',
     fullName: 'Eng. M.Sc. Lara Batista Ferreira de Lima',
     role: 'Equipe Técnica',
@@ -76,7 +90,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_ufg_2',
     institutionGroup: 'UFG',
-    titlePrefix: 'Eng. Dr.',
+    pronoun: 'Eng.',
+    title: 'Dr.',
     name: 'Matheus Henrique Morato de Moraes',
     fullName: 'Eng. Dr. Matheus Henrique Morato de Moraes',
     role: 'Equipe Técnica',
@@ -87,7 +102,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_ufg_3',
     institutionGroup: 'UFG',
-    titlePrefix: 'Prof. Dr.',
+    pronoun: 'Prof.',
+    title: 'Dr.',
     name: 'Liosber Medina Garcia',
     fullName: 'Prof. Dr. Liosber Medina Garcia',
     role: 'Equipe Técnica',
@@ -98,7 +114,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_ufg_4',
     institutionGroup: 'UFG',
-    titlePrefix: 'Prof. Dr.',
+    pronoun: 'Prof.',
+    title: 'Dr.',
     name: 'Marcos Paulino Roriz Junior',
     fullName: 'Prof. Dr. Marcos Paulino Roriz Junior',
     role: 'Equipe Técnica',
@@ -109,7 +126,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_ufg_5',
     institutionGroup: 'UFG',
-    titlePrefix: 'Prof. Dr.',
+    pronoun: 'Prof.',
+    title: 'Dr.',
     name: 'Robinson Andrés Giraldo Zuluaga',
     fullName: 'Prof. Dr. Robinson Andrés Giraldo Zuluaga',
     role: 'Equipe Técnica',
@@ -120,7 +138,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_ufg_6',
     institutionGroup: 'UFG',
-    titlePrefix: 'Prof. Dr.',
+    pronoun: 'Prof.',
+    title: 'Dr.',
     name: 'Ronny Marcelo Aliaga Medrano',
     fullName: 'Prof. Dr. Ronny Marcelo Aliaga Medrano',
     role: 'Equipe Técnica',
@@ -131,7 +150,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_ufg_7',
     institutionGroup: 'UFG',
-    titlePrefix: 'Pesquisadora Visitante Dra.',
+    pronoun: 'Pesquisadora Visitante',
+    title: 'Dra.',
     name: 'Yaeko Yamashita',
     fullName: 'Pesquisadora Visitante Dra. Yaeko Yamashita',
     role: 'Equipe Técnica',
@@ -142,7 +162,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_ufg_8',
     institutionGroup: 'UFG',
-    titlePrefix: 'Pesquisador Visitante',
+    pronoun: 'Pesquisador Visitante',
+    title: '',
     name: 'José Maria Rodrigues de Souza',
     fullName: 'Pesquisador Visitante José Maria Rodrigues de Souza',
     role: 'Equipe Técnica',
@@ -154,7 +175,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_fnde_1',
     institutionGroup: 'FNDE',
-    titlePrefix: '',
+    pronoun: '',
+    title: '',
     name: 'Haroldo da Silva Gomes',
     fullName: 'Haroldo da Silva Gomes',
     role: 'Coordenador-Geral da Política do Transporte Escolar – CGPTE',
@@ -165,7 +187,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_fnde_2',
     institutionGroup: 'FNDE',
-    titlePrefix: '',
+    pronoun: '',
+    title: '',
     name: 'Daniela Oshiro Yanaze',
     fullName: 'Daniela Oshiro Yanaze',
     role: 'Coordenadora de Monitoramento, Avaliação e Apoio à Gestão do Transporte Escolar – CMATE',
@@ -176,7 +199,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_fnde_3',
     institutionGroup: 'FNDE',
-    titlePrefix: '',
+    pronoun: '',
+    title: '',
     name: 'Neuza Helena Portugal dos Santos',
     fullName: 'Neuza Helena Portugal dos Santos',
     role: 'Coordenadora de Apoio ao Transporte Escolar – COATE',
@@ -187,7 +211,8 @@ window.DEFAULT_OFFICIAL_TEAM = [
   {
     id: 'team_fnde_4',
     institutionGroup: 'FNDE',
-    titlePrefix: '',
+    pronoun: '',
+    title: '',
     name: 'Maria Angelica Floriano Pedrosa',
     fullName: 'Maria Angelica Floriano Pedrosa',
     role: 'Coordenadora de Apoio ao Caminho da Escola – COACE',
@@ -196,3 +221,25 @@ window.DEFAULT_OFFICIAL_TEAM = [
     order: 12
   }
 ];
+
+// Carregar equipe mestra personalizada salva em localStorage ou usar padrão
+window.getMasterTeam = function() {
+  try {
+    const saved = localStorage.getItem('autoreport_master_team');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn('Erro ao carregar equipe mestra:', e);
+  }
+  return window.DEFAULT_OFFICIAL_TEAM.map(m => ({ ...m }));
+};
+
+window.saveMasterTeam = function(team) {
+  try {
+    localStorage.setItem('autoreport_master_team', JSON.stringify(team));
+  } catch (e) {
+    console.warn('Erro ao salvar equipe mestra:', e);
+  }
+};

@@ -132,7 +132,7 @@ class ReportDocxGenerator {
       ];
 
       team.forEach(tm => {
-        const displayName = tm.fullName || (tm.titlePrefix ? `${tm.titlePrefix} ${tm.name}` : tm.name) || '';
+        const displayName = (window.formatTeamMemberFullName ? window.formatTeamMemberFullName(tm) : tm.fullName) || tm.name || '';
         teamRows.push(
           new TableRow({
             children: [
