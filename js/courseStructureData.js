@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Modelo Padrão Oficial e Estrutura do Curso
- * Versão: v.1.9.4
+ * Versão: v.1.9.5
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
@@ -121,6 +121,40 @@ window.courseStructureHelper = {
   },
 
   /**
+   * Duplica um módulo com todas as suas temáticas (deep copy) e renumera os módulos
+   */
+  duplicateModule(modules = [], modIdx = 0) {
+    const norm = this.normalize(modules);
+    if (modIdx < 0 || modIdx >= norm.length) return norm;
+
+    const target = norm[modIdx];
+    const copy = JSON.parse(JSON.stringify(target));
+    copy.id = `mod_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    copy.gestorTopics = (copy.gestorTopics || []).map((t, ti) => ({
+      ...t,
+      id: `top_g_${Date.now()}_${ti}_${Math.random().toString(36).substr(2, 4)}`
+    }));
+    copy.cacsTopics = (copy.cacsTopics || []).map((t, ti) => ({
+      ...t,
+      id: `top_c_${Date.now()}_${ti}_${Math.random().toString(36).substr(2, 4)}`
+    }));
+
+    norm.splice(modIdx + 1, 0, copy);
+    return this.autoRenumber(norm);
+  },
+
+  /**
+   * Renumera e reordena os módulos automaticamente (01, 02, 03...)
+   */
+  autoRenumber(modules = []) {
+    return modules.map((m, idx) => ({
+      ...m,
+      order: idx + 1,
+      moduleNumber: idx < 9 ? `0${idx + 1}` : `${idx + 1}`
+    }));
+  },
+
+  /**
    * Normaliza a lista de módulos garantindo compatibilidade com formatos legados e o novo padrão hierárquico
    */
   normalize(modules = []) {
@@ -202,3 +236,4 @@ window.courseStructureHelper = {
     return { totalGestor, totalCACS };
   }
 };
+

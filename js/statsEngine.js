@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Estatístico e Calculador de Métricas Analíticas
- * Versão: v.1.9.4
+ * Versão: v.1.9.5
  */
 
 class StatsEngine {
@@ -207,7 +207,6 @@ class StatsEngine {
     `;
   }
 
-  /**
   /**
    * Gera o HTML da Tabela 2: Estrutura do Curso (com suporte a módulos com múltiplas temáticas e rowspans)
    */

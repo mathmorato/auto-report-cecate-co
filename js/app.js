@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.9.4
+ * Versão: v.1.9.5
  */
 
 window.icons = {
@@ -2652,6 +2652,9 @@ class AutoReportApp {
                 <div style="display:flex; align-items:center; gap:0.4rem;">
                   <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveCourseModule(${modIdx}, -1)" ${modIdx === 0 ? 'disabled' : ''} title="Mover para cima" style="padding:0.2rem 0.5rem;">↑</button>
                   <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveCourseModule(${modIdx}, 1)" ${modIdx === mods.length - 1 ? 'disabled' : ''} title="Mover para baixo" style="padding:0.2rem 0.5rem;">↓</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseModule(${modIdx})" title="Duplicar Módulo com todas as temáticas" style="padding:0.2rem 0.55rem; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
+                  </button>
                   <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
@@ -2755,10 +2758,21 @@ class AutoReportApp {
     this.showToast(`✓ Módulo ${numStr} adicionado com sucesso!`, 'success');
   }
 
+  duplicateCourseModule(modIdx) {
+    if (!this.currentTraining || !window.courseStructureHelper) return;
+    this.currentTraining.courseModules = window.courseStructureHelper.duplicateModule(this.currentTraining.courseModules, modIdx);
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
+    this.showToast('✓ Módulo duplicado com sucesso nesta capacitação!', 'success');
+  }
+
   deleteCourseModule(modIdx) {
     if (!this.currentTraining || !this.currentTraining.courseModules) return;
     if (confirm('Deseja realmente remover este módulo da capacitação?')) {
       this.currentTraining.courseModules.splice(modIdx, 1);
+      if (window.courseStructureHelper) {
+        this.currentTraining.courseModules = window.courseStructureHelper.autoRenumber(this.currentTraining.courseModules);
+      }
       this.renderCourseStructureStep();
       this.saveCurrentStepData();
       this.showToast('Módulo removido da capacitação.', 'info');
@@ -2775,8 +2789,11 @@ class AutoReportApp {
     mods[modIdx] = mods[targetIdx];
     mods[targetIdx] = temp;
 
-    // Atualizar order
-    mods.forEach((m, idx) => { m.order = idx + 1; });
+    if (window.courseStructureHelper) {
+      this.currentTraining.courseModules = window.courseStructureHelper.autoRenumber(mods);
+    } else {
+      mods.forEach((m, idx) => { m.order = idx + 1; });
+    }
 
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
@@ -3015,6 +3032,9 @@ class AutoReportApp {
                 <div style="display:flex; align-items:center; gap:0.4rem;">
                   <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveGlobalMasterCourseModule(${modIdx}, -1)" ${modIdx === 0 ? 'disabled' : ''} title="Mover para cima" style="padding:0.2rem 0.5rem;">↑</button>
                   <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveGlobalMasterCourseModule(${modIdx}, 1)" ${modIdx === masterMods.length - 1 ? 'disabled' : ''} title="Mover para baixo" style="padding:0.2rem 0.5rem;">↓</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateGlobalMasterCourseModule(${modIdx})" title="Duplicar Módulo com todas as temáticas" style="padding:0.2rem 0.55rem; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
+                  </button>
                   <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteGlobalMasterCourseModule(${modIdx})" title="Excluir Módulo do Modelo Global" style="padding:0.2rem 0.5rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
@@ -3117,11 +3137,21 @@ class AutoReportApp {
     this.showToast(`✓ Módulo ${numStr} adicionado ao Catálogo Mestre!`, 'success');
   }
 
+  duplicateGlobalMasterCourseModule(modIdx) {
+    if (!window.courseStructureHelper) return;
+    let masterMods = window.courseStructureHelper.getMasterStructure();
+    masterMods = window.courseStructureHelper.duplicateModule(masterMods, modIdx);
+    window.courseStructureHelper.saveMasterStructure(masterMods);
+    this.renderGlobalMasterCourseStructure();
+    this.showToast('✓ Módulo duplicado com sucesso no Modelo Padrão Global!', 'success');
+  }
+
   deleteGlobalMasterCourseModule(modIdx) {
     if (!window.courseStructureHelper) return;
-    const masterMods = window.courseStructureHelper.getMasterStructure();
+    let masterMods = window.courseStructureHelper.getMasterStructure();
     if (confirm('Deseja realmente remover este módulo do Modelo Padrão Global?')) {
       masterMods.splice(modIdx, 1);
+      masterMods = window.courseStructureHelper.autoRenumber(masterMods);
       window.courseStructureHelper.saveMasterStructure(masterMods);
       this.renderGlobalMasterCourseStructure();
       this.showToast('Módulo removido do Catálogo Mestre.', 'info');
@@ -3130,14 +3160,14 @@ class AutoReportApp {
 
   moveGlobalMasterCourseModule(modIdx, direction) {
     if (!window.courseStructureHelper) return;
-    const masterMods = window.courseStructureHelper.getMasterStructure();
+    let masterMods = window.courseStructureHelper.getMasterStructure();
     const targetIdx = modIdx + direction;
     if (targetIdx < 0 || targetIdx >= masterMods.length) return;
 
     const temp = masterMods[modIdx];
     masterMods[modIdx] = masterMods[targetIdx];
     masterMods[targetIdx] = temp;
-    masterMods.forEach((m, idx) => { m.order = idx + 1; });
+    masterMods = window.courseStructureHelper.autoRenumber(masterMods);
 
     window.courseStructureHelper.saveMasterStructure(masterMods);
     this.renderGlobalMasterCourseStructure();
