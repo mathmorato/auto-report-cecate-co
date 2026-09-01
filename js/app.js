@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.7.0
+ * Versão: v.1.7.1
  */
 
 window.icons = {
@@ -2626,6 +2626,9 @@ class AutoReportApp {
 
     const msgEl = document.getElementById('modal-delete-member-message');
     const nameEl = document.getElementById('modal-delete-member-name');
+    const pronounEl = document.getElementById('modal-delete-member-pronoun');
+    const titleEl = document.getElementById('modal-delete-member-title');
+    const instEl = document.getElementById('modal-delete-member-institution');
     const roleEl = document.getElementById('modal-delete-member-role');
 
     if (msgEl) {
@@ -2633,13 +2636,37 @@ class AutoReportApp {
         ? 'Deseja realmente remover este integrante do catálogo geral de equipe?'
         : 'Deseja realmente remover este integrante da equipe desta capacitação?';
     }
+
     if (nameEl) {
       nameEl.textContent = window.formatTeamMemberFullName ? window.formatTeamMemberFullName(member) : (member.name || 'Integrante');
     }
+
+    if (pronounEl) {
+      const pVal = member.pronoun;
+      if (!pVal || pVal === 'NENHUM' || pVal === '__unselected__') {
+        pronounEl.textContent = '(Nenhum pronome)';
+      } else {
+        const found = (window.OFFICIAL_PRONOUNS || []).find(p => p.value === pVal);
+        pronounEl.textContent = found ? found.label : pVal;
+      }
+    }
+
+    if (titleEl) {
+      const tVal = member.title;
+      if (!tVal || tVal === 'NENHUM' || tVal === '__unselected__') {
+        titleEl.textContent = '(Nenhuma titulação)';
+      } else {
+        const found = (window.OFFICIAL_TITLES || []).find(t => t.value === tVal);
+        titleEl.textContent = found ? found.label : tVal;
+      }
+    }
+
+    if (instEl) {
+      instEl.textContent = member.institution || member.institutionGroup || 'UFG';
+    }
+
     if (roleEl) {
-      const inst = member.institution || member.institutionGroup || 'UFG';
-      const role = member.role || 'Equipe Técnica';
-      roleEl.textContent = `${inst} • ${role}`;
+      roleEl.textContent = member.role || 'Equipe Técnica';
     }
 
     const modal = document.getElementById('modal-confirm-delete-member');
