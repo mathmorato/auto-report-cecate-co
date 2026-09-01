@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial em Word (.docx)
- * Versão: v.1.8.3
+ * Versão: v.1.8.4
  */
 
 class ReportDocxGenerator {
@@ -162,7 +162,7 @@ class ReportDocxGenerator {
           spacing: { after: 200 },
           children: [
             new TextRun({
-              text: `O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${training.number || 16}, executada no município polo de ${training.polo || 'Pontes e Lacerda'}, Estado de ${training.uf || 'MT'}, nas datas de ${training.datesFormatted || '23 e 24 de junho de 2026'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${training.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).`
+              text: `O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${training.number || ''}, executada no município polo de ${training.polo || 'Município Polo'}, Estado de ${training.uf || 'GO'}, nas datas de ${training.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${training.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).`
             })
           ]
         })
@@ -331,7 +331,7 @@ class ReportDocxGenerator {
           spacing: { after: 200 },
           children: [
             new TextRun({
-              text: `A realização da Capacitação nº ${training.number || 16} no polo de ${training.polo || 'Pontes e Lacerda'} cumpriu integralmente os objetivos institucionais fixados pelo CECATE-CO e pelo FNDE. O estreitamento do diálogo técnico entre a gestão municipal e o controle social do CACS-FUNDEB fortalece as diretrizes de governança, segurança e eficiência no transporte escolar dos estudantes da Educação Básica.`
+              text: `A realização da Capacitação nº ${training.number || ''} no polo de ${training.polo || 'Município Polo'} cumpriu integralmente os objetivos institucionais fixados pelo CECATE-CO e pelo FNDE. O estreitamento do diálogo técnico entre a gestão municipal e o controle social do CACS-FUNDEB fortalece as diretrizes de governança, segurança e eficiência no transporte escolar dos estudantes da Educação Básica.`
             })
           ]
         })

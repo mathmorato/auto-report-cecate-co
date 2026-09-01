@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.8.3
+ * Versão: v.1.8.4
  */
 
 window.icons = {
@@ -72,14 +72,15 @@ class AutoReportApp {
      Navegação & SPA Router
      ========================================================================== */
   handleRoute() {
-    const hash = window.location.hash.replace('#', '') || 'dashboard';
-    if (hash.startsWith('wizard/')) {
-      const parts = hash.split('/');
-      const trainingId = parts[1];
-      const step = parseInt(parts[2]) || 1;
-      this.openWizard(trainingId, step);
-    } else {
+    const hash = window.location.hash.replace('#', '');
+    if (hash === 'trainings' || hash === 'municipalities' || hash === 'team') {
       this.navigateTo(hash);
+    } else {
+      // Ao abrir ou recarregar a página, sempre inicia no Dashboard principal limpo
+      if (window.location.hash && window.location.hash.startsWith('#wizard')) {
+        history.replaceState(null, '', window.location.pathname);
+      }
+      this.navigateTo('dashboard');
     }
   }
 
@@ -2723,13 +2724,13 @@ class AutoReportApp {
         </div>
 
         <div style="text-align:center; margin: 3rem 0;">
-          <h1 style="font-size:22pt; margin-bottom:0.5rem;">RELATÓRIO DE ATIVIDADES Nº ${t.number || 16}</h1>
+          <h1 style="font-size:22pt; margin-bottom:0.5rem;">RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}</h1>
           <h2 style="font-size:16pt; color:#2563eb; margin:0;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
-          <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem;">${t.polo || 'Polo Regional'} - ${t.uf || 'MT'}, ${t.datesFormatted || '2026'}</h3>
+          <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem;">${t.polo || 'Polo Regional'} - ${t.uf || 'GO'}, ${t.datesFormatted || '2026'}</h3>
         </div>
 
         <h3>1. INTRODUÇÃO</h3>
-        <p>O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${t.number || 16}, executada no município polo de ${t.polo || 'Pontes e Lacerda'}, Estado de ${t.uf || 'MT'}, nas datas de ${t.datesFormatted || '23 e 24 de junho de 2026'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${t.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <p>O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${t.number || ''}, executada no município polo de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, nas datas de ${t.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${t.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
 
         <h3>2. DADOS BÁSICOS DO CURSO</h3>
         <p>Foram convocados ${metrics.totalSummonedMunicipalities} municípios para participarem das atividades formativas no polo de ${t.polo}. A distância média percorrida pelas delegações foi de ${metrics.avgDistance} km.</p>
