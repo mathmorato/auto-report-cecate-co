@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Banco de Dados Local (IndexedDB & State Management)
- * Versão: v.1.3.7
+ * Versão: v.1.3.8
  */
 
 class TrainingDB {
@@ -181,9 +181,9 @@ class TrainingDB {
       throw new Error('Capacitação não encontrada no banco de dados.');
     }
 
-    // Regra estrita de segurança: NUNCA permitir exclusão de registros do Histórico Protegido
-    if (training.isHistorical || training.status === 'historico') {
-      throw new Error('Capacitações do Histórico Protegido (Nº 6 a 15) não podem ser excluídas.');
+    // Regra estrita de segurança: NUNCA permitir exclusão de registros do Histórico Protegido (Nº 6 a 14)
+    if ((training.isHistorical || training.status === 'historico') && (parseInt(training.number) >= 6 && parseInt(training.number) <= 14)) {
+      throw new Error('Capacitações do Histórico Protegido (Nº 6 a 14) não podem ser excluídas.');
     }
 
     // Exclusão em cascata de todos os registros filhos e mestre
@@ -570,11 +570,23 @@ class TrainingDB {
       await this.deleteTraining('cap_16cte_pontes_lacerda').catch(() => {});
     }
 
-    // 3. Limpeza/remoção da Capacitação 15 da base protegida se existir como histórico
-    const oldCap15 = await this.get('trainings', 'cap_historico_15');
-    if (oldCap15 && oldCap15.isHistorical) {
-      console.log('Removendo Capacitação 15 da base protegida conforme solicitado pelo usuário...');
-      await this.deleteTraining('cap_historico_15').catch(() => {});
+    // 3. Limpeza/remoção da Capacitação 15 (Posse) da base protegida no IndexedDB
+    const allTrainings = await this.getAll('trainings');
+    for (const t of allTrainings) {
+      if (t.id === 'cap_historico_15' || (parseInt(t.number) === 15 && (t.isHistorical || t.status === 'historico' || t.polo === 'Posse'))) {
+        console.log('Removendo Capacitação 15 (Posse) do IndexedDB...');
+        await Promise.all([
+          this.clearStoreByIndex('team', 'trainingId', t.id),
+          this.clearStoreByIndex('municipalities', 'trainingId', t.id),
+          this.clearStoreByIndex('courseModules', 'trainingId', t.id),
+          this.clearStoreByIndex('courseMoments', 'trainingId', t.id),
+          this.clearStoreByIndex('attendance', 'trainingId', t.id),
+          this.clearStoreByIndex('evaluations', 'trainingId', t.id),
+          this.clearStoreByIndex('media', 'trainingId', t.id),
+          this.clearStoreByIndex('auditLog', 'trainingId', t.id),
+          this.delete('trainings', t.id)
+        ]);
+      }
     }
   }
 }

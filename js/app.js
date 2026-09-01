@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.7
+ * Versão: v.1.3.8
  */
 
 class AutoReportApp {
@@ -2005,9 +2005,9 @@ class AutoReportApp {
       return;
     }
 
-    // Regra estrita: impedir exclusão de registros do Histórico Protegido
-    if (training.isHistorical || training.status === 'historico') {
-      this.showToast('🛡️ Registros do Histórico Protegido (Nº 6 a 15) são permanentes e não podem ser excluídos.', 'warning');
+    // Regra estrita: impedir exclusão de registros do Histórico Protegido (Nº 6 a 14)
+    if ((training.isHistorical || training.status === 'historico') && (parseInt(training.number) >= 6 && parseInt(training.number) <= 14)) {
+      this.showToast('🛡️ Registros do Histórico Protegido (Nº 6 a 14) são permanentes e não podem ser excluídos.', 'warning');
       return;
     }
 

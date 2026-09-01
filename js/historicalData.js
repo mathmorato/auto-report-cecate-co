@@ -1,4 +1,4 @@
-// Banco de Dados Histórico Oficial: Capacitações Nº 6 a 15
+// Banco de Dados Histórico Oficial: Capacitações Nº 6 a 14
 // Fonte: Documentos de Referência 01, 02 e 03 do CECATE Centro-Oeste
 window.HISTORICAL_TRAININGS = [
   {
