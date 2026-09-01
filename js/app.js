@@ -1,7 +1,20 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.5.3
+ * Versão: v.1.5.4
  */
+
+window.icons = {
+  edit: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
+  delete: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`,
+  search: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+  lock: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
+  plus: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+  close: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+  save: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`,
+  user: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`,
+  building: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg>`,
+  check: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+};
 
 class AutoReportApp {
   constructor() {
@@ -232,12 +245,12 @@ class AutoReportApp {
                 </div>
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                   <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="${isHist ? 'Visualizar dados' : 'Continuar edição'}">
-                    ${isHist ? '🔍 Consultar' : '✏️ Continuar'}
+                    ${isHist ? `${window.icons.search} Consultar` : `${window.icons.edit} Continuar`}
                   </button>
                   ${isHist
-                    ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b;" title="Registro do Histórico Protegido - Exclusão desabilitada">🔒 Protegido</span>`
+                    ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.12); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Registro do Histórico Protegido - Exclusão desabilitada">${window.icons.lock} Protegido</span>`
                     : `<button class="btn btn-secondary btn-sm" onclick="app.openConfirmDeleteModal('${t.id}')" style="color:var(--accent-danger); border-color:rgba(239, 68, 68, 0.3);" title="Excluir este relatório permanentemente">
-                        <span style="color:#ef4444;">🗑️ Apagar</span>
+                        <span style="color:#ef4444; display:inline-flex; align-items:center; gap:0.25rem;">${window.icons.delete} Excluir</span>
                       </button>`
                   }
                 </div>
@@ -1231,8 +1244,10 @@ class AutoReportApp {
                   </td>
                   <td><span style="color:var(--text-secondary); font-size:0.85rem;">${item.role || 'Equipe Técnica'}</span></td>
                   <td style="text-align:center; white-space:nowrap;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('wizard', ${idx})" style="margin-right:0.35rem; color:#fbbf24; border-color:rgba(245, 158, 11, 0.3); font-size:0.75rem; padding:0.25rem 0.55rem;" title="Editar este integrante">✏️ Editar</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem;" title="Excluir este integrante">🗑️ Excluir</button>
+                    <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('wizard', ${idx})" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.3); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar este integrante">${window.icons.edit} Editar</button>
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir este integrante">${window.icons.delete} Excluir</button>
+                    </div>
                   </td>
                 </tr>
               `;
@@ -1343,8 +1358,10 @@ class AutoReportApp {
                   </td>
                   <td><span style="color:var(--text-secondary); font-size:0.85rem;">${item.role || 'Equipe Técnica'}</span></td>
                   <td style="text-align:center; white-space:nowrap;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('master', ${idx})" style="margin-right:0.35rem; color:#fbbf24; border-color:rgba(245, 158, 11, 0.3); font-size:0.75rem; padding:0.25rem 0.55rem;" title="Editar este integrante">✏️ Editar</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMasterTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem;" title="Excluir do catálogo geral">🗑️ Excluir</button>
+                    <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('master', ${idx})" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.3); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar este integrante">${window.icons.edit} Editar</button>
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMasterTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir do catálogo geral">${window.icons.delete} Excluir</button>
+                    </div>
                   </td>
                 </tr>
               `;
@@ -1670,8 +1687,8 @@ class AutoReportApp {
               <span style="font-size:0.8rem; color:var(--text-muted);">km</span>
             </div>
           </td>
-          <td style="text-align:center;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMunicipality(${targetIdx})" title="Excluir município" style="color:#ef4444; border-color:rgba(239,68,68,0.3);">🗑️</button>
+          <td style="text-align:center; white-space:nowrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMunicipality(${targetIdx})" title="Excluir município" style="color:#ef4444; border-color:rgba(239,68,68,0.3); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;">${window.icons.delete} Excluir</button>
           </td>
         </tr>
       `;
@@ -2694,15 +2711,15 @@ class AutoReportApp {
                   <td style="font-size:0.85rem;">${t.datesFormatted || t.startDate || '-'}</td>
                   <td style="font-size:0.85rem;">${t.workload || '16h'}</td>
                   <td>${statusBadge}</td>
-                  <td style="text-align:center;">
-                    <div style="display:flex; gap:0.4rem; justify-content:center; align-items:center;">
-                      <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="${isHist ? 'Consultar' : 'Editar'}">
-                        ${isHist ? '🔍 Consultar' : '✏️ Editar'}
+                  <td style="text-align:center; white-space:nowrap;">
+                    <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
+                      <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" style="display:inline-flex; align-items:center;" title="${isHist ? 'Consultar' : 'Editar'}">
+                        ${isHist ? `${window.icons.search} Consultar` : `${window.icons.edit} Editar`}
                       </button>
                       ${isHist
-                        ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b;" title="Histórico protegido - exclusão desabilitada">🔒</span>`
-                        : `<button class="btn btn-secondary btn-sm" onclick="app.openConfirmDeleteModal('${t.id}')" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" title="Excluir este relatório">
-                            🗑️
+                        ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.12); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Histórico protegido - exclusão desabilitada">${window.icons.lock} Protegido</span>`
+                        : `<button class="btn btn-secondary btn-sm" onclick="app.openConfirmDeleteModal('${t.id}')" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3); display:inline-flex; align-items:center;" title="Excluir este relatório">
+                            ${window.icons.delete} Excluir
                           </button>`
                       }
                     </div>
