@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.6.4
+ * Versão: v.1.6.5
  */
 
 window.icons = {
@@ -1267,9 +1267,8 @@ class AutoReportApp {
     const container = document.getElementById('wizard-team-list-container');
     if (!container || !this.currentTraining) return;
 
-    if (!this.currentTraining.team || this.currentTraining.team.length === 0) {
-      this.currentTraining.team = (window.getMasterTeam ? window.getMasterTeam() : window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m }));
-    }
+    // Sincronizar sempre todas as informações da Equipe Técnica central (UFG & FNDE)
+    this.currentTraining.team = (window.getMasterTeam ? window.getMasterTeam() : window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m }));
 
     const team = this.currentTraining.team;
 
@@ -1296,16 +1295,11 @@ class AutoReportApp {
     if (displayList.length === 0) {
       container.innerHTML = `
         <div style="padding:2rem; text-align:center; color:var(--text-muted); background:var(--bg-input); border-radius:var(--radius-md);">
-          Nenhum integrante nesta categoria. Clique em <strong>+ Adicionar Integrante</strong> acima para cadastrar.
+          Nenhum integrante cadastrado nesta categoria na Equipe Técnica.
         </div>
       `;
       return;
     }
-
-    const pronouns = window.OFFICIAL_PRONOUNS || [];
-    const titles = window.OFFICIAL_TITLES || [];
-    const roleOptionsUFG = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'UFG');
-    const roleOptionsFNDE = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'FNDE');
 
     container.innerHTML = `
       <div class="table-responsive-wrapper">
@@ -1315,14 +1309,12 @@ class AutoReportApp {
               <th style="width:140px;">Pronome</th>
               <th style="width:120px;">Titulação</th>
               <th style="min-width:240px;">Nome do Integrante</th>
-              <th style="width:110px; text-align:center;">Instituição</th>
+              <th style="width:120px; text-align:center;">Instituição</th>
               <th style="min-width:320px;">Cargo / Função Oficial</th>
-              <th style="width:160px; text-align:center;">Ações</th>
             </tr>
           </thead>
           <tbody>
             ${displayList.map(item => {
-              const idx = item.originalIndex;
               const isUfg = item.institutionGroup === 'UFG' || item.institution === 'UFG';
 
               return `
@@ -1336,12 +1328,6 @@ class AutoReportApp {
                     </span>
                   </td>
                   <td><span style="color:var(--text-secondary); font-size:0.85rem;">${item.role || 'Equipe Técnica'}</span></td>
-                  <td style="text-align:center; white-space:nowrap;">
-                    <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
-                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('wizard', ${idx})" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.3); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar este integrante">${window.icons.edit} Editar</button>
-                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir este integrante">${window.icons.delete} Excluir</button>
-                    </div>
-                  </td>
                 </tr>
               `;
             }).join('')}
