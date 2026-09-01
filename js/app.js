@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.0.4
+ * Versão: v.1.0.5
  */
 
 class AutoReportApp {
@@ -11,6 +11,7 @@ class AutoReportApp {
     this.activeView = 'dashboard';
     this.trainingList = [];
     this.dashboardFilter = 'all';
+    this.trainingToDeleteId = null;
     this.theme = localStorage.getItem('autoreport_theme') || 'dark';
     this.metrics = null;
   }
@@ -236,7 +237,7 @@ class AutoReportApp {
                   </button>
                   ${isHist
                     ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b;" title="Registro do Histórico Protegido - Exclusão desabilitada">🔒 Protegido</span>`
-                    : `<button class="btn btn-secondary btn-sm" onclick="app.deleteTrainingAction('${t.id}')" style="color:var(--accent-danger); border-color:rgba(239, 68, 68, 0.3);" title="Excluir permanentemente este relatório">
+                    : `<button class="btn btn-secondary btn-sm" onclick="app.openConfirmDeleteModal('${t.id}')" style="color:var(--accent-danger); border-color:rgba(239, 68, 68, 0.3);" title="Excluir este relatório permanentemente">
                         <span style="color:#ef4444;">🗑️ Apagar</span>
                       </button>`
                   }
@@ -620,11 +621,10 @@ class AutoReportApp {
   }
 
   removeTeamMember(index) {
-    if (confirm('Deseja remover este integrante?')) {
-      this.currentTraining.team.splice(index, 1);
-      this.renderTeamList();
-      this.saveCurrentStepData();
-    }
+    this.currentTraining.team.splice(index, 1);
+    this.renderTeamList();
+    this.saveCurrentStepData();
+    this.showToast('Integrante removido da equipe.');
   }
 
   /* ==========================================================================
@@ -989,12 +989,11 @@ class AutoReportApp {
   }
 
   removeMedia(mediaId) {
-    if (confirm('Deseja excluir este anexo/foto?')) {
-      this.currentTraining.media = (this.currentTraining.media || []).filter(m => m.id !== mediaId);
-      this.renderPhotosStep();
-      this.renderAppendicesStep();
-      this.saveCurrentStepData();
-    }
+    this.currentTraining.media = (this.currentTraining.media || []).filter(m => m.id !== mediaId);
+    this.renderPhotosStep();
+    this.renderAppendicesStep();
+    this.saveCurrentStepData();
+    this.showToast('Item removido com sucesso.');
   }
 
   /* ==========================================================================
@@ -1190,9 +1189,9 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     EXCLUSÃO DE CAPACITAÇÕES (EXCETO HISTÓRICO PROTEGIDO)
+     EXCLUSÃO DE CAPACITAÇÕES (MODAL WEB MODERNO)
      ========================================================================== */
-  async deleteTrainingAction(trainingId) {
+  async openConfirmDeleteModal(trainingId) {
     if (!window.db) return;
     const training = await window.db.get('trainings', trainingId);
     if (!training) {
@@ -1202,39 +1201,76 @@ class AutoReportApp {
 
     // Regra estrita: impedir exclusão de registros do Histórico Protegido
     if (training.isHistorical || training.status === 'historico') {
-      this.showToast('🛡️ Registros do Histórico Protegido (Nº 6 a 15) não podem ser excluídos.', 'warning');
+      this.showToast('🛡️ Registros do Histórico Protegido (Nº 6 a 15) são permanentes e não podem ser excluídos.', 'warning');
       return;
     }
 
-    const confirmed = confirm(
-      `ATENÇÃO: Deseja realmente excluir permanentemente o relatório da Capacitação Nº ${training.number} - ${training.polo || 'Polo Regional'}?\n\n` +
-      `Esta ação removerá todos os dados preenchidos, participantes, módulos, avaliações e anexos vinculados a este relatório e NÃO poderá ser desfeita.`
-    );
+    this.trainingToDeleteId = trainingId;
 
-    if (confirmed) {
-      try {
-        await window.db.deleteTraining(trainingId);
-        this.showToast(`✓ Capacitação Nº ${training.number} excluída com sucesso!`, 'success');
-        await this.refreshTrainingsList();
+    // Atualizar dados no modal web
+    const titleEl = document.getElementById('modal-delete-target-title');
+    const detailsEl = document.getElementById('modal-delete-target-details');
+    if (titleEl) {
+      titleEl.textContent = `Capacitação Nº ${training.number} - ${training.polo || 'Polo Regional'} (${training.uf || 'MT'})`;
+    }
+    if (detailsEl) {
+      detailsEl.innerHTML = `
+        <span>📍 Local: <strong>${training.locationVenue || 'Auditório Municipal'}</strong></span>
+        <span>📅 Datas: <strong>${training.datesFormatted || training.startDate || 'Data a definir'}</strong></span>
+        <span>⏱️ Carga: <strong>${training.workload || '16h'}</strong></span>
+      `;
+    }
 
-        if (this.currentTraining?.id === trainingId) {
-          this.currentTraining = null;
-          this.navigateTo('dashboard');
-        } else if (this.activeView === 'trainings') {
-          this.renderTrainingsList();
-        } else {
-          this.renderDashboard();
+    const modal = document.getElementById('modal-confirm-delete');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeConfirmDeleteModal() {
+    this.trainingToDeleteId = null;
+    const modal = document.getElementById('modal-confirm-delete');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => {
+        if (!modal.classList.contains('active')) {
+          modal.style.display = 'none';
         }
-      } catch (err) {
-        console.error('Erro ao excluir capacitação:', err);
-        this.showToast(`Erro ao excluir: ${err.message}`, 'error');
+      }, 200);
+    }
+  }
+
+  async executeDeleteTrainingConfirmed() {
+    if (!this.trainingToDeleteId || !window.db) return;
+
+    const idToDelete = this.trainingToDeleteId;
+    const training = await window.db.get('trainings', idToDelete);
+    const num = training ? training.number : '';
+
+    try {
+      this.closeConfirmDeleteModal();
+      await window.db.deleteTraining(idToDelete);
+      this.showToast(`✓ Capacitação Nº ${num} excluída com sucesso!`, 'success');
+      await this.refreshTrainingsList();
+
+      if (this.currentTraining?.id === idToDelete) {
+        this.currentTraining = null;
+        this.navigateTo('dashboard');
+      } else if (this.activeView === 'trainings') {
+        this.renderTrainingsList();
+      } else {
+        this.renderDashboard();
       }
+    } catch (err) {
+      console.error('Erro ao excluir capacitação:', err);
+      this.showToast(`Erro ao excluir: ${err.message}`, 'error');
     }
   }
 
   deleteCurrentWizardTraining() {
     if (this.currentTraining) {
-      this.deleteTrainingAction(this.currentTraining.id);
+      this.openConfirmDeleteModal(this.currentTraining.id);
     }
   }
 
@@ -1303,7 +1339,7 @@ class AutoReportApp {
                       </button>
                       ${isHist
                         ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b;" title="Histórico protegido - exclusão desabilitada">🔒</span>`
-                        : `<button class="btn btn-secondary btn-sm" onclick="app.deleteTrainingAction('${t.id}')" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" title="Excluir este relatório">
+                        : `<button class="btn btn-secondary btn-sm" onclick="app.openConfirmDeleteModal('${t.id}')" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" title="Excluir este relatório">
                             🗑️
                           </button>`
                       }
@@ -1319,16 +1355,7 @@ class AutoReportApp {
   }
 
   async duplicateTrainingAction(trainingId) {
-    if (confirm('Deseja duplicar esta capacitação como modelo para uma nova edição?')) {
-      try {
-        const newId = await window.db.duplicateTraining(trainingId);
-        this.showToast('✓ Capacitação duplicada com sucesso!');
-        await this.refreshTrainingsList();
-        this.openWizard(newId, 1);
-      } catch (err) {
-        this.showToast(`Erro ao duplicar: ${err.message}`, 'error');
-      }
-    }
+    this.openCloneModal(trainingId);
   }
 
   /* ==========================================================================
