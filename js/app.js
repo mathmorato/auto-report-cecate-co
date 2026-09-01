@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.0.7
+ * Versão: v.1.0.8
  */
 
 class AutoReportApp {
@@ -12,7 +12,7 @@ class AutoReportApp {
     this.trainingList = [];
     this.dashboardFilter = 'all';
     this.trainingToDeleteId = null;
-    this.theme = localStorage.getItem('autoreport_theme') || 'dark';
+    this.theme = localStorage.getItem('autoreport_theme') || 'light';
     this.metrics = null;
   }
 
