@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.5
+ * Versão: v.1.3.6
  */
 
 class AutoReportApp {
@@ -621,17 +621,23 @@ class AutoReportApp {
         const munCount = data.allMunicipalities?.length || data.invitedMunicipalitiesCount || 0;
         const expParticipants = munCount * 4;
 
+        training.title = data.title || training.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR';
         training.polo = data.polo || training.polo;
         training.uf = data.uf || training.uf;
         training.poloIbge = data.poloIbge || training.poloIbge;
         training.startDate = data.startDate || training.startDate;
         training.endDate = data.endDate || training.endDate;
         training.datesFormatted = data.datesFormatted || training.datesFormatted;
-        training.workload = data.workload || training.workload;
+        training.workload = data.workload || training.workload || '16 horas';
         training.locationVenue = data.venue || training.locationVenue;
         training.locationAddress = data.address || training.locationAddress;
-        training.targetAudience = data.targetAudience || training.targetAudience;
+        training.targetAudience = data.targetAudience || training.targetAudience || 'Gestores Municipais e Conselheiros CACS-FUNDEB';
         training.expectedParticipants = expParticipants || training.expectedParticipants;
+        training.responsibleOrg = training.responsibleOrg || 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste';
+        training.relatedProject = training.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
+        training.processNumber = training.processNumber || '23070.012345/2026-00';
+        training.fundingOrg = training.fundingOrg || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
+        training.partnerOrgs = training.partnerOrgs || 'Ministério da Educação / Prefeituras Municipais';
       }
 
       // Sincronizar Municípios Convocados com distâncias calculadas pelo polo
@@ -752,7 +758,8 @@ class AutoReportApp {
       if (t.isHistorical) {
         titleEl.innerHTML = `Capacitação Nº ${t.number} • <span style="color:#f59e0b;">${t.polo || 'Polo'} (${t.uf || 'MT'}) [HISTÓRICO PRESERVADO]</span>`;
       } else {
-        titleEl.innerHTML = `Capacitação Nº ${t.number || 16} • <span style="color:var(--accent-secondary);">${t.polo || 'Novo Polo'} (${t.uf || 'MT'})</span>`;
+        const poloText = t.polo ? `${t.polo} (${t.uf || 'UF'})` : 'Nova Capacitação em Branco';
+        titleEl.innerHTML = `Capacitação Nº ${t.number || 16} • <span style="color:var(--accent-secondary);">${poloText}</span>`;
       }
     }
 
@@ -795,30 +802,32 @@ class AutoReportApp {
     const t = this.currentTraining;
 
     // Etapa 1: Identificação
-    this.setVal('wiz-train-number', t.number);
-    this.setVal('wiz-train-title', t.title);
+    this.setVal('wiz-train-number', t.number || '');
+    this.setVal('wiz-train-title', t.title || '');
 
     // Carga Horária com botão de rotação (spinner)
-    const workloadNum = parseInt(t.workload) || 16;
+    const workloadNum = t.workload ? parseInt(t.workload) : '';
     this.setVal('wiz-train-workload-num', workloadNum);
-    this.setVal('wiz-train-workload', `${workloadNum} horas`);
+    this.setVal('wiz-train-workload', t.workload || '');
+    const hintEl = document.getElementById('wiz-workload-auto-hint');
+    if (hintEl) hintEl.textContent = t.workload ? `Carga horária configurada: ${t.workload}` : '';
 
     // Estado (UF) PRIMEIRO e Município Polo Suspenso com Código IBGE/INEP
-    const uf = t.uf || 'MT';
+    const uf = t.uf || '';
     this.setVal('wiz-train-uf', uf);
-    this.populateCitiesDropdown(uf, t.polo, t.poloIbge);
+    this.populateCitiesDropdown(uf, t.polo || '', t.poloIbge || '');
 
-    this.setVal('wiz-train-start-date', t.startDate);
-    this.setVal('wiz-train-end-date', t.endDate);
-    this.setVal('wiz-train-dates-fmt', t.datesFormatted);
-    this.setVal('wiz-train-target', t.targetAudience);
-    this.setVal('wiz-train-expected', t.expectedParticipants);
-    this.setVal('wiz-train-venue', t.locationVenue);
-    this.setVal('wiz-train-org', t.responsibleOrg);
-    this.setVal('wiz-train-project', t.relatedProject);
-    this.setVal('wiz-train-process', t.processNumber);
-    this.setVal('wiz-train-funding', t.fundingOrg);
-    this.setVal('wiz-train-partners', t.partnerOrgs);
+    this.setVal('wiz-train-start-date', t.startDate || '');
+    this.setVal('wiz-train-end-date', t.endDate || '');
+    this.setVal('wiz-train-dates-fmt', t.datesFormatted || '');
+    this.setVal('wiz-train-target', t.targetAudience || '');
+    this.setVal('wiz-train-expected', t.expectedParticipants || '');
+    this.setVal('wiz-train-venue', t.locationVenue || '');
+    this.setVal('wiz-train-org', t.responsibleOrg || '');
+    this.setVal('wiz-train-project', t.relatedProject || '');
+    this.setVal('wiz-train-process', t.processNumber || '');
+    this.setVal('wiz-train-funding', t.fundingOrg || '');
+    this.setVal('wiz-train-partners', t.partnerOrgs || '');
 
     // Exibir card do arquivo de convocação anexado em Etapa 1 (se existir)
     const attachedCard = document.getElementById('etapa1-convocacao-attached-card');
@@ -877,22 +886,22 @@ class AutoReportApp {
 
     // Sincronizar dados da Etapa 1
     t.number = parseInt(this.getVal('wiz-train-number')) || t.number;
-    t.title = this.getVal('wiz-train-title') || t.title;
-    t.uf = this.getVal('wiz-train-uf') || t.uf;
-    t.polo = this.getVal('wiz-train-polo') || t.polo;
-    t.poloIbge = this.getVal('wiz-train-inep') || t.poloIbge;
-    t.workload = this.getVal('wiz-train-workload') || `${parseInt(this.getVal('wiz-train-workload-num')) || 16} horas`;
-    t.startDate = this.getVal('wiz-train-start-date') || t.startDate;
-    t.endDate = this.getVal('wiz-train-end-date') || t.endDate;
-    t.datesFormatted = this.getVal('wiz-train-dates-fmt') || t.datesFormatted;
-    t.targetAudience = this.getVal('wiz-train-target') || t.targetAudience;
-    t.expectedParticipants = parseInt(this.getVal('wiz-train-expected')) || t.expectedParticipants;
-    t.locationVenue = this.getVal('wiz-train-venue') || t.locationVenue;
-    t.responsibleOrg = this.getVal('wiz-train-org') || t.responsibleOrg;
-    t.relatedProject = this.getVal('wiz-train-project') || t.relatedProject;
-    t.processNumber = this.getVal('wiz-train-process') || t.processNumber;
-    t.fundingOrg = this.getVal('wiz-train-funding') || t.fundingOrg;
-    t.partnerOrgs = this.getVal('wiz-train-partners') || t.partnerOrgs;
+    t.title = this.getVal('wiz-train-title');
+    t.uf = this.getVal('wiz-train-uf');
+    t.polo = this.getVal('wiz-train-polo');
+    t.poloIbge = this.getVal('wiz-train-inep');
+    t.workload = this.getVal('wiz-train-workload') || (this.getVal('wiz-train-workload-num') ? `${this.getVal('wiz-train-workload-num')} horas` : '');
+    t.startDate = this.getVal('wiz-train-start-date');
+    t.endDate = this.getVal('wiz-train-end-date');
+    t.datesFormatted = this.getVal('wiz-train-dates-fmt');
+    t.targetAudience = this.getVal('wiz-train-target');
+    t.expectedParticipants = parseInt(this.getVal('wiz-train-expected')) || '';
+    t.locationVenue = this.getVal('wiz-train-venue');
+    t.responsibleOrg = this.getVal('wiz-train-org');
+    t.relatedProject = this.getVal('wiz-train-project');
+    t.processNumber = this.getVal('wiz-train-process');
+    t.fundingOrg = this.getVal('wiz-train-funding');
+    t.partnerOrgs = this.getVal('wiz-train-partners');
 
     // Sincronizar dados da Etapa 5
     t.contactsData = {
