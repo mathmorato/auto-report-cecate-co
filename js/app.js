@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.1
+ * Versão: v.1.3.2
  */
 
 class AutoReportApp {
@@ -421,10 +421,16 @@ class AutoReportApp {
     const uploadStep = document.getElementById('convocacao-upload-step');
     const procStep = document.getElementById('convocacao-processing-step');
     const resStep = document.getElementById('convocacao-results-step');
+    const loadedCard = document.getElementById('convocacao-file-loaded-card');
+    const loadedFileName = document.getElementById('convocacao-loaded-file-name');
     const statusText = document.getElementById('convocacao-status-text');
     const progressFill = document.getElementById('convocacao-progress-fill');
 
+    // Ocultar área de upload/botão de enviar e exibir card do arquivo selecionado
     if (uploadStep) uploadStep.style.display = 'none';
+    if (loadedCard) loadedCard.style.display = 'flex';
+    if (loadedFileName) loadedFileName.textContent = file.name;
+
     if (procStep) procStep.style.display = 'block';
     if (resStep) resStep.style.display = 'none';
 
@@ -462,14 +468,34 @@ class AutoReportApp {
       const applyBtn = document.getElementById('convocacao-apply-btn');
       if (applyBtn) applyBtn.style.display = 'inline-flex';
 
-      this.showToast('✨ Convocação analisada com varredura completa!');
+      this.showToast('✨ Convocação analisada com sucesso!');
 
     } catch (err) {
       console.error('Erro na leitura da convocação:', err);
       this.showToast(`Erro ao ler PDF: ${err.message}`, 'error');
       if (procStep) procStep.style.display = 'none';
+      if (loadedCard) loadedCard.style.display = 'none';
       if (uploadStep) uploadStep.style.display = 'block';
     }
+  }
+
+  removeLoadedConvocacaoFile() {
+    const fileInput = document.getElementById('convocacao-file-input');
+    const loadedCard = document.getElementById('convocacao-file-loaded-card');
+    const uploadStep = document.getElementById('convocacao-upload-step');
+    const procStep = document.getElementById('convocacao-processing-step');
+    const resStep = document.getElementById('convocacao-results-step');
+    const applyBtn = document.getElementById('convocacao-apply-btn');
+
+    if (fileInput) fileInput.value = '';
+    if (loadedCard) loadedCard.style.display = 'none';
+    if (procStep) procStep.style.display = 'none';
+    if (resStep) resStep.style.display = 'none';
+    if (applyBtn) applyBtn.style.display = 'none';
+    if (uploadStep) uploadStep.style.display = 'block';
+
+    this.extractedConvocacaoData = null;
+    this.showToast('🗑️ Arquivo de convocação removido. Você pode enviar outro PDF.');
   }
 
   updateConvocacaoExtractedField(field, value) {
@@ -499,7 +525,8 @@ class AutoReportApp {
     const badgeEl = document.getElementById('res-conv-muns-badge');
     const listEl = document.getElementById('res-conv-muns-list');
 
-    if (badgeEl) badgeEl.textContent = `${muns.length} Municípios`;
+    const expPartCount = muns.length * 4;
+    if (badgeEl) badgeEl.textContent = `${muns.length} Municípios (${expPartCount} Participantes Previstos)`;
     if (listEl) {
       if (muns.length === 0) {
         listEl.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">Nenhum município listado. Clique acima para adicionar.</span>`;
@@ -588,6 +615,9 @@ class AutoReportApp {
         };
       } else {
         // Atualizar dados no relatório existente
+        const munCount = data.allMunicipalities?.length || data.invitedMunicipalitiesCount || 0;
+        const expParticipants = munCount * 4;
+
         training.polo = data.polo || training.polo;
         training.uf = data.uf || training.uf;
         training.poloIbge = data.poloIbge || training.poloIbge;
@@ -598,7 +628,7 @@ class AutoReportApp {
         training.locationVenue = data.venue || training.locationVenue;
         training.locationAddress = data.address || training.locationAddress;
         training.targetAudience = data.targetAudience || training.targetAudience;
-        training.expectedParticipants = data.expectedParticipants || training.expectedParticipants;
+        training.expectedParticipants = expParticipants || training.expectedParticipants;
       }
 
       // Sincronizar Municípios Convocados com distâncias calculadas pelo polo

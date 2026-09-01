@@ -326,7 +326,7 @@ class ConvocacaoParser {
     if (result.invitedMunicipalitiesCount === 0) {
       result.invitedMunicipalitiesCount = result.allMunicipalities.length;
     }
-    result.expectedParticipants = (result.invitedMunicipalitiesCount || result.allMunicipalities.length) * 2;
+    result.expectedParticipants = (result.invitedMunicipalitiesCount || result.allMunicipalities.length) * 4;
 
     return result;
   }
