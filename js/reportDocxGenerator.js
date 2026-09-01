@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial em Word (.docx)
- * Versão: v.1.9.8
+ * Versão: v.1.9.9
  */
 
 class ReportDocxGenerator {
@@ -229,10 +229,10 @@ class ReportDocxGenerator {
         new TableRow({
           tableHeader: true,
           children: [
-            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Módulo', bold: true })] })] }),
-            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Temática Gestor', bold: true })] })] }),
-            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Temática CACS', bold: true })] })] }),
-            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Carga Horária', bold: true })] })] })
+            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Módulo', bold: true })] })] }),
+            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Temática Gestor', bold: true })] })] }),
+            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Temática CACS', bold: true })] })] }),
+            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Carga Horária', bold: true })] })] })
           ]
         })
       ];
@@ -256,10 +256,10 @@ class ReportDocxGenerator {
           modRows.push(
             new TableRow({
               children: [
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: i === 0 ? (mod.moduleNumber || '01') : '', bold: true })] })] }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: g ? (g.topic || '-') : '' })] })] }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: c ? (c.topic || '-') : '' })] })] }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: hText.join(' | ') || '-' })] })] })
+                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: i === 0 ? (mod.moduleNumber || '01') : '', bold: true })] })] }),
+                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: g ? (g.topic || '-') : '' })] })] }),
+                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: c ? (c.topic || '-') : '' })] })] }),
+                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: hText.join(' | ') || '-' })] })] })
               ]
             })
           );

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Estatístico e Calculador de Métricas Analíticas
- * Versão: v.1.9.8
+ * Versão: v.1.9.9
  */
 
 class StatsEngine {
@@ -237,10 +237,10 @@ class StatsEngine {
             const h = parseFloat(g.hours) || 0;
             totalHoursGestor += h;
             totalHoursCACS += h;
-            rowsHtml += `<td colspan="2" style="vertical-align:middle; text-align:left;">${g.topic || '-'}</td>`;
+            rowsHtml += `<td colspan="2" style="text-align:center; vertical-align:middle;">${g.topic || '-'}</td>`;
             rowsHtml += `<td colspan="2" style="text-align:center; vertical-align:middle; font-weight:600;">${h.toFixed(1).replace('.', ',')} h</td>`;
           } else {
-            rowsHtml += `<td colspan="2" style="color:var(--text-muted);">-</td>`;
+            rowsHtml += `<td colspan="2" style="text-align:center; color:var(--text-muted);">-</td>`;
             rowsHtml += `<td colspan="2" style="text-align:center; color:var(--text-muted);">-</td>`;
           }
 
@@ -265,24 +265,24 @@ class StatsEngine {
           if (g) {
             totalHoursGestor += parseFloat(g.hours) || 0;
             if (gTopics.length === 1 && maxRows > 1 && i === 0) {
-              rowsHtml += `<td rowspan="${maxRows}" style="vertical-align:middle;">${g.topic || '-'}</td>`;
+              rowsHtml += `<td rowspan="${maxRows}" style="text-align:center; vertical-align:middle;">${g.topic || '-'}</td>`;
             } else if (gTopics.length > 1 || maxRows === 1) {
-              rowsHtml += `<td>${g.topic || '-'}</td>`;
+              rowsHtml += `<td style="text-align:center; vertical-align:middle;">${g.topic || '-'}</td>`;
             }
           } else if (gTopics.length > 1) {
-            rowsHtml += `<td style="color:var(--text-muted);">-</td>`;
+            rowsHtml += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
           }
 
           // Coluna Temática CACS
           if (c) {
             totalHoursCACS += parseFloat(c.hours) || 0;
             if (cTopics.length === 1 && maxRows > 1 && i === 0) {
-              rowsHtml += `<td rowspan="${maxRows}" style="vertical-align:middle;">${c.topic || '-'}</td>`;
+              rowsHtml += `<td rowspan="${maxRows}" style="text-align:center; vertical-align:middle;">${c.topic || '-'}</td>`;
             } else if (cTopics.length > 1 || maxRows === 1) {
-              rowsHtml += `<td>${c.topic || '-'}</td>`;
+              rowsHtml += `<td style="text-align:center; vertical-align:middle;">${c.topic || '-'}</td>`;
             }
           } else if (cTopics.length > 1) {
-            rowsHtml += `<td style="color:var(--text-muted);">-</td>`;
+            rowsHtml += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
           }
 
           // Coluna Carga Horária Gestor
@@ -320,14 +320,14 @@ class StatsEngine {
           <thead>
             <tr>
               <th rowspan="2" style="width: 80px; text-align:center; vertical-align:middle;">Módulo</th>
-              <th colspan="2" style="text-align:center;">Temática</th>
-              <th colspan="2" style="text-align:center;">Carga Horária</th>
+              <th colspan="2" style="text-align:center; vertical-align:middle;">Temática</th>
+              <th colspan="2" style="text-align:center; vertical-align:middle;">Carga Horária</th>
             </tr>
             <tr>
-              <th style="text-align:left;">Gestor</th>
-              <th style="text-align:left;">CACS</th>
-              <th style="width: 100px; text-align:center;">Gestor</th>
-              <th style="width: 100px; text-align:center;">CACS</th>
+              <th style="text-align:center; vertical-align:middle;">Gestor</th>
+              <th style="text-align:center; vertical-align:middle;">CACS</th>
+              <th style="width: 100px; text-align:center; vertical-align:middle;">Gestor</th>
+              <th style="width: 100px; text-align:center; vertical-align:middle;">CACS</th>
             </tr>
           </thead>
           <tbody>
@@ -335,9 +335,9 @@ class StatsEngine {
           </tbody>
           <tfoot>
             <tr style="font-weight:700; background:rgba(99, 102, 241, 0.08);">
-              <td colspan="3" style="text-align:right;">Total Geral de Carga Horária:</td>
-              <td style="text-align:center; font-weight:800; color:var(--accent-blue-text);">${totalHoursGestor.toFixed(1).replace('.', ',')} h</td>
-              <td style="text-align:center; font-weight:800; color:var(--accent-emerald-text);">${totalHoursCACS.toFixed(1).replace('.', ',')} h</td>
+              <td colspan="3" style="text-align:center; vertical-align:middle;">Total Geral de Carga Horária:</td>
+              <td style="text-align:center; vertical-align:middle; font-weight:800; color:var(--accent-blue-text);">${totalHoursGestor.toFixed(1).replace('.', ',')} h</td>
+              <td style="text-align:center; vertical-align:middle; font-weight:800; color:var(--accent-emerald-text);">${totalHoursCACS.toFixed(1).replace('.', ',')} h</td>
             </tr>
           </tfoot>
         </table>

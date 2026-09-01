@@ -1765,7 +1765,7 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
-  text-align: left;
+  text-align: center;
 }
 
 .report-data-table th {
@@ -1777,6 +1777,8 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   border-right: 1px solid var(--border-color);
   font-size: 0.82rem;
   letter-spacing: 0.02em;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .report-data-table td {
@@ -1785,6 +1787,7 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   border-right: 1px solid var(--border-color);
   color: var(--text-secondary);
   vertical-align: middle;
+  text-align: center;
 }
 
 .report-data-table tr:hover td {
