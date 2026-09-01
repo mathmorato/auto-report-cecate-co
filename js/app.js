@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.6.6
+ * Versão: v.1.6.7
  */
 
 window.icons = {
@@ -1501,17 +1501,19 @@ class AutoReportApp {
     // Popular opções de Pronome
     const pronounSelect = document.getElementById(`${context}-team-pronoun-select`);
     if (pronounSelect) {
-      pronounSelect.innerHTML = (window.OFFICIAL_PRONOUNS || []).map(p => `
-        <option value="${p.value}">${p.label}</option>
-      `).join('');
+      pronounSelect.innerHTML = `
+        <option value="">Selecionar Pronome...</option>
+        ${(window.OFFICIAL_PRONOUNS || []).map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
+      `;
     }
 
     // Popular opções de Titulação
     const titleSelect = document.getElementById(`${context}-team-title-select`);
     if (titleSelect) {
-      titleSelect.innerHTML = (window.OFFICIAL_TITLES || []).map(t => `
-        <option value="${t.value}">${t.label}</option>
-      `).join('');
+      titleSelect.innerHTML = `
+        <option value="">Selecionar Titulação...</option>
+        ${(window.OFFICIAL_TITLES || []).map(t => `<option value="${t.value}">${t.label}</option>`).join('')}
+      `;
     }
 
     // Popular opções de Cargo
@@ -1520,6 +1522,7 @@ class AutoReportApp {
     const roleOptionsFNDE = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'FNDE');
     if (roleSelect) {
       roleSelect.innerHTML = `
+        <option value="">Selecionar Cargo / Função...</option>
         <optgroup label="Universidade Federal de Goiás - UFG">
           ${roleOptionsUFG.map(r => `<option value="${r.value}">${r.value}</option>`).join('')}
         </optgroup>
@@ -1566,13 +1569,13 @@ class AutoReportApp {
         }
       }
     } else {
-      // Modo Adição
+      // Modo Adição - Tudo vem desmarcado/em branco para o usuário selecionar livremente
       if (titleTextEl) titleTextEl.textContent = `Cadastrar Novo Integrante da Equipe`;
-      if (pronounSelect) pronounSelect.value = 'Prof.';
-      if (titleSelect) titleSelect.value = 'Dr.';
+      if (pronounSelect) pronounSelect.value = '';
+      if (titleSelect) titleSelect.value = '';
       if (nameInput) nameInput.value = '';
-      if (instSelect) instSelect.value = 'UFG';
-      if (roleSelect) roleSelect.value = 'Pesquisador e Equipe Técnica';
+      if (instSelect) instSelect.value = '';
+      if (roleSelect) roleSelect.value = '';
       if (customRoleGroup) customRoleGroup.style.display = 'none';
       if (customRoleInput) customRoleInput.value = '';
     }
@@ -1636,8 +1639,8 @@ class AutoReportApp {
     const pronoun = (document.getElementById(`${context}-team-pronoun-select`)?.value || '').trim();
     const title = (document.getElementById(`${context}-team-title-select`)?.value || '').trim();
     const name = (document.getElementById(`${context}-team-name-input`)?.value || '').trim();
-    const institution = (document.getElementById(`${context}-team-institution-select`)?.value || 'UFG').trim();
-    let role = (document.getElementById(`${context}-team-role-select`)?.value || 'Equipe Técnica').trim();
+    const institution = (document.getElementById(`${context}-team-institution-select`)?.value || '').trim();
+    let role = (document.getElementById(`${context}-team-role-select`)?.value || '').trim();
 
     if (role === 'Outro Cargo') {
       const custom = (document.getElementById(`${context}-team-custom-role-input`)?.value || '').trim();
@@ -1645,8 +1648,20 @@ class AutoReportApp {
     }
 
     if (!name) {
-      alert('Por favor, informe o nome do integrante.');
+      this.showToast('⚠️ Por favor, informe o Nome do integrante.', 'warning');
       document.getElementById(`${context}-team-name-input`)?.focus();
+      return;
+    }
+
+    if (!institution) {
+      this.showToast('⚠️ Por favor, selecione a Instituição do integrante.', 'warning');
+      document.getElementById(`${context}-team-institution-select`)?.focus();
+      return;
+    }
+
+    if (!role) {
+      this.showToast('⚠️ Por favor, selecione o Cargo / Função do integrante.', 'warning');
+      document.getElementById(`${context}-team-role-select`)?.focus();
       return;
     }
 

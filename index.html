@@ -94,7 +94,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.6.6</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.6.7</span> • CECATE</div>
       </div>
     </aside>
 
@@ -509,6 +509,7 @@
                     <div class="form-group">
                       <label class="form-label" style="font-size:0.8rem;">Instituição *:</label>
                       <select id="wizard-team-institution-select" class="form-control form-control-sm" onchange="app.onInPageInstitutionChange('wizard', this.value)">
+                        <option value="" disabled selected>Selecionar Instituição...</option>
                         <option value="UFG">UFG (Universidade)</option>
                         <option value="FNDE">FNDE (Governo Federal)</option>
                         <option value="MEC">MEC (Ministério da Educação)</option>
@@ -1025,6 +1026,7 @@
               <div class="form-group">
                 <label class="form-label" style="font-size:0.8rem;">Instituição *:</label>
                 <select id="master-team-institution-select" class="form-control form-control-sm" onchange="app.onInPageInstitutionChange('master', this.value)">
+                  <option value="" disabled selected>Selecionar Instituição...</option>
                   <option value="UFG">UFG (Universidade)</option>
                   <option value="FNDE">FNDE (Governo Federal)</option>
                   <option value="MEC">MEC (Ministério da Educação)</option>
@@ -1116,13 +1118,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.6.6 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.6.7 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.6.6</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.6.7</span>
         </div>
       </footer>
     </div>
