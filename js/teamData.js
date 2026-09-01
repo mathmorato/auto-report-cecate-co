@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Catálogo Oficial de Equipe Participante (UFG & FNDE)
- * Versão: v.1.5.7
+ * Versão: v.1.5.8
  */
 
 window.OFFICIAL_PRONOUNS = [

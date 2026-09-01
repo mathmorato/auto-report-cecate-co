@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.5.7
+ * Versão: v.1.5.8
  */
 
 window.icons = {
@@ -2810,6 +2810,42 @@ class AutoReportApp {
     this.setVal('setting-funding-name', funding);
     this.setVal('setting-proj-name', proj);
     this.setVal('setting-process-name', process);
+
+    this.lockGlobalSettingsInputs(true);
+  }
+
+  lockGlobalSettingsInputs(isLocked) {
+    const fields = ['setting-org-name', 'setting-funding-name', 'setting-proj-name', 'setting-process-name'];
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.disabled = isLocked;
+        el.style.background = isLocked ? 'var(--bg-input)' : 'rgba(15, 23, 42, 0.95)';
+        el.style.cursor = isLocked ? 'not-allowed' : 'text';
+      }
+    });
+
+    const viewActions = document.getElementById('settings-view-mode-actions');
+    const editActions = document.getElementById('settings-edit-mode-actions');
+    if (viewActions) viewActions.style.display = isLocked ? 'block' : 'none';
+    if (editActions) editActions.style.display = isLocked ? 'none' : 'flex';
+  }
+
+  requestEditGlobalSettings() {
+    this.openModal('modal-confirm-edit-settings');
+  }
+
+  confirmEnableEditGlobalSettings() {
+    this.closeModal('modal-confirm-edit-settings');
+    this.lockGlobalSettingsInputs(false);
+    const firstInput = document.getElementById('setting-org-name');
+    if (firstInput) firstInput.focus();
+    this.showToast('✏️ Edição das Configurações Globais habilitada.', 'info');
+  }
+
+  cancelEditGlobalSettings() {
+    this.initGlobalSettings();
+    this.showToast('Edição cancelada.', 'info');
   }
 
   saveGlobalSettings() {
@@ -2831,7 +2867,8 @@ class AutoReportApp {
       this.populateAllWizardForms();
     }
 
-    this.showToast('✓ Configurações salvas com sucesso!', 'success');
+    this.lockGlobalSettingsInputs(true);
+    this.showToast('✓ Configurações Globais salvas com sucesso!', 'success');
   }
 
   fileToDataUrl(file) {
