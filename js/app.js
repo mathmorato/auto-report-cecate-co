@@ -1,1349 +1,1146 @@
 /**
- * AutoReport CECATE - Aplicação Principal (SPA Controller & UI Manager)
+ * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
+ * Versão: v.1.0.2
  */
 
 class AutoReportApp {
   constructor() {
-    this.currentReport = null;
-    this.history = [];
-    this.trainings = [];
-    this.activeTrainingId = null;
+    this.currentTraining = null;
+    this.currentStep = 1;
+    this.totalSteps = 11;
     this.activeView = 'dashboard';
-    this.currentTone = 'executive';
-    this.zoomLevel = 100;
-    this.orgSettings = {
-      defaultOrgName: "CECATE Soluções Tecnológicas",
-      defaultDepartment: "Governança & Inovação",
-      defaultSigner: "Coordenação Geral",
-      theme: "dark"
-    };
-
-    this.init();
+    this.trainingList = [];
+    this.theme = localStorage.getItem('autoreport_theme') || 'dark';
+    this.metrics = null;
   }
 
-  init() {
-    this.loadStorage();
-    this.applyTheme();
-    this.bindEvents();
-    this.renderDashboard();
-    this.renderTrainings();
-    this.renderTemplates();
-    this.renderHistory();
-    this.loadDefaultTemplate('audit_compliance');
-  }
+  /**
+   * Inicialização da aplicação
+   */
+  async init() {
+    console.log('Inicializando AutoReport CECATE...');
 
-  /* ==========================================================================
-     Storage & Settings
-     ========================================================================== */
-  loadStorage() {
+    // 1. Inicializar Banco IndexedDB
     try {
-      const savedHistory = localStorage.getItem('autoreport_history');
-      if (savedHistory) this.history = JSON.parse(savedHistory);
-
-      const savedSettings = localStorage.getItem('autoreport_settings');
-      if (savedSettings) this.orgSettings = { ...this.orgSettings, ...JSON.parse(savedSettings) };
-
-      const savedTrainings = localStorage.getItem('autoreport_trainings');
-      if (savedTrainings) {
-        this.trainings = JSON.parse(savedTrainings);
-      } else {
-        // Dados de demonstração padrão do CECATE
-        this.trainings = [
-          {
-            id: "train_101",
-            code: "CAP-2026-001",
-            title: "Formação Especializada em Automação de Relatórios com IA",
-            category: "Tecnologia & Automação",
-            instructor: "Prof. Dr. Marcos Souza",
-            target: "Analistas e Especialistas de Processos CECATE",
-            startDate: "2026-08-10",
-            endDate: "2026-08-28",
-            schedule: "08:30 às 17:30 (Sextas e Sábados)",
-            location: "Auditório Central CECATE & Lab 04",
-            modality: "Presencial",
-            status: "Concluída",
-            hours: 40,
-            vacancies: 25,
-            enrolled: 25,
-            graduated: 24,
-            syllabus: "Módulo 1: Arquitetura de Relatórios Inteligentes\nMódulo 2: Engenharia de Prompts e Diagnósticos Técnicos\nMódulo 3: Parametrização Modular e KPIs Dinâmicos\nMódulo 4: Workshop Prático e Homologação de Modelos",
-            notes: "Todos os concluintes receberam certificado digital e acesso prioritário aos modelos oficiais CECATE."
-          },
-          {
-            id: "train_102",
-            code: "CAP-2026-002",
-            title: "Auditoria de Processos e Conformidade Regulatória",
-            category: "Qualidade & Auditoria",
-            instructor: "Dra. Renata Calheiros",
-            target: "Auditores Internos e Líderes de Qualidade",
-            startDate: "2026-08-20",
-            endDate: "2026-09-10",
-            schedule: "19:00 às 22:00 (Terças e Quintas)",
-            location: "Sala 204 - Bloco B / Microsoft Teams",
-            modality: "Híbrido",
-            status: "Em Andamento",
-            hours: 32,
-            vacancies: 30,
-            enrolled: 28,
-            graduated: 0,
-            syllabus: "Módulo 1: Diretrizes de Conformidade e Gestão de Riscos\nMódulo 2: Mapeamento de Não-Conformidades Críticas\nMódulo 3: Planos de Ação e Evidências Documentais\nMódulo 4: Simulação de Auditoria de Campo",
-            notes: "Material de apoio disponível no portal acadêmico. Avaliação final agendada para 10/09."
-          },
-          {
-            id: "train_103",
-            code: "CAP-2026-003",
-            title: "Segurança Operacional, NR-10 e Gestão de Riscos Industriais",
-            category: "Segurança & Governança",
-            instructor: "Eng. Carlos Alberto Ribeiro",
-            target: "Técnicos de Campo e Inspetores de Manutenção",
-            startDate: "2026-09-15",
-            endDate: "2026-09-25",
-            schedule: "08:00 às 12:00 (Matutino)",
-            location: "Centro de Treinamento Técnico CECATE",
-            modality: "Presencial",
-            status: "Planejada",
-            hours: 20,
-            vacancies: 20,
-            enrolled: 16,
-            graduated: 0,
-            syllabus: "Módulo 1: Conceitos Fundamentais e Normas Regulamentadoras\nMódulo 2: Procedimentos de Bloqueio e Etiquetagem (LOTO)\nMódulo 3: Análise Preliminar de Risco (APR) e EPIs\nMódulo 4: Prática em Painéis Energizados",
-            notes: "Exige uso obrigatório de botas de segurança e capacete nas aulas práticas."
-          },
-          {
-            id: "train_104",
-            code: "CAP-2026-004",
-            title: "Governança de Dados, Dashboards & KPIs Técnicos",
-            category: "Gestão & Liderança",
-            instructor: "Mariana Vasconcelos",
-            target: "Gestores de Squads e Coordenadores de Projeto",
-            startDate: "2026-07-05",
-            endDate: "2026-07-20",
-            schedule: "14:00 às 18:00 (Online Ao Vivo)",
-            location: "Google Meet / Sala Virtual CECATE",
-            modality: "Online",
-            status: "Concluída",
-            hours: 16,
-            vacancies: 40,
-            enrolled: 40,
-            graduated: 38,
-            syllabus: "Módulo 1: Métricas de Eficiência, SLA e Produtividade\nMódulo 2: Construção de Indicadores Automatizados\nMódulo 3: Comunicação Executiva e Apresentação de Resultados",
-            notes: "Taxa de aprovação de 95%. Feedback excelente dos participantes (NPS 9.8)."
-          }
-        ];
-        this.saveStorage();
+      if (window.db) {
+        await window.db.init();
       }
-    } catch (e) {
-      console.warn("Erro ao carregar dados do localStorage:", e);
+    } catch (err) {
+      console.warn('Erro ao inicializar IndexedDB:', err);
     }
-  }
 
-  saveStorage() {
-    try {
-      localStorage.setItem('autoreport_history', JSON.stringify(this.history));
-      localStorage.setItem('autoreport_settings', JSON.stringify(this.orgSettings));
-      localStorage.setItem('autoreport_trainings', JSON.stringify(this.trainings));
-    } catch (e) {
-      console.warn("Erro ao salvar dados no localStorage:", e);
-    }
-  }
+    // 2. Aplicar Tema
+    this.applyTheme(this.theme);
 
-  applyTheme() {
-    if (this.orgSettings.theme === 'light') {
-      document.body.classList.add('light-theme');
-      const themeBtn = document.getElementById('theme-toggle-btn');
-      if (themeBtn) themeBtn.innerHTML = '☀️ Modo Claro';
-    } else {
-      document.body.classList.remove('light-theme');
-      const themeBtn = document.getElementById('theme-toggle-btn');
-      if (themeBtn) themeBtn.innerHTML = '🌙 Modo Escuro';
-    }
-  }
+    // 3. Vincular Eventos Globais
+    this.bindEvents();
 
-  toggleTheme() {
-    this.orgSettings.theme = this.orgSettings.theme === 'dark' ? 'light' : 'dark';
-    this.applyTheme();
-    this.saveStorage();
-    this.showToast(`Tema alterado para ${this.orgSettings.theme === 'dark' ? 'Modo Escuro' : 'Modo Claro'}`);
+    // 4. Carregar lista de capacitações e atualizar Dashboard
+    await this.refreshTrainingsList();
+
+    // 5. Tratar Hash da URL ou abrir dashboard por padrão
+    this.handleRoute();
+
+    console.log('AutoReport CECATE pronto!');
   }
 
   /* ==========================================================================
-     Navigation & Views
+     Navegação & SPA Router
      ========================================================================== */
+  handleRoute() {
+    const hash = window.location.hash.replace('#', '') || 'dashboard';
+    if (hash.startsWith('wizard/')) {
+      const parts = hash.split('/');
+      const trainingId = parts[1];
+      const step = parseInt(parts[2]) || 1;
+      this.openWizard(trainingId, step);
+    } else {
+      this.navigateTo(hash);
+    }
+  }
+
   navigateTo(viewId) {
     this.activeView = viewId;
+    window.location.hash = viewId;
 
-    // Atualizar itens do menu
+    // Atualizar itens do menu lateral
     document.querySelectorAll('.nav-item').forEach(item => {
-      if (item.getAttribute('data-view') === viewId) {
+      const targetView = item.getAttribute('data-view');
+      if (targetView === viewId || (viewId === 'wizard' && targetView === 'trainings')) {
         item.classList.add('active');
       } else {
         item.classList.remove('active');
       }
     });
 
-    // Atualizar seções de conteúdo
-    document.querySelectorAll('.view-section').forEach(sec => {
-      sec.classList.remove('active');
+    // Alternar visibilidade das seções
+    document.querySelectorAll('.view-section').forEach(section => {
+      section.classList.remove('active');
     });
 
-    const targetSection = document.getElementById(`view-${viewId}`);
-    if (targetSection) targetSection.classList.add('active');
-
-    // Atualizar título da barra superior
-    const titleMap = {
-      dashboard: "Painel de Controle & Visão Geral",
-      trainings: "Gestão & Cadastro de Capacitações CECATE",
-      studio: "Estúdio de Criação & Automação de Relatórios",
-      templates: "Biblioteca de Modelos Prontos",
-      history: "Arquivo & Histórico de Relatórios Gerados",
-      settings: "Configurações Globais & Identidade Visual"
-    };
-    const titleEl = document.getElementById('page-current-title');
-    if (titleEl) titleEl.innerText = titleMap[viewId] || "AutoReport CECATE";
-
-    // Atualizações específicas por tela
-    if (viewId === 'dashboard') this.renderDashboard();
-    if (viewId === 'trainings') this.renderTrainings();
-    if (viewId === 'history') this.renderHistory();
-    if (viewId === 'studio') this.updateLivePreview();
-  }
-
-  /* ==========================================================================
-     Template Loading & Initialization
-     ========================================================================== */
-  loadDefaultTemplate(templateId) {
-    const tpl = REPORT_TEMPLATES.find(t => t.id === templateId) || REPORT_TEMPLATES[0];
-    this.currentReport = JSON.parse(JSON.stringify(tpl));
-    
-    // Aplicar configurações institucionais se disponíveis
-    if (this.orgSettings.defaultOrgName) {
-      this.currentReport.defaultMeta.orgName = this.orgSettings.defaultOrgName;
-    }
-    
-    this.currentReport.meta = { ...this.currentReport.defaultMeta };
-    this.populateEditorForm();
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-  }
-
-  /* ==========================================================================
-     Editor UI Population & Binding
-     ========================================================================== */
-  populateEditorForm() {
-    if (!this.currentReport || !this.currentReport.meta) return;
-
-    const meta = this.currentReport.meta;
-    this.setInputValue('meta-orgName', meta.orgName);
-    this.setInputValue('meta-reportTitle', meta.reportTitle);
-    this.setInputValue('meta-responsible', meta.responsible);
-    this.setInputValue('meta-department', meta.department);
-    this.setInputValue('meta-date', meta.date);
-    this.setInputValue('meta-referenceCode', meta.referenceCode);
-    this.setInputValue('meta-period', meta.period || "Ciclo Vigente 2026");
-
-    this.renderKpiForm();
-  }
-
-  setInputValue(id, val) {
-    const el = document.getElementById(id);
-    if (el && val !== undefined) el.value = val;
-  }
-
-  syncMetaFromForm() {
-    if (!this.currentReport) return;
-    this.currentReport.meta = {
-      orgName: document.getElementById('meta-orgName')?.value || '',
-      reportTitle: document.getElementById('meta-reportTitle')?.value || '',
-      responsible: document.getElementById('meta-responsible')?.value || '',
-      department: document.getElementById('meta-department')?.value || '',
-      date: document.getElementById('meta-date')?.value || '',
-      referenceCode: document.getElementById('meta-referenceCode')?.value || '',
-      period: document.getElementById('meta-period')?.value || ''
-    };
-    this.updateLivePreview();
-  }
-
-  renderKpiForm() {
-    const container = document.getElementById('kpi-inputs-container');
-    if (!container || !this.currentReport) return;
-
-    const kpis = this.currentReport.defaultKpis || [];
-    container.innerHTML = kpis.map((kpi, idx) => `
-      <div class="kpi-input-row" style="display:grid; grid-template-columns: 1.5fr 1fr auto; gap: 0.5rem; margin-bottom: 0.6rem; align-items:center;">
-        <input type="text" class="form-control form-control-sm" value="${kpi.label}" placeholder="Indicador" oninput="app.updateKpiItem(${idx}, 'label', this.value)">
-        <input type="text" class="form-control form-control-sm" value="${kpi.value}" placeholder="Valor" oninput="app.updateKpiItem(${idx}, 'value', this.value)">
-        <button class="btn btn-danger btn-sm" onclick="app.removeKpiItem(${idx})" title="Remover">✕</button>
-      </div>
-    `).join('');
-  }
-
-  updateKpiItem(index, field, value) {
-    if (this.currentReport && this.currentReport.defaultKpis[index]) {
-      this.currentReport.defaultKpis[index][field] = value;
-      // Atualizar também o bloco de KPIs caso exista
-      const kpiBlock = this.currentReport.blocks.find(b => b.type === 'kpi_metrics');
-      if (kpiBlock && kpiBlock.kpis && kpiBlock.kpis[index]) {
-        kpiBlock.kpis[index][field] = value;
-      }
-      this.updateLivePreview();
-    }
-  }
-
-  addKpiItem() {
-    if (!this.currentReport) return;
-    if (!this.currentReport.defaultKpis) this.currentReport.defaultKpis = [];
-    this.currentReport.defaultKpis.push({ label: "Novo Indicador", value: "100%", change: "Meta atingida" });
-    
-    const kpiBlock = this.currentReport.blocks.find(b => b.type === 'kpi_metrics');
-    if (kpiBlock) {
-      if (!kpiBlock.kpis) kpiBlock.kpis = [];
-      kpiBlock.kpis.push({ label: "Novo Indicador", value: "100%", change: "Meta atingida" });
+    const activeSection = document.getElementById(`view-${viewId}`);
+    if (activeSection) {
+      activeSection.classList.add('active');
     }
 
-    this.renderKpiForm();
-    this.updateLivePreview();
-    this.showToast("Indicador adicionado!");
-  }
-
-  removeKpiItem(index) {
-    if (!this.currentReport || !this.currentReport.defaultKpis) return;
-    this.currentReport.defaultKpis.splice(index, 1);
-    const kpiBlock = this.currentReport.blocks.find(b => b.type === 'kpi_metrics');
-    if (kpiBlock && kpiBlock.kpis) kpiBlock.kpis.splice(index, 1);
-    this.renderKpiForm();
-    this.updateLivePreview();
-  }
-
-  /* ==========================================================================
-     Modular Blocks Management
-     ========================================================================== */
-  renderModularBlocksEditor() {
-    const listEl = document.getElementById('modular-blocks-container');
-    if (!listEl || !this.currentReport) return;
-
-    listEl.innerHTML = this.currentReport.blocks.map((block, idx) => {
-      return `
-        <div class="block-item" data-block-id="${block.id}">
-          <div class="block-header">
-            <div class="block-title-group">
-              <span class="drag-handle">☰</span>
-              <strong style="font-size:0.95rem; color:var(--text-primary);">${block.title}</strong>
-              <span class="badge badge-primary">${block.type}</span>
-            </div>
-            <div class="block-actions">
-              <button class="btn btn-secondary btn-sm" onclick="app.moveBlock(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} title="Mover para cima">↑</button>
-              <button class="btn btn-secondary btn-sm" onclick="app.moveBlock(${idx}, 1)" ${idx === this.currentReport.blocks.length - 1 ? 'disabled' : ''} title="Mover para baixo">↓</button>
-              <button class="btn btn-danger btn-sm" onclick="app.removeBlock(${idx})" title="Excluir bloco">✕</button>
-            </div>
-          </div>
-          <div class="block-body-content">
-            ${this.renderBlockEditorBody(block, idx)}
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  renderBlockEditorBody(block, idx) {
-    if (block.type === 'executive_summary' || block.type === 'ai_diagnostic') {
-      return `
-        <div class="form-group" style="margin-bottom: 0.5rem;">
-          <textarea class="form-control" rows="4" oninput="app.updateBlockContent(${idx}, this.value)">${block.content || ''}</textarea>
-        </div>
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.4rem;">
-          <button class="btn btn-secondary btn-sm" onclick="app.aiEnhanceBlock(${idx}, 'expand')">✨ Expandir</button>
-          <button class="btn btn-secondary btn-sm" onclick="app.aiEnhanceBlock(${idx}, 'summarize')">✂️ Resumir</button>
-          <button class="btn btn-secondary btn-sm" onclick="app.aiEnhanceBlock(${idx}, 'formalize')">👔 Formalizar</button>
-          <button class="btn btn-secondary btn-sm" onclick="app.aiRegenerateBlock(${idx})">⚡ Gerar Parecer c/ IA</button>
-        </div>
-      `;
-    } else if (block.type === 'recommendations') {
-      return `
-        <div style="display:flex; flex-direction:column; gap:0.4rem;">
-          ${(block.items || []).map((item, itemIdx) => `
-            <div style="display:flex; gap:0.4rem; align-items:center;">
-              <span style="color:var(--accent-primary); font-weight:bold;">•</span>
-              <input type="text" class="form-control form-control-sm" value="${item}" oninput="app.updateRecommendationItem(${idx}, ${itemIdx}, this.value)">
-              <button class="btn btn-danger btn-sm" onclick="app.removeRecommendationItem(${idx}, ${itemIdx})">✕</button>
-            </div>
-          `).join('')}
-          <button class="btn btn-secondary btn-sm" style="margin-top:0.4rem; align-self:flex-start;" onclick="app.addRecommendationItem(${idx})">+ Adicionar Recomendação</button>
-        </div>
-      `;
-    } else if (block.type === 'data_table') {
-      return `
-        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.4rem;">
-          Tabela com ${(block.headers || []).length} colunas e ${(block.rows || []).length} linhas de dados.
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="app.editTableModal(${idx})">✏️ Editar Dados da Tabela</button>
-      `;
-    } else if (block.type === 'kpi_metrics') {
-      return `
-        <div style="font-size:0.85rem; color:var(--text-secondary);">
-          Exibindo ${(block.kpis || []).length} indicadores no grid do documento. (Gerenciado na aba de Indicadores)
-        </div>
-      `;
-    } else if (block.type === 'signatures') {
-      return `
-        <div style="font-size:0.85rem; color:var(--text-muted);">
-          Contém ${(block.signers || []).length} campos de assinatura e homologação formal.
-        </div>
-      `;
-    }
-    return `<div style="font-size:0.85rem; color:var(--text-muted);">Bloco modular padrão.</div>`;
-  }
-
-  updateBlockContent(idx, content) {
-    if (this.currentReport && this.currentReport.blocks[idx]) {
-      this.currentReport.blocks[idx].content = content;
-      this.updateLivePreview();
-    }
-  }
-
-  updateRecommendationItem(blockIdx, itemIdx, value) {
-    if (this.currentReport?.blocks[blockIdx]?.items) {
-      this.currentReport.blocks[blockIdx].items[itemIdx] = value;
-      this.updateLivePreview();
-    }
-  }
-
-  addRecommendationItem(blockIdx) {
-    if (this.currentReport?.blocks[blockIdx]) {
-      if (!this.currentReport.blocks[blockIdx].items) this.currentReport.blocks[blockIdx].items = [];
-      this.currentReport.blocks[blockIdx].items.push("Nova diretriz recomendada para cumprimento.");
-      this.renderModularBlocksEditor();
-      this.updateLivePreview();
-    }
-  }
-
-  removeRecommendationItem(blockIdx, itemIdx) {
-    if (this.currentReport?.blocks[blockIdx]?.items) {
-      this.currentReport.blocks[blockIdx].items.splice(itemIdx, 1);
-      this.renderModularBlocksEditor();
-      this.updateLivePreview();
-    }
-  }
-
-  editTableModal(idx) {
-    if (!this.currentReport?.blocks[idx]) return;
-    this.activeTableBlockIdx = idx;
-    this.renderTableEditorModal();
-    this.openModal('modal-edit-table');
-  }
-
-  renderTableEditorModal() {
-    const container = document.getElementById('table-editor-container');
-    if (!container || this.activeTableBlockIdx === undefined) return;
-    const block = this.currentReport.blocks[this.activeTableBlockIdx];
-    if (!block || !block.headers || !block.rows) return;
-
-    let html = `
-      <table class="data-table" style="background:var(--bg-input); border-radius:6px; margin-bottom:1rem;">
-        <thead>
-          <tr>
-            ${block.headers.map((h, hIdx) => `
-              <th><input type="text" class="form-control form-control-sm" value="${h}" onchange="app.currentReport.blocks[app.activeTableBlockIdx].headers[${hIdx}]=this.value"></th>
-            `).join('')}
-            <th style="width:50px;">Ação</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${block.rows.map((row, rIdx) => `
-            <tr>
-              ${row.map((cell, cIdx) => `
-                <td><input type="text" class="form-control form-control-sm" value="${cell}" onchange="app.currentReport.blocks[app.activeTableBlockIdx].rows[${rIdx}][${cIdx}]=this.value"></td>
-              `).join('')}
-              <td><button class="btn btn-danger btn-sm" onclick="app.removeTableRowModal(${rIdx})">✕</button></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
-
-    container.innerHTML = html;
-  }
-
-  addTableRowModal() {
-    if (this.activeTableBlockIdx === undefined || !this.currentReport?.blocks[this.activeTableBlockIdx]) return;
-    const block = this.currentReport.blocks[this.activeTableBlockIdx];
-    const newRow = block.headers.map(() => "Novo dado");
-    block.rows.push(newRow);
-    this.renderTableEditorModal();
-  }
-
-  removeTableRowModal(rIdx) {
-    if (this.activeTableBlockIdx === undefined || !this.currentReport?.blocks[this.activeTableBlockIdx]) return;
-    this.currentReport.blocks[this.activeTableBlockIdx].rows.splice(rIdx, 1);
-    this.renderTableEditorModal();
-  }
-
-  saveTableModalData() {
-    this.closeModal('modal-edit-table');
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-    this.showToast("Tabela atualizada com sucesso!", 'success');
-  }
-
-  moveBlock(idx, direction) {
-    if (!this.currentReport || !this.currentReport.blocks) return;
-    const targetIdx = idx + direction;
-    if (targetIdx < 0 || targetIdx >= this.currentReport.blocks.length) return;
-
-    const temp = this.currentReport.blocks[idx];
-    this.currentReport.blocks[idx] = this.currentReport.blocks[targetIdx];
-    this.currentReport.blocks[targetIdx] = temp;
-
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-  }
-
-  removeBlock(idx) {
-    if (!this.currentReport || !this.currentReport.blocks) return;
-    if (confirm("Deseja realmente remover este bloco do relatório?")) {
-      this.currentReport.blocks.splice(idx, 1);
-      this.renderModularBlocksEditor();
-      this.updateLivePreview();
-      this.showToast("Bloco removido!");
-    }
-  }
-
-  openAddBlockModal() {
-    const listEl = document.getElementById('available-block-types-list');
-    if (listEl) {
-      listEl.innerHTML = AVAILABLE_BLOCK_TYPES.map(bt => `
-        <div class="block-type-card glass-card" style="padding:1rem; cursor:pointer; display:flex; align-items:center; gap:1rem; margin-bottom:0.75rem;" onclick="app.addModularBlock('${bt.type}')">
-          <div style="font-size:1.8rem;">${bt.icon}</div>
-          <div>
-            <h4 style="font-size:1rem; margin-bottom:0.2rem;">${bt.name}</h4>
-            <p style="font-size:0.8rem; color:var(--text-secondary);">${bt.desc}</p>
-          </div>
-        </div>
-      `).join('');
-    }
-    this.openModal('modal-add-block');
-  }
-
-  addModularBlock(type) {
-    if (!this.currentReport) return;
-    const blockMeta = AVAILABLE_BLOCK_TYPES.find(b => b.type === type);
-    const newId = `b_custom_${Date.now()}`;
-
-    let newBlock = {
-      id: newId,
-      type: type,
-      title: `${this.currentReport.blocks.length + 1}. ${blockMeta ? blockMeta.name : 'Novo Bloco'}`
-    };
-
-    if (type === 'executive_summary' || type === 'ai_diagnostic') {
-      newBlock.content = "Insira o conteúdo deste bloco ou utilize o assistente de IA para redigir automaticamente.";
-    } else if (type === 'recommendations') {
-      newBlock.items = ["Ação prioritária 1", "Ação prioritária 2"];
-    } else if (type === 'data_table') {
-      newBlock.headers = ["Item", "Descrição", "Responsável", "Status"];
-      newBlock.rows = [
-        ["01", "Verificação Inicial", "Equipe Técnica", "Concluído"],
-        ["02", "Validação de Processo", "Coordenação", "Em Andamento"]
-      ];
-    } else if (type === 'kpi_metrics') {
-      newBlock.kpis = [
-        { label: "Métrica Primária", value: "98.5%", change: "+1.2%" },
-        { label: "Meta Cumprida", value: "Sim", change: "100%" }
-      ];
-    } else if (type === 'signatures') {
-      newBlock.signers = [
-        { name: "{responsavel}", role: "Responsável Técnico" },
-        { name: "Superintendência", role: "Homologação" }
-      ];
-    }
-
-    this.currentReport.blocks.push(newBlock);
-    this.closeModal('modal-add-block');
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-    this.showToast(`Bloco "${newBlock.title}" adicionado com sucesso!`, 'success');
-  }
-
-  /* ==========================================================================
-     AI Writing & Automated Generation
-     ========================================================================== */
-  setTone(tone) {
-    this.currentTone = tone;
-    document.querySelectorAll('.btn-tone').forEach(btn => {
-      if (btn.getAttribute('data-tone') === tone) {
-        btn.classList.add('btn-primary');
-        btn.classList.remove('btn-secondary');
-      } else {
-        btn.classList.remove('btn-primary');
-        btn.classList.add('btn-secondary');
-      }
-    });
-    this.showToast(`Tom de redação ajustado para: ${tone.toUpperCase()}`);
-  }
-
-  aiEnhanceBlock(idx, action) {
-    if (!this.currentReport?.blocks[idx]) return;
-    const block = this.currentReport.blocks[idx];
-    const enhanced = reportEngine.enhanceText(block.content, action, this.currentTone);
-    block.content = enhanced;
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-    this.showToast(`Texto aprimorado (${action})!`, 'success');
-  }
-
-  aiRegenerateBlock(idx) {
-    if (!this.currentReport?.blocks[idx]) return;
-    const meta = this.currentReport.meta || {};
-    const kpis = this.currentReport.defaultKpis || [];
-    const generated = reportEngine.generateAutomatedDiagnostic(meta, kpis, this.currentTone);
-    this.currentReport.blocks[idx].content = generated;
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-    this.showToast("Diagnóstico e parecer gerados com IA!", 'success');
-  }
-
-  triggerFullAutomation() {
-    if (!this.currentReport) return;
-    this.syncMetaFromForm();
-    const meta = this.currentReport.meta;
-    const kpis = this.currentReport.defaultKpis || [];
-
-    // Percorrer blocos e automatizar diagnósticos e sumários
-    this.currentReport.blocks.forEach(block => {
-      if (block.type === 'ai_diagnostic') {
-        block.content = reportEngine.generateAutomatedDiagnostic(meta, kpis, this.currentTone);
-      } else if (block.type === 'executive_summary') {
-        block.content = `O presente documento consolida a análise executiva das operações da **{empresa}** referente ao **{periodo}**, sob responsabilidade de **{responsavel}** (${meta.department}). As evidências atestam desempenho consistente e conformidade com as diretrizes organizacionais.`;
-      }
-    });
-
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-    this.showToast("Relatório 100% automatizado e reescrito com sucesso!", 'success');
-  }
-
-  /* ==========================================================================
-     Live Preview & Document Rendering
-     ========================================================================== */
-  updateLivePreview() {
-    const previewContainer = document.getElementById('a4-preview-content');
-    if (!previewContainer || !this.currentReport) return;
-
-    const meta = this.currentReport.meta || {};
-    const blocks = this.currentReport.blocks || [];
-
-    let docHtml = `
-      <header class="report-doc-header">
-        <div>
-          <div class="doc-org-title">${reportEngine.interpolate(meta.orgName, meta)}</div>
-          <div class="doc-report-title">${reportEngine.interpolate(meta.reportTitle, meta)}</div>
-        </div>
-        <div class="doc-meta-box">
-          <div><strong>Emissão:</strong> ${meta.date || new Date().toLocaleDateString('pt-BR')}</div>
-          <div><strong>Ref:</strong> ${meta.referenceCode || 'DOC-01'}</div>
-          <div><strong>Depto:</strong> ${meta.department || 'Geral'}</div>
-        </div>
-      </header>
-    `;
-
-    blocks.forEach(block => {
-      docHtml += `<section class="report-section-block">`;
-      docHtml += `<h3 class="report-section-title">${reportEngine.interpolate(block.title, meta)}</h3>`;
-
-      if (block.type === 'executive_summary' || block.type === 'ai_diagnostic') {
-        const textInterp = reportEngine.interpolate(block.content || '', meta);
-        docHtml += `<div class="report-section-content">${reportEngine.renderMarkdownToHtml(textInterp)}</div>`;
-      } else if (block.type === 'kpi_metrics') {
-        const kpis = block.kpis || this.currentReport.defaultKpis || [];
-        docHtml += `<div class="report-kpi-grid">`;
-        kpis.forEach(k => {
-          docHtml += `
-            <div class="report-kpi-box">
-              <div class="report-kpi-label">${k.label}</div>
-              <div class="report-kpi-val">${k.value}</div>
-              <div style="font-size:0.75rem; color:#10b981; font-weight:600;">${k.change || ''}</div>
-            </div>
-          `;
-        });
-        docHtml += `</div>`;
-      } else if (block.type === 'data_table' && block.headers && block.rows) {
-        docHtml += `<table class="report-table"><thead><tr>`;
-        block.headers.forEach(h => docHtml += `<th>${h}</th>`);
-        docHtml += `</tr></thead><tbody>`;
-        block.rows.forEach(r => {
-          docHtml += `<tr>`;
-          r.forEach(cell => docHtml += `<td>${cell}</td>`);
-          docHtml += `</tr>`;
-        });
-        docHtml += `</tbody></table>`;
-      } else if (block.type === 'recommendations' && block.items) {
-        docHtml += `<ul style="padding-left: 1.25rem; color: #334155; font-size: 0.92rem; line-height: 1.7;">`;
-        block.items.forEach(it => {
-          docHtml += `<li>${reportEngine.interpolate(it, meta)}</li>`;
-        });
-        docHtml += `</ul>`;
-      } else if (block.type === 'signatures' && block.signers) {
-        docHtml += `<div class="report-signatures">`;
-        block.signers.forEach(s => {
-          docHtml += `
-            <div>
-              <div class="signature-line">${reportEngine.interpolate(s.name, meta)}</div>
-              <div class="signature-role">${s.role}</div>
-            </div>
-          `;
-        });
-        docHtml += `</div>`;
-      }
-
-      docHtml += `</section>`;
-    });
-
-    docHtml += `
-      <footer class="report-doc-footer">
-        <span>AutoReport CECATE • Sistema de Automação de Relatórios</span>
-        <span>Página 1 de 1</span>
-      </footer>
-    `;
-
-    previewContainer.innerHTML = docHtml;
-  }
-
-  /* ==========================================================================
-     Export Handlers
-     ========================================================================== */
-  printReport() {
-    window.print();
-  }
-
-  downloadMarkdown() {
-    if (!this.currentReport) return;
-    this.syncMetaFromForm();
-    const md = reportEngine.exportToMarkdown(this.currentReport);
-    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${(this.currentReport.meta.referenceCode || 'relatorio').toLowerCase()}_autoreport.md`;
-    link.click();
-    URL.revokeObjectURL(url);
-    this.showToast("Relatório Markdown baixado com sucesso!", 'success');
-  }
-
-  downloadHTML() {
-    if (!this.currentReport) return;
-    this.syncMetaFromForm();
-    const previewContent = document.getElementById('a4-preview-content')?.innerHTML || '';
-    const fullHtml = reportEngine.exportToHTML(this.currentReport, previewContent);
-    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${(this.currentReport.meta.referenceCode || 'relatorio').toLowerCase()}_documento.html`;
-    link.click();
-    URL.revokeObjectURL(url);
-    this.showToast("Documento HTML independente baixado com sucesso!", 'success');
-  }
-
-  saveReportToHistory() {
-    if (!this.currentReport) return;
-    this.syncMetaFromForm();
-
-    const reportRecord = {
-      id: `rep_${Date.now()}`,
-      savedAt: new Date().toISOString(),
-      meta: { ...this.currentReport.meta },
-      category: this.currentReport.category || "Geral",
-      reportData: JSON.parse(JSON.stringify(this.currentReport))
-    };
-
-    this.history.unshift(reportRecord);
-    this.saveStorage();
-    this.renderHistory();
-    this.renderDashboard();
-    this.showToast("Relatório salvo no histórico com sucesso!", 'success');
-  }
-
-  /* ==========================================================================
-     Dashboard & History Rendering
-     ========================================================================== */
-  renderDashboard() {
-    const totalReports = this.history.length;
-    const countEl = document.getElementById('dash-total-reports');
-    if (countEl) countEl.innerText = totalReports;
-
-    const recentListEl = document.getElementById('dash-recent-reports-body');
-    if (!recentListEl) return;
-
-    if (this.history.length === 0) {
-      recentListEl.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center; padding: 2rem; color:var(--text-muted);">
-            Nenhum relatório salvo no histórico ainda. Crie seu primeiro relatório no <strong>Estúdio de Criação</strong>!
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    recentListEl.innerHTML = this.history.slice(0, 5).map(item => `
-      <tr>
-        <td><strong>${item.meta.referenceCode || 'REF-N/A'}</strong></td>
-        <td>${item.meta.reportTitle || 'Sem título'}</td>
-        <td><span class="badge badge-primary">${item.category || 'Geral'}</span></td>
-        <td>${new Date(item.savedAt).toLocaleDateString('pt-BR')}</td>
-        <td>
-          <button class="btn btn-secondary btn-sm" onclick="app.loadReportFromHistory('${item.id}')">Abrir no Estúdio</button>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  renderTemplates() {
-    const gridEl = document.getElementById('templates-grid-container');
-    if (!gridEl) return;
-
-    gridEl.innerHTML = REPORT_TEMPLATES.map(tpl => `
-      <div class="template-card">
-        <div>
-          <div class="template-icon-header">${tpl.icon}</div>
-          <div class="template-title">${tpl.title}</div>
-          <div class="template-desc">${tpl.description}</div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border-color); padding-top:1rem;">
-          <span class="badge badge-cyan">${tpl.category}</span>
-          <button class="btn btn-primary btn-sm" onclick="app.useTemplate('${tpl.id}')">Usar Modelo →</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  useTemplate(templateId) {
-    this.loadDefaultTemplate(templateId);
-    this.navigateTo('studio');
-    this.showToast("Modelo carregado no Estúdio de Criação!");
-  }
-
-  renderHistory() {
-    const listContainer = document.getElementById('history-table-body');
-    if (!listContainer) return;
-
-    if (this.history.length === 0) {
-      listContainer.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align:center; padding: 2rem; color:var(--text-muted);">
-            Nenhum relatório arquivado no momento.
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    listContainer.innerHTML = this.history.map(item => `
-      <tr>
-        <td><strong>${item.meta.referenceCode || 'REF-00'}</strong></td>
-        <td>${item.meta.reportTitle}</td>
-        <td>${item.meta.responsible || 'N/A'}</td>
-        <td><span class="badge badge-success">${item.category}</span></td>
-        <td>${new Date(item.savedAt).toLocaleString('pt-BR')}</td>
-        <td style="display:flex; gap:0.4rem;">
-          <button class="btn btn-secondary btn-sm" onclick="app.loadReportFromHistory('${item.id}')">Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="app.deleteHistoryItem('${item.id}')">Excluir</button>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  loadReportFromHistory(historyId) {
-    const found = this.history.find(h => h.id === historyId);
-    if (!found) return;
-
-    this.currentReport = JSON.parse(JSON.stringify(found.reportData));
-    this.populateEditorForm();
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-    this.navigateTo('studio');
-    this.showToast(`Relatório "${this.currentReport.meta.reportTitle}" carregado com sucesso!`);
-  }
-
-  deleteHistoryItem(historyId) {
-    if (confirm("Tem certeza que deseja excluir este relatório do histórico?")) {
-      this.history = this.history.filter(h => h.id !== historyId);
-      this.saveStorage();
-      this.renderHistory();
+    // Ações específicas de cada view
+    if (viewId === 'dashboard') {
       this.renderDashboard();
-      this.showToast("Relatório excluído do histórico.");
+    } else if (viewId === 'trainings') {
+      this.renderTrainingsList();
+    } else if (viewId === 'municipalities') {
+      this.renderMunicipalitiesBank();
     }
   }
 
   /* ==========================================================================
-     Capacitações & Treinamentos Management
+     Tema Claro / Escuro
      ========================================================================== */
-  renderTrainings() {
-    // Calcular Métricas
-    const totalTrainings = this.trainings.length;
-    const completedTrainings = this.trainings.filter(t => t.status === 'Concluída').length;
-    const activeTrainings = this.trainings.filter(t => t.status === 'Em Andamento' || t.status === 'Planejada').length;
-    
-    // Alunos formados ou concluintes
-    const totalGraduated = this.trainings.reduce((sum, t) => sum + (parseInt(t.graduated) || (t.status === 'Concluída' ? parseInt(t.enrolled || 0) : 0)), 0);
-    const totalHours = this.trainings.reduce((sum, t) => sum + (parseInt(t.hours) || 0), 0);
+  applyTheme(theme) {
+    this.theme = theme;
+    localStorage.setItem('autoreport_theme', theme);
+    const themeBtn = document.getElementById('theme-toggle-btn');
 
-    const totalEl = document.getElementById('train-total-count');
-    const compEl = document.getElementById('train-completed-count');
-    const actEl = document.getElementById('train-active-count');
-    const studEl = document.getElementById('train-students-count');
-    const hourEl = document.getElementById('train-total-hours');
-    const badgeEl = document.getElementById('train-count-badge');
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+      if (themeBtn) themeBtn.innerHTML = '☀️ Modo Claro';
+    } else {
+      document.body.classList.remove('light-theme');
+      if (themeBtn) themeBtn.innerHTML = '🌙 Modo Escuro';
+    }
 
-    if (totalEl) totalEl.innerText = totalTrainings;
-    if (compEl) compEl.innerText = completedTrainings;
-    if (actEl) actEl.innerText = activeTrainings;
-    if (studEl) studEl.innerText = `${totalGraduated} alunos`;
-    if (hourEl) hourEl.innerText = `${totalHours}h`;
-    if (badgeEl) badgeEl.innerText = `${totalTrainings} registros`;
-
-    this.filterTrainings();
+    // Atualizar gráficos se estiver na etapa de gráficos
+    if (this.currentStep === 7 || this.currentStep === 10) {
+      this.renderEvaluationCharts();
+      this.renderWordClouds();
+    }
   }
 
-  filterTrainings() {
-    const tableBody = document.getElementById('trainings-table-body');
-    if (!tableBody) return;
+  toggleTheme() {
+    const newTheme = this.theme === 'dark' ? 'light' : 'dark';
+    this.applyTheme(newTheme);
+    this.showToast(`Tema alternado para ${newTheme === 'dark' ? 'Modo Escuro' : 'Modo Claro'}`);
+  }
 
-    const query = (document.getElementById('train-search-query')?.value || '').toLowerCase().trim();
-    const statusFilter = document.getElementById('train-filter-status')?.value || 'all';
-    const modalityFilter = document.getElementById('train-filter-modality')?.value || 'all';
+  /* ==========================================================================
+     Dashboard & Estatísticas Globais
+     ========================================================================== */
+  async refreshTrainingsList() {
+    if (window.db) {
+      this.trainingList = await window.db.getAllTrainings();
+    }
+  }
 
-    let filtered = this.trainings.filter(t => {
-      // Filtro de Texto
-      const matchesText = !query || 
-        (t.code && t.code.toLowerCase().includes(query)) ||
-        (t.title && t.title.toLowerCase().includes(query)) ||
-        (t.instructor && t.instructor.toLowerCase().includes(query)) ||
-        (t.location && t.location.toLowerCase().includes(query)) ||
-        (t.category && t.category.toLowerCase().includes(query));
+  async renderDashboard() {
+    await this.refreshTrainingsList();
 
-      // Filtro de Status
-      const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+    const totalTrainings = this.trainingList.length;
+    const completedTrainings = this.trainingList.filter(t => t.status === 'completed' || t.progressPercent === 100).length;
+    const inProgressTrainings = totalTrainings - completedTrainings;
 
-      // Filtro de Modalidade
-      const matchesModality = modalityFilter === 'all' || t.modality === modalityFilter;
+    // Totais de participantes e municípios
+    let totalParticipants = 0;
+    let totalMuns = 0;
 
-      return matchesText && matchesStatus && matchesModality;
+    for (const t of this.trainingList) {
+      const full = await window.db.getTrainingFull(t.id);
+      if (full) {
+        totalParticipants += (full.attendance?.length || (full.municipalities?.reduce((acc, m) => acc + (m.presentTotal || 0), 0)) || 0);
+        totalMuns += (full.municipalities?.filter(m => (m.presentTotal || 0) > 0).length || 0);
+      }
+    }
+
+    // Atualizar contadores no DOM
+    const elTotal = document.getElementById('dash-total-reports');
+    if (elTotal) elTotal.textContent = totalTrainings;
+
+    const elCompleted = document.getElementById('dash-completed-reports');
+    if (elCompleted) elCompleted.textContent = completedTrainings;
+
+    const elParticipants = document.getElementById('dash-total-participants');
+    if (elParticipants) elParticipants.textContent = totalParticipants;
+
+    const elMunicipalities = document.getElementById('dash-total-municipalities');
+    if (elMunicipalities) elMunicipalities.textContent = totalMuns;
+
+    // Renderizar tabela de capacitações recentes no dashboard
+    const container = document.getElementById('dashboard-trainings-list');
+    if (container) {
+      if (this.trainingList.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:2.5rem; color:var(--text-muted);">
+            <div style="font-size:2.5rem; margin-bottom:0.5rem;">📁</div>
+            <p>Nenhuma capacitação cadastrada ainda.</p>
+            <button class="btn btn-gradient btn-sm" style="margin-top:1rem;" onclick="app.createNewTraining()">+ Criar Primeira Capacitação</button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = this.trainingList.map(t => `
+          <div class="glass-card" style="margin-bottom:1rem; padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div style="display:flex; align-items:center; gap:1rem;">
+              <div style="width:48px; height:48px; border-radius:var(--radius-md); background:var(--gradient-brand); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.1rem; color:white;">
+                ${t.number || 16}
+              </div>
+              <div>
+                <h4 style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-bottom:0.2rem;">
+                  Capacitação Nº ${t.number || 16} - ${t.polo || 'Polo Regional'} (${t.uf || 'MT'})
+                </h4>
+                <div style="font-size:0.8rem; color:var(--text-muted); display:flex; gap:1rem; flex-wrap:wrap;">
+                  <span>📅 ${t.datesFormatted || t.startDate || 'Data a definir'}</span>
+                  <span>📍 ${t.locationVenue || 'Auditório Local'}</span>
+                  <span>⏱️ ${t.workload || '16h'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:1.25rem;">
+              <div style="text-align:right;">
+                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Progresso</div>
+                <div style="font-size:0.9rem; font-weight:700; color:${t.progressPercent === 100 ? 'var(--accent-success)' : 'var(--accent-secondary)'};">
+                  ${t.progressPercent || 0}% Concluído
+                </div>
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="Editar e continuar">✏️ Continuar</button>
+                <button class="btn btn-secondary btn-sm" onclick="app.duplicateTrainingAction('${t.id}')" title="Duplicar como modelo">📋 Duplicar</button>
+                <button class="btn btn-gradient btn-sm" onclick="app.directDownloadDocx('${t.id}')" title="Gerar Relatório .docx">⚡ Gerar .docx</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  /* ==========================================================================
+     ASSISTENTE DE 11 ETAPAS (WIZARD ENGINE)
+     ========================================================================== */
+  async createNewTraining() {
+    const nextNumber = this.trainingList.length > 0 ? Math.max(...this.trainingList.map(t => parseInt(t.number) || 0)) + 1 : 16;
+    const newId = `cap_${Date.now()}`;
+
+    const newTraining = {
+      id: newId,
+      number: nextNumber,
+      title: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+      polo: '',
+      uf: 'MT',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+      datesFormatted: 'A definir',
+      workload: '16 horas',
+      targetAudience: 'Gestores Municipais e Conselheiros CACS-FUNDEB',
+      expectedParticipants: 40,
+      responsibleOrg: 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
+      relatedProject: 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+      processNumber: '23070.012345/2026-00',
+      fundingOrg: 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
+      partnerOrgs: 'Ministério da Educação / Prefeituras Municipais',
+      locationVenue: 'Auditório Municipal',
+      status: 'in_progress',
+      progressPercent: 10,
+      team: [],
+      municipalities: [],
+      courseModules: [
+        { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, order: 0 },
+        { moduleNumber: '02', topicGestor: 'Conhecendo os programas PNATE e Caminho da Escola', topicCACS: 'Conhecendo os programas PNATE e Caminho da Escola', hoursGestor: 1.5, hoursCACS: 1.5, order: 1 },
+        { moduleNumber: '03', topicGestor: 'Gestão do Transporte Escolar e Software SETE', topicCACS: 'Fiscalização e Controle Social do Transporte Escolar', hoursGestor: 2.0, hoursCACS: 2.0, order: 2 },
+        { moduleNumber: '04', topicGestor: 'Prestação de Contas no SiGPC e Desafios Locais', topicCACS: 'Atuação do CACS-FUNDEB e Análise de Contas', hoursGestor: 3.0, hoursCACS: 3.0, order: 3 }
+      ],
+      courseMoments: [],
+      attendance: [],
+      evaluations: [],
+      media: []
+    };
+
+    await window.db.saveTrainingFull(newTraining, 'Criação de nova capacitação');
+    this.openWizard(newId, 1);
+  }
+
+  async openWizard(trainingId, step = 1) {
+    if (!window.db) return;
+
+    // Buscar dados completos
+    this.currentTraining = await window.db.getTrainingFull(trainingId);
+    if (!this.currentTraining) {
+      this.showToast('Capacitação não encontrada.', 'error');
+      this.navigateTo('dashboard');
+      return;
+    }
+
+    this.activeView = 'wizard';
+    this.navigateTo('wizard');
+    this.setWizardStep(step);
+    this.populateAllWizardForms();
+  }
+
+  setWizardStep(stepNumber) {
+    this.currentStep = Math.max(1, Math.min(this.totalSteps, stepNumber));
+    window.location.hash = `wizard/${this.currentTraining?.id || ''}/${this.currentStep}`;
+
+    // Atualizar abas do Stepper
+    document.querySelectorAll('.step-tab-btn').forEach((tab, idx) => {
+      const s = idx + 1;
+      tab.classList.remove('active');
+      if (s === this.currentStep) tab.classList.add('active');
+      if (s < this.currentStep) tab.classList.add('completed');
     });
 
-    if (filtered.length === 0) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="9" style="text-align:center; padding: 2.5rem 1rem; color:var(--text-muted);">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
-            <p>Nenhuma capacitação encontrada com os filtros selecionados.</p>
-            <button class="btn btn-secondary btn-sm" style="margin-top: 0.75rem;" onclick="document.getElementById('train-search-query').value=''; document.getElementById('train-filter-status').value='all'; document.getElementById('train-filter-modality').value='all'; app.filterTrainings();">Limpar Filtros</button>
-          </td>
-        </tr>
-      `;
+    // Alternar painéis
+    document.querySelectorAll('.wizard-step-panel').forEach(panel => {
+      panel.classList.remove('active');
+    });
+
+    const activePanel = document.getElementById(`wizard-step-${this.currentStep}`);
+    if (activePanel) activePanel.classList.add('active');
+
+    // Atualizar título e barra de progresso no topo
+    this.updateWizardHeader();
+
+    // Ações ao entrar em etapas específicas
+    if (this.currentStep === 3) this.renderMunicipalitiesStep();
+    if (this.currentStep === 4) this.renderCourseStructureStep();
+    if (this.currentStep === 6) this.renderAttendanceStep();
+    if (this.currentStep === 7) {
+      this.renderEvaluationStep();
+      setTimeout(() => {
+        this.renderEvaluationCharts();
+        this.renderWordClouds();
+      }, 100);
+    }
+    if (this.currentStep === 8) this.renderPhotosStep();
+    if (this.currentStep === 9) this.renderAppendicesStep();
+    if (this.currentStep === 10) this.renderConferenceStep();
+    if (this.currentStep === 11) this.renderReportPreviewStep();
+  }
+
+  wizardNext() {
+    this.saveCurrentStepData();
+    if (this.currentStep < this.totalSteps) {
+      this.setWizardStep(this.currentStep + 1);
+    }
+  }
+
+  wizardPrev() {
+    this.saveCurrentStepData();
+    if (this.currentStep > 1) {
+      this.setWizardStep(this.currentStep - 1);
+    }
+  }
+
+  updateWizardHeader() {
+    if (!this.currentTraining) return;
+
+    const t = this.currentTraining;
+    const titleEl = document.getElementById('wizard-header-title');
+    if (titleEl) {
+      titleEl.innerHTML = `Capacitação Nº ${t.number || 16} • <span style="color:var(--accent-secondary);">${t.polo || 'Novo Polo'} (${t.uf || 'MT'})</span>`;
+    }
+
+    // Calcular percentual de preenchimento
+    let completedSteps = 0;
+    if (t.polo && t.startDate) completedSteps++;
+    if (t.team && t.team.length > 0) completedSteps++;
+    if (t.municipalities && t.municipalities.length > 0) completedSteps++;
+    if (t.courseModules && t.courseModules.length > 0) completedSteps++;
+    if (t.contactsData?.contactedCount > 0) completedSteps++;
+    if (t.attendance && t.attendance.length > 0) completedSteps++;
+    if (t.evaluations && t.evaluations.length > 0) completedSteps++;
+    if (t.media && t.media.filter(m => m.type === 'photo').length > 0) completedSteps++;
+    if (t.media && t.media.filter(m => m.type !== 'photo').length > 0) completedSteps++;
+    if (completedSteps >= 8) completedSteps += 2; // Conferência e Geração
+
+    const percent = Math.min(100, Math.round((completedSteps / 11) * 100));
+    t.progressPercent = percent;
+
+    const barEl = document.getElementById('wizard-header-progressbar');
+    if (barEl) barEl.style.width = `${percent}%`;
+
+    const statusTextEl = document.getElementById('wizard-header-progress-text');
+    if (statusTextEl) {
+      statusTextEl.textContent = `${percent}% Concluído (${completedSteps} de 11 Etapas)`;
+    }
+  }
+
+  /* ==========================================================================
+     POPULAÇÃO & SALVAMENTO DE DADOS DAS ETAPAS
+     ========================================================================== */
+  populateAllWizardForms() {
+    if (!this.currentTraining) return;
+    const t = this.currentTraining;
+
+    // Etapa 1: Identificação
+    this.setVal('wiz-train-number', t.number);
+    this.setVal('wiz-train-title', t.title);
+    this.setVal('wiz-train-polo', t.polo);
+    this.setVal('wiz-train-uf', t.uf);
+    this.setVal('wiz-train-start-date', t.startDate);
+    this.setVal('wiz-train-end-date', t.endDate);
+    this.setVal('wiz-train-dates-fmt', t.datesFormatted);
+    this.setVal('wiz-train-workload', t.workload);
+    this.setVal('wiz-train-target', t.targetAudience);
+    this.setVal('wiz-train-expected', t.expectedParticipants);
+    this.setVal('wiz-train-venue', t.locationVenue);
+    this.setVal('wiz-train-org', t.responsibleOrg);
+    this.setVal('wiz-train-project', t.relatedProject);
+    this.setVal('wiz-train-process', t.processNumber);
+    this.setVal('wiz-train-funding', t.fundingOrg);
+    this.setVal('wiz-train-partners', t.partnerOrgs);
+
+    // Etapa 2: Equipe
+    this.renderTeamList();
+
+    // Etapa 5: Contatos
+    if (t.contactsData) {
+      this.setVal('wiz-contact-start-date', t.contactsData.startDate);
+      this.setVal('wiz-contact-methods', t.contactsData.methods);
+      this.setVal('wiz-contact-responsible', t.contactsData.responsible);
+      this.setVal('wiz-contact-count', t.contactsData.contactedCount);
+      this.setVal('wiz-contact-emails', t.contactsData.emailsSent);
+      this.setVal('wiz-contact-phones', t.contactsData.phoneCalls);
+      this.setVal('wiz-contact-notes', t.contactsData.notes);
+    }
+  }
+
+  saveCurrentStepData() {
+    if (!this.currentTraining || !window.db) return;
+    const t = this.currentTraining;
+
+    // Sincronizar dados da Etapa 1
+    t.number = parseInt(this.getVal('wiz-train-number')) || t.number;
+    t.title = this.getVal('wiz-train-title') || t.title;
+    t.polo = this.getVal('wiz-train-polo') || t.polo;
+    t.uf = this.getVal('wiz-train-uf') || t.uf;
+    t.startDate = this.getVal('wiz-train-start-date') || t.startDate;
+    t.endDate = this.getVal('wiz-train-end-date') || t.endDate;
+    t.datesFormatted = this.getVal('wiz-train-dates-fmt') || t.datesFormatted;
+    t.workload = this.getVal('wiz-train-workload') || t.workload;
+    t.targetAudience = this.getVal('wiz-train-target') || t.targetAudience;
+    t.expectedParticipants = parseInt(this.getVal('wiz-train-expected')) || t.expectedParticipants;
+    t.locationVenue = this.getVal('wiz-train-venue') || t.locationVenue;
+    t.responsibleOrg = this.getVal('wiz-train-org') || t.responsibleOrg;
+    t.relatedProject = this.getVal('wiz-train-project') || t.relatedProject;
+    t.processNumber = this.getVal('wiz-train-process') || t.processNumber;
+    t.fundingOrg = this.getVal('wiz-train-funding') || t.fundingOrg;
+    t.partnerOrgs = this.getVal('wiz-train-partners') || t.partnerOrgs;
+
+    // Sincronizar dados da Etapa 5
+    t.contactsData = {
+      startDate: this.getVal('wiz-contact-start-date'),
+      methods: this.getVal('wiz-contact-methods'),
+      responsible: this.getVal('wiz-contact-responsible'),
+      contactedCount: parseInt(this.getVal('wiz-contact-count')) || 0,
+      emailsSent: parseInt(this.getVal('wiz-contact-emails')) || 0,
+      phoneCalls: parseInt(this.getVal('wiz-contact-phones')) || 0,
+      notes: this.getVal('wiz-contact-notes')
+    };
+
+    // Disparar Autosave no IndexedDB
+    window.db.triggerAutoSave(t.id, () => this.currentTraining, () => {
+      this.updateWizardHeader();
+    });
+  }
+
+  /* ==========================================================================
+     ETAPA 2: EQUIPE PARTICIPANTE
+     ========================================================================== */
+  renderTeamList() {
+    const container = document.getElementById('wizard-team-list-container');
+    if (!container || !this.currentTraining) return;
+
+    const team = this.currentTraining.team || [];
+    if (team.length === 0) {
+      container.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum integrante cadastrado na equipe. Clique abaixo para adicionar.</p>`;
       return;
     }
-
-    tableBody.innerHTML = filtered.map(t => {
-      // Status Badge class
-      let statusBadgeClass = 'badge-status-planejada';
-      if (t.status === 'Concluída') statusBadgeClass = 'badge-status-concluida';
-      else if (t.status === 'Em Andamento') statusBadgeClass = 'badge-status-andamento';
-      else if (t.status === 'Cancelada') statusBadgeClass = 'badge-status-cancelada';
-
-      // Format Date
-      let dateDisplay = t.startDate ? new Date(t.startDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'A definir';
-      if (t.endDate && t.endDate !== t.startDate) {
-        dateDisplay += ` até ${new Date(t.endDate + 'T00:00:00').toLocaleDateString('pt-BR')}`;
-      }
-
-      // Format Attendees
-      let attendeesDisplay = `${t.enrolled || 0} / ${t.vacancies || '-'}`;
-      if (t.status === 'Concluída' && t.graduated !== undefined) {
-        attendeesDisplay += ` (${t.graduated} formados)`;
-      }
-
-      return `
-        <tr>
-          <td><span class="badge badge-primary" style="font-family:monospace; font-size:0.8rem;">${this.escapeHtml(t.code || 'CAP-00')}</span></td>
-          <td>
-            <strong style="color:var(--text-primary); cursor:pointer;" onclick="app.viewTrainingDetails('${t.id}')">${this.escapeHtml(t.title)}</strong>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${this.escapeHtml(t.category || 'Geral')} • ${this.escapeHtml(t.target || 'Público Geral')}</div>
-          </td>
-          <td style="font-size:0.85rem; white-space:nowrap;">${dateDisplay}</td>
-          <td>
-            <div style="font-size:0.85rem;">${this.escapeHtml(t.location || 'CECATE')}</div>
-            <span class="badge badge-modality" style="font-size:0.7rem; margin-top:2px;">${this.escapeHtml(t.modality || 'Presencial')}</span>
-          </td>
-          <td style="font-size:0.85rem; font-weight:500;">${this.escapeHtml(t.instructor || 'N/A')}</td>
-          <td><span class="badge badge-cyan">${t.hours || 0}h</span></td>
-          <td style="font-size:0.85rem;">${attendeesDisplay}</td>
-          <td><span class="badge ${statusBadgeClass}">${this.escapeHtml(t.status || 'Planejada')}</span></td>
-          <td style="text-align:right;">
-            <div style="display:inline-flex; gap:0.35rem;">
-              <button class="btn btn-secondary btn-sm" onclick="app.viewTrainingDetails('${t.id}')" title="Visualizar Ficha Técnica">👁️</button>
-              <button class="btn btn-secondary btn-sm" onclick="app.generateTrainingReport('${t.id}')" title="Gerar Relatório Técnico no Estúdio">⚡ Relatório</button>
-              <button class="btn btn-secondary btn-sm" onclick="app.openEditTrainingModal('${t.id}')" title="Editar Capacitação">✏️</button>
-              <button class="btn btn-danger btn-sm" onclick="app.deleteTraining('${t.id}')" title="Excluir">🗑️</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
-
-  generateRandomTrainingCode() {
-    const year = new Date().getFullYear();
-    const count = this.trainings.length + 1;
-    const nextCode = `CAP-${year}-${String(count).padStart(3, '0')}`;
-    const codeInput = document.getElementById('train-code');
-    if (codeInput) codeInput.value = nextCode;
-  }
-
-  openNewTrainingModal() {
-    const form = document.getElementById('form-training-record');
-    if (form) form.reset();
-
-    const titleEl = document.getElementById('modal-training-form-title');
-    if (titleEl) titleEl.innerHTML = "🎓 Nova Capacitação CECATE";
-
-    document.getElementById('train-id').value = '';
-    this.generateRandomTrainingCode();
-
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('train-start-date').value = today;
-    document.getElementById('train-status').value = 'Planejada';
-    document.getElementById('train-modality').value = 'Presencial';
-    document.getElementById('train-vacancies').value = '30';
-    document.getElementById('train-enrolled').value = '0';
-    document.getElementById('train-graduated').value = '0';
-
-    this.openModal('modal-training-form');
-  }
-
-  openEditTrainingModal(id) {
-    const t = this.trainings.find(item => item.id === id);
-    if (!t) return;
-
-    this.closeModal('modal-training-details');
-
-    const titleEl = document.getElementById('modal-training-form-title');
-    if (titleEl) titleEl.innerHTML = `✏️ Editar Capacitação • ${t.code}`;
-
-    document.getElementById('train-id').value = t.id;
-    document.getElementById('train-code').value = t.code || '';
-    document.getElementById('train-category').value = t.category || 'Tecnologia & Automação';
-    document.getElementById('train-title').value = t.title || '';
-    document.getElementById('train-instructor').value = t.instructor || '';
-    document.getElementById('train-target').value = t.target || '';
-    document.getElementById('train-start-date').value = t.startDate || '';
-    document.getElementById('train-end-date').value = t.endDate || '';
-    document.getElementById('train-schedule').value = t.schedule || '';
-    document.getElementById('train-location').value = t.location || '';
-    document.getElementById('train-modality').value = t.modality || 'Presencial';
-    document.getElementById('train-status').value = t.status || 'Planejada';
-    document.getElementById('train-hours').value = t.hours || '';
-    document.getElementById('train-vacancies').value = t.vacancies || '';
-    document.getElementById('train-enrolled').value = t.enrolled || 0;
-    document.getElementById('train-graduated').value = t.graduated || 0;
-    document.getElementById('train-syllabus').value = t.syllabus || '';
-    document.getElementById('train-notes').value = t.notes || '';
-
-    this.openModal('modal-training-form');
-  }
-
-  saveTrainingFromModal(e) {
-    if (e) e.preventDefault();
-
-    const id = document.getElementById('train-id').value;
-    const code = document.getElementById('train-code').value.trim();
-    const title = document.getElementById('train-title').value.trim();
-    const category = document.getElementById('train-category').value;
-    const instructor = document.getElementById('train-instructor').value.trim();
-    const target = document.getElementById('train-target').value.trim();
-    const startDate = document.getElementById('train-start-date').value;
-    const endDate = document.getElementById('train-end-date').value;
-    const schedule = document.getElementById('train-schedule').value.trim();
-    const location = document.getElementById('train-location').value.trim();
-    const modality = document.getElementById('train-modality').value;
-    const status = document.getElementById('train-status').value;
-    const hours = parseInt(document.getElementById('train-hours').value) || 0;
-    const vacancies = parseInt(document.getElementById('train-vacancies').value) || 0;
-    const enrolled = parseInt(document.getElementById('train-enrolled').value) || 0;
-    const graduated = parseInt(document.getElementById('train-graduated').value) || 0;
-    const syllabus = document.getElementById('train-syllabus').value.trim();
-    const notes = document.getElementById('train-notes').value.trim();
-
-    if (!code || !title || !instructor || !location || !startDate) {
-      this.showToast("Por favor, preencha todos os campos obrigatórios (*).", "warning");
-      return;
-    }
-
-    if (id) {
-      // Edição
-      const idx = this.trainings.findIndex(item => item.id === id);
-      if (idx !== -1) {
-        this.trainings[idx] = {
-          ...this.trainings[idx],
-          code, title, category, instructor, target, startDate, endDate, schedule,
-          location, modality, status, hours, vacancies, enrolled, graduated, syllabus, notes,
-          updatedAt: new Date().toISOString()
-        };
-        this.showToast(`Capacitação ${code} atualizada com sucesso!`, 'success');
-      }
-    } else {
-      // Nova
-      const newTraining = {
-        id: `train_${Date.now()}`,
-        code, title, category, instructor, target, startDate, endDate, schedule,
-        location, modality, status, hours, vacancies, enrolled, graduated, syllabus, notes,
-        createdAt: new Date().toISOString()
-      };
-      this.trainings.unshift(newTraining);
-      this.showToast(`Nova capacitação ${code} cadastrada com sucesso!`, 'success');
-    }
-
-    this.saveStorage();
-    this.renderTrainings();
-    this.closeModal('modal-training-form');
-  }
-
-  deleteTraining(id) {
-    const t = this.trainings.find(item => item.id === id);
-    if (!t) return;
-
-    if (confirm(`Deseja realmente excluir a capacitação "${t.code} - ${t.title}"?`)) {
-      this.trainings = this.trainings.filter(item => item.id !== id);
-      this.saveStorage();
-      this.renderTrainings();
-      this.showToast(`Capacitação ${t.code} excluída.`);
-    }
-  }
-
-  viewTrainingDetails(id) {
-    const t = this.trainings.find(item => item.id === id);
-    if (!t) return;
-
-    this.activeTrainingId = id;
-    const container = document.getElementById('training-details-content');
-    if (!container) return;
-
-    let statusBadgeClass = 'badge-status-planejada';
-    if (t.status === 'Concluída') statusBadgeClass = 'badge-status-concluida';
-    else if (t.status === 'Em Andamento') statusBadgeClass = 'badge-status-andamento';
-    else if (t.status === 'Cancelada') statusBadgeClass = 'badge-status-cancelada';
-
-    let dateDisplay = t.startDate ? new Date(t.startDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'A definir';
-    if (t.endDate && t.endDate !== t.startDate) {
-      dateDisplay += ` até ${new Date(t.endDate + 'T00:00:00').toLocaleDateString('pt-BR')}`;
-    }
-
-    const completionRate = (t.enrolled > 0 && t.graduated) 
-      ? Math.min(100, Math.round((t.graduated / t.enrolled) * 100)) + '%' 
-      : (t.status === 'Concluída' ? '100%' : 'Em andamento');
 
     container.innerHTML = `
-      <div class="training-detail-header">
-        <div>
-          <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.5rem;">
-            <span class="badge badge-primary" style="font-family:monospace; font-size:0.9rem;">${this.escapeHtml(t.code)}</span>
-            <span class="badge badge-cyan">${this.escapeHtml(t.category || 'Geral')}</span>
-            <span class="badge badge-modality">${this.escapeHtml(t.modality || 'Presencial')}</span>
-            <span class="badge ${statusBadgeClass}">${this.escapeHtml(t.status)}</span>
-          </div>
-          <h2 style="font-size:1.35rem; color:var(--text-primary); margin:0;">${this.escapeHtml(t.title)}</h2>
-        </div>
+      <div class="table-responsive-wrapper">
+        <table class="report-data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Instituição</th>
+              <th>Função / Cargo</th>
+              <th>Tipo</th>
+              <th style="width:100px; text-align:center;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${team.map((m, idx) => `
+              <tr>
+                <td><strong>${m.name}</strong></td>
+                <td>${m.institution || 'UFG'}</td>
+                <td>${m.role || 'Instrutor'}</td>
+                <td><span class="nav-badge" style="background:rgba(99, 102, 241, 0.15); color:#818cf8;">${m.type === 'coordenacao' ? 'Coordenação' : (m.type === 'fnde' ? 'FNDE' : 'Técnica')}</span></td>
+                <td style="text-align:center;">
+                  <button class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" title="Excluir">✕</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
       </div>
-
-      <div class="training-detail-grid">
-        <div class="training-detail-card">
-          <div class="training-detail-card-label">Instrutor / Facilitador</div>
-          <div class="training-detail-card-value">${this.escapeHtml(t.instructor || 'N/A')}</div>
-        </div>
-
-        <div class="training-detail-card">
-          <div class="training-detail-card-label">Local / Plataforma</div>
-          <div class="training-detail-card-value">${this.escapeHtml(t.location || 'CECATE')}</div>
-        </div>
-
-        <div class="training-detail-card">
-          <div class="training-detail-card-label">Período / Datas</div>
-          <div class="training-detail-card-value" style="font-size:0.95rem;">${dateDisplay}</div>
-        </div>
-
-        <div class="training-detail-card">
-          <div class="training-detail-card-label">Carga Horária</div>
-          <div class="training-detail-card-value" style="color:var(--accent-secondary);">${t.hours || 0} Horas</div>
-        </div>
-
-        <div class="training-detail-card">
-          <div class="training-detail-card-label">Inscritos / Vagas</div>
-          <div class="training-detail-card-value">${t.enrolled || 0} / ${t.vacancies || '-'}</div>
-        </div>
-
-        <div class="training-detail-card">
-          <div class="training-detail-card-label">Concluintes / Taxa</div>
-          <div class="training-detail-card-value" style="color:var(--accent-success);">${t.graduated || 0} (${completionRate})</div>
-        </div>
-      </div>
-
-      ${t.schedule ? `
-        <div style="margin-bottom:1rem; font-size:0.9rem;">
-          <strong style="color:var(--text-primary);">🕒 Horário / Turno:</strong> <span style="color:var(--text-secondary);">${this.escapeHtml(t.schedule)}</span>
-        </div>
-      ` : ''}
-
-      ${t.target ? `
-        <div style="margin-bottom:1rem; font-size:0.9rem;">
-          <strong style="color:var(--text-primary);">👥 Público-Alvo:</strong> <span style="color:var(--text-secondary);">${this.escapeHtml(t.target)}</span>
-        </div>
-      ` : ''}
-
-      ${t.syllabus ? `
-        <div>
-          <label class="form-label" style="font-weight:700; color:var(--text-primary); margin-bottom:0.4rem;">📖 Conteúdo Programático & Ementa:</label>
-          <div class="training-ementa-box" style="white-space: pre-line;">${this.escapeHtml(t.syllabus)}</div>
-        </div>
-      ` : ''}
-
-      ${t.notes ? `
-        <div style="margin-top:1rem;">
-          <label class="form-label" style="font-weight:700; color:var(--text-primary); margin-bottom:0.4rem;">📌 Observações & Requisitos:</label>
-          <div class="training-ementa-box" style="background:rgba(255,255,255,0.02); font-size:0.875rem; white-space: pre-line;">${this.escapeHtml(t.notes)}</div>
-        </div>
-      ` : ''}
     `;
-
-    // Atualizar botões de ação do rodapé
-    const editBtn = document.getElementById('btn-edit-from-details');
-    const reportBtn = document.getElementById('btn-report-from-details');
-    if (editBtn) editBtn.onclick = () => this.openEditTrainingModal(id);
-    if (reportBtn) reportBtn.onclick = () => this.generateTrainingReport(id);
-
-    this.openModal('modal-training-details');
   }
 
-  /**
-   * Integração com o Estúdio: Cria um relatório técnico completo com base na capacitação selecionada
-   */
-  generateTrainingReport(id) {
-    const t = this.trainings.find(item => item.id === id);
-    if (!t) return;
+  addTeamMemberPrompt() {
+    const name = prompt('Nome do Integrante da Equipe:');
+    if (!name) return;
+    const role = prompt('Função / Cargo:', 'Pesquisador e Equipe Técnica');
+    const institution = prompt('Instituição:', 'UFG');
 
-    this.closeModal('modal-training-details');
-
-    const templateBase = REPORT_TEMPLATES.find(tpl => tpl.id === 'training_capacity') || REPORT_TEMPLATES[0];
-    const customReport = JSON.parse(JSON.stringify(templateBase));
-
-    // Configurar Metadados com base na capacitação
-    customReport.meta = {
-      orgName: this.orgSettings.defaultOrgName || "CECATE Soluções Tecnológicas",
-      reportTitle: `Relatório Técnico de Capacitação: ${t.title}`,
-      responsible: t.instructor || this.orgSettings.defaultSigner || "Coordenação Geral",
-      department: t.target || this.orgSettings.defaultDepartment || "Desenvolvimento de Talentos",
-      date: t.endDate || t.startDate || new Date().toISOString().split('T')[0],
-      referenceCode: t.code || "CAP-2026",
-      period: t.startDate ? `${t.startDate} a ${t.endDate || t.startDate}` : "Ciclo Vigente"
-    };
-
-    // Calcular KPIs
-    const completionRate = (t.enrolled > 0 && t.graduated) 
-      ? Math.min(100, Math.round((t.graduated / t.enrolled) * 100)) + '%' 
-      : '100%';
-
-    customReport.defaultKpis = [
-      { label: "Taxa de Conclusão", value: completionRate, status: "success" },
-      { label: "Alunos Capacitados", value: `${t.graduated || t.enrolled || 0} alunos`, status: "success" },
-      { label: "Carga Horária", value: `${t.hours || 0} horas`, status: "success" },
-      { label: "Modalidade / Local", value: `${t.modality || 'Presencial'}`, status: "success" }
-    ];
-
-    // Ajustar blocos com informações personalizadas
-    customReport.blocks.forEach(b => {
-      if (b.type === 'executive_summary') {
-        b.content = `O presente relatório técnico atesta a realização da capacitação **${t.title}** (${t.code}), executada no período de **${t.startDate || 'N/A'}** a **${t.endDate || t.startDate || 'N/A'}** no local **${t.location}** (${t.modality}). A facilitação foi conduzida por **${t.instructor}** para o público de **${t.target || 'Técnicos e Analistas'}**, totalizando **${t.hours} horas** de atividades teóricas e laboratoriais.`;
-      } else if (b.type === 'kpi_metrics') {
-        b.kpis = [
-          { label: "Taxa de Conclusão", value: completionRate, change: "Meta atingida" },
-          { label: "Total de Concluintes", value: `${t.graduated || t.enrolled || 0}`, change: `De ${t.enrolled || t.vacancies || 0} inscritos` },
-          { label: "Carga Horária", value: `${t.hours}h`, change: "100% ministrada" },
-          { label: "Status da Turma", value: `${t.status}`, change: t.category }
-        ];
-      } else if (b.type === 'data_table' && t.syllabus) {
-        // Tentar extrair módulos da ementa se houver
-        const lines = t.syllabus.split('\n').filter(l => l.trim().length > 0);
-        if (lines.length > 0) {
-          b.rows = lines.map((line, i) => [`Módulo 0${i+1}`, line.replace(/^Módulo \d+:? ?/i, ''), `${Math.round((t.hours || 40) / lines.length)}h`, "100%", "Concluído"]);
-        }
-      }
+    if (!this.currentTraining.team) this.currentTraining.team = [];
+    this.currentTraining.team.push({
+      id: `team_${Date.now()}`,
+      name,
+      role: role || 'Instrutor',
+      institution: institution || 'UFG',
+      type: 'tecnica',
+      order: this.currentTraining.team.length
     });
 
-    this.currentReport = customReport;
-    this.populateEditorForm();
-    this.renderModularBlocksEditor();
-    this.updateLivePreview();
-    this.navigateTo('studio');
-    this.showToast(`Relatório para "${t.code} - ${t.title}" gerado com sucesso no Estúdio!`, 'success');
+    this.renderTeamList();
+    this.saveCurrentStepData();
   }
 
-  exportTrainingsCSV() {
-    if (this.trainings.length === 0) {
-      this.showToast("Nenhuma capacitação para exportar.", "warning");
-      return;
+  removeTeamMember(index) {
+    if (confirm('Deseja remover este integrante?')) {
+      this.currentTraining.team.splice(index, 1);
+      this.renderTeamList();
+      this.saveCurrentStepData();
     }
-
-    const headers = ["Código", "Título", "Categoria", "Instrutor", "Público-Alvo", "Data Início", "Data Fim", "Local", "Modalidade", "Status", "Carga Horária (h)", "Vagas", "Inscritos", "Concluintes"];
-    
-    const rows = this.trainings.map(t => [
-      `"${t.code || ''}"`,
-      `"${(t.title || '').replace(/"/g, '""')}"`,
-      `"${t.category || ''}"`,
-      `"${(t.instructor || '').replace(/"/g, '""')}"`,
-      `"${(t.target || '').replace(/"/g, '""')}"`,
-      `"${t.startDate || ''}"`,
-      `"${t.endDate || ''}"`,
-      `"${(t.location || '').replace(/"/g, '""')}"`,
-      `"${t.modality || ''}"`,
-      `"${t.status || ''}"`,
-      t.hours || 0,
-      t.vacancies || 0,
-      t.enrolled || 0,
-      t.graduated || 0
-    ]);
-
-    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `cecate_capacitacoes_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    this.showToast("Planilha CSV exportada com sucesso!", "success");
-  }
-
-  escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   /* ==========================================================================
-     UI Modals & Toasts
+     ETAPA 3: MUNICÍPIOS & TABELA 1
      ========================================================================== */
-  openModal(modalId) {
-    const el = document.getElementById(modalId);
-    if (el) el.classList.add('open');
+  renderMunicipalitiesStep() {
+    const container = document.getElementById('wizard-municipalities-table-preview');
+    if (!container || !this.currentTraining || !window.statsEngine) return;
+
+    const muns = this.currentTraining.municipalities || [];
+    container.innerHTML = window.statsEngine.generateTable1Html(muns);
+
+    const countEl = document.getElementById('wiz-muns-total-count');
+    if (countEl) countEl.textContent = `${muns.length} Municípios Cadastrados`;
   }
 
-  closeModal(modalId) {
-    const el = document.getElementById(modalId);
-    if (el) el.classList.remove('open');
+  addMunicipalityPrompt() {
+    const query = prompt('Digite o nome ou código IBGE do município:');
+    if (!query) return;
+
+    let matched = null;
+    if (window.IBGE_DATA) {
+      matched = window.IBGE_DATA.find(i => String(i.c) === query || i.n.toLowerCase().includes(query.toLowerCase()));
+    }
+
+    const munName = matched ? matched.n : query;
+    const ibgeCode = matched ? matched.c : parseInt(prompt('Código IBGE (7 dígitos):') || '0');
+    const uf = matched ? matched.u : (this.currentTraining.uf || 'MT');
+    const dist = parseFloat(prompt(`Distância em km até ${this.currentTraining.polo || 'o polo'}:`, '0') || '0');
+
+    if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
+    this.currentTraining.municipalities.push({
+      id: `mun_${Date.now()}`,
+      ibgeCode,
+      name: munName,
+      uf,
+      distanceKm: dist,
+      isSummoned: true,
+      inscribedCACS: 0,
+      inscribedGestores: 0,
+      inscribedTotal: 0,
+      presentCACS: 0,
+      presentGestores: 0,
+      presentTotal: 0
+    });
+
+    this.renderMunicipalitiesStep();
+    this.saveCurrentStepData();
+  }
+
+  /* ==========================================================================
+     ETAPA 4: ESTRUTURA DO CURSO & TABELA 2
+     ========================================================================== */
+  renderCourseStructureStep() {
+    const container = document.getElementById('wizard-course-table-preview');
+    if (!container || !this.currentTraining || !window.statsEngine) return;
+
+    const mods = this.currentTraining.courseModules || [];
+    container.innerHTML = window.statsEngine.generateTable2Html(mods);
+  }
+
+  addModulePrompt() {
+    const modNumber = prompt('Número do Módulo (Ex: 05):', `0${(this.currentTraining.courseModules?.length || 0) + 1}`);
+    if (!modNumber) return;
+    const topicGestor = prompt('Temática para Gestores:', '');
+    const topicCACS = prompt('Temática para Conselheiros CACS:', topicGestor);
+    const hours = parseFloat(prompt('Carga Horária (horas):', '2.0') || '2.0');
+
+    if (!this.currentTraining.courseModules) this.currentTraining.courseModules = [];
+    this.currentTraining.courseModules.push({
+      id: `mod_${Date.now()}`,
+      moduleNumber: modNumber,
+      topicGestor,
+      topicCACS,
+      hoursGestor: hours,
+      hoursCACS: hours,
+      order: this.currentTraining.courseModules.length
+    });
+
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
+  }
+
+  /* ==========================================================================
+     ETAPA 6: LISTA DE PRESENÇA (UPLOAD & TABELA 4)
+     ========================================================================== */
+  async handleAttendanceFileUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file || !window.excelParser) return;
+
+    try {
+      this.showToast('Lendo planilha de presença...');
+      const { sheets, sheetNames } = await window.excelParser.readWorkbook(file);
+      const firstSheet = sheets[sheetNames[0]];
+
+      const parsed = window.excelParser.parseAttendanceRows(firstSheet, null, this.currentTraining.uf || 'MT');
+      if (parsed.length === 0) {
+        this.showToast('Nenhum registro de participante identificado na planilha.', 'warning');
+        return;
+      }
+
+      this.currentTraining.attendance = parsed;
+
+      // Reconciliar presença com a lista de municípios
+      this.reconcileMunicipalitiesPresence(parsed);
+
+      this.renderAttendanceStep();
+      this.saveCurrentStepData();
+      this.showToast(`✓ ${parsed.length} participantes importados com sucesso!`, 'success');
+    } catch (err) {
+      console.error('Erro ao importar lista de presença:', err);
+      this.showToast(`Erro na importação: ${err.message}`, 'error');
+    }
+  }
+
+  reconcileMunicipalitiesPresence(attendanceList = []) {
+    if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
+
+    // Agrupar por município
+    const map = {};
+    attendanceList.forEach(att => {
+      const munName = att.municipality || 'Não Informado';
+      if (!map[munName]) {
+        map[munName] = { cacs: 0, gestores: 0, ibgeCode: att.ibgeCode };
+      }
+      if (att.representation === 'CACS-FUNDEB') map[munName].cacs++;
+      else map[munName].gestores++;
+    });
+
+    // Atualizar registros existentes ou inserir novos
+    Object.keys(map).forEach(munName => {
+      let existing = this.currentTraining.municipalities.find(m => m.name.toLowerCase() === munName.toLowerCase());
+      if (existing) {
+        existing.presentCACS = map[munName].cacs;
+        existing.presentGestores = map[munName].gestores;
+        existing.presentTotal = map[munName].cacs + map[munName].gestores;
+        if (existing.inscribedTotal === 0) {
+          existing.inscribedCACS = existing.presentCACS;
+          existing.inscribedGestores = existing.presentGestores;
+          existing.inscribedTotal = existing.presentTotal;
+        }
+      } else {
+        this.currentTraining.municipalities.push({
+          id: `mun_${Date.now()}_${munName}`,
+          ibgeCode: map[munName].ibgeCode || '',
+          name: munName,
+          uf: this.currentTraining.uf || 'MT',
+          distanceKm: 0,
+          isSummoned: true,
+          inscribedCACS: map[munName].cacs,
+          inscribedGestores: map[munName].gestores,
+          inscribedTotal: map[munName].cacs + map[munName].gestores,
+          presentCACS: map[munName].cacs,
+          presentGestores: map[munName].gestores,
+          presentTotal: map[munName].cacs + map[munName].gestores
+        });
+      }
+    });
+  }
+
+  renderAttendanceStep() {
+    const container = document.getElementById('wizard-attendance-table-container');
+    const table4Container = document.getElementById('wizard-table4-preview');
+    if (!this.currentTraining) return;
+
+    const list = this.currentTraining.attendance || [];
+
+    // Renderizar tabela de participantes
+    if (container) {
+      if (list.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma lista de presença importada. Arraste ou selecione a planilha acima.</p>`;
+      } else {
+        container.innerHTML = `
+          <div style="margin-bottom:0.75rem; font-size:0.88rem; color:var(--text-secondary); display:flex; justify-content:space-between;">
+            <span>Total de Presentes: <strong>${list.length}</strong></span>
+            <span>CACS: <strong>${list.filter(a => a.representation === 'CACS-FUNDEB').length}</strong> | Gestores: <strong>${list.filter(a => a.representation !== 'CACS-FUNDEB').length}</strong></span>
+          </div>
+          <div class="table-responsive-wrapper" style="max-height:350px;">
+            <table class="report-data-table">
+              <thead>
+                <tr>
+                  <th>Nome Completo</th>
+                  <th>CPF</th>
+                  <th>Município</th>
+                  <th>Segmento</th>
+                  <th>Cargo / Função</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${list.slice(0, 50).map(a => `
+                  <tr>
+                    <td><strong>${a.name}</strong></td>
+                    <td style="font-family:monospace;">${a.cpf || '-'}</td>
+                    <td>${a.municipality || '-'}</td>
+                    <td><span class="nav-badge" style="background:rgba(6, 182, 212, 0.15); color:#22d3ee;">${a.representation}</span></td>
+                    <td>${a.roleGestao || a.roleCACS || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    // Renderizar Tabela 4 (Participação por Município)
+    if (table4Container && window.statsEngine) {
+      table4Container.innerHTML = window.statsEngine.generateTable4Html(this.currentTraining.municipalities || []);
+    }
+  }
+
+  /* ==========================================================================
+     ETAPA 7: AVALIAÇÃO (UPLOAD, MÉDIAS, GRÁFICOS & NUVEM)
+     ========================================================================== */
+  async handleEvaluationFileUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file || !window.excelParser) return;
+
+    try {
+      this.showToast('Processando planilha de avaliações...');
+      const { sheets, sheetNames } = await window.excelParser.readWorkbook(file);
+      const firstSheet = sheets[sheetNames[0]];
+
+      const parsed = window.excelParser.parseEvaluationRows(firstSheet, null, this.currentTraining.uf || 'MT');
+      if (parsed.length === 0) {
+        this.showToast('Nenhum registro de avaliação identificado.', 'warning');
+        return;
+      }
+
+      this.currentTraining.evaluations = parsed;
+      this.renderEvaluationStep();
+      this.renderEvaluationCharts();
+      this.renderWordClouds();
+      this.saveCurrentStepData();
+      this.showToast(`✓ ${parsed.length} avaliações processadas com sucesso!`, 'success');
+    } catch (err) {
+      console.error('Erro ao processar avaliações:', err);
+      this.showToast(`Erro na avaliação: ${err.message}`, 'error');
+    }
+  }
+
+  renderEvaluationStep() {
+    if (!this.currentTraining || !window.statsEngine) return;
+    const evals = this.currentTraining.evaluations || [];
+    const stats = window.statsEngine.calculateEvaluationStats(evals);
+
+    const countEl = document.getElementById('wiz-eval-total-count');
+    if (countEl) countEl.textContent = `${evals.length} Avaliações Registradas`;
+
+    const meanEl = document.getElementById('wiz-eval-overall-mean');
+    if (meanEl) meanEl.textContent = `${stats.overallMean} / 5.0`;
+  }
+
+  renderEvaluationCharts() {
+    if (!window.chartEngine || !this.currentTraining) return;
+    const isDark = this.theme === 'dark';
+    const evals = this.currentTraining.evaluations || [];
+    const attendance = this.currentTraining.attendance || [];
+
+    // Figura 3: Participação CACS vs Gestor
+    const cacsPresent = attendance.filter(a => a.representation === 'CACS-FUNDEB').length || 1;
+    const gestPresent = attendance.filter(a => a.representation !== 'CACS-FUNDEB').length || 28;
+    window.chartEngine.renderFig3Participation('chart-fig3-canvas', cacsPresent, gestPresent, isDark);
+
+    // Figura 4: Avaliação Geral (Todos os participantes)
+    const statsGen = window.statsEngine.calculateEvaluationStats(evals);
+    window.chartEngine.renderEvaluationBarChart('chart-fig4-canvas', statsGen.averages, 'Figura 4. Avaliação de Todos os Participantes', isDark, '#6366f1');
+
+    // Figura 5: Avaliação CACS
+    const statsCACS = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation === 'CACS-FUNDEB'));
+    window.chartEngine.renderEvaluationBarChart('chart-fig5-canvas', statsCACS.averages, 'Figura 5. Avaliação dos Conselheiros CACS', isDark, '#06b6d4');
+
+    // Figura 6: Avaliação Gestores
+    const statsGest = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation !== 'CACS-FUNDEB'));
+    window.chartEngine.renderEvaluationBarChart('chart-fig6-canvas', statsGest.averages, 'Figura 6. Avaliação dos Gestores Municipais', isDark, '#8b5cf6');
+  }
+
+  renderWordClouds() {
+    if (!window.wordCloudEngine || !this.currentTraining) return;
+    const evals = this.currentTraining.evaluations || [];
+    const isDark = this.theme === 'dark';
+
+    const likedTexts = evals.map(e => e.likedAspects).filter(Boolean);
+    const improveTexts = evals.map(e => e.improveAspects).filter(Boolean);
+
+    // Nuvem de Aspectos Positivos (Figura 7)
+    const likedWords = window.wordCloudEngine.processTextList(likedTexts);
+    const canvas7 = document.getElementById('wordcloud-fig7-canvas');
+    if (canvas7) {
+      window.wordCloudEngine.renderToCanvas(canvas7, likedWords, { palette: 'positive', isDark, width: 550, height: 320 });
+    }
+
+    // Nuvem de Aspectos a Melhorar (Figura 8)
+    const improveWords = window.wordCloudEngine.processTextList(improveTexts);
+    const canvas8 = document.getElementById('wordcloud-fig8-canvas');
+    if (canvas8) {
+      window.wordCloudEngine.renderToCanvas(canvas8, improveWords, { palette: 'improve', isDark, width: 550, height: 320 });
+    }
+  }
+
+  /* ==========================================================================
+     ETAPA 8: REGISTROS FOTOGRÁFICOS
+     ========================================================================== */
+  async handlePhotoUpload(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    if (!this.currentTraining.media) this.currentTraining.media = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const dataUrl = await this.fileToDataUrl(file);
+      const photoCount = this.currentTraining.media.filter(m => m.type === 'photo').length;
+      const figNumber = photoCount + 9; // Inicia em Figura 9 conforme referência 16CTE
+
+      this.currentTraining.media.push({
+        id: `photo_${Date.now()}_${i}`,
+        type: 'photo',
+        blob: dataUrl,
+        caption: `Figura ${figNumber}. Registro da capacitação no polo ${this.currentTraining.polo || ''}.`,
+        order: photoCount,
+        section: '6. REGISTROS FOTOGRÁFICOS',
+        fileName: file.name
+      });
+    }
+
+    this.renderPhotosStep();
+    this.saveCurrentStepData();
+    this.showToast(`✓ ${files.length} fotos adicionadas à galeria!`, 'success');
+  }
+
+  renderPhotosStep() {
+    const container = document.getElementById('wizard-photos-grid');
+    if (!container || !this.currentTraining) return;
+
+    const photos = (this.currentTraining.media || []).filter(m => m.type === 'photo');
+    if (photos.length === 0) {
+      container.innerHTML = `<p style="color:var(--text-muted); grid-column:1/-1;">Nenhuma fotografia inserida. Faça upload acima para compor a galeria do relatório.</p>`;
+      return;
+    }
+
+    container.innerHTML = photos.map((p, idx) => `
+      <div class="photo-gallery-card">
+        <img src="${p.blob}" alt="${p.caption}" class="photo-gallery-img">
+        <div class="photo-gallery-body">
+          <input type="text" class="form-control form-control-sm" value="${p.caption}" onchange="app.updatePhotoCaption('${p.id}', this.value)" placeholder="Legenda da figura...">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.25rem;">
+            <span style="font-size:0.75rem; color:var(--text-muted);">Foto #${idx + 1}</span>
+            <button class="btn btn-secondary btn-sm" onclick="app.removeMedia('${p.id}')" title="Excluir Foto">🗑️ Excluir</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  updatePhotoCaption(photoId, newCaption) {
+    const photo = this.currentTraining.media?.find(m => m.id === photoId);
+    if (photo) {
+      photo.caption = newCaption;
+      this.saveCurrentStepData();
+    }
+  }
+
+  removeMedia(mediaId) {
+    if (confirm('Deseja excluir este anexo/foto?')) {
+      this.currentTraining.media = (this.currentTraining.media || []).filter(m => m.id !== mediaId);
+      this.renderPhotosStep();
+      this.renderAppendicesStep();
+      this.saveCurrentStepData();
+    }
+  }
+
+  /* ==========================================================================
+     ETAPA 9: APÊNDICES I & II
+     ========================================================================== */
+  async handleAppendixUpload(type, event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    if (!this.currentTraining.media) this.currentTraining.media = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const dataUrl = await this.fileToDataUrl(file);
+
+      this.currentTraining.media.push({
+        id: `doc_${type}_${Date.now()}_${i}`,
+        type: type, // 'doc_fnde' ou 'doc_cecate'
+        blob: dataUrl,
+        caption: file.name,
+        fileName: file.name,
+        order: this.currentTraining.media.length
+      });
+    }
+
+    this.renderAppendicesStep();
+    this.saveCurrentStepData();
+    this.showToast(`✓ Documento anexado com sucesso!`, 'success');
+  }
+
+  renderAppendicesStep() {
+    const fndeContainer = document.getElementById('wizard-appendix-fnde-list');
+    const cecateContainer = document.getElementById('wizard-appendix-cecate-list');
+    if (!this.currentTraining) return;
+
+    const fndeDocs = (this.currentTraining.media || []).filter(m => m.type === 'doc_fnde');
+    const cecateDocs = (this.currentTraining.media || []).filter(m => m.type === 'doc_cecate');
+
+    if (fndeContainer) {
+      fndeContainer.innerHTML = fndeDocs.length === 0
+        ? `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhuma convocação do FNDE anexada.</p>`
+        : fndeDocs.map(d => `<div class="audit-item"><span>📄 ${d.fileName}</span><button class="btn btn-secondary btn-sm" onclick="app.removeMedia('${d.id}')">✕</button></div>`).join('');
+    }
+
+    if (cecateContainer) {
+      cecateContainer.innerHTML = cecateDocs.length === 0
+        ? `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhuma convocação do CECATE anexada.</p>`
+        : cecateDocs.map(d => `<div class="audit-item"><span>📄 ${d.fileName}</span><button class="btn btn-secondary btn-sm" onclick="app.removeMedia('${d.id}')">✕</button></div>`).join('');
+    }
+  }
+
+  /* ==========================================================================
+     ETAPA 10: PAINEL DE CONFERÊNCIA GERAL & AUDITORIA
+     ========================================================================== */
+  renderConferenceStep() {
+    const container = document.getElementById('wizard-conference-content');
+    if (!container || !this.currentTraining || !window.statsEngine) return;
+
+    const metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
+    this.metrics = metrics;
+
+    container.innerHTML = `
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+        <div class="metric-card">
+          <div class="metric-icon">👥</div>
+          <div class="metric-info">
+            <h4>Taxa de Participação</h4>
+            <div class="metric-value" style="color:var(--accent-secondary);">${metrics.participationRateGeneral}%</div>
+            <div class="metric-trend">${metrics.totalPresent} presentes / ${metrics.totalInscribed} inscritos</div>
+          </div>
+        </div>
+
+        <div class="metric-card cyan">
+          <div class="metric-icon">🏛️</div>
+          <div class="metric-info">
+            <h4>Municípios Atendidos</h4>
+            <div class="metric-value">${metrics.totalPresentMunicipalities}</div>
+            <div class="metric-trend">de ${metrics.totalSummonedMunicipalities} convocados</div>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-icon">⭐</div>
+          <div class="metric-info">
+            <h4>Média Geral de Avaliação</h4>
+            <div class="metric-value" style="color:var(--accent-success);">${metrics.evalStatsGeneral.overallMean} / 5.0</div>
+            <div class="metric-trend">${metrics.evalStatsGeneral.totalResponses} respostas computadas</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-card">
+        <h4 class="wizard-card-title">🔍 Checklist de Auditoria & Validação Cruzada</h4>
+        <div style="margin-top:1rem;">
+          <div class="audit-item valid">
+            <div><strong>Identificação e Metadados:</strong> Polo, UF e datas devidamente informados.</div>
+            <span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981;">✓ Validado</span>
+          </div>
+
+          <div class="audit-item ${metrics.totalPresent > 0 ? 'valid' : 'critical'}">
+            <div><strong>Lista de Presença:</strong> ${metrics.totalPresent} participantes identificados e categorizados.</div>
+            <span class="nav-badge" style="${metrics.totalPresent > 0 ? 'background:rgba(16, 185, 129, 0.15); color:#10b981;' : 'background:rgba(239, 68, 68, 0.15); color:#ef4444;'}">
+              ${metrics.totalPresent > 0 ? '✓ Validado' : '⚠ Pendência Crítica'}
+            </span>
+          </div>
+
+          <div class="audit-item ${metrics.evalStatsGeneral.totalResponses > 0 ? 'valid' : 'warning'}">
+            <div><strong>Pesquisa Avaliativa:</strong> ${metrics.evalStatsGeneral.totalResponses} respostas com médias calculadas.</div>
+            <span class="nav-badge" style="${metrics.evalStatsGeneral.totalResponses > 0 ? 'background:rgba(16, 185, 129, 0.15); color:#10b981;' : 'background:rgba(245, 158, 11, 0.15); color:#f59e0b;'}">
+              ${metrics.evalStatsGeneral.totalResponses > 0 ? '✓ Validado' : '⚠ Pendência'}
+            </span>
+          </div>
+
+          ${metrics.auditIssues.map(issue => `
+            <div class="audit-item ${issue.type}">
+              <div><strong>Alerta do Sistema:</strong> ${issue.message}</div>
+              <span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b;">Atenção</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  /* ==========================================================================
+     ETAPA 11: PRÉ-VISUALIZAÇÃO & GERAÇÃO FINAL DO RELATÓRIO
+     ========================================================================== */
+  renderReportPreviewStep() {
+    const container = document.getElementById('wizard-report-preview-document');
+    if (!container || !this.currentTraining || !window.statsEngine) return;
+
+    const t = this.currentTraining;
+    const metrics = window.statsEngine.calculateAllMetrics(t);
+    this.metrics = metrics;
+
+    container.innerHTML = `
+      <div class="report-doc-page">
+        <div style="text-align:center; border-bottom: 2px solid #1e3a8a; padding-bottom: 1rem; margin-bottom: 2rem;">
+          <h2 style="font-size:16pt; margin:0;">UNIVERSIDADE FEDERAL DE GOIÁS - UFG</h2>
+          <h3 style="font-size:13pt; margin:4px 0; color:#0284c7;">CENTRO COLABORADOR DE APOIO AO TRANSPORTE ESCOLAR - CECATE CENTRO-OESTE</h3>
+          <p style="font-size:10pt; color:#475569; margin:0;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE</p>
+        </div>
+
+        <div style="text-align:center; margin: 3rem 0;">
+          <h1 style="font-size:22pt; margin-bottom:0.5rem;">RELATÓRIO DE ATIVIDADES Nº ${t.number || 16}</h1>
+          <h2 style="font-size:16pt; color:#2563eb; margin:0;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
+          <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem;">${t.polo || 'Polo Regional'} - ${t.uf || 'MT'}, ${t.datesFormatted || '2026'}</h3>
+        </div>
+
+        <h3>1. INTRODUÇÃO</h3>
+        <p>O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${t.number || 16}, executada no município polo de ${t.polo || 'Pontes e Lacerda'}, Estado de ${t.uf || 'MT'}, nas datas de ${t.datesFormatted || '23 e 24 de junho de 2026'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${t.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+
+        <h3>2. DADOS BÁSICOS DO CURSO</h3>
+        <p>Foram convocados ${metrics.totalSummonedMunicipalities} municípios para participarem das atividades formativas no polo de ${t.polo}. A distância média percorrida pelas delegações foi de ${metrics.avgDistance} km.</p>
+        
+        <p><em>Tabela 1. Municípios convocados.</em></p>
+        ${window.statsEngine.generateTable1Html(t.municipalities || [])}
+
+        <p><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
+        ${window.statsEngine.generateTable2Html(t.courseModules || [])}
+
+        <h3>4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO</h3>
+        <p>O evento registrou ${metrics.totalInscribed} inscritos e ${metrics.totalPresent} presentes efetivos, com taxa global de participação de ${metrics.participationRateGeneral}%.</p>
+
+        <p><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
+        ${window.statsEngine.generateTable4Html(t.municipalities || [])}
+
+        <h3>5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
+        <p>Registrou-se ${metrics.evalStatsGeneral.totalResponses} questionários de avaliação preenchidos, com média global de satisfação de ${metrics.evalStatsGeneral.overallMean} / 5.0.</p>
+
+        <h3>7. CONSIDERAÇÕES FINAIS</h3>
+        <p>A realização da Capacitação nº ${t.number} no polo de ${t.polo} cumpriu integralmente as metas e diretrizes estabelecidas pelo CECATE-CO e pelo FNDE.</p>
+      </div>
+    `;
+  }
+
+  async downloadDocxReport() {
+    if (!this.currentTraining || !window.reportDocxGenerator) return;
+    this.showToast('⚡ Gerando arquivo Word (.docx)...');
+    if (!this.metrics) {
+      this.metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
+    }
+    await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics);
+  }
+
+  async directDownloadDocx(trainingId) {
+    const full = await window.db.getTrainingFull(trainingId);
+    if (full && window.reportDocxGenerator && window.statsEngine) {
+      const metrics = window.statsEngine.calculateAllMetrics(full);
+      this.showToast('⚡ Gerando arquivo Word (.docx)...');
+      await window.reportDocxGenerator.generateAndDownload(full, metrics);
+    }
+  }
+
+  async duplicateTrainingAction(trainingId) {
+    if (confirm('Deseja duplicar esta capacitação como modelo para uma nova edição?')) {
+      try {
+        const newId = await window.db.duplicateTraining(trainingId);
+        this.showToast('✓ Capacitação duplicada com sucesso!');
+        await this.refreshTrainingsList();
+        this.openWizard(newId, 1);
+      } catch (err) {
+        this.showToast(`Erro ao duplicar: ${err.message}`, 'error');
+      }
+    }
+  }
+
+  /* ==========================================================================
+     MUNICIPALITIES CATALOG BANK
+     ========================================================================== */
+  renderMunicipalitiesBank() {
+    const container = document.getElementById('municipalities-bank-list');
+    if (!container || !window.IBGE_DATA) return;
+
+    const data = window.IBGE_DATA.slice(0, 100);
+    container.innerHTML = `
+      <div class="table-responsive-wrapper" style="max-height:500px;">
+        <table class="report-data-table">
+          <thead>
+            <tr>
+              <th>Código IBGE</th>
+              <th>Nome do Município</th>
+              <th>UF</th>
+              <th>Região</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(m => `
+              <tr>
+                <td style="font-family:monospace;">${m.c}</td>
+                <td><strong>${m.n}</strong></td>
+                <td>${m.u}</td>
+                <td>${m.r}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  /* ==========================================================================
+     UTILITÁRIOS & HELPERS
+     ========================================================================== */
+  setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = (val !== undefined && val !== null) ? val : '';
+  }
+
+  getVal(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = err => reject(err);
+      reader.readAsDataURL(file);
+    });
   }
 
   showToast(message, type = 'info') {
@@ -1351,59 +1148,48 @@ class AutoReportApp {
     if (!container) return;
 
     const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${message}</span>`;
+    toast.className = 'toast';
+    if (type === 'success') toast.style.borderLeft = '4px solid var(--accent-success)';
+    if (type === 'error') toast.style.borderLeft = '4px solid var(--accent-danger)';
+    if (type === 'warning') toast.style.borderLeft = '4px solid var(--accent-warning)';
+
+    toast.innerHTML = message;
     container.appendChild(toast);
 
     setTimeout(() => {
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 300);
-    }, 3200);
+    }, 3500);
   }
 
-  /* ==========================================================================
-     Global Event Bindings
-     ========================================================================== */
   bindEvents() {
-    // Navigation items click
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const view = item.getAttribute('data-view');
-        if (view) this.navigateTo(view);
-      });
-    });
-
-    // Theme toggle
+    // Theme toggle button
     const themeBtn = document.getElementById('theme-toggle-btn');
     if (themeBtn) {
       themeBtn.addEventListener('click', () => this.toggleTheme());
     }
 
-    // Modal Close buttons
+    // Modal close buttons
     document.querySelectorAll('.modal-close').forEach(btn => {
       btn.addEventListener('click', () => {
-        const modal = btn.closest('.modal-backdrop');
-        if (modal) modal.classList.remove('open');
+        document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
       });
     });
 
-    // Settings save form
-    const settingsForm = document.getElementById('global-settings-form');
-    if (settingsForm) {
-      settingsForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.orgSettings.defaultOrgName = document.getElementById('setting-org-name')?.value || '';
-        this.orgSettings.defaultDepartment = document.getElementById('setting-dept-name')?.value || '';
-        this.orgSettings.defaultSigner = document.getElementById('setting-signer-name')?.value || '';
-        this.saveStorage();
-        this.showToast("Configurações institucionais salvas com sucesso!", 'success');
-      });
-    }
+    // Inputs autosave on change
+    document.addEventListener('input', (e) => {
+      if (e.target.closest('#view-wizard') && this.currentTraining) {
+        this.saveCurrentStepData();
+      }
+    });
+
+    // Window popstate / hashchange
+    window.addEventListener('hashchange', () => this.handleRoute());
   }
 }
 
-// Inicializar a aplicação quando o DOM estiver pronto
+// Inicializar Singleton da Aplicação
+window.app = new AutoReportApp();
 document.addEventListener('DOMContentLoaded', () => {
-  window.app = new AutoReportApp();
+  window.app.init();
 });

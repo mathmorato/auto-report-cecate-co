@@ -1,0 +1,352 @@
+/**
+ * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
+ * Versão: v.1.0.2
+ */
+
+class ExcelParser {
+  constructor() {
+    this.ibgeLookup = new Map();
+    this.initIbgeLookup();
+  }
+
+  initIbgeLookup() {
+    if (window.IBGE_DATA && Array.isArray(window.IBGE_DATA)) {
+      window.IBGE_DATA.forEach(item => {
+        // Mapear por código
+        this.ibgeLookup.set(String(item.c), item);
+        // Mapear por nome normalizado + UF
+        const normKey = `${this.normalizeStr(item.n)}_${item.u.toUpperCase()}`;
+        this.ibgeLookup.set(normKey, item);
+        // Mapear só por nome
+        const nameOnlyKey = this.normalizeStr(item.n);
+        if (!this.ibgeLookup.has(nameOnlyKey)) {
+          this.ibgeLookup.set(nameOnlyKey, item);
+        }
+      });
+    }
+  }
+
+  normalizeStr(str) {
+    if (!str || typeof str !== 'string') return '';
+    return str.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
+  }
+
+  formatCpf(cpf) {
+    if (!cpf) return '';
+    const digits = String(cpf).replace(/\D/g, '');
+    if (digits.length === 11) {
+      return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
+    }
+    return String(cpf).trim();
+  }
+
+  /**
+   * Lê um arquivo Excel (File / Blob / ArrayBuffer) e retorna as planilhas e linhas
+   */
+  async readWorkbook(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const sheets = {};
+          workbook.SheetNames.forEach(name => {
+            const worksheet = workbook.Sheets[name];
+            sheets[name] = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null });
+          });
+          resolve({ workbook, sheets, sheetNames: workbook.SheetNames });
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  /**
+   * Identifica colunas da Lista de Presença via sinonímia inteligente
+   */
+  mapAttendanceColumns(headerRow = []) {
+    const mapping = {
+      timestamp: -1,
+      name: -1,
+      cpf: -1,
+      phone: -1,
+      email: -1,
+      isEnrolled: -1,
+      birthDate: -1,
+      municipality: -1,
+      representation: -1,
+      roleGestao: -1,
+      roleCACS: -1,
+      successCase: -1
+    };
+
+    headerRow.forEach((colName, idx) => {
+      if (!colName) return;
+      const clean = this.normalizeStr(String(colName));
+
+      if (clean.includes('carimbo') || clean.includes('timestamp') || clean.includes('datahora')) {
+        mapping.timestamp = idx;
+      } else if (clean.includes('nomecompleto') || clean === 'nome') {
+        mapping.name = idx;
+      } else if (clean.includes('cpf')) {
+        mapping.cpf = idx;
+      } else if (clean.includes('telefone') || clean.includes('celular') || clean.includes('contato')) {
+        if (mapping.phone === -1) mapping.phone = idx;
+      } else if (clean.includes('email') || clean.includes('correioeletronico')) {
+        mapping.email = idx;
+      } else if (clean.includes('jainscrito') || clean.includes('estainscrito') || clean.includes('inscricao')) {
+        mapping.isEnrolled = idx;
+      } else if (clean.includes('datanascimento') || clean.includes('nascimento')) {
+        mapping.birthDate = idx;
+      } else if (clean.includes('municipio') || clean.includes('cidade') || clean.includes('polo')) {
+        mapping.municipality = idx;
+      } else if (clean.includes('fazpartedo') || clean.includes('representacao') || clean.includes('segmento')) {
+        mapping.representation = idx;
+      } else if (clean.includes('cargona') && clean.includes('gestao') || clean.includes('gestaomunicipal')) {
+        mapping.roleGestao = idx;
+      } else if (clean.includes('cargono') && clean.includes('cacs') || clean.includes('cacsfundeb')) {
+        mapping.roleCACS = idx;
+      } else if (clean.includes('casodesucesso') || clean.includes('relato')) {
+        mapping.successCase = idx;
+      }
+    });
+
+    return mapping;
+  }
+
+  /**
+   * Processa linhas da Lista de Presença gerando objetos normalizados
+   */
+  parseAttendanceRows(rows = [], mapping = null, trainingUf = 'MT') {
+    if (!rows || rows.length < 2) return [];
+    if (!this.ibgeLookup.size) this.initIbgeLookup();
+
+    const headers = rows[0];
+    const colMap = mapping || this.mapAttendanceColumns(headers);
+    const results = [];
+    const seenCpfs = new Set();
+
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row || row.length === 0 || !row.some(c => c !== null && c !== '')) continue;
+
+      const rawName = colMap.name !== -1 ? row[colMap.name] : '';
+      const rawCpf = colMap.cpf !== -1 ? row[colMap.cpf] : '';
+      if (!rawName && !rawCpf) continue;
+
+      const formattedCpf = this.formatCpf(rawCpf);
+      const name = String(rawName || '').trim();
+      const email = colMap.email !== -1 && row[colMap.email] ? String(row[colMap.email]).trim() : '';
+      const phone = colMap.phone !== -1 && row[colMap.phone] ? String(row[colMap.phone]).trim() : '';
+      const birthDate = colMap.birthDate !== -1 && row[colMap.birthDate] ? String(row[colMap.birthDate]).trim() : '';
+
+      // Município & Código IBGE
+      let rawMun = colMap.municipality !== -1 && row[colMap.municipality] ? String(row[colMap.municipality]).trim() : '';
+      let ibgeCode = '';
+      let matchedMunName = rawMun;
+
+      if (rawMun) {
+        // Remover sufixos como (MT), (GO)
+        const munClean = rawMun.replace(/\([A-Z]{2}\)/g, '').trim();
+        const lookupKey = `${this.normalizeStr(munClean)}_${trainingUf.toUpperCase()}`;
+        let ibgeInfo = this.ibgeLookup.get(lookupKey) || this.ibgeLookup.get(this.normalizeStr(munClean));
+
+        if (ibgeInfo) {
+          ibgeCode = ibgeInfo.c;
+          matchedMunName = ibgeInfo.n;
+        }
+      }
+
+      // Representação
+      const rawRep = colMap.representation !== -1 && row[colMap.representation] ? String(row[colMap.representation]).trim() : '';
+      let representation = 'Gestão municipal';
+      if (rawRep.toUpperCase().includes('CACS') || rawRep.toUpperCase().includes('FUNDEB') || rawRep.toUpperCase().includes('CONSELHO')) {
+        representation = 'CACS-FUNDEB';
+      }
+
+      const roleGestao = colMap.roleGestao !== -1 && row[colMap.roleGestao] ? String(row[colMap.roleGestao]).trim() : '';
+      const roleCACS = colMap.roleCACS !== -1 && row[colMap.roleCACS] ? String(row[colMap.roleCACS]).trim() : '';
+      const successCase = colMap.successCase !== -1 && row[colMap.successCase] ? String(row[colMap.successCase]).trim() : '';
+
+      const isEnrolled = colMap.isEnrolled !== -1 && row[colMap.isEnrolled]
+        ? !String(row[colMap.isEnrolled]).toLowerCase().includes('não')
+        : true;
+
+      const isDuplicate = formattedCpf && seenCpfs.has(formattedCpf);
+      if (formattedCpf) seenCpfs.add(formattedCpf);
+
+      results.push({
+        id: `att_parsed_${Date.now()}_${r}`,
+        name,
+        cpf: formattedCpf,
+        email,
+        phone,
+        birthDate,
+        municipality: matchedMunName,
+        ibgeCode,
+        representation,
+        roleGestao,
+        roleCACS,
+        successCase,
+        isEnrolled,
+        isPresent: true,
+        isDuplicate,
+        source: 'excel'
+      });
+    }
+
+    return results;
+  }
+
+  /**
+   * Identifica colunas da Planilha de Avaliação
+   */
+  mapEvaluationColumns(headerRow = []) {
+    const mapping = {
+      timestamp: -1,
+      name: -1,
+      cpf: -1,
+      email: -1,
+      phone: -1,
+      municipality: -1,
+      representation: -1,
+      ratings: [], // 7 perguntas de 1 a 5
+      likedAspects: -1,
+      improveAspects: -1,
+      institution: -1,
+      suggestions: -1,
+      howFound: -1,
+      comments: -1
+    };
+
+    headerRow.forEach((colName, idx) => {
+      if (!colName) return;
+      const clean = this.normalizeStr(String(colName));
+
+      if (clean.includes('carimbo') || clean.includes('timestamp')) {
+        mapping.timestamp = idx;
+      } else if (clean.includes('nomecompleto') || clean === 'nome') {
+        mapping.name = idx;
+      } else if (clean.includes('cpf')) {
+        mapping.cpf = idx;
+      } else if (clean.includes('email')) {
+        mapping.email = idx;
+      } else if (clean.includes('telefone') || clean.includes('celular')) {
+        mapping.phone = idx;
+      } else if (clean.includes('municipio') || clean.includes('cidade')) {
+        mapping.municipality = idx;
+      } else if (clean.includes('fazpartedo') || clean.includes('representacao')) {
+        mapping.representation = idx;
+      } else if (clean.includes('avaliarde1a5') || clean.includes('1significagruim') || clean.includes('comovoceavali')) {
+        mapping.ratings.push({ index: idx, label: colName });
+      } else if (clean.includes('maisgostou') || clean.includes('aspectospositivos')) {
+        mapping.likedAspects = idx;
+      } else if (clean.includes('melhorados') || clean.includes('melhorar') || clean.includes('aspectosamelhorar')) {
+        mapping.improveAspects = idx;
+      } else if (clean.includes('instituicaovinculada') || clean.includes('orgao')) {
+        mapping.institution = idx;
+      } else if (clean.includes('sugestaodetemas') || clean.includes('temasparafuturas')) {
+        mapping.suggestions = idx;
+      } else if (clean.includes('comoficousabendo') || clean.includes('divulgacao')) {
+        mapping.howFound = idx;
+      } else if (clean.includes('comentarios') || clean.includes('sugestoes')) {
+        mapping.comments = idx;
+      }
+    });
+
+    return mapping;
+  }
+
+  /**
+   * Processa linhas da Planilha de Avaliação gerando registros estruturados
+   */
+  parseEvaluationRows(rows = [], mapping = null, trainingUf = 'MT') {
+    if (!rows || rows.length < 2) return [];
+    if (!this.ibgeLookup.size) this.initIbgeLookup();
+
+    const headers = rows[0];
+    const colMap = mapping || this.mapEvaluationColumns(headers);
+    const results = [];
+
+    for (let r = 1; r < rows.length; r++) {
+      const row = rows[r];
+      if (!row || row.length === 0 || !row.some(c => c !== null && c !== '')) continue;
+
+      const name = colMap.name !== -1 && row[colMap.name] ? String(row[colMap.name]).trim() : `Participante ${r}`;
+      const cpf = colMap.cpf !== -1 ? this.formatCpf(row[colMap.cpf]) : '';
+      const email = colMap.email !== -1 && row[colMap.email] ? String(row[colMap.email]).trim() : '';
+      const phone = colMap.phone !== -1 && row[colMap.phone] ? String(row[colMap.phone]).trim() : '';
+
+      // Município
+      let rawMun = colMap.municipality !== -1 && row[colMap.municipality] ? String(row[colMap.municipality]).trim() : '';
+      let ibgeCode = '';
+      let matchedMunName = rawMun;
+
+      if (rawMun) {
+        const munClean = rawMun.replace(/\([A-Z]{2}\)/g, '').trim();
+        const lookupKey = `${this.normalizeStr(munClean)}_${trainingUf.toUpperCase()}`;
+        let ibgeInfo = this.ibgeLookup.get(lookupKey) || this.ibgeLookup.get(this.normalizeStr(munClean));
+        if (ibgeInfo) {
+          ibgeCode = ibgeInfo.c;
+          matchedMunName = ibgeInfo.n;
+        }
+      }
+
+      // Representação
+      const rawRep = colMap.representation !== -1 && row[colMap.representation] ? String(row[colMap.representation]).trim() : '';
+      let representation = 'Gestão municipal';
+      if (rawRep.toUpperCase().includes('CACS') || rawRep.toUpperCase().includes('FUNDEB')) {
+        representation = 'CACS-FUNDEB';
+      }
+
+      // Notas 1 a 5 (até 7 perguntas)
+      const ratings = [];
+      if (colMap.ratings && colMap.ratings.length > 0) {
+        colMap.ratings.forEach(ratingItem => {
+          const val = parseFloat(row[ratingItem.index]);
+          ratings.push(!isNaN(val) && val >= 1 && val <= 5 ? val : 5);
+        });
+      } else {
+        // Fallback padrão se não mapeado
+        for (let i = 0; i < 7; i++) ratings.push(5);
+      }
+
+      const likedAspects = colMap.likedAspects !== -1 && row[colMap.likedAspects] ? String(row[colMap.likedAspects]).trim() : '';
+      const improveAspects = colMap.improveAspects !== -1 && row[colMap.improveAspects] ? String(row[colMap.improveAspects]).trim() : '';
+      const institution = colMap.institution !== -1 && row[colMap.institution] ? String(row[colMap.institution]).trim() : '';
+      const suggestions = colMap.suggestions !== -1 && row[colMap.suggestions] ? String(row[colMap.suggestions]).trim() : '';
+      const howFound = colMap.howFound !== -1 && row[colMap.howFound] ? String(row[colMap.howFound]).trim() : '';
+      const comments = colMap.comments !== -1 && row[colMap.comments] ? String(row[colMap.comments]).trim() : '';
+
+      results.push({
+        id: `eval_parsed_${Date.now()}_${r}`,
+        name,
+        cpf,
+        email,
+        phone,
+        municipality: matchedMunName,
+        ibgeCode,
+        representation,
+        ratings,
+        likedAspects,
+        improveAspects,
+        institution,
+        suggestions,
+        howFound,
+        comments
+      });
+    }
+
+    return results;
+  }
+}
+
+window.excelParser = new ExcelParser();

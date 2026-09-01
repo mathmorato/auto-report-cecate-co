@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoReport CECATE - Plataforma Modular de Automação de Relatórios</title>
+  <title>AutoReport CECATE - Plataforma de Automatização de Relatórios de Capacitações</title>
   
   <!-- SEO & Metadados -->
-  <meta name="description" content="Plataforma modular e inteligente para automação da escrita e geração de relatórios técnicos, de auditoria e executivos.">
-  <meta name="keywords" content="relatorios, automacao, cecate, relatorio tecnico, auditoria, kpis, gerador de relatorio">
+  <meta name="description" content="Plataforma modular e inteligente para cadastro, conferência e geração automatizada de relatórios técnicos de capacitações em transporte escolar.">
+  <meta name="keywords" content="relatorios, cecate, fnde, ufg, transporte escolar, cacs fundeb, capacitacao, automacao de relatorios">
   
   <!-- Fontes Google (Plus Jakarta Sans & Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,31 +50,24 @@
             <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
           </svg>
           <span>Capacitações</span>
-          <span class="nav-badge" style="background:rgba(6, 182, 212, 0.18); color:#22d3ee;">Novo</span>
         </a>
 
-        <a href="#studio" class="nav-item" data-view="studio" id="nav-studio">
+        <a href="javascript:void(0)" class="nav-item" onclick="app.createNewTraining()" id="nav-new-training" style="color:var(--accent-secondary);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          <span>Estúdio de Criação</span>
-          <span class="nav-badge">IA</span>
+          <span>+ Nova Capacitação</span>
+          <span class="nav-badge">Wizard</span>
         </a>
 
-        <a href="#templates" class="nav-item" data-view="templates" id="nav-templates">
+        <a href="#municipalities" class="nav-item" data-view="municipalities" id="nav-municipalities">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
           </svg>
-          <span>Modelos / Templates</span>
-        </a>
-
-        <a href="#history" class="nav-item" data-view="history" id="nav-history">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 14 14"></polyline>
-          </svg>
-          <span>Histórico & Arquivo</span>
+          <span>Banco IBGE (5.570)</span>
         </a>
 
         <a href="#settings" class="nav-item" data-view="settings" id="nav-settings">
@@ -89,9 +82,9 @@
       <div class="sidebar-footer">
         <div class="system-status">
           <div class="status-dot"></div>
-          <span>Motor de Redação Ativo</span>
+          <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.0.1</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.0.2</span> • CECATE</div>
       </div>
     </aside>
 
@@ -103,12 +96,15 @@
       <!-- Topbar -->
       <header class="topbar">
         <div class="topbar-left">
-          <h2 class="page-title" id="page-current-title">Painel de Controle & Visão Geral</h2>
+          <h2 class="page-title" id="page-current-title">Plataforma de Gestão de Capacitações CECATE</h2>
         </div>
         
         <div class="topbar-right">
+          <div id="autosave-status-badge" style="font-size:0.8rem; font-weight:600; color:var(--accent-success); display:flex; align-items:center; gap:0.35rem;">
+            ✓ Salvo
+          </div>
           <button class="btn btn-secondary btn-sm" id="theme-toggle-btn">🌙 Modo Escuro</button>
-          <button class="btn btn-gradient btn-sm" onclick="app.navigateTo('studio')">⚡ Novo Relatório</button>
+          <button class="btn btn-gradient btn-sm" onclick="app.createNewTraining()">+ Nova Capacitação</button>
         </div>
       </header>
 
@@ -123,375 +119,577 @@
           <!-- Hero Banner -->
           <div class="dashboard-hero">
             <div class="hero-text">
-              <h2>Automação Inteligente de Relatórios Técnicos</h2>
-              <p>Elabore, estruture e padronize relatórios de auditoria, conformidade e desempenho em minutos com blocos modulares e assistência inteligente de redação.</p>
+              <h2>Automação Inteligente de Relatórios de Capacitações</h2>
+              <p>Cadastre novas capacitações, importe listas de presença e avaliações, gere tabelas territoriais, gráficos institucionais e emita o relatório oficial .docx em conformidade com o padrão UFG / CECATE / FNDE.</p>
             </div>
             <div class="hero-actions">
-              <button class="btn btn-gradient" onclick="app.navigateTo('studio')">Abrir Estúdio de Criação →</button>
+              <button class="btn btn-gradient" onclick="app.createNewTraining()">+ Cadastrar Nova Capacitação →</button>
             </div>
           </div>
 
-          <!-- Grade de Métricas -->
+          <!-- Grade de Métricas Globais -->
           <div class="metrics-grid">
             <div class="metric-card">
               <div class="metric-icon">📑</div>
               <div class="metric-info">
-                <h4>Relatórios Arquivados</h4>
-                <div class="metric-value" id="dash-total-reports">0</div>
-                <div class="metric-trend">↑ Sincronizado localmente</div>
-              </div>
-            </div>
-
-            <div class="metric-card cyan">
-              <div class="metric-icon">⏱️</div>
-              <div class="metric-info">
-                <h4>Tempo Médio Economizado</h4>
-                <div class="metric-value">85%</div>
-                <div class="metric-trend">Redução no ciclo de escrita</div>
-              </div>
-            </div>
-
-            <div class="metric-card green">
-              <div class="metric-icon">🧩</div>
-              <div class="metric-info">
-                <h4>Modelos Prontos</h4>
-                <div class="metric-value">4</div>
-                <div class="metric-trend">Totalmente customizáveis</div>
-              </div>
-            </div>
-
-            <div class="metric-card purple">
-              <div class="metric-icon">🎯</div>
-              <div class="metric-info">
-                <h4>Conformidade CECATE</h4>
-                <div class="metric-value">100%</div>
-                <div class="metric-trend">Padrão A4 & Normativo</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Relatórios Recentes -->
-          <div class="glass-card">
-            <div class="card-header">
-              <h3 class="card-title">📄 Relatórios Gerados Recentemente</h3>
-              <button class="btn btn-secondary btn-sm" onclick="app.navigateTo('history')">Ver Histórico Completo</button>
-            </div>
-            
-            <div class="data-table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Código</th>
-                    <th>Título do Documento</th>
-                    <th>Categoria</th>
-                    <th>Data</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="dash-recent-reports-body">
-                  <!-- Inserido dinamicamente pelo app.js -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </section>
-
-        <!-- ==========================================
-             VIEW: CAPACITAÇÕES & TREINAMENTOS
-             ========================================== -->
-        <section class="view-section" id="view-trainings">
-          
-          <!-- Hero / Header de Capacitações -->
-          <div class="dashboard-hero" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(99, 102, 241, 0.1)); border-color: rgba(6, 182, 212, 0.3);">
-            <div class="hero-text">
-              <h2>Gestão & Cadastro de Capacitações</h2>
-              <p>Cadastre turmas, controle cronogramas, instrutores, locais e gere relatórios técnicos oficiais de treinamento integrados ao ecossistema CECATE.</p>
-            </div>
-            <div class="hero-actions">
-              <button class="btn btn-gradient" onclick="app.openNewTrainingModal()">+ Nova Capacitação</button>
-            </div>
-          </div>
-
-          <!-- Grade de Métricas das Capacitações -->
-          <div class="metrics-grid">
-            <div class="metric-card cyan">
-              <div class="metric-icon">🎓</div>
-              <div class="metric-info">
                 <h4>Total de Capacitações</h4>
-                <div class="metric-value" id="train-total-count">0</div>
-                <div class="metric-trend">Registradas no sistema</div>
+                <div class="metric-value" id="dash-total-reports">0</div>
+                <div class="metric-trend">Registros salvos localmente</div>
               </div>
             </div>
 
-            <div class="metric-card green">
-              <div class="metric-icon">✅</div>
+            <div class="metric-card cyan">
+              <div class="metric-icon">✓</div>
               <div class="metric-info">
-                <h4>Concluídas</h4>
-                <div class="metric-value" id="train-completed-count">0</div>
-                <div class="metric-trend" style="color:var(--accent-success);">Turmas finalizadas</div>
-              </div>
-            </div>
-
-            <div class="metric-card purple">
-              <div class="metric-icon">🚀</div>
-              <div class="metric-info">
-                <h4>Em Andamento / Previstas</h4>
-                <div class="metric-value" id="train-active-count">0</div>
-                <div class="metric-trend">Ciclos ativos</div>
+                <h4>Capacitações Concluídas</h4>
+                <div class="metric-value" id="dash-completed-reports">0</div>
+                <div class="metric-trend">Prontas para emissão</div>
               </div>
             </div>
 
             <div class="metric-card">
               <div class="metric-icon">👥</div>
               <div class="metric-info">
-                <h4>Participantes Formados</h4>
-                <div class="metric-value" id="train-students-count">0</div>
-                <div class="metric-trend">Horas totais: <span id="train-total-hours" style="font-weight:700;">0h</span></div>
+                <h4>Participantes Atendidos</h4>
+                <div class="metric-value" id="dash-total-participants">0</div>
+                <div class="metric-trend">Gestores e CACS-FUNDEB</div>
+              </div>
+            </div>
+
+            <div class="metric-card cyan">
+              <div class="metric-icon">🏛️</div>
+              <div class="metric-info">
+                <h4>Municípios Alcançados</h4>
+                <div class="metric-value" id="dash-total-municipalities">0</div>
+                <div class="metric-trend">Polos Centro-Oeste</div>
               </div>
             </div>
           </div>
 
-          <!-- Barra de Filtros & Ações -->
-          <div class="trainings-filter-bar">
-            <div class="trainings-filter-inputs">
-              <div class="search-input-wrapper">
-                <span class="search-icon-inside">🔍</span>
-                <input type="text" id="train-search-query" class="form-control form-control-sm" placeholder="Buscar por código, título, local ou instrutor..." oninput="app.filterTrainings()">
-              </div>
-
-              <select id="train-filter-status" class="form-control form-control-sm" style="width: auto;" onchange="app.filterTrainings()">
-                <option value="all">Status: Todos</option>
-                <option value="Em Andamento">Em Andamento</option>
-                <option value="Planejada">Planejada</option>
-                <option value="Concluída">Concluída</option>
-                <option value="Cancelada">Cancelada</option>
-              </select>
-
-              <select id="train-filter-modality" class="form-control form-control-sm" style="width: auto;" onchange="app.filterTrainings()">
-                <option value="all">Modalidade: Todas</option>
-                <option value="Presencial">Presencial</option>
-                <option value="Online">Online / Remoto</option>
-                <option value="Híbrido">Híbrido</option>
-              </select>
+          <!-- Lista de Capacitações no Dashboard -->
+          <div style="margin-top: 2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h3>Banco de Capacitações & Relatórios</h3>
+              <button class="btn btn-secondary btn-sm" onclick="app.navigateTo('trainings')">Ver Todas as Capacitações</button>
             </div>
-
-            <div class="trainings-action-group">
-              <button class="btn btn-secondary btn-sm" onclick="app.exportTrainingsCSV()" title="Exportar tabela para CSV">📥 Exportar CSV</button>
-              <button class="btn btn-primary btn-sm" onclick="app.openNewTrainingModal()">+ Nova Capacitação</button>
+            <div id="dashboard-trainings-list">
+              <!-- Renderizado dinamicamente pelo app.js -->
             </div>
           </div>
-
-          <!-- Tabela de Capacitações -->
-          <div class="glass-card">
-            <div class="card-header">
-              <h3 class="card-title">📚 Listagem de Capacitações Cadastradas</h3>
-              <span id="train-count-badge" class="badge badge-primary">0 registros</span>
-            </div>
-
-            <div class="data-table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Código</th>
-                    <th>Título da Capacitação</th>
-                    <th>Período / Data</th>
-                    <th>Local / Plataforma</th>
-                    <th>Instrutor</th>
-                    <th>Carga Horária</th>
-                    <th>Participantes</th>
-                    <th>Status</th>
-                    <th style="text-align:right;">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="trainings-table-body">
-                  <!-- Renderizado dinamicamente pelo app.js -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
         </section>
 
         <!-- ==========================================
-             VIEW: REPORT STUDIO (GERADOR & EDITOR)
+             VIEW: ASSISTENTE DE 11 ETAPAS (WIZARD)
              ========================================== -->
-        <section class="view-section" id="view-studio">
-          
-          <div class="studio-container">
+        <section class="view-section" id="view-wizard">
+          <div class="wizard-container">
             
-            <!-- Painel Esquerdo: Editor Modular -->
-            <div class="editor-panel">
-              <div class="editor-header">
-                <div style="display:flex; align-items:center; gap:0.5rem;">
-                  <span style="font-size:1.2rem;">⚡</span>
-                  <strong>Configuração & Redação Modular</strong>
+            <!-- Barra Superior do Wizard -->
+            <div class="wizard-header-bar">
+              <div>
+                <div class="wizard-training-title" id="wizard-header-title">
+                  Capacitação Nº 16 • <span style="color:var(--accent-secondary);">Pontes e Lacerda (MT)</span>
                 </div>
-                <div style="display:flex; gap:0.5rem;">
-                  <button class="btn btn-secondary btn-sm" onclick="app.saveReportToHistory()">💾 Salvar</button>
-                  <button class="btn btn-gradient btn-sm" onclick="app.triggerFullAutomation()">✨ Auto-Escrever</button>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;" id="wizard-header-progress-text">
+                  82% Concluído (8 de 11 Etapas)
                 </div>
               </div>
 
-              <!-- Toolbar de IA & Tom -->
-              <div class="ai-writer-toolbar">
-                <div class="ai-toolbar-header">
-                  <span style="font-size:0.85rem; font-weight:700; color:var(--text-primary);">🎯 Tom de Redação do Relatório:</span>
-                  <span class="badge badge-primary">Motor IA CECATE</span>
-                </div>
-                <div class="ai-controls-row">
-                  <button class="btn btn-primary btn-sm btn-tone" data-tone="executive" onclick="app.setTone('executive')">Executivo</button>
-                  <button class="btn btn-secondary btn-sm btn-tone" data-tone="technical" onclick="app.setTone('technical')">Técnico</button>
-                  <button class="btn btn-secondary btn-sm btn-tone" data-tone="formal" onclick="app.setTone('formal')">Institucional</button>
-                  <button class="btn btn-secondary btn-sm btn-tone" data-tone="didactic" onclick="app.setTone('didactic')">Didático</button>
-                </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-secondary btn-sm" onclick="app.navigateTo('dashboard')">← Sair para Dashboard</button>
+                <button class="btn btn-gradient btn-sm" onclick="app.downloadDocxReport()">⚡ Baixar Relatório .docx</button>
               </div>
 
-              <!-- Abas do Editor -->
-              <div class="editor-tabs">
-                <button class="editor-tab-btn active" id="tab-btn-meta" onclick="document.getElementById('panel-meta').style.display='block'; document.getElementById('panel-blocks').style.display='none'; this.classList.add('active'); document.getElementById('tab-btn-blocks').classList.remove('active');">
-                  1. Metadados & Parâmetros
-                </button>
-                <button class="editor-tab-btn" id="tab-btn-blocks" onclick="document.getElementById('panel-blocks').style.display='block'; document.getElementById('panel-meta').style.display='none'; this.classList.add('active'); document.getElementById('tab-btn-meta').classList.remove('active');">
-                  2. Blocos de Conteúdo
-                </button>
-              </div>
-
-              <!-- Corpo do Editor -->
-              <div class="editor-body">
-                
-                <!-- Subpainel: Metadados -->
-                <div id="panel-meta">
-                  <div class="form-group">
-                    <label class="form-label">Instituição / Organização:</label>
-                    <input type="text" id="meta-orgName" class="form-control" oninput="app.syncMetaFromForm()">
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Título do Relatório:</label>
-                    <input type="text" id="meta-reportTitle" class="form-control" oninput="app.syncMetaFromForm()">
-                  </div>
-
-                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-                    <div class="form-group">
-                      <label class="form-label">Responsável Técnico:</label>
-                      <input type="text" id="meta-responsible" class="form-control" oninput="app.syncMetaFromForm()">
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Departamento / Unidade:</label>
-                      <input type="text" id="meta-department" class="form-control" oninput="app.syncMetaFromForm()">
-                    </div>
-                  </div>
-
-                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-                    <div class="form-group">
-                      <label class="form-label">Data de Emissão:</label>
-                      <input type="date" id="meta-date" class="form-control" oninput="app.syncMetaFromForm()">
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Código de Referência:</label>
-                      <input type="text" id="meta-referenceCode" class="form-control" oninput="app.syncMetaFromForm()">
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Período / Ciclo Avaliado:</label>
-                    <input type="text" id="meta-period" class="form-control" placeholder="Ex: Agosto de 2026" oninput="app.syncMetaFromForm()">
-                  </div>
-
-                  <!-- Seção de Indicadores Numéricos -->
-                  <div style="margin-top:1.5rem; border-top:1px solid var(--border-color); padding-top:1rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                      <label class="form-label" style="margin:0;">📊 Indicadores-Chave (KPIs):</label>
-                      <button class="btn btn-secondary btn-sm" onclick="app.addKpiItem()">+ Adicionar KPI</button>
-                    </div>
-                    <div id="kpi-inputs-container">
-                      <!-- Renderizado via app.js -->
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Subpainel: Blocos Modulares -->
-                <div id="panel-blocks" style="display:none;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                    <span style="font-size:0.85rem; color:var(--text-secondary);">Arraste ou ordene as seções do documento:</span>
-                    <button class="btn btn-primary btn-sm" onclick="app.openAddBlockModal()">+ Inserir Bloco</button>
-                  </div>
-
-                  <div class="modular-blocks-list" id="modular-blocks-container">
-                    <!-- Inserido dinamicamente pelo app.js -->
-                  </div>
-                </div>
-
+              <div class="wizard-progress-track">
+                <div class="wizard-progress-bar" id="wizard-header-progressbar" style="width: 82%;"></div>
               </div>
             </div>
 
-            <!-- Painel Direito: Pré-visualização A4 em Tempo Real -->
-            <div class="preview-panel">
-              <div class="preview-header">
-                <div style="display:flex; align-items:center; gap:0.5rem;">
-                  <span>👁️</span>
-                  <strong>Prévia A4 ao Vivo</strong>
+            <!-- Navegação de Abas do Stepper (11 Etapas) -->
+            <div class="stepper-nav">
+              <button class="step-tab-btn active" onclick="app.setWizardStep(1)">
+                <span class="step-tab-num">1</span> 1. Identificação
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(2)">
+                <span class="step-tab-num">2</span> 2. Equipe
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(3)">
+                <span class="step-tab-num">3</span> 3. Municípios
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(4)">
+                <span class="step-tab-num">4</span> 4. Estrutura do Curso
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(5)">
+                <span class="step-tab-num">5</span> 5. Contatos
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(6)">
+                <span class="step-tab-num">6</span> 6. Lista de Presença
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(7)">
+                <span class="step-tab-num">7</span> 7. Avaliação
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(8)">
+                <span class="step-tab-num">8</span> 8. Fotografias
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(9)">
+                <span class="step-tab-num">9</span> 9. Apêndices
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(10)">
+                <span class="step-tab-num">10</span> 10. Conferência
+              </button>
+              <button class="step-tab-btn" onclick="app.setWizardStep(11)">
+                <span class="step-tab-num">11</span> 11. Geração
+              </button>
+            </div>
+
+            <!-- ETAPA 1: IDENTIFICAÇÃO -->
+            <div class="wizard-step-panel active" id="wizard-step-1">
+              <div class="wizard-card">
+                <h3 class="wizard-card-title">📝 Etapa 1: Identificação da Capacitação</h3>
+                <p class="wizard-card-desc">Informe os dados institucionais, polo territorial, datas e informações administrativas do evento.</p>
+
+                <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Número do Relatório *:</label>
+                    <input type="number" id="wiz-train-number" class="form-control" placeholder="16">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Título da Capacitação *:</label>
+                    <input type="text" id="wiz-train-title" class="form-control" placeholder="CAPACITAÇÃO EM TRANSPORTE ESCOLAR">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Carga Horária *:</label>
+                    <input type="text" id="wiz-train-workload" class="form-control" placeholder="16 horas">
+                  </div>
                 </div>
-                <div class="preview-controls">
-                  <button class="btn btn-secondary btn-sm" onclick="app.downloadMarkdown()" title="Exportar Markdown">.MD</button>
-                  <button class="btn btn-secondary btn-sm" onclick="app.downloadHTML()" title="Baixar Arquivo HTML">.HTML</button>
-                  <button class="btn btn-gradient btn-sm" onclick="app.printReport()">🖨️ Imprimir / PDF</button>
+
+                <div style="display:grid; grid-template-columns: 2fr 1fr 2fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Município Polo *:</label>
+                    <input type="text" id="wiz-train-polo" class="form-control" placeholder="Ex: Pontes e Lacerda">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Estado (UF) *:</label>
+                    <input type="text" id="wiz-train-uf" class="form-control" placeholder="MT">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Local / Auditório de Realização:</label>
+                    <input type="text" id="wiz-train-venue" class="form-control" placeholder="Ex: Auditório Municipal de Educação">
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Data Inicial *:</label>
+                    <input type="date" id="wiz-train-start-date" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Data Final:</label>
+                    <input type="date" id="wiz-train-end-date" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Texto Formatado de Datas (para o relatório):</label>
+                    <input type="text" id="wiz-train-dates-fmt" class="form-control" placeholder="Ex: 23 e 24 de junho de 2026">
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Público-Alvo:</label>
+                    <input type="text" id="wiz-train-target" class="form-control" placeholder="Gestores Municipais e Conselheiros CACS-FUNDEB">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Previsão de Participantes:</label>
+                    <input type="number" id="wiz-train-expected" class="form-control" placeholder="50">
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Projeto Relacionado:</label>
+                    <input type="text" id="wiz-train-project" class="form-control" placeholder="FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Número do Processo:</label>
+                    <input type="text" id="wiz-train-process" class="form-control" placeholder="23070.012345/2026-00">
+                  </div>
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <div></div>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Equipe) →</button>
                 </div>
               </div>
+            </div>
 
-              <div class="preview-viewport">
-                <div class="a4-sheet" id="a4-preview-content">
-                  <!-- Documento renderizado dinamicamente pelo app.js -->
+            <!-- ETAPA 2: EQUIPE PARTICIPANTE -->
+            <div class="wizard-step-panel" id="wizard-step-2">
+              <div class="wizard-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                  <div>
+                    <h3 class="wizard-card-title">👥 Etapa 2: Equipe Participante</h3>
+                    <p class="wizard-card-desc">Cadastre os coordenadores, pesquisadores, instrutores técnicos e representantes do FNDE.</p>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" onclick="app.addTeamMemberPrompt()">+ Adicionar Integrante</button>
+                </div>
+
+                <div id="wizard-team-list-container">
+                  <!-- Renderizado dinamicamente -->
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Municípios) →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 3: MUNICÍPIOS & TABELA 1 -->
+            <div class="wizard-step-panel" id="wizard-step-3">
+              <div class="wizard-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                  <div>
+                    <h3 class="wizard-card-title">🏛️ Etapa 3: Municípios Convocados</h3>
+                    <p class="wizard-card-desc">Adicione os municípios convocados da microrregião e suas respectivas distâncias em km até o polo.</p>
+                  </div>
+                  <div style="display:flex; gap:0.5rem;">
+                    <span id="wiz-muns-total-count" class="nav-badge" style="align-self:center;">0 Municípios</span>
+                    <button class="btn btn-secondary btn-sm" onclick="app.addMunicipalityPrompt()">+ Cadastrar Município</button>
+                  </div>
+                </div>
+
+                <div style="margin-top:1.5rem;">
+                  <h4 style="font-size:0.95rem; margin-bottom:0.5rem; color:var(--text-secondary);">Prévia da Tabela 1: Municípios convocados</h4>
+                  <div id="wizard-municipalities-table-preview">
+                    <!-- Tabela 1 Gerada Dinamicamente -->
+                  </div>
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Estrutura do Curso) →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 4: ESTRUTURA DO CURSO & TABELA 2 -->
+            <div class="wizard-step-panel" id="wizard-step-4">
+              <div class="wizard-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                  <div>
+                    <h3 class="wizard-card-title">📚 Etapa 4: Estrutura do Curso</h3>
+                    <p class="wizard-card-desc">Configure os módulos teóricos e práticos aplicados para Gestores Municipais e Conselheiros CACS.</p>
+                  </div>
+                  <button class="btn btn-secondary btn-sm" onclick="app.addModulePrompt()">+ Adicionar Módulo</button>
+                </div>
+
+                <div id="wizard-course-table-preview">
+                  <!-- Tabela 2 Gerada Dinamicamente -->
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Contatos) →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 5: CONTATO COM OS MUNICÍPIOS -->
+            <div class="wizard-step-panel" id="wizard-step-5">
+              <div class="wizard-card">
+                <h3 class="wizard-card-title">📞 Etapa 5: Contato com os Municípios</h3>
+                <p class="wizard-card-desc">Registre as datas de início de convocação, canais utilizados e quantitativos de contatos.</p>
+
+                <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Data de Início dos Contatos:</label>
+                    <input type="date" id="wiz-contact-start-date" class="form-control">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Formas e Meios de Contato:</label>
+                    <input type="text" id="wiz-contact-methods" class="form-control" placeholder="Ofícios, E-mails, Ligações Telefônicas e WhatsApp">
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label">Responsável pela Articulação:</label>
+                    <input type="text" id="wiz-contact-responsible" class="form-control" placeholder="Equipe de Articulação Institucional CECATE-CO">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Municípios Contatados:</label>
+                    <input type="number" id="wiz-contact-count" class="form-control" placeholder="17">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">E-mails Enviados:</label>
+                    <input type="number" id="wiz-contact-emails" class="form-control" placeholder="34">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Telefonemas:</label>
+                    <input type="number" id="wiz-contact-phones" class="form-control" placeholder="50">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Observações e Relato do Processo de Convocação:</label>
+                  <textarea id="wiz-contact-notes" class="form-control" rows="3" placeholder="Informações relevantes sobre a adesão dos municípios, canais de confirmação, etc."></textarea>
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Lista de Presença) →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 6: LISTA DE PRESENÇA (UPLOAD EXCEL & TABELA 4) -->
+            <div class="wizard-step-panel" id="wizard-step-6">
+              <div class="wizard-card">
+                <h3 class="wizard-card-title">📋 Etapa 6: Importação da Lista de Presença</h3>
+                <p class="wizard-card-desc">Faça upload da planilha Excel de respostas da lista de presença (Google Forms / Excel). O sistema mapeará automaticamente as colunas e calculará as taxas de participação.</p>
+
+                <!-- Dropzone Upload Excel -->
+                <div class="upload-dropzone" onclick="document.getElementById('file-input-attendance').click()">
+                  <div class="upload-dropzone-icon">📊</div>
+                  <div class="upload-dropzone-text">Clique ou arraste a Planilha de Lista de Presença (.xlsx)</div>
+                  <div class="upload-dropzone-hint">Ex: 16CTE - Lista de presença (respostas).xlsx</div>
+                  <input type="file" id="file-input-attendance" accept=".xlsx, .xls" style="display:none;" onchange="app.handleAttendanceFileUpload(event)">
+                </div>
+
+                <div style="margin-top:2rem;">
+                  <h4 style="font-size:0.95rem; margin-bottom:0.5rem; color:var(--text-secondary);">Participantes Identificados</h4>
+                  <div id="wizard-attendance-table-container">
+                    <!-- Tabela de participantes renderizada dinamicamente -->
+                  </div>
+                </div>
+
+                <div style="margin-top:2rem;">
+                  <h4 style="font-size:0.95rem; margin-bottom:0.5rem; color:var(--text-secondary);">Tabela 4: Participação por Município (P/I)</h4>
+                  <div id="wizard-table4-preview">
+                    <!-- Tabela 4 Gerada Dinamicamente -->
+                  </div>
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Avaliação) →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 7: AVALIAÇÃO DA CAPACITAÇÃO (GRÁFICOS & NUVENS) -->
+            <div class="wizard-step-panel" id="wizard-step-7">
+              <div class="wizard-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                  <div>
+                    <h3 class="wizard-card-title">⭐ Etapa 7: Avaliação da Capacitação</h3>
+                    <p class="wizard-card-desc">Importe a planilha de avaliação para gerar automaticamente as médias das 7 perguntas, gráficos comparativos e nuvens de palavras nativas.</p>
+                  </div>
+                  <div style="display:flex; gap:0.75rem;">
+                    <span class="nav-badge" id="wiz-eval-total-count">0 Avaliações</span>
+                    <span class="nav-badge" id="wiz-eval-overall-mean" style="background:rgba(16, 185, 129, 0.15); color:#10b981;">0.0 / 5.0</span>
+                  </div>
+                </div>
+
+                <!-- Dropzone Upload Avaliação -->
+                <div class="upload-dropzone" onclick="document.getElementById('file-input-evaluation').click()">
+                  <div class="upload-dropzone-icon">📈</div>
+                  <div class="upload-dropzone-text">Clique ou arraste a Planilha de Avaliação (.xlsx)</div>
+                  <div class="upload-dropzone-hint">Ex: 16CTE - Avaliação (respostas).xlsx</div>
+                  <input type="file" id="file-input-evaluation" accept=".xlsx, .xls" style="display:none;" onchange="app.handleEvaluationFileUpload(event)">
+                </div>
+
+                <!-- Grade de Gráficos e Nuvens de Palavras -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:2rem;">
+                  
+                  <div class="glass-card" style="padding:1.25rem;">
+                    <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 3. Participação CACS vs Gestores</h4>
+                    <div style="height:250px; position:relative;">
+                      <canvas id="chart-fig3-canvas"></canvas>
+                    </div>
+                  </div>
+
+                  <div class="glass-card" style="padding:1.25rem;">
+                    <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 4. Avaliação Geral (Todos os Participantes)</h4>
+                    <div style="height:250px; position:relative;">
+                      <canvas id="chart-fig4-canvas"></canvas>
+                    </div>
+                  </div>
+
+                  <div class="glass-card" style="padding:1.25rem;">
+                    <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 5. Avaliação Conselheiros CACS</h4>
+                    <div style="height:250px; position:relative;">
+                      <canvas id="chart-fig5-canvas"></canvas>
+                    </div>
+                  </div>
+
+                  <div class="glass-card" style="padding:1.25rem;">
+                    <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 6. Avaliação Gestores Municipais</h4>
+                    <div style="height:250px; position:relative;">
+                      <canvas id="chart-fig6-canvas"></canvas>
+                    </div>
+                  </div>
+
+                  <div class="glass-card" style="padding:1.25rem;">
+                    <h4 style="font-size:0.9rem; margin-bottom:0.75rem;">Figura 7. Nuvem de Palavras: Aspectos Positivos</h4>
+                    <div style="display:flex; justify-content:center; background:var(--bg-input); border-radius:var(--radius-md); padding:0.5rem;">
+                      <canvas id="wordcloud-fig7-canvas" width="550" height="300" style="max-width:100%; height:auto;"></canvas>
+                    </div>
+                  </div>
+
+                  <div class="glass-card" style="padding:1.25rem;">
+                    <h4 style="font-size:0.9rem; margin-bottom:0.75rem;">Figura 8. Nuvem de Palavras: Aspectos a Melhorar</h4>
+                    <div style="display:flex; justify-content:center; background:var(--bg-input); border-radius:var(--radius-md); padding:0.5rem;">
+                      <canvas id="wordcloud-fig8-canvas" width="550" height="300" style="max-width:100%; height:auto;"></canvas>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Fotografias) →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 8: REGISTROS FOTOGRÁFICOS -->
+            <div class="wizard-step-panel" id="wizard-step-8">
+              <div class="wizard-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                  <div>
+                    <h3 class="wizard-card-title">📸 Etapa 8: Registros Fotográficos da Capacitação</h3>
+                    <p class="wizard-card-desc">Insira fotos do evento (Figuras 9 a 13). O sistema renumerará e organizará as legendas automaticamente.</p>
+                  </div>
+                  <button class="btn btn-primary btn-sm" onclick="document.getElementById('file-input-photos').click()">+ Enviar Fotos</button>
+                  <input type="file" id="file-input-photos" accept="image/*" multiple style="display:none;" onchange="app.handlePhotoUpload(event)">
+                </div>
+
+                <div class="photo-gallery-grid" id="wizard-photos-grid">
+                  <!-- Fotos renderizadas dinamicamente -->
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Apêndices) →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 9: APÊNDICES I & II -->
+            <div class="wizard-step-panel" id="wizard-step-9">
+              <div class="wizard-card">
+                <h3 class="wizard-card-title">📎 Etapa 9: Documentos e Apêndices</h3>
+                <p class="wizard-card-desc">Anexe os ofícios de convocação do FNDE (Apêndice I) e as convocações/e-mails do CECATE (Apêndice II).</p>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:1.5rem;">
+                  
+                  <div class="glass-card" style="padding:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                      <h4>Apêndice I: Convocações do FNDE</h4>
+                      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-input-appendix-fnde').click()">+ Anexar</button>
+                      <input type="file" id="file-input-appendix-fnde" multiple style="display:none;" onchange="app.handleAppendixUpload('doc_fnde', event)">
+                    </div>
+                    <div id="wizard-appendix-fnde-list">
+                      <!-- Lista Apêndice I -->
+                    </div>
+                  </div>
+
+                  <div class="glass-card" style="padding:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                      <h4>Apêndice II: Convocações do CECATE</h4>
+                      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-input-appendix-cecate').click()">+ Anexar</button>
+                      <input type="file" id="file-input-appendix-cecate" multiple style="display:none;" onchange="app.handleAppendixUpload('doc_cecate', event)">
+                    </div>
+                    <div id="wizard-appendix-cecate-list">
+                      <!-- Lista Apêndice II -->
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Conferência) →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 10: CONFERÊNCIA GERAL & AUDITORIA -->
+            <div class="wizard-step-panel" id="wizard-step-10">
+              <div class="wizard-card">
+                <h3 class="wizard-card-title">🔍 Etapa 10: Painel de Conferência & Auditoria</h3>
+                <p class="wizard-card-desc">Audite a integridade dos dados, reconciliação entre lista de presença e avaliação antes de gerar o relatório oficial.</p>
+
+                <div id="wizard-conference-content">
+                  <!-- Renderizado dinamicamente -->
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
+                  <button class="btn btn-gradient" onclick="app.wizardNext()">Prosseguir para Geração do Relatório →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ETAPA 11: GERAÇÃO DO RELATÓRIO OFICIAL -->
+            <div class="wizard-step-panel" id="wizard-step-11">
+              <div class="wizard-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                  <div>
+                    <h3 class="wizard-card-title">⚡ Etapa 11: Geração & Download do Relatório</h3>
+                    <p class="wizard-card-desc">Pré-visualize o documento institucional e baixe o arquivo editável em Word (.docx) estruturado conforme o padrão de referência.</p>
+                  </div>
+                  <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                    <button class="btn btn-gradient" onclick="app.downloadDocxReport()">⚡ Baixar Relatório Oficial (.docx)</button>
+                  </div>
+                </div>
+
+                <div class="report-doc-preview-wrapper">
+                  <div id="wizard-report-preview-document">
+                    <!-- Pré-visualização do Relatório Oficial -->
+                  </div>
+                </div>
+
+                <div class="wizard-actions-footer">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar para Conferência</button>
+                  <button class="btn btn-gradient" onclick="app.downloadDocxReport()">⚡ Baixar Relatório Oficial (.docx)</button>
                 </div>
               </div>
             </div>
 
           </div>
-
         </section>
 
         <!-- ==========================================
-             VIEW: MODELOS & TEMPLATES
+             VIEW: CAPACITAÇÕES (TODAS)
              ========================================== -->
-        <section class="view-section" id="view-templates">
-          <div style="margin-bottom: 1.5rem;">
-            <h2>Biblioteca de Modelos Pré-Configurados</h2>
-            <p style="color:var(--text-secondary); font-size:0.95rem;">Selecione um modelo especializado para iniciar um novo relatório estruturado.</p>
+        <section class="view-section" id="view-trainings">
+          <div style="margin-bottom: 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+              <h2>Banco de Capacitações</h2>
+              <p style="color:var(--text-secondary); font-size:0.95rem;">Gerencie todas as edições de capacitações cadastradas na plataforma.</p>
+            </div>
+            <button class="btn btn-gradient" onclick="app.createNewTraining()">+ Nova Capacitação</button>
           </div>
 
-          <div class="templates-grid" id="templates-grid-container">
-            <!-- Renderizado dinamicamente pelo app.js -->
+          <div id="all-trainings-list-container">
+            <!-- Tabela completa de capacitações -->
           </div>
         </section>
 
         <!-- ==========================================
-             VIEW: HISTÓRICO & ARQUIVO
+             VIEW: BANCO IBGE (5.570 MUNICÍPIOS)
              ========================================== -->
-        <section class="view-section" id="view-history">
+        <section class="view-section" id="view-municipalities">
           <div style="margin-bottom: 1.5rem;">
-            <h2>Arquivo de Relatórios Salvos</h2>
-            <p style="color:var(--text-secondary); font-size:0.95rem;">Gerencie, edite e exporte os relatórios criados na plataforma.</p>
+            <h2>Catálogo Territorial IBGE (5.570 Municípios)</h2>
+            <p style="color:var(--text-secondary); font-size:0.95rem;">Base de dados oficial do IBGE para auto-preenchimento e validação instantânea.</p>
           </div>
 
-          <div class="glass-card">
-            <div class="data-table-container">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Código</th>
-                    <th>Título</th>
-                    <th>Responsável</th>
-                    <th>Categoria</th>
-                    <th>Data de Salvamento</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="history-table-body">
-                  <!-- Renderizado dinamicamente pelo app.js -->
-                </tbody>
-              </table>
-            </div>
+          <div id="municipalities-bank-list">
+            <!-- Tabela IBGE -->
           </div>
         </section>
 
@@ -505,20 +703,20 @@
           </div>
 
           <div class="glass-card" style="max-width:700px;">
-            <form id="global-settings-form">
+            <form id="global-settings-form" onsubmit="event.preventDefault(); app.showToast('Configurações salvas!');">
               <div class="form-group">
-                <label class="form-label">Nome Padrão da Organização / Empresa:</label>
-                <input type="text" id="setting-org-name" class="form-control" value="CECATE Soluções Tecnológicas">
+                <label class="form-label">Nome Padrão da Organização / Centro:</label>
+                <input type="text" id="setting-org-name" class="form-control" value="CECATE Centro-Oeste / UFG">
               </div>
 
               <div class="form-group">
-                <label class="form-label">Departamento / Unidade Padrão:</label>
-                <input type="text" id="setting-dept-name" class="form-control" value="Governança & Inovação">
+                <label class="form-label">Órgão Financiador:</label>
+                <input type="text" id="setting-funding-name" class="form-control" value="Fundo Nacional de Desenvolvimento da Educação - FNDE">
               </div>
 
               <div class="form-group">
-                <label class="form-label">Cargo / Responsável de Assinatura Padrão:</label>
-                <input type="text" id="setting-signer-name" class="form-control" value="Coordenação Geral">
+                <label class="form-label">Projeto Relacionado:</label>
+                <input type="text" id="setting-proj-name" class="form-control" value="FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL">
               </div>
 
               <div style="margin-top:1.5rem;">
@@ -530,233 +728,37 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.0.2 -->
       <footer class="app-main-footer">
         <div class="footer-left">
-          <span>CECATE Centro-Oeste • Automação de Relatórios Técnicos</span>
+          <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.0.1</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.0.2</span>
         </div>
       </footer>
-    </div>
-  </div>
-
-  <!-- ==========================================
-       MODAL: ADICIONAR BLOCO MODULAR
-       ========================================== -->
-  <div class="modal-backdrop" id="modal-add-block">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h3>🧩 Escolha o Tipo de Bloco Modular</h3>
-        <button class="btn btn-secondary btn-sm modal-close">✕</button>
-      </div>
-      <div class="modal-body" id="available-block-types-list">
-        <!-- Renderizado dinamicamente pelo app.js -->
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary modal-close">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================
-       MODAL: EDITAR DADOS DA TABELA
-       ========================================== -->
-  <div class="modal-backdrop" id="modal-edit-table">
-    <div class="modal-container" style="max-width: 800px;">
-      <div class="modal-header">
-        <h3>📋 Editar Tabela de Dados</h3>
-        <button class="btn btn-secondary btn-sm modal-close">✕</button>
-      </div>
-      <div class="modal-body">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-          <span style="font-size:0.85rem; color:var(--text-secondary);">Edite os cabeçalhos e linhas da tabela:</span>
-          <button class="btn btn-secondary btn-sm" onclick="app.addTableRowModal()">+ Adicionar Linha</button>
-        </div>
-        <div id="table-editor-container" style="overflow-x:auto;">
-          <!-- Tabela editável gerada dinamicamente -->
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary modal-close">Cancelar</button>
-        <button class="btn btn-primary" onclick="app.saveTableModalData()">Salvar Alterações</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================
-       MODAL: CADASTRO & EDIÇÃO DE CAPACITAÇÃO
-       ========================================== -->
-  <div class="modal-backdrop" id="modal-training-form">
-    <div class="modal-container" style="max-width: 850px;">
-      <div class="modal-header">
-        <h3 id="modal-training-form-title">🎓 Nova Capacitação CECATE</h3>
-        <button class="btn btn-secondary btn-sm modal-close">✕</button>
-      </div>
-      <form id="form-training-record" onsubmit="app.saveTrainingFromModal(event)">
-        <input type="hidden" id="train-id">
-        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-          
-          <!-- Linha 1: Código e Categoria -->
-          <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:1rem;">
-            <div class="form-group">
-              <label class="form-label">Código da Capacitação *:</label>
-              <div style="display:flex; gap:0.5rem;">
-                <input type="text" id="train-code" class="form-control" placeholder="Ex: CAP-2026-001" required>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="app.generateRandomTrainingCode()" title="Gerar Código Automático">⚡ Gerar</button>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Categoria / Área do Conhecimento *:</label>
-              <select id="train-category" class="form-control" required>
-                <option value="Tecnologia & Automação">Tecnologia & Automação</option>
-                <option value="Qualidade & Auditoria">Qualidade & Auditoria</option>
-                <option value="Segurança & Governança">Segurança & Governança</option>
-                <option value="Gestão & Liderança">Gestão & Liderança</option>
-                <option value="Operações & Manutenção">Operações & Manutenção</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Linha 2: Título -->
-          <div class="form-group">
-            <label class="form-label">Título da Capacitação / Treinamento *:</label>
-            <input type="text" id="train-title" class="form-control" placeholder="Ex: Formação em Boas Práticas e Automação de Relatórios Técnicos" required>
-          </div>
-
-          <!-- Linha 3: Instrutor e Público-Alvo -->
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-            <div class="form-group">
-              <label class="form-label">Instrutor / Facilitador *:</label>
-              <input type="text" id="train-instructor" class="form-control" placeholder="Ex: Prof. Dr. Marcos Souza" required>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Público-Alvo / Departamento:</label>
-              <input type="text" id="train-target" class="form-control" placeholder="Ex: Analistas, Técnicos de Automação, Gestores">
-            </div>
-          </div>
-
-          <!-- Linha 4: Datas e Horário -->
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1.2fr; gap:1rem;">
-            <div class="form-group">
-              <label class="form-label">Data de Início *:</label>
-              <input type="date" id="train-start-date" class="form-control" required>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Data de Término:</label>
-              <input type="date" id="train-end-date" class="form-control">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Horário / Turno:</label>
-              <input type="text" id="train-schedule" class="form-control" placeholder="Ex: 08:30 às 17:30 (Integral)">
-            </div>
-          </div>
-
-          <!-- Linha 5: Local, Modalidade e Status -->
-          <div style="display:grid; grid-template-columns: 1.5fr 1fr 1fr; gap:1rem;">
-            <div class="form-group">
-              <label class="form-label">Local / Sala / Plataforma *:</label>
-              <input type="text" id="train-location" class="form-control" placeholder="Ex: Auditório Principal CECATE / Sala 201 / Teams" required>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Modalidade *:</label>
-              <select id="train-modality" class="form-control" required>
-                <option value="Presencial">Presencial</option>
-                <option value="Online">Online / Remoto</option>
-                <option value="Híbrido">Híbrido</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Status *:</label>
-              <select id="train-status" class="form-control" required>
-                <option value="Planejada">Planejada</option>
-                <option value="Em Andamento">Em Andamento</option>
-                <option value="Concluída">Concluída</option>
-                <option value="Cancelada">Cancelada</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Linha 6: Carga Horária, Vagas, Inscritos e Concluintes -->
-          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem;">
-            <div class="form-group">
-              <label class="form-label">Carga Horária (h) *:</label>
-              <input type="number" id="train-hours" class="form-control" min="1" max="1000" placeholder="Ex: 40" required>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Vagas Totais:</label>
-              <input type="number" id="train-vacancies" class="form-control" min="1" placeholder="Ex: 30" value="30">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Inscritos:</label>
-              <input type="number" id="train-enrolled" class="form-control" min="0" placeholder="Ex: 28" value="0">
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Concluintes:</label>
-              <input type="number" id="train-graduated" class="form-control" min="0" placeholder="Ex: 26" value="0">
-            </div>
-          </div>
-
-          <!-- Linha 7: Ementa e Objetivos -->
-          <div class="form-group">
-            <label class="form-label">Ementa / Conteúdo Programático / Objetivos:</label>
-            <textarea id="train-syllabus" class="form-control" rows="3" placeholder="Módulo 1: Introdução aos conceitos...&#10;Módulo 2: Automação aplicada...&#10;Módulo 3: Estudos de caso e práticas..."></textarea>
-          </div>
-
-          <!-- Linha 8: Observações e Requisitos -->
-          <div class="form-group">
-            <label class="form-label">Observações / Requisitos Prévios / Materiais:</label>
-            <textarea id="train-notes" class="form-control" rows="2" placeholder="Requisitos prévios, link de materiais, infraestrutura necessária ou critérios de aprovação..."></textarea>
-          </div>
-
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar Capacitação</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ==========================================
-       MODAL: DETALHES DA CAPACITAÇÃO (FICHA TÉCNICA)
-       ========================================== -->
-  <div class="modal-backdrop" id="modal-training-details">
-    <div class="modal-container" style="max-width: 780px;">
-      <div class="modal-header">
-        <h3>📋 Ficha Técnica da Capacitação</h3>
-        <button class="btn btn-secondary btn-sm modal-close">✕</button>
-      </div>
-      <div class="modal-body" id="training-details-content" style="max-height: 70vh; overflow-y: auto;">
-        <!-- Injetado dinamicamente via app.js -->
-      </div>
-      <div class="modal-footer" style="justify-content: space-between;">
-        <div>
-          <button class="btn btn-secondary modal-close">Fechar</button>
-        </div>
-        <div style="display:flex; gap:0.5rem;">
-          <button class="btn btn-secondary btn-sm" id="btn-edit-from-details" onclick="">✏️ Editar Dados</button>
-          <button class="btn btn-gradient btn-sm" id="btn-report-from-details" onclick="">⚡ Gerar Relatório no Estúdio</button>
-        </div>
-      </div>
     </div>
   </div>
 
   <!-- Container de Toasts -->
   <div class="toast-container" id="toast-container"></div>
 
-  <!-- Scripts da Aplicação -->
+  <!-- ==========================================
+       SCRIPTS DA APLICAÇÃO
+       ========================================== -->
+  <!-- Bibliotecas Locais Vendor -->
+  <script src="js/vendor/xlsx.full.min.js"></script>
+  <script src="js/vendor/chart.umd.min.js"></script>
+  <script src="js/vendor/docx.umd.js"></script>
+
+  <!-- Dados Territoriais e Motores Especializados -->
+  <script src="js/ibgeData.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/wordcloud.js"></script>
+  <script src="js/excelParser.js"></script>
+  <script src="js/statsEngine.js"></script>
+  <script src="js/chartEngine.js"></script>
+  <script src="js/reportDocxGenerator.js"></script>
   <script src="js/templates.js"></script>
   <script src="js/reportEngine.js"></script>
   <script src="js/app.js"></script>
