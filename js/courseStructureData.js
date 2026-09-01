@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Modelo Padrão Oficial e Estrutura do Curso
- * Versão: v.1.9.2
+ * Versão: v.1.9.3
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
@@ -53,7 +53,57 @@ window.DEFAULT_COURSE_STRUCTURE = [
 
 window.courseStructureHelper = {
   /**
-   * Retorna uma cópia profunda (deep copy) independente do modelo padrão oficial
+   * Obtém a Estrutura Mestre Global atual (do localStorage/IndexedDB ou do padrão oficial de fábrica)
+   */
+  getMasterStructure() {
+    try {
+      const stored = localStorage.getItem('cecate_master_course_structure');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return this.normalize(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar estrutura mestre do localStorage:', e);
+    }
+    return this.getDefaultCopy();
+  },
+
+  /**
+   * Salva a Estrutura Mestre Global no armazenamento permanente
+   */
+  saveMasterStructure(modules) {
+    const norm = this.normalize(modules);
+    try {
+      localStorage.setItem('cecate_master_course_structure', JSON.stringify(norm));
+    } catch (e) {
+      console.warn('Erro ao salvar no localStorage:', e);
+    }
+    return norm;
+  },
+
+  /**
+   * Retorna uma cópia profunda (deep copy) independente da Estrutura Mestre Global
+   */
+  getMasterCopy() {
+    const master = this.getMasterStructure();
+    return JSON.parse(JSON.stringify(master)).map((mod, idx) => ({
+      ...mod,
+      id: `mod_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 4)}`,
+      gestorTopics: (mod.gestorTopics || []).map((t, ti) => ({
+        ...t,
+        id: `top_g_${Date.now()}_${idx}_${ti}_${Math.random().toString(36).substr(2, 4)}`
+      })),
+      cacsTopics: (mod.cacsTopics || []).map((t, ti) => ({
+        ...t,
+        id: `top_c_${Date.now()}_${idx}_${ti}_${Math.random().toString(36).substr(2, 4)}`
+      }))
+    }));
+  },
+
+  /**
+   * Retorna uma cópia profunda (deep copy) independente do modelo padrão oficial de fábrica
    */
   getDefaultCopy() {
     return JSON.parse(JSON.stringify(window.DEFAULT_COURSE_STRUCTURE)).map((mod, idx) => ({

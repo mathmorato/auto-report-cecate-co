@@ -135,6 +135,8 @@ class AutoReportApp {
       this.renderMunicipalitiesBank();
     } else if (viewId === 'team') {
       this.renderMasterTeamManagement();
+    } else if (viewId === 'course-structure') {
+      this.renderGlobalMasterCourseStructure();
     }
   }
 
@@ -423,7 +425,7 @@ class AutoReportApp {
       progressPercent: 0,
       team: (window.getMasterTeam ? window.getMasterTeam() : (window.DEFAULT_OFFICIAL_TEAM || [])).map(m => ({ ...m })),
       municipalities: [],
-      courseModules: window.courseStructureHelper ? window.courseStructureHelper.getDefaultCopy() : (window.DEFAULT_COURSE_STRUCTURE || []),
+      courseModules: window.courseStructureHelper ? window.courseStructureHelper.getMasterCopy() : (window.DEFAULT_COURSE_STRUCTURE || []),
       courseMoments: [],
       attendance: [],
       evaluations: [],
@@ -2960,6 +2962,257 @@ class AutoReportApp {
     await window.db.saveTrainingFull(this.currentTraining, `Cópia independente da estrutura do curso de "${sourceTraining.title || sourceTraining.id}"`);
     this.closeCopyCourseStructureModal();
     this.showToast(`✓ Estrutura copiada com sucesso de "${sourceTraining.title || 'outra capacitação'}"!`, 'success');
+  }
+
+  pullFromGlobalMasterCourseStructure() {
+    if (!this.currentTraining || !window.courseStructureHelper) return;
+    this.currentTraining.courseModules = window.courseStructureHelper.getMasterCopy();
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
+    this.showToast('✓ Estrutura do curso atualizada a partir do Catálogo Geral Mestre!', 'success');
+  }
+
+  /* ==========================================================================
+     CATÁLOGO MESTRE DA ESTRUTURA DO CURSO (GLOBAL / SIDEBAR)
+     ========================================================================== */
+  renderGlobalMasterCourseStructure() {
+    if (!window.courseStructureHelper) return;
+
+    const masterMods = window.courseStructureHelper.getMasterStructure();
+    const editorContainer = document.getElementById('global-master-course-editor');
+    const tableContainer = document.getElementById('global-master-course-table-preview');
+
+    if (editorContainer) {
+      if (masterMods.length === 0) {
+        editorContainer.innerHTML = `
+          <div style="text-align:center; padding:2.5rem; background:var(--bg-input); border:1px dashed var(--border-color); border-radius:var(--radius-md);">
+            <p style="color:var(--text-secondary); margin-bottom:1rem;">O catálogo mestre está vazio.</p>
+            <button class="btn btn-primary btn-sm" onclick="app.resetGlobalMasterCourseStructure()">+ Restaurar Padrão Oficial do CECATE (4 Módulos)</button>
+          </div>
+        `;
+      } else {
+        editorContainer.innerHTML = masterMods.map((mod, modIdx) => {
+          const gTopics = mod.gestorTopics || [];
+          const cTopics = mod.cacsTopics || [];
+
+          const gTotalHours = gTopics.reduce((acc, t) => acc + (parseFloat(t.hours) || 0), 0);
+          const cTotalHours = cTopics.reduce((acc, t) => acc + (parseFloat(t.hours) || 0), 0);
+
+          return `
+            <div class="course-mod-card" data-mod-id="${mod.id}">
+              <!-- Cabeçalho do Card do Módulo Mestre -->
+              <div class="course-mod-header">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                  <span class="nav-badge badge-blue font-bold" style="font-size:0.9rem; padding:0.25rem 0.65rem;">
+                    Módulo ${mod.moduleNumber || `0${modIdx + 1}`}
+                  </span>
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <label style="font-size:0.78rem; color:var(--text-muted); margin:0;">Identificador:</label>
+                    <input type="text" class="form-control form-control-sm" style="width:70px; text-align:center; font-weight:700;" value="${mod.moduleNumber || `0${modIdx + 1}`}" onchange="app.updateGlobalMasterCourseModuleNumber(${modIdx}, this.value)">
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:0.4rem;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveGlobalMasterCourseModule(${modIdx}, -1)" ${modIdx === 0 ? 'disabled' : ''} title="Mover para cima" style="padding:0.2rem 0.5rem;">↑</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveGlobalMasterCourseModule(${modIdx}, 1)" ${modIdx === masterMods.length - 1 ? 'disabled' : ''} title="Mover para baixo" style="padding:0.2rem 0.5rem;">↓</button>
+                  <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteGlobalMasterCourseModule(${modIdx})" title="Excluir Módulo do Modelo Global" style="padding:0.2rem 0.5rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Grade Dupla: Gestão Municipal vs Conselheiros CACS -->
+              <div class="course-mod-grid">
+                
+                <!-- Coluna Gestores Municipais -->
+                <div class="course-topic-col">
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+                    <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
+                      🏛️ Gestão Municipal (Gestores)
+                    </strong>
+                    <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
+                      Total: ${gTotalHours.toFixed(1).replace('.', ',')} h
+                    </span>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                    ${gTopics.map((t, tIdx) => `
+                      <div class="course-topic-item">
+                        <input type="text" class="form-control form-control-sm" placeholder="Temática para Gestores" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'topic', this.value)">
+                        <div style="display:flex; align-items:center; gap:0.25rem;">
+                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
+                          <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                      </div>
+                    `).join('')}
+                  </div>
+
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                    + Adicionar Temática Gestor
+                  </button>
+                </div>
+
+                <!-- Coluna Conselheiros CACS-FUNDEB -->
+                <div class="course-topic-col">
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+                    <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
+                      👥 Conselheiros CACS-FUNDEB
+                    </strong>
+                    <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
+                      Total: ${cTotalHours.toFixed(1).replace('.', ',')} h
+                    </span>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                    ${cTopics.map((t, tIdx) => `
+                      <div class="course-topic-item">
+                        <input type="text" class="form-control form-control-sm" placeholder="Temática para CACS" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'topic', this.value)">
+                        <div style="display:flex; align-items:center; gap:0.25rem;">
+                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
+                          <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                      </div>
+                    `).join('')}
+                  </div>
+
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                    + Adicionar Temática CACS
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    if (tableContainer && window.statsEngine) {
+      tableContainer.innerHTML = window.statsEngine.generateTable2Html(masterMods);
+    }
+  }
+
+  addGlobalMasterCourseModule() {
+    if (!window.courseStructureHelper) return;
+    const masterMods = window.courseStructureHelper.getMasterStructure();
+    const nextNum = masterMods.length + 1;
+    const numStr = nextNum < 10 ? `0${nextNum}` : `${nextNum}`;
+
+    masterMods.push({
+      id: `mod_master_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      moduleNumber: numStr,
+      order: nextNum,
+      gestorTopics: [
+        { id: `top_g_${Date.now()}_1`, topic: 'Nova Temática Gestão Municipal', hours: 2.0 }
+      ],
+      cacsTopics: [
+        { id: `top_c_${Date.now()}_1`, topic: 'Nova Temática Conselheiros CACS', hours: 2.0 }
+      ]
+    });
+
+    window.courseStructureHelper.saveMasterStructure(masterMods);
+    this.renderGlobalMasterCourseStructure();
+    this.showToast(`✓ Módulo ${numStr} adicionado ao Catálogo Mestre!`, 'success');
+  }
+
+  deleteGlobalMasterCourseModule(modIdx) {
+    if (!window.courseStructureHelper) return;
+    const masterMods = window.courseStructureHelper.getMasterStructure();
+    if (confirm('Deseja realmente remover este módulo do Modelo Padrão Global?')) {
+      masterMods.splice(modIdx, 1);
+      window.courseStructureHelper.saveMasterStructure(masterMods);
+      this.renderGlobalMasterCourseStructure();
+      this.showToast('Módulo removido do Catálogo Mestre.', 'info');
+    }
+  }
+
+  moveGlobalMasterCourseModule(modIdx, direction) {
+    if (!window.courseStructureHelper) return;
+    const masterMods = window.courseStructureHelper.getMasterStructure();
+    const targetIdx = modIdx + direction;
+    if (targetIdx < 0 || targetIdx >= masterMods.length) return;
+
+    const temp = masterMods[modIdx];
+    masterMods[modIdx] = masterMods[targetIdx];
+    masterMods[targetIdx] = temp;
+    masterMods.forEach((m, idx) => { m.order = idx + 1; });
+
+    window.courseStructureHelper.saveMasterStructure(masterMods);
+    this.renderGlobalMasterCourseStructure();
+  }
+
+  updateGlobalMasterCourseModuleNumber(modIdx, newNumber) {
+    if (!window.courseStructureHelper) return;
+    const masterMods = window.courseStructureHelper.getMasterStructure();
+    if (masterMods[modIdx]) {
+      masterMods[modIdx].moduleNumber = (newNumber || '').trim();
+      window.courseStructureHelper.saveMasterStructure(masterMods);
+      this.renderGlobalMasterCourseStructure();
+    }
+  }
+
+  addGlobalMasterCourseTopic(modIdx, type) {
+    if (!window.courseStructureHelper) return;
+    const masterMods = window.courseStructureHelper.getMasterStructure();
+    const mod = masterMods[modIdx];
+    if (!mod) return;
+
+    if (type === 'gestor') {
+      if (!mod.gestorTopics) mod.gestorTopics = [];
+      mod.gestorTopics.push({ id: `top_g_${Date.now()}`, topic: '', hours: 1.0 });
+    } else {
+      if (!mod.cacsTopics) mod.cacsTopics = [];
+      mod.cacsTopics.push({ id: `top_c_${Date.now()}`, topic: '', hours: 1.0 });
+    }
+
+    window.courseStructureHelper.saveMasterStructure(masterMods);
+    this.renderGlobalMasterCourseStructure();
+  }
+
+  removeGlobalMasterCourseTopic(modIdx, type, topicIdx) {
+    if (!window.courseStructureHelper) return;
+    const masterMods = window.courseStructureHelper.getMasterStructure();
+    const mod = masterMods[modIdx];
+    if (!mod) return;
+
+    if (type === 'gestor' && mod.gestorTopics) {
+      mod.gestorTopics.splice(topicIdx, 1);
+      if (mod.gestorTopics.length === 0) mod.gestorTopics.push({ id: `top_g_${Date.now()}`, topic: '', hours: 0 });
+    } else if (type === 'cacs' && mod.cacsTopics) {
+      mod.cacsTopics.splice(topicIdx, 1);
+      if (mod.cacsTopics.length === 0) mod.cacsTopics.push({ id: `top_c_${Date.now()}`, topic: '', hours: 0 });
+    }
+
+    window.courseStructureHelper.saveMasterStructure(masterMods);
+    this.renderGlobalMasterCourseStructure();
+  }
+
+  updateGlobalMasterCourseTopic(modIdx, type, topicIdx, field, value) {
+    if (!window.courseStructureHelper) return;
+    const masterMods = window.courseStructureHelper.getMasterStructure();
+    const mod = masterMods[modIdx];
+    if (!mod) return;
+
+    const list = type === 'gestor' ? mod.gestorTopics : mod.cacsTopics;
+    if (list && list[topicIdx]) {
+      if (field === 'hours') list[topicIdx].hours = parseFloat(value) || 0;
+      else list[topicIdx].topic = value;
+
+      window.courseStructureHelper.saveMasterStructure(masterMods);
+      this.renderGlobalMasterCourseStructure();
+    }
+  }
+
+  resetGlobalMasterCourseStructure() {
+    if (!window.courseStructureHelper) return;
+    if (confirm('Deseja restaurar o Modelo Padrão Global para a matriz oficial original do CECATE-CO (4 módulos)?')) {
+      const defaultCopy = window.courseStructureHelper.getDefaultCopy();
+      window.courseStructureHelper.saveMasterStructure(defaultCopy);
+      this.renderGlobalMasterCourseStructure();
+      this.showToast('✓ Modelo Padrão Global restaurado com sucesso!', 'success');
+    }
   }
 
   /* ==========================================================================
