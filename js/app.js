@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.8.5
+ * Versão: v.1.8.6
  */
 
 window.icons = {
@@ -63,8 +63,9 @@ class AutoReportApp {
     // 4. Carregar lista de capacitações e atualizar Dashboard
     await this.refreshTrainingsList();
 
-    // 5. Tratar Hash da URL ou abrir dashboard por padrão
-    this.handleRoute();
+    // 5. Na inicialização ou recarregamento, sempre abrir no Dashboard limpo
+    history.replaceState(null, '', window.location.pathname);
+    this.navigateTo('dashboard', false);
 
     console.log('AutoReport CECATE pronto!');
   }
@@ -74,20 +75,36 @@ class AutoReportApp {
      ========================================================================== */
   handleRoute() {
     const hash = window.location.hash.replace('#', '');
-    if (hash === 'trainings' || hash === 'municipalities' || hash === 'team') {
-      this.navigateTo(hash);
-    } else {
-      // Ao abrir ou recarregar a página, sempre inicia no Dashboard principal limpo
-      if (window.location.hash && window.location.hash.startsWith('#wizard')) {
-        history.replaceState(null, '', window.location.pathname);
+    if (!hash || hash === 'dashboard') {
+      this.navigateTo('dashboard', false);
+    } else if (hash.startsWith('wizard/')) {
+      const parts = hash.split('/');
+      const trainingId = parts[1];
+      const step = parseInt(parts[2]) || 1;
+      if (this.currentTraining && this.currentTraining.id === trainingId) {
+        this.navigateTo('wizard', false);
+        this.setWizardStep(step);
+      } else {
+        this.openWizard(trainingId, step);
       }
-      this.navigateTo('dashboard');
+    } else if (hash === 'wizard') {
+      if (this.currentTraining) {
+        this.navigateTo('wizard', false);
+      } else {
+        this.navigateTo('dashboard', false);
+      }
+    } else if (hash === 'trainings' || hash === 'municipalities' || hash === 'team') {
+      this.navigateTo(hash, false);
+    } else {
+      this.navigateTo('dashboard', false);
     }
   }
 
-  navigateTo(viewId) {
+  navigateTo(viewId, updateHash = true) {
     this.activeView = viewId;
-    window.location.hash = viewId;
+    if (updateHash && viewId !== 'wizard') {
+      window.location.hash = viewId;
+    }
 
     // Atualizar itens do menu lateral
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -728,12 +745,12 @@ class AutoReportApp {
     this.currentTraining = await window.db.getTrainingFull(trainingId);
     if (!this.currentTraining) {
       this.showToast('Capacitação não encontrada.', 'error');
-      this.navigateTo('dashboard');
+      this.navigateTo('dashboard', false);
       return;
     }
 
     this.activeView = 'wizard';
-    this.navigateTo('wizard');
+    this.navigateTo('wizard', false);
     this.setWizardStep(step);
     this.populateAllWizardForms();
   }
