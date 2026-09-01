@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Modelo Padrão Oficial e Estrutura do Curso
- * Versão: v.1.9.6
+ * Versão: v.1.9.7
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
@@ -8,6 +8,7 @@ window.DEFAULT_COURSE_STRUCTURE = [
     id: "mod_default_01",
     moduleNumber: "01",
     order: 1,
+    isShared: true,
     gestorTopics: [
       { id: "top_g_01", topic: "Transporte Escolar no Brasil, CECATE-CO", hours: 1.5 }
     ],
@@ -19,6 +20,7 @@ window.DEFAULT_COURSE_STRUCTURE = [
     id: "mod_default_02",
     moduleNumber: "02",
     order: 2,
+    isShared: true,
     gestorTopics: [
       { id: "top_g_02", topic: "Conhecendo os programas PNATE e Caminho da Escola", hours: 1.5 }
     ],
@@ -30,6 +32,7 @@ window.DEFAULT_COURSE_STRUCTURE = [
     id: "mod_default_03",
     moduleNumber: "03",
     order: 3,
+    isShared: true,
     gestorTopics: [
       { id: "top_g_03", topic: "Planejamento e Regulação do Transporte Escolar", hours: 2.0 }
     ],
@@ -41,6 +44,7 @@ window.DEFAULT_COURSE_STRUCTURE = [
     id: "mod_default_04",
     moduleNumber: "04",
     order: 4,
+    isShared: false,
     gestorTopics: [
       { id: "top_g_04_1", topic: "Software Eletrônico de Gestão do Transporte Escolar, SETE", hours: 3.0 }
     ],
@@ -206,10 +210,25 @@ window.courseStructureHelper = {
         }];
       }
 
+      let isShared = m.isShared;
+      if (isShared === undefined) {
+        isShared = (gTopics.length === cTopics.length) && gTopics.every((gt, i) => gt.topic === cTopics[i]?.topic && gt.hours === cTopics[i]?.hours);
+      }
+
+      if (isShared) {
+        // Garantir sincronia completa em módulos compartilhados
+        cTopics = gTopics.map((gt, gti) => ({
+          id: cTopics[gti]?.id || `top_c_${Date.now()}_${idx}_${gti}`,
+          topic: gt.topic,
+          hours: gt.hours
+        }));
+      }
+
       return {
         id: m.id || `mod_${Date.now()}_${idx}`,
         moduleNumber: m.moduleNumber || (idx < 9 ? `0${idx + 1}` : `${idx + 1}`),
         order: m.order !== undefined ? m.order : idx + 1,
+        isShared: !!isShared,
         gestorTopics: gTopics,
         cacsTopics: cTopics
       };

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.9.6
+ * Versão: v.1.9.7
  */
 
 window.icons = {
@@ -2661,68 +2661,105 @@ class AutoReportApp {
                 </div>
               </div>
 
-              <!-- Grade Dupla: Gestão Municipal vs Conselheiros CACS -->
-              <div class="course-mod-grid">
-                
-                <!-- Coluna Gestores Municipais -->
-                <div class="course-topic-col">
-                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+              <!-- Checkbox de Módulo Compartilhado -->
+              <div style="margin:0.75rem 0 1rem 0; padding:0.5rem 0.75rem; background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-md);">
+                <label style="display:flex; align-items:center; gap:0.55rem; font-weight:700; font-size:0.86rem; color:var(--text-primary); cursor:pointer; margin:0;">
+                  <input type="checkbox" ${mod.isShared ? 'checked' : ''} onchange="app.toggleCourseModuleShared(${modIdx}, this.checked)">
+                  <span>🤝 Módulo compartilhado entre Gestores e CACS (mesmo conteúdo e carga horária)</span>
+                </label>
+              </div>
+
+              ${mod.isShared ? `
+                <!-- Bloco Único: Módulo Compartilhado -->
+                <div style="background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:0.75rem;">
                     <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
-                      🏛️ Gestão Municipal (Gestores)
+                      🤝 Temática do Módulo Compartilhado
                     </strong>
                     <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
-                      Total: ${gTotalHours.toFixed(1).replace('.', ',')} h
+                      Carga Horária: ${gTotalHours.toFixed(1).replace('.', ',')} h
                     </span>
                   </div>
 
                   <div style="display:flex; flex-direction:column; gap:0.5rem;">
                     ${gTopics.map((t, tIdx) => `
                       <div class="course-topic-item">
-                        <input type="text" class="form-control form-control-sm" placeholder="Temática para Gestores" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'topic', this.value)">
+                        <input type="text" class="form-control form-control-sm" placeholder="Temática do Módulo" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateCourseTopic(${modIdx}, 'shared', ${tIdx}, 'topic', this.value)">
                         <div style="display:flex; align-items:center; gap:0.25rem;">
-                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
+                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'shared', ${tIdx}, 'hours', this.value)">
                           <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'shared', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
                       </div>
                     `).join('')}
                   </div>
 
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
-                    + Adicionar Temática Gestor
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'shared')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.5rem;">
+                    + Adicionar Temática
                   </button>
                 </div>
+              ` : `
+                <!-- Grade Dupla: Módulo Específico por Público (Gestor vs CACS) -->
+                <div class="course-mod-grid">
+                  <!-- Coluna Gestores Municipais -->
+                  <div class="course-topic-col">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+                      <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
+                        🏛️ Gestão Municipal (Gestores)
+                      </strong>
+                      <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
+                        Total: ${gTotalHours.toFixed(1).replace('.', ',')} h
+                      </span>
+                    </div>
 
-                <!-- Coluna Conselheiros CACS-FUNDEB -->
-                <div class="course-topic-col">
-                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
-                    <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
-                      👥 Conselheiros CACS-FUNDEB
-                    </strong>
-                    <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
-                      Total: ${cTotalHours.toFixed(1).replace('.', ',')} h
-                    </span>
-                  </div>
-
-                  <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                    ${cTopics.map((t, tIdx) => `
-                      <div class="course-topic-item">
-                        <input type="text" class="form-control form-control-sm" placeholder="Temática para CACS" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'topic', this.value)">
-                        <div style="display:flex; align-items:center; gap:0.25rem;">
-                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
-                          <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                      ${gTopics.map((t, tIdx) => `
+                        <div class="course-topic-item">
+                          <input type="text" class="form-control form-control-sm" placeholder="Temática para Gestores" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'topic', this.value)">
+                          <div style="display:flex; align-items:center; gap:0.25rem;">
+                            <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
+                            <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                          </div>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
-                      </div>
-                    `).join('')}
+                      `).join('')}
+                    </div>
+
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                      + Adicionar Temática Gestor
+                    </button>
                   </div>
 
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
-                    + Adicionar Temática CACS
-                  </button>
-                </div>
+                  <!-- Coluna Conselheiros CACS-FUNDEB -->
+                  <div class="course-topic-col">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+                      <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
+                        👥 Conselheiros CACS-FUNDEB
+                      </strong>
+                      <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
+                        Total: ${cTotalHours.toFixed(1).replace('.', ',')} h
+                      </span>
+                    </div>
 
-              </div>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                      ${cTopics.map((t, tIdx) => `
+                        <div class="course-topic-item">
+                          <input type="text" class="form-control form-control-sm" placeholder="Temática para CACS" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'topic', this.value)">
+                          <div style="display:flex; align-items:center; gap:0.25rem;">
+                            <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
+                            <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                          </div>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                        </div>
+                      `).join('')}
+                    </div>
+
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                      + Adicionar Temática CACS
+                    </button>
+                  </div>
+                </div>
+              `}
             </div>
           `;
         }).join('');
@@ -2808,25 +2845,54 @@ class AutoReportApp {
     }
   }
 
+  toggleCourseModuleShared(modIdx, isChecked) {
+    if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    const mod = this.currentTraining.courseModules[modIdx];
+    if (!mod) return;
+
+    if (isChecked) {
+      const gStr = JSON.stringify((mod.gestorTopics || []).map(t => ({ topic: t.topic, hours: t.hours })));
+      const cStr = JSON.stringify((mod.cacsTopics || []).map(t => ({ topic: t.topic, hours: t.hours })));
+      if (gStr !== cStr) {
+        if (!confirm('Este módulo possui temáticas diferentes para Gestores e CACS.\n\nAo torná-lo compartilhado, as temáticas da Gestão Municipal serão aplicadas aos dois públicos. Deseja continuar?')) {
+          this.renderCourseStructureStep();
+          return;
+        }
+      }
+      mod.isShared = true;
+      mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics || []));
+    } else {
+      mod.isShared = false;
+      if (!mod.cacsTopics || mod.cacsTopics.length === 0) {
+        mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics || []));
+      }
+    }
+
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
+  }
+
   addCourseTopic(modIdx, type) {
     if (!this.currentTraining || !this.currentTraining.courseModules) return;
     const mod = this.currentTraining.courseModules[modIdx];
     if (!mod) return;
 
-    if (type === 'gestor') {
+    const newTopic = {
+      id: `top_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      topic: '',
+      hours: 1.0
+    };
+
+    if (type === 'shared' || mod.isShared) {
       if (!mod.gestorTopics) mod.gestorTopics = [];
-      mod.gestorTopics.push({
-        id: `top_g_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-        topic: '',
-        hours: 1.0
-      });
+      mod.gestorTopics.push(newTopic);
+      mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics));
+    } else if (type === 'gestor') {
+      if (!mod.gestorTopics) mod.gestorTopics = [];
+      mod.gestorTopics.push(newTopic);
     } else {
       if (!mod.cacsTopics) mod.cacsTopics = [];
-      mod.cacsTopics.push({
-        id: `top_c_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-        topic: '',
-        hours: 1.0
-      });
+      mod.cacsTopics.push(newTopic);
     }
 
     this.renderCourseStructureStep();
@@ -2838,7 +2904,15 @@ class AutoReportApp {
     const mod = this.currentTraining.courseModules[modIdx];
     if (!mod) return;
 
-    if (type === 'gestor' && mod.gestorTopics) {
+    if (type === 'shared' || mod.isShared) {
+      if (mod.gestorTopics) {
+        mod.gestorTopics.splice(topicIdx, 1);
+        if (mod.gestorTopics.length === 0) {
+          mod.gestorTopics.push({ id: `top_g_${Date.now()}`, topic: '', hours: 0 });
+        }
+        mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics));
+      }
+    } else if (type === 'gestor' && mod.gestorTopics) {
       mod.gestorTopics.splice(topicIdx, 1);
       if (mod.gestorTopics.length === 0) {
         mod.gestorTopics.push({ id: `top_g_${Date.now()}`, topic: '', hours: 0 });
@@ -2859,16 +2933,25 @@ class AutoReportApp {
     const mod = this.currentTraining.courseModules[modIdx];
     if (!mod) return;
 
-    const list = type === 'gestor' ? mod.gestorTopics : mod.cacsTopics;
-    if (list && list[topicIdx]) {
-      if (field === 'hours') {
-        list[topicIdx].hours = parseFloat(value) || 0;
-      } else {
-        list[topicIdx].topic = value;
+    if (type === 'shared' || mod.isShared) {
+      if (mod.gestorTopics && mod.gestorTopics[topicIdx]) {
+        if (field === 'hours') mod.gestorTopics[topicIdx].hours = parseFloat(value) || 0;
+        else mod.gestorTopics[topicIdx].topic = value;
       }
-      this.renderCourseStructureStep();
-      this.saveCurrentStepData();
+      mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics));
+    } else {
+      const list = type === 'gestor' ? mod.gestorTopics : mod.cacsTopics;
+      if (list && list[topicIdx]) {
+        if (field === 'hours') {
+          list[topicIdx].hours = parseFloat(value) || 0;
+        } else {
+          list[topicIdx].topic = value;
+        }
+      }
     }
+
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
   }
 
   /* Modais de Restauração de Template & Cópia de Outra Capacitação */
@@ -3041,68 +3124,105 @@ class AutoReportApp {
                 </div>
               </div>
 
-              <!-- Grade Dupla: Gestão Municipal vs Conselheiros CACS -->
-              <div class="course-mod-grid">
-                
-                <!-- Coluna Gestores Municipais -->
-                <div class="course-topic-col">
-                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+              <!-- Checkbox de Módulo Compartilhado -->
+              <div style="margin:0.75rem 0 1rem 0; padding:0.5rem 0.75rem; background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-md);">
+                <label style="display:flex; align-items:center; gap:0.55rem; font-weight:700; font-size:0.86rem; color:var(--text-primary); cursor:pointer; margin:0;">
+                  <input type="checkbox" ${mod.isShared ? 'checked' : ''} onchange="app.toggleGlobalMasterCourseModuleShared(${modIdx}, this.checked)">
+                  <span>🤝 Módulo compartilhado entre Gestores e CACS (mesmo conteúdo e carga horária)</span>
+                </label>
+              </div>
+
+              ${mod.isShared ? `
+                <!-- Bloco Único: Módulo Compartilhado -->
+                <div style="background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:0.75rem;">
                     <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
-                      🏛️ Gestão Municipal (Gestores)
+                      🤝 Temática do Módulo Compartilhado
                     </strong>
                     <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
-                      Total: ${gTotalHours.toFixed(1).replace('.', ',')} h
+                      Carga Horária: ${gTotalHours.toFixed(1).replace('.', ',')} h
                     </span>
                   </div>
 
                   <div style="display:flex; flex-direction:column; gap:0.5rem;">
                     ${gTopics.map((t, tIdx) => `
                       <div class="course-topic-item">
-                        <input type="text" class="form-control form-control-sm" placeholder="Temática para Gestores" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'topic', this.value)">
+                        <input type="text" class="form-control form-control-sm" placeholder="Temática do Módulo" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx}, 'topic', this.value)">
                         <div style="display:flex; align-items:center; gap:0.25rem;">
-                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
+                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx}, 'hours', this.value)">
                           <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
                       </div>
                     `).join('')}
                   </div>
 
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
-                    + Adicionar Temática Gestor
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'shared')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.5rem;">
+                    + Adicionar Temática
                   </button>
                 </div>
+              ` : `
+                <!-- Grade Dupla: Módulo Específico por Público (Gestor vs CACS) -->
+                <div class="course-mod-grid">
+                  <!-- Coluna Gestores Municipais -->
+                  <div class="course-topic-col">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+                      <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
+                        🏛️ Gestão Municipal (Gestores)
+                      </strong>
+                      <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
+                        Total: ${gTotalHours.toFixed(1).replace('.', ',')} h
+                      </span>
+                    </div>
 
-                <!-- Coluna Conselheiros CACS-FUNDEB -->
-                <div class="course-topic-col">
-                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
-                    <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
-                      👥 Conselheiros CACS-FUNDEB
-                    </strong>
-                    <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
-                      Total: ${cTotalHours.toFixed(1).replace('.', ',')} h
-                    </span>
-                  </div>
-
-                  <div style="display:flex; flex-direction:column; gap:0.5rem;">
-                    ${cTopics.map((t, tIdx) => `
-                      <div class="course-topic-item">
-                        <input type="text" class="form-control form-control-sm" placeholder="Temática para CACS" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'topic', this.value)">
-                        <div style="display:flex; align-items:center; gap:0.25rem;">
-                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
-                          <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                      ${gTopics.map((t, tIdx) => `
+                        <div class="course-topic-item">
+                          <input type="text" class="form-control form-control-sm" placeholder="Temática para Gestores" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'topic', this.value)">
+                          <div style="display:flex; align-items:center; gap:0.25rem;">
+                            <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
+                            <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                          </div>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
-                      </div>
-                    `).join('')}
+                      `).join('')}
+                    </div>
+
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                      + Adicionar Temática Gestor
+                    </button>
                   </div>
 
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
-                    + Adicionar Temática CACS
-                  </button>
-                </div>
+                  <!-- Coluna Conselheiros CACS-FUNDEB -->
+                  <div class="course-topic-col">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+                      <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
+                        👥 Conselheiros CACS-FUNDEB
+                      </strong>
+                      <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
+                        Total: ${cTotalHours.toFixed(1).replace('.', ',')} h
+                      </span>
+                    </div>
 
-              </div>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                      ${cTopics.map((t, tIdx) => `
+                        <div class="course-topic-item">
+                          <input type="text" class="form-control form-control-sm" placeholder="Temática para CACS" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'topic', this.value)">
+                          <div style="display:flex; align-items:center; gap:0.25rem;">
+                            <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
+                            <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                          </div>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                        </div>
+                      `).join('')}
+                    </div>
+
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                      + Adicionar Temática CACS
+                    </button>
+                  </div>
+                </div>
+              `}
             </div>
           `;
         }).join('');
@@ -3183,18 +3303,52 @@ class AutoReportApp {
     }
   }
 
-  addGlobalMasterCourseTopic(modIdx, type) {
+  toggleGlobalMasterCourseModuleShared(modIdx, isChecked) {
     if (!window.courseStructureHelper) return;
-    const masterMods = window.courseStructureHelper.getMasterStructure();
+    let masterMods = window.courseStructureHelper.getMasterStructure();
     const mod = masterMods[modIdx];
     if (!mod) return;
 
-    if (type === 'gestor') {
+    if (isChecked) {
+      const gStr = JSON.stringify((mod.gestorTopics || []).map(t => ({ topic: t.topic, hours: t.hours })));
+      const cStr = JSON.stringify((mod.cacsTopics || []).map(t => ({ topic: t.topic, hours: t.hours })));
+      if (gStr !== cStr) {
+        if (!confirm('Este módulo possui temáticas diferentes para Gestores e CACS.\n\nAo torná-lo compartilhado, as temáticas da Gestão Municipal serão aplicadas aos dois públicos. Deseja continuar?')) {
+          this.renderGlobalMasterCourseStructure();
+          return;
+        }
+      }
+      mod.isShared = true;
+      mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics || []));
+    } else {
+      mod.isShared = false;
+      if (!mod.cacsTopics || mod.cacsTopics.length === 0) {
+        mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics || []));
+      }
+    }
+
+    window.courseStructureHelper.saveMasterStructure(masterMods);
+    this.renderGlobalMasterCourseStructure();
+  }
+
+  addGlobalMasterCourseTopic(modIdx, type) {
+    if (!window.courseStructureHelper) return;
+    let masterMods = window.courseStructureHelper.getMasterStructure();
+    const mod = masterMods[modIdx];
+    if (!mod) return;
+
+    const newTopic = { id: `top_${Date.now()}`, topic: '', hours: 1.0 };
+
+    if (type === 'shared' || mod.isShared) {
       if (!mod.gestorTopics) mod.gestorTopics = [];
-      mod.gestorTopics.push({ id: `top_g_${Date.now()}`, topic: '', hours: 1.0 });
+      mod.gestorTopics.push(newTopic);
+      mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics));
+    } else if (type === 'gestor') {
+      if (!mod.gestorTopics) mod.gestorTopics = [];
+      mod.gestorTopics.push(newTopic);
     } else {
       if (!mod.cacsTopics) mod.cacsTopics = [];
-      mod.cacsTopics.push({ id: `top_c_${Date.now()}`, topic: '', hours: 1.0 });
+      mod.cacsTopics.push(newTopic);
     }
 
     window.courseStructureHelper.saveMasterStructure(masterMods);
@@ -3203,11 +3357,17 @@ class AutoReportApp {
 
   removeGlobalMasterCourseTopic(modIdx, type, topicIdx) {
     if (!window.courseStructureHelper) return;
-    const masterMods = window.courseStructureHelper.getMasterStructure();
+    let masterMods = window.courseStructureHelper.getMasterStructure();
     const mod = masterMods[modIdx];
     if (!mod) return;
 
-    if (type === 'gestor' && mod.gestorTopics) {
+    if (type === 'shared' || mod.isShared) {
+      if (mod.gestorTopics) {
+        mod.gestorTopics.splice(topicIdx, 1);
+        if (mod.gestorTopics.length === 0) mod.gestorTopics.push({ id: `top_g_${Date.now()}`, topic: '', hours: 0 });
+        mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics));
+      }
+    } else if (type === 'gestor' && mod.gestorTopics) {
       mod.gestorTopics.splice(topicIdx, 1);
       if (mod.gestorTopics.length === 0) mod.gestorTopics.push({ id: `top_g_${Date.now()}`, topic: '', hours: 0 });
     } else if (type === 'cacs' && mod.cacsTopics) {
@@ -3221,18 +3381,26 @@ class AutoReportApp {
 
   updateGlobalMasterCourseTopic(modIdx, type, topicIdx, field, value) {
     if (!window.courseStructureHelper) return;
-    const masterMods = window.courseStructureHelper.getMasterStructure();
+    let masterMods = window.courseStructureHelper.getMasterStructure();
     const mod = masterMods[modIdx];
     if (!mod) return;
 
-    const list = type === 'gestor' ? mod.gestorTopics : mod.cacsTopics;
-    if (list && list[topicIdx]) {
-      if (field === 'hours') list[topicIdx].hours = parseFloat(value) || 0;
-      else list[topicIdx].topic = value;
-
-      window.courseStructureHelper.saveMasterStructure(masterMods);
-      this.renderGlobalMasterCourseStructure();
+    if (type === 'shared' || mod.isShared) {
+      if (mod.gestorTopics && mod.gestorTopics[topicIdx]) {
+        if (field === 'hours') mod.gestorTopics[topicIdx].hours = parseFloat(value) || 0;
+        else mod.gestorTopics[topicIdx].topic = value;
+      }
+      mod.cacsTopics = JSON.parse(JSON.stringify(mod.gestorTopics));
+    } else {
+      const list = type === 'gestor' ? mod.gestorTopics : mod.cacsTopics;
+      if (list && list[topicIdx]) {
+        if (field === 'hours') list[topicIdx].hours = parseFloat(value) || 0;
+        else list[topicIdx].topic = value;
+      }
     }
+
+    window.courseStructureHelper.saveMasterStructure(masterMods);
+    this.renderGlobalMasterCourseStructure();
   }
 
   resetGlobalMasterCourseStructure() {
