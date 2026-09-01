@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.2
+ * Versão: v.1.3.3
  */
 
 class AutoReportApp {
@@ -348,18 +348,19 @@ class AutoReportApp {
       uf: 'MT',
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date().toISOString().split('T')[0],
-      datesFormatted: 'A definir',
+      datesFormatted: '',
       workload: '16 horas',
       targetAudience: 'Gestores Municipais e Conselheiros CACS-FUNDEB',
-      expectedParticipants: 40,
+      expectedParticipants: 0,
       responsibleOrg: 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
       relatedProject: 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
       processNumber: '23070.012345/2026-00',
       fundingOrg: 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
       partnerOrgs: 'Ministério da Educação / Prefeituras Municipais',
-      locationVenue: 'Auditório Municipal',
+      locationVenue: '',
+      locationAddress: '',
       status: 'in_progress',
-      progressPercent: 10,
+      progressPercent: 0,
       team: [],
       municipalities: [],
       courseModules: [
@@ -374,7 +375,7 @@ class AutoReportApp {
       media: []
     };
 
-    await window.db.saveTrainingFull(newTraining, 'Criação de nova capacitação');
+    await window.db.saveTrainingFull(newTraining, 'Criação de nova capacitação em branco');
     this.openWizard(newId, 1);
   }
 
