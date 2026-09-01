@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.7.5
+ * Versão: v.1.7.6
  */
 
 window.icons = {
@@ -232,10 +232,10 @@ class AutoReportApp {
         container.innerHTML = filtered.map(t => {
           const isHist = t.status === 'historico' || t.isHistorical;
           const statusBadge = isHist
-            ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b;">Histórico Protegido</span>`
+            ? `<span class="nav-badge badge-amber">Histórico Protegido</span>`
             : (t.progressPercent === 100
-                ? `<span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluída</span>`
-                : `<span class="nav-badge" style="background:rgba(6, 182, 212, 0.15); color:#22d3ee; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Em Andamento</span>`);
+                ? `<span class="nav-badge badge-emerald" style="display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluída</span>`
+                : `<span class="nav-badge badge-cyan" style="display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Em Andamento</span>`);
 
           return `
             <div class="glass-card" style="margin-bottom:1rem; padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-left: 4px solid ${isHist ? '#f59e0b' : 'var(--accent-secondary)'};">
@@ -271,9 +271,9 @@ class AutoReportApp {
                     ${isHist ? `${window.icons.search} Consultar` : `${window.icons.edit} Continuar`}
                   </button>
                   ${isHist
-                    ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.12); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Registro do Histórico Protegido - Exclusão desabilitada">${window.icons.lock} Protegido</span>`
-                    : `<button class="btn btn-secondary btn-sm" onclick="app.openConfirmDeleteModal('${t.id}')" style="color:var(--accent-danger); border-color:rgba(239, 68, 68, 0.3);" title="Excluir este relatório permanentemente">
-                        <span style="color:#ef4444; display:inline-flex; align-items:center; gap:0.25rem;">${window.icons.delete} Excluir</span>
+                    ? `<span class="nav-badge badge-amber" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Registro do Histórico Protegido - Exclusão desabilitada">${window.icons.lock} Protegido</span>`
+                    : `<button class="btn btn-secondary btn-sm btn-action-delete" onclick="app.openConfirmDeleteModal('${t.id}')" style="display:inline-flex; align-items:center;" title="Excluir este relatório permanentemente">
+                        ${window.icons.delete} Excluir
                       </button>`
                   }
                 </div>
@@ -1284,7 +1284,7 @@ class AutoReportApp {
     if (!container || !this.currentTraining) return;
 
     // Sincronizar sempre todas as informações da Equipe Técnica central (UFG & FNDE)
-    this.currentTraining.team = (window.getMasterTeam ? window.getMasterTeam() : window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m }));
+    this.currentTraining.team = (window.getMasterTeam ? window.getMasterTeam() : (window.DEFAULT_OFFICIAL_TEAM || [])).map(m => ({ ...m }));
 
     const team = this.currentTraining.team;
 
@@ -1339,7 +1339,7 @@ class AutoReportApp {
                   <td><span style="color:var(--text-secondary); font-weight:600;">${item.title || '-'}</span></td>
                   <td><strong style="color:var(--text-primary); font-size:0.9rem;">${item.name || ''}</strong></td>
                   <td style="text-align:center;">
-                    <span class="nav-badge" style="background:${isUfg ? 'rgba(245, 158, 11, 0.12)' : 'rgba(59, 130, 246, 0.12)'}; color:${isUfg ? '#fbbf24' : '#60a5fa'}; font-weight:700; border:1px solid ${isUfg ? 'rgba(245, 158, 11, 0.25)' : 'rgba(59, 130, 246, 0.25)'};">
+                    <span class="nav-badge ${isUfg ? 'badge-amber' : 'badge-blue'}">
                       ${item.institution || 'UFG'}
                     </span>
                   </td>
@@ -1447,15 +1447,15 @@ class AutoReportApp {
                   <td><span style="color:var(--text-secondary); font-weight:600;">${item.title || '-'}</span></td>
                   <td><strong style="color:var(--text-primary); font-size:0.9rem;">${item.name || ''}</strong></td>
                   <td style="text-align:center;">
-                    <span class="nav-badge" style="background:${isUfg ? 'rgba(245, 158, 11, 0.12)' : 'rgba(59, 130, 246, 0.12)'}; color:${isUfg ? '#fbbf24' : '#60a5fa'}; font-weight:700; border:1px solid ${isUfg ? 'rgba(245, 158, 11, 0.25)' : 'rgba(59, 130, 246, 0.25)'};">
+                    <span class="nav-badge ${isUfg ? 'badge-amber' : 'badge-blue'}">
                       ${item.institution || 'UFG'}
                     </span>
                   </td>
                   <td><span style="color:var(--text-secondary); font-size:0.85rem;">${item.role || 'Equipe Técnica'}</span></td>
                   <td style="text-align:center; white-space:nowrap;">
                     <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
-                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('master', ${idx})" style="color:#fbbf24; border-color:rgba(245, 158, 11, 0.3); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar este integrante">${window.icons.edit} Editar</button>
-                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMasterTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir do catálogo geral">${window.icons.delete} Excluir</button>
+                      <button type="button" class="btn btn-secondary btn-sm btn-action-edit" onclick="app.openTeamMemberEditor('master', ${idx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar este integrante">${window.icons.edit} Editar</button>
+                      <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMasterTeamMember(${idx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir do catálogo geral">${window.icons.delete} Excluir</button>
                     </div>
                   </td>
                 </tr>
@@ -2828,10 +2828,10 @@ class AutoReportApp {
             ${sorted.map(t => {
               const isHist = t.status === 'historico' || t.isHistorical;
               const statusBadge = isHist
-                ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b;">Histórico Protegido</span>`
+                ? `<span class="nav-badge badge-amber">Histórico Protegido</span>`
                 : (t.progressPercent === 100
-                    ? `<span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluída</span>`
-                    : `<span class="nav-badge" style="background:rgba(6, 182, 212, 0.15); color:#22d3ee; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Em Andamento</span>`);
+                    ? `<span class="nav-badge badge-emerald" style="display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluída</span>`
+                    : `<span class="nav-badge badge-cyan" style="display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Em Andamento</span>`);
 
               return `
                 <tr>
@@ -2847,8 +2847,8 @@ class AutoReportApp {
                         ${isHist ? `${window.icons.search} Consultar` : `${window.icons.edit} Editar`}
                       </button>
                       ${isHist
-                        ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.12); color:#f59e0b; border:1px solid rgba(245, 158, 11, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Histórico protegido - exclusão desabilitada">${window.icons.lock} Protegido</span>`
-                        : `<button class="btn btn-secondary btn-sm" onclick="app.openConfirmDeleteModal('${t.id}')" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3); display:inline-flex; align-items:center;" title="Excluir este relatório">
+                        ? `<span class="nav-badge badge-amber" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Histórico protegido - exclusão desabilitada">${window.icons.lock} Protegido</span>`
+                        : `<button class="btn btn-secondary btn-sm btn-action-delete" onclick="app.openConfirmDeleteModal('${t.id}')" style="display:inline-flex; align-items:center;" title="Excluir este relatório">
                             ${window.icons.delete} Excluir
                           </button>`
                       }

@@ -43,30 +43,78 @@
   --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   --shadow-glow: 0 0 25px -3px rgba(245, 158, 11, 0.35);
 
-  --backdrop-blur: blur(12px);
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Theme-aware Color Accent Tokens (High Contrast) */
+  --accent-amber: #f59e0b;
+  --accent-amber-text: #fbbf24;
+  --accent-amber-bg: rgba(245, 158, 11, 0.15);
+  --accent-amber-border: rgba(245, 158, 11, 0.35);
+
+  --accent-blue: #3b82f6;
+  --accent-blue-text: #60a5fa;
+  --accent-blue-bg: rgba(59, 130, 246, 0.15);
+  --accent-blue-border: rgba(59, 130, 246, 0.35);
+
+  --accent-emerald: #10b981;
+  --accent-emerald-text: #34d399;
+  --accent-emerald-bg: rgba(16, 185, 129, 0.15);
+  --accent-emerald-border: rgba(16, 185, 129, 0.35);
+
+  --accent-rose: #ef4444;
+  --accent-rose-text: #f87171;
+  --accent-rose-bg: rgba(239, 68, 68, 0.15);
+  --accent-rose-border: rgba(239, 68, 68, 0.35);
+
+  --accent-cyan: #06b6d4;
+  --accent-cyan-text: #22d3ee;
+  --accent-cyan-bg: rgba(6, 182, 212, 0.15);
+  --accent-cyan-border: rgba(6, 182, 212, 0.35);
 }
 
-/* Light Theme Variables */
+/* Light Theme Variables & High Contrast Color Overrides */
 body.light-theme {
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card: rgba(255, 255, 255, 0.95);
   --bg-card-hover: #f1f5f9;
-  --bg-input: #f8fafc;
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-focus: #4f46e5;
+  --bg-input: #f1f5f9;
+  --border-color: rgba(0, 0, 0, 0.12);
+  --border-focus: #2563eb;
 
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
 
   --shadow-md: 0 4px 12px -1px rgba(0, 0, 0, 0.07);
   --shadow-lg: 0 12px 28px -4px rgba(0, 0, 0, 0.1);
-  --shadow-glow: 0 0 25px -3px rgba(99, 102, 241, 0.2);
-  --gradient-card: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
-  --gradient-glow: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08), transparent 70%);
+  --shadow-glow: 0 0 25px -3px rgba(37, 99, 235, 0.15);
+  --gradient-card: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  --gradient-glow: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.08), transparent 70%);
+
+  /* High Contrast Accent Tokens for Light Mode (>7:1 Ratio) */
+  --accent-amber: #d97706;
+  --accent-amber-text: #92400e;       /* Dark Amber for high contrast on light bg */
+  --accent-amber-bg: #fef3c7;          /* Soft warm amber background */
+  --accent-amber-border: #fcd34d;
+
+  --accent-blue: #2563eb;
+  --accent-blue-text: #1e40af;        /* Dark Blue for high contrast on light bg */
+  --accent-blue-bg: #dbeafe;           /* Soft blue background */
+  --accent-blue-border: #93c5fd;
+
+  --accent-emerald: #059669;
+  --accent-emerald-text: #065f46;     /* Dark Emerald for high contrast on light bg */
+  --accent-emerald-bg: #d1fae5;        /* Soft emerald background */
+  --accent-emerald-border: #6ee7b7;
+
+  --accent-rose: #dc2626;
+  --accent-rose-text: #991b1b;        /* Dark Rose/Red for high contrast on light bg */
+  --accent-rose-bg: #fee2e2;           /* Soft red background */
+  --accent-rose-border: #fca5a5;
+
+  --accent-cyan: #0891b2;
+  --accent-cyan-text: #155e75;        /* Dark Cyan for high contrast on light bg */
+  --accent-cyan-bg: #cffafe;           /* Soft cyan background */
+  --accent-cyan-border: #67e8f9;
 }
 
 /* ==========================================================================
@@ -1933,17 +1981,105 @@ textarea.form-control {
 }
 
 .team-tab-btn:hover, .master-team-tab-btn:hover, .filter-tab-btn:hover {
-  border-color: rgba(59, 130, 246, 0.4) !important;
+  border-color: var(--accent-blue-border) !important;
   color: var(--text-primary) !important;
   transform: translateY(-1px);
 }
 
 .team-tab-btn.active, .master-team-tab-btn.active, .filter-tab-btn.active {
-  background: rgba(59, 130, 246, 0.15) !important;
-  border-color: rgba(59, 130, 246, 0.5) !important;
-  color: #60a5fa !important;
+  background: var(--accent-blue-bg) !important;
+  border-color: var(--accent-blue-border) !important;
+  color: var(--accent-blue-text) !important;
   font-weight: 700 !important;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2) !important;
+  box-shadow: 0 0 12px var(--accent-blue-bg) !important;
+}
+
+/* Badges & Status Indicators (High Contrast Theme-Aware) */
+.badge-status-amber, .badge-amber {
+  background: var(--accent-amber-bg) !important;
+  color: var(--accent-amber-text) !important;
+  border: 1px solid var(--accent-amber-border) !important;
+  font-weight: 700 !important;
+}
+
+.badge-status-blue, .badge-blue {
+  background: var(--accent-blue-bg) !important;
+  color: var(--accent-blue-text) !important;
+  border: 1px solid var(--accent-blue-border) !important;
+  font-weight: 700 !important;
+}
+
+.badge-status-emerald, .badge-emerald {
+  background: var(--accent-emerald-bg) !important;
+  color: var(--accent-emerald-text) !important;
+  border: 1px solid var(--accent-emerald-border) !important;
+  font-weight: 700 !important;
+}
+
+.badge-status-rose, .badge-rose {
+  background: var(--accent-rose-bg) !important;
+  color: var(--accent-rose-text) !important;
+  border: 1px solid var(--accent-rose-border) !important;
+  font-weight: 700 !important;
+}
+
+.badge-status-cyan, .badge-cyan {
+  background: var(--accent-cyan-bg) !important;
+  color: var(--accent-cyan-text) !important;
+  border: 1px solid var(--accent-cyan-border) !important;
+  font-weight: 700 !important;
+}
+
+/* Action Buttons (Editar, Excluir, Protegido) */
+.btn-action-edit {
+  color: var(--accent-amber-text) !important;
+  border-color: var(--accent-amber-border) !important;
+  background: var(--accent-amber-bg) !important;
+}
+.btn-action-edit:hover {
+  background: var(--accent-amber-border) !important;
+}
+
+.btn-action-delete {
+  color: var(--accent-rose-text) !important;
+  border-color: var(--accent-rose-border) !important;
+  background: var(--accent-rose-bg) !important;
+}
+.btn-action-delete:hover {
+  background: var(--accent-rose-border) !important;
+}
+
+/* Text Accent Utilities */
+.text-accent-amber {
+  color: var(--accent-amber-text) !important;
+}
+.text-accent-blue {
+  color: var(--accent-blue-text) !important;
+}
+.text-accent-emerald {
+  color: var(--accent-emerald-text) !important;
+}
+.text-accent-rose {
+  color: var(--accent-rose-text) !important;
+}
+.text-accent-cyan {
+  color: var(--accent-cyan-text) !important;
+}
+
+/* Light Theme Overrides for Data Tables */
+body.light-theme .report-data-table th {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+body.light-theme .report-data-table td {
+  border-bottom-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+body.light-theme .nav-badge {
+  font-weight: 700 !important;
 }
 
 

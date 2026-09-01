@@ -85,7 +85,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.7.5</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.7.6</span> • CECATE</div>
       </div>
     </aside>
 
@@ -194,15 +194,15 @@
                   </button>
                   <button type="button" class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-hist" onclick="app.setDashboardFilter('historico')" style="display:inline-flex; align-items:center; gap:0.35rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                    Histórico (Nº 6 a 14) <span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#fbbf24; padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-hist">0</span>
+                    Histórico (Nº 6 a 14) <span class="nav-badge" style="background:var(--accent-amber-bg); color:var(--accent-amber-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-hist">0</span>
                   </button>
                   <button type="button" class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-prog" onclick="app.setDashboardFilter('in_progress')" style="display:inline-flex; align-items:center; gap:0.35rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    Em Andamento <span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:#60a5fa; padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-prog">0</span>
+                    Em Andamento <span class="nav-badge" style="background:var(--accent-blue-bg); color:var(--accent-blue-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-prog">0</span>
                   </button>
                   <button type="button" class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-comp" onclick="app.setDashboardFilter('completed')" style="display:inline-flex; align-items:center; gap:0.35rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Concluídas <span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#34d399; padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-comp">0</span>
+                    Concluídas <span class="nav-badge" style="background:var(--accent-emerald-bg); color:var(--accent-emerald-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="dash-count-comp">0</span>
                   </button>
 
                   <button type="button" class="btn btn-secondary btn-sm" onclick="app.navigateTo('trainings')" style="margin-left:0.5rem;">Ver Todas as Capacitações</button>
@@ -459,16 +459,16 @@
                     <span style="font-size:0.85rem; font-weight:600; color:var(--text-secondary);">Filtrar por Instituição:</span>
                   </div>
 
-                  <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                     <button type="button" class="btn btn-sm btn-secondary team-tab-btn active" id="team-tab-all" onclick="app.setTeamFilter('all')" style="display:inline-flex; align-items:center; gap:0.35rem;">
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                       Todos <span class="nav-badge" style="background:rgba(255,255,255,0.1); padding:0.1rem 0.4rem; font-size:0.75rem;" id="team-count-all">0</span>
                     </button>
                     <button type="button" class="btn btn-sm btn-secondary team-tab-btn" id="team-tab-ufg" onclick="app.setTeamFilter('UFG')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                      UFG - Coordenação & Técnica <span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#fbbf24; padding:0.1rem 0.4rem; font-size:0.75rem;" id="team-count-ufg">0</span>
+                      UFG - Coordenação & Técnica <span class="nav-badge" style="background:var(--accent-amber-bg); color:var(--accent-amber-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="team-count-ufg">0</span>
                     </button>
                     <button type="button" class="btn btn-sm btn-secondary team-tab-btn" id="team-tab-fnde" onclick="app.setTeamFilter('FNDE')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                      FNDE - Coordenações <span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:#60a5fa; padding:0.1rem 0.4rem; font-size:0.75rem;" id="team-count-fnde">0</span>
+                      FNDE - Coordenações <span class="nav-badge" style="background:var(--accent-blue-bg); color:var(--accent-blue-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="team-count-fnde">0</span>
                     </button>
                   </div>
                 </div>
@@ -552,438 +552,17 @@
                 </div>
               </div>
             </div>
-
-            <!-- ETAPA 3: MUNICÍPIOS & TABELA 1 -->
-            <div class="wizard-step-panel" id="wizard-step-3">
-              <div class="wizard-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
-                  <div>
-                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
-                      <span>Etapa 3: Municípios Convocados</span>
-                    </h3>
-                    <p class="wizard-card-desc">Adicione os municípios convocados da microrregião e suas respectivas distâncias em km até o polo.</p>
-                  </div>
-                  <div style="display:flex; gap:0.5rem;">
-                    <span id="wiz-muns-total-count" class="nav-badge" style="align-self:center;">0 Municípios</span>
-                    <button class="btn btn-secondary btn-sm" onclick="app.addMunicipalityPrompt()">+ Cadastrar Município</button>
-                  </div>
-                </div>
-
-                <!-- Card de Previsão de Participantes Baseado nos Municípios Convocados (4x Número de Municípios) -->
-                <div style="background:var(--bg-input); border:1px solid var(--border-color); border-left:4px solid var(--accent-primary); border-radius:var(--radius-md); padding:1rem; margin-top:1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-                  <div>
-                    <label class="form-label" style="margin-bottom:0.2rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Previsão de Participantes:
-                    </label>
-                    <div style="font-size:0.78rem; color:var(--text-muted);">
-                      Calculado automaticamente com base na quantidade de municípios convocados (<strong>4 participantes × número de municípios</strong>).
-                    </div>
-                  </div>
-                  <div style="display:flex; align-items:center; gap:0.5rem;">
-                    <input type="number" id="wiz-train-expected" class="form-control" style="width:120px; font-weight:700; text-align:center; font-size:1.05rem;" placeholder="Ex: 50" onchange="app.saveCurrentStepData()">
-                    <span style="font-size:0.85rem; color:var(--text-secondary); font-weight:600;">participantes</span>
-                  </div>
-                </div>
-
-                <div style="margin-top:1.5rem;">
-                  <h4 style="font-size:0.95rem; margin-bottom:0.5rem; color:var(--text-secondary);">Prévia da Tabela 1: Municípios convocados</h4>
-                  <div id="wizard-municipalities-table-preview">
-                    <!-- Tabela 1 Gerada Dinamicamente -->
-                  </div>
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
-                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Estrutura do Curso) →</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ETAPA 4: ESTRUTURA DO CURSO & TABELA 2 -->
-            <div class="wizard-step-panel" id="wizard-step-4">
-              <div class="wizard-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                  <div>
-                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                      <span>Etapa 4: Estrutura do Curso</span>
-                    </h3>
-                    <p class="wizard-card-desc">Configure os módulos teóricos e práticos aplicados para Gestores Municipais e Conselheiros CACS.</p>
-                  </div>
-                  <button class="btn btn-secondary btn-sm" onclick="app.addModulePrompt()">+ Adicionar Módulo</button>
-                </div>
-
-                <div id="wizard-course-table-preview">
-                  <!-- Tabela 2 Gerada Dinamicamente -->
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
-                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Contatos) →</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ETAPA 5: CONTATO COM OS MUNICÍPIOS -->
-            <div class="wizard-step-panel" id="wizard-step-5">
-              <div class="wizard-card">
-                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                  <span>Etapa 5: Contato com os Municípios</span>
-                </h3>
-                <p class="wizard-card-desc">Registre as datas de início de convocação, canais utilizados e quantitativos de contatos.</p>
-
-                <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">Data de Início dos Contatos:</label>
-                    <input type="date" id="wiz-contact-start-date" class="form-control">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Formas e Meios de Contato:</label>
-                    <input type="text" id="wiz-contact-methods" class="form-control" placeholder="Ofícios, E-mails, Ligações Telefônicas e WhatsApp">
-                  </div>
-                </div>
-
-                <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">Responsável pela Articulação:</label>
-                    <input type="text" id="wiz-contact-responsible" class="form-control" placeholder="Equipe de Articulação Institucional CECATE-CO">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Municípios Contatados:</label>
-                    <input type="number" id="wiz-contact-count" class="form-control" placeholder="17">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">E-mails Enviados:</label>
-                    <input type="number" id="wiz-contact-emails" class="form-control" placeholder="34">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Telefonemas:</label>
-                    <input type="number" id="wiz-contact-phones" class="form-control" placeholder="50">
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Observações e Relato do Processo de Convocação:</label>
-                  <textarea id="wiz-contact-notes" class="form-control" rows="3" placeholder="Informações relevantes sobre a adesão dos municípios, canais de confirmação, etc."></textarea>
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
-                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Lista de Presença) →</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ETAPA 6: LISTA DE PRESENÇA (UPLOAD EXCEL & TABELA 4) -->
-            <div class="wizard-step-panel" id="wizard-step-6">
-              <div class="wizard-card">
-                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                  <span>Etapa 6: Importação da Lista de Presença</span>
-                </h3>
-                <p class="wizard-card-desc">Faça upload da planilha Excel de respostas da lista de presença (Google Forms / Excel). O sistema mapeará automaticamente as colunas e calculará as taxas de participação.</p>
-
-                <!-- Dropzone Upload Excel -->
-                <div class="upload-dropzone" onclick="document.getElementById('file-input-attendance').click()">
-                  <div class="upload-dropzone-icon">
-                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                  </div>
-                  <div class="upload-dropzone-text">Clique ou arraste a Planilha de Lista de Presença (.xlsx)</div>
-                  <div class="upload-dropzone-hint">Ex: 16CTE - Lista de presença (respostas).xlsx</div>
-                  <input type="file" id="file-input-attendance" accept=".xlsx, .xls" style="display:none;" onchange="app.handleAttendanceFileUpload(event)">
-                </div>
-
-                <div style="margin-top:2rem;">
-                  <h4 style="font-size:0.95rem; margin-bottom:0.5rem; color:var(--text-secondary);">Participantes Identificados</h4>
-                  <div id="wizard-attendance-table-container">
-                    <!-- Tabela de participantes renderizada dinamicamente -->
-                  </div>
-                </div>
-
-                <div style="margin-top:2rem;">
-                  <h4 style="font-size:0.95rem; margin-bottom:0.5rem; color:var(--text-secondary);">Tabela 4: Participação por Município (P/I)</h4>
-                  <div id="wizard-table4-preview">
-                    <!-- Tabela 4 Gerada Dinamicamente -->
-                  </div>
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
-                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Avaliação) →</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ETAPA 7: AVALIAÇÃO DA CAPACITAÇÃO (GRÁFICOS & NUVENS) -->
-            <div class="wizard-step-panel" id="wizard-step-7">
-              <div class="wizard-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
-                  <div>
-                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                      <span>Etapa 7: Avaliação da Capacitação</span>
-                    </h3>
-                    <p class="wizard-card-desc">Importe a planilha de avaliação para gerar automaticamente as médias das 7 perguntas, gráficos comparativos e nuvens de palavras nativas.</p>
-                  </div>
-                  <div style="display:flex; gap:0.75rem;">
-                    <span class="nav-badge" id="wiz-eval-total-count">0 Avaliações</span>
-                    <span class="nav-badge" id="wiz-eval-overall-mean" style="background:rgba(16, 185, 129, 0.15); color:#10b981;">0.0 / 5.0</span>
-                  </div>
-                </div>
-
-                <!-- Dropzone Upload Avaliação -->
-                <div class="upload-dropzone" onclick="document.getElementById('file-input-evaluation').click()">
-                  <div class="upload-dropzone-icon">
-                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                  </div>
-                  <div class="upload-dropzone-text">Clique ou arraste a Planilha de Avaliação (.xlsx)</div>
-                  <div class="upload-dropzone-hint">Ex: 16CTE - Avaliação (respostas).xlsx</div>
-                  <input type="file" id="file-input-evaluation" accept=".xlsx, .xls" style="display:none;" onchange="app.handleEvaluationFileUpload(event)">
-                </div>
-
-                <!-- Grade de Gráficos e Nuvens de Palavras -->
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:2rem;">
-                  
-                  <div class="glass-card" style="padding:1.25rem;">
-                    <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 3. Participação CACS vs Gestores</h4>
-                    <div style="height:250px; position:relative;">
-                      <canvas id="chart-fig3-canvas"></canvas>
-                    </div>
-                  </div>
-
-                  <div class="glass-card" style="padding:1.25rem;">
-                    <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 4. Avaliação Geral (Todos os Participantes)</h4>
-                    <div style="height:250px; position:relative;">
-                      <canvas id="chart-fig4-canvas"></canvas>
-                    </div>
-                  </div>
-
-                  <div class="glass-card" style="padding:1.25rem;">
-                    <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 5. Avaliação Conselheiros CACS</h4>
-                    <div style="height:250px; position:relative;">
-                      <canvas id="chart-fig5-canvas"></canvas>
-                    </div>
-                  </div>
-
-                  <div class="glass-card" style="padding:1.25rem;">
-                    <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 6. Avaliação Gestores Municipais</h4>
-                    <div style="height:250px; position:relative;">
-                      <canvas id="chart-fig6-canvas"></canvas>
-                    </div>
-                  </div>
-
-                  <div class="glass-card" style="padding:1.25rem;">
-                    <h4 style="font-size:0.9rem; margin-bottom:0.75rem;">Figura 7. Nuvem de Palavras: Aspectos Positivos</h4>
-                    <div style="display:flex; justify-content:center; background:var(--bg-input); border-radius:var(--radius-md); padding:0.5rem;">
-                      <canvas id="wordcloud-fig7-canvas" width="550" height="300" style="max-width:100%; height:auto;"></canvas>
-                    </div>
-                  </div>
-
-                  <div class="glass-card" style="padding:1.25rem;">
-                    <h4 style="font-size:0.9rem; margin-bottom:0.75rem;">Figura 8. Nuvem de Palavras: Aspectos a Melhorar</h4>
-                    <div style="display:flex; justify-content:center; background:var(--bg-input); border-radius:var(--radius-md); padding:0.5rem;">
-                      <canvas id="wordcloud-fig8-canvas" width="550" height="300" style="max-width:100%; height:auto;"></canvas>
-                    </div>
-                  </div>
-
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
-                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Fotografias) →</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ETAPA 8: REGISTROS FOTOGRÁFICOS -->
-            <div class="wizard-step-panel" id="wizard-step-8">
-              <div class="wizard-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                  <div>
-                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                      <span>Etapa 8: Registros Fotográficos da Capacitação</span>
-                    </h3>
-                    <p class="wizard-card-desc">Insira fotos do evento (Figuras 9 a 13). O sistema renumerará e organizará as legendas automaticamente.</p>
-                  </div>
-                  <button class="btn btn-primary btn-sm" onclick="document.getElementById('file-input-photos').click()">+ Enviar Fotos</button>
-                  <input type="file" id="file-input-photos" accept="image/*" multiple style="display:none;" onchange="app.handlePhotoUpload(event)">
-                </div>
-
-                <div class="photo-gallery-grid" id="wizard-photos-grid">
-                  <!-- Fotos renderizadas dinamicamente -->
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
-                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Apêndices) →</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ETAPA 9: APÊNDICES I & II -->
-            <div class="wizard-step-panel" id="wizard-step-9">
-              <div class="wizard-card">
-                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-                  <span>Etapa 9: Documentos e Apêndices</span>
-                </h3>
-                <p class="wizard-card-desc">Anexe os ofícios de convocação do FNDE (Apêndice I) e as convocações/e-mails do CECATE (Apêndice II).</p>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:1.5rem;">
-                  
-                  <div class="glass-card" style="padding:1.5rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                      <h4>Apêndice I: Convocações do FNDE</h4>
-                      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-input-appendix-fnde').click()">+ Anexar</button>
-                      <input type="file" id="file-input-appendix-fnde" multiple style="display:none;" onchange="app.handleAppendixUpload('doc_fnde', event)">
-                    </div>
-                    <div id="wizard-appendix-fnde-list">
-                      <!-- Lista Apêndice I -->
-                    </div>
-                  </div>
-
-                  <div class="glass-card" style="padding:1.5rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                      <h4>Apêndice II: Convocações do CECATE</h4>
-                      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-input-appendix-cecate').click()">+ Anexar</button>
-                      <input type="file" id="file-input-appendix-cecate" multiple style="display:none;" onchange="app.handleAppendixUpload('doc_cecate', event)">
-                    </div>
-                    <div id="wizard-appendix-cecate-list">
-                      <!-- Lista Apêndice II -->
-                    </div>
-                  </div>
-
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
-                  <button class="btn btn-primary" onclick="app.wizardNext()">Salvar e Próxima Etapa (Conferência) →</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ETAPA 10: CONFERÊNCIA GERAL & AUDITORIA -->
-            <div class="wizard-step-panel" id="wizard-step-10">
-              <div class="wizard-card">
-                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  <span>Etapa 10: Painel de Conferência & Auditoria</span>
-                </h3>
-                <p class="wizard-card-desc">Audite a integridade dos dados, reconciliação entre lista de presença e avaliação antes de gerar o relatório oficial.</p>
-
-                <div id="wizard-conference-content">
-                  <!-- Renderizado dinamicamente -->
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
-                  <button class="btn btn-gradient" onclick="app.wizardNext()">Prosseguir para Geração do Relatório →</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ETAPA 11: GERAÇÃO DO RELATÓRIO OFICIAL -->
-            <div class="wizard-step-panel" id="wizard-step-11">
-              <div class="wizard-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
-                  <div>
-                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                      <span>Etapa 11: Geração & Download do Relatório</span>
-                    </h3>
-                    <p class="wizard-card-desc">Pré-visualize o documento institucional e baixe o arquivo editável em Word (.docx) estruturado conforme o padrão de referência.</p>
-                  </div>
-                  <div style="display:flex; gap:0.5rem;">
-                    <button class="btn btn-secondary" onclick="window.print()" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Imprimir / Salvar PDF
-                    </button>
-                  </div>
-                </div>
-
-                <div class="report-doc-preview-wrapper">
-                  <div id="wizard-report-preview-document">
-                    <!-- Pré-visualização do Relatório Oficial -->
-                  </div>
-                </div>
-
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar para Conferência</button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        <!-- ==========================================
-             VIEW: CAPACITAÇÕES (TODAS)
-             ========================================== -->
-        <section class="view-section" id="view-trainings">
-          <div style="margin-bottom: 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-            <div>
-              <h2>Banco de Capacitações</h2>
-              <p style="color:var(--text-secondary); font-size:0.95rem;">Gerencie todas as edições de capacitações cadastradas na plataforma.</p>
-            </div>
-          </div>
-
-          <div id="all-trainings-list-container">
-            <!-- Tabela completa de capacitações -->
-          </div>
-        </section>
-
-        <!-- ==========================================
-             VIEW: BANCO IBGE (5.570 MUNICÍPIOS)
-             ========================================== -->
-        <section class="view-section" id="view-municipalities">
-          <div style="margin-bottom: 1.5rem;">
-            <h2>Catálogo Territorial IBGE (5.570 Municípios)</h2>
-            <p style="color:var(--text-secondary); font-size:0.95rem;">Base de dados oficial do IBGE para auto-preenchimento e validação instantânea.</p>
-          </div>
-
-          <div id="municipalities-bank-list">
-            <!-- Tabela IBGE -->
-          </div>
-        </section>
-
-        <!-- ==========================================
-             SEÇÃO: GERENCIAMENTO DE EQUIPE TÉCNICA (GLOBAL)
-             ========================================== -->
-        <section id="view-team" class="view-section">
-          <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
-            <div>
-              <h2 class="view-title" style="display:flex; align-items:center; gap:0.5rem;">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                <span>Catálogo Geral de Equipe Técnica & Participante</span>
-              </h2>
-              <p class="view-subtitle">Gerencie o cadastro padrão oficial dos integrantes da Universidade Federal de Goiás (UFG) e do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
-            </div>
-            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-              <button type="button" class="btn btn-primary btn-sm" onclick="app.openTeamMemberEditor('master', -1)">+ Adicionar Novo Integrante</button>
-            </div>
-          </div>
-
-          <!-- Sub-abas da Equipe Master -->
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; flex-wrap:wrap; gap:0.75rem;">
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:var(--radius-sm); background:rgba(59, 130, 246, 0.12); color:#60a5fa; border:1px solid rgba(59, 130, 246, 0.25);">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-              </span>
-              <span style="font-size:0.85rem; font-weight:600; color:var(--text-secondary);">Filtrar por Instituição:</span>
-            </div>
-
+            
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
               <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn active" id="master-team-tab-all" onclick="app.setMasterTeamFilter('all')" style="display:inline-flex; align-items:center; gap:0.35rem;">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                 Todos <span class="nav-badge" style="background:rgba(255,255,255,0.1); padding:0.1rem 0.4rem; font-size:0.75rem;" id="master-team-count-all">0</span>
               </button>
               <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn" id="master-team-tab-ufg" onclick="app.setMasterTeamFilter('UFG')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                UFG - Coordenação & Técnica <span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#fbbf24; padding:0.1rem 0.4rem; font-size:0.75rem;" id="master-team-count-ufg">0</span>
+                UFG - Coordenação & Técnica <span class="nav-badge" style="background:var(--accent-amber-bg); color:var(--accent-amber-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="master-team-count-ufg">0</span>
               </button>
               <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn" id="master-team-tab-fnde" onclick="app.setMasterTeamFilter('FNDE')" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                FNDE - Coordenações <span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:#60a5fa; padding:0.1rem 0.4rem; font-size:0.75rem;" id="master-team-count-fnde">0</span>
+                FNDE - Coordenações <span class="nav-badge" style="background:var(--accent-blue-bg); color:var(--accent-blue-text); padding:0.1rem 0.4rem; font-size:0.75rem;" id="master-team-count-fnde">0</span>
               </button>
             </div>
           </div>
@@ -1116,13 +695,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.7.5 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.7.6 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.7.5</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.7.6</span>
         </div>
       </footer>
     </div>
