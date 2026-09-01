@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.9.1
+ * Versão: v.1.9.2
  */
 
 window.icons = {
@@ -423,12 +423,7 @@ class AutoReportApp {
       progressPercent: 0,
       team: (window.getMasterTeam ? window.getMasterTeam() : (window.DEFAULT_OFFICIAL_TEAM || [])).map(m => ({ ...m })),
       municipalities: [],
-      courseModules: [
-        { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, order: 0 },
-        { moduleNumber: '02', topicGestor: 'Conhecendo os programas PNATE e Caminho da Escola', topicCACS: 'Conhecendo os programas PNATE e Caminho da Escola', hoursGestor: 1.5, hoursCACS: 1.5, order: 1 },
-        { moduleNumber: '03', topicGestor: 'Gestão do Transporte Escolar e Software SETE', topicCACS: 'Fiscalização e Controle Social do Transporte Escolar', hoursGestor: 2.0, hoursCACS: 2.0, order: 2 },
-        { moduleNumber: '04', topicGestor: 'Prestação de Contas no SiGPC e Desafios Locais', topicCACS: 'Atuação do CACS-FUNDEB e Análise de Contas', hoursGestor: 3.0, hoursCACS: 3.0, order: 3 }
-      ],
+      courseModules: window.courseStructureHelper ? window.courseStructureHelper.getDefaultCopy() : (window.DEFAULT_COURSE_STRUCTURE || []),
       courseMoments: [],
       attendance: [],
       evaluations: [],
@@ -2607,36 +2602,364 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     ETAPA 4: ESTRUTURA DO CURSO & TABELA 2
+     ETAPA 4: ESTRUTURA DO CURSO & TABELA 2 (MODELO PADRÃO & CÓPIA INDEPENDENTE)
      ========================================================================== */
   renderCourseStructureStep() {
-    const container = document.getElementById('wizard-course-table-preview');
-    if (!container || !this.currentTraining || !window.statsEngine) return;
+    if (!this.currentTraining) return;
+
+    // Garantir normalização da estrutura do curso
+    if (window.courseStructureHelper) {
+      this.currentTraining.courseModules = window.courseStructureHelper.normalize(this.currentTraining.courseModules);
+    }
 
     const mods = this.currentTraining.courseModules || [];
-    container.innerHTML = window.statsEngine.generateTable2Html(mods);
+    const editorContainer = document.getElementById('wizard-course-modules-editor');
+    const tableContainer = document.getElementById('wizard-course-table-preview');
+
+    // 1. Renderizar Editor de Módulos e Temáticas
+    if (editorContainer) {
+      if (mods.length === 0) {
+        editorContainer.innerHTML = `
+          <div style="text-align:center; padding:2.5rem; background:var(--bg-input); border:1px dashed var(--border-color); border-radius:var(--radius-md);">
+            <p style="color:var(--text-secondary); margin-bottom:1rem;">Nenhum módulo configurado para esta capacitação.</p>
+            <button class="btn btn-primary btn-sm" onclick="app.confirmRestoreDefaultCourseStructure()">+ Carregar Modelo Padrão Oficial (4 Módulos)</button>
+          </div>
+        `;
+      } else {
+        editorContainer.innerHTML = mods.map((mod, modIdx) => {
+          const gTopics = mod.gestorTopics || [];
+          const cTopics = mod.cacsTopics || [];
+
+          const gTotalHours = gTopics.reduce((acc, t) => acc + (parseFloat(t.hours) || 0), 0);
+          const cTotalHours = cTopics.reduce((acc, t) => acc + (parseFloat(t.hours) || 0), 0);
+
+          return `
+            <div class="course-mod-card" data-mod-id="${mod.id}">
+              <!-- Cabeçalho do Card do Módulo -->
+              <div class="course-mod-header">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                  <span class="nav-badge badge-blue font-bold" style="font-size:0.9rem; padding:0.25rem 0.65rem;">
+                    Módulo ${mod.moduleNumber || `0${modIdx + 1}`}
+                  </span>
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <label style="font-size:0.78rem; color:var(--text-muted); margin:0;">Identificador:</label>
+                    <input type="text" class="form-control form-control-sm" style="width:70px; text-align:center; font-weight:700;" value="${mod.moduleNumber || `0${modIdx + 1}`}" onchange="app.updateCourseModuleNumber(${modIdx}, this.value)">
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:0.4rem;">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveCourseModule(${modIdx}, -1)" ${modIdx === 0 ? 'disabled' : ''} title="Mover para cima" style="padding:0.2rem 0.5rem;">↑</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveCourseModule(${modIdx}, 1)" ${modIdx === mods.length - 1 ? 'disabled' : ''} title="Mover para baixo" style="padding:0.2rem 0.5rem;">↓</button>
+                  <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Grade Dupla: Gestão Municipal vs Conselheiros CACS -->
+              <div class="course-mod-grid">
+                
+                <!-- Coluna Gestores Municipais -->
+                <div class="course-topic-col">
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+                    <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
+                      🏛️ Gestão Municipal (Gestores)
+                    </strong>
+                    <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
+                      Total: ${gTotalHours.toFixed(1).replace('.', ',')} h
+                    </span>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                    ${gTopics.map((t, tIdx) => `
+                      <div class="course-topic-item">
+                        <input type="text" class="form-control form-control-sm" placeholder="Temática para Gestores" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'topic', this.value)">
+                        <div style="display:flex; align-items:center; gap:0.25rem;">
+                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
+                          <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                      </div>
+                    `).join('')}
+                  </div>
+
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                    + Adicionar Temática Gestor
+                  </button>
+                </div>
+
+                <!-- Coluna Conselheiros CACS-FUNDEB -->
+                <div class="course-topic-col">
+                  <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
+                    <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
+                      👥 Conselheiros CACS-FUNDEB
+                    </strong>
+                    <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
+                      Total: ${cTotalHours.toFixed(1).replace('.', ',')} h
+                    </span>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                    ${cTopics.map((t, tIdx) => `
+                      <div class="course-topic-item">
+                        <input type="text" class="form-control form-control-sm" placeholder="Temática para CACS" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'topic', this.value)">
+                        <div style="display:flex; align-items:center; gap:0.25rem;">
+                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
+                          <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                      </div>
+                    `).join('')}
+                  </div>
+
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                    + Adicionar Temática CACS
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // 2. Renderizar Visualização Oficial da Tabela 2
+    if (tableContainer && window.statsEngine) {
+      tableContainer.innerHTML = window.statsEngine.generateTable2Html(mods);
+    }
   }
 
-  addModulePrompt() {
-    const modNumber = prompt('Número do Módulo (Ex: 05):', `0${(this.currentTraining.courseModules?.length || 0) + 1}`);
-    if (!modNumber) return;
-    const topicGestor = prompt('Temática para Gestores:', '');
-    const topicCACS = prompt('Temática para Conselheiros CACS:', topicGestor);
-    const hours = parseFloat(prompt('Carga Horária (horas):', '2.0') || '2.0');
-
+  addNewCourseModule() {
+    if (!this.currentTraining) return;
     if (!this.currentTraining.courseModules) this.currentTraining.courseModules = [];
+    const nextNum = this.currentTraining.courseModules.length + 1;
+    const numStr = nextNum < 10 ? `0${nextNum}` : `${nextNum}`;
+
     this.currentTraining.courseModules.push({
-      id: `mod_${Date.now()}`,
-      moduleNumber: modNumber,
-      topicGestor,
-      topicCACS,
-      hoursGestor: hours,
-      hoursCACS: hours,
-      order: this.currentTraining.courseModules.length
+      id: `mod_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      moduleNumber: numStr,
+      order: nextNum,
+      gestorTopics: [
+        { id: `top_g_${Date.now()}_1`, topic: 'Nova Temática Gestão Municipal', hours: 2.0 }
+      ],
+      cacsTopics: [
+        { id: `top_c_${Date.now()}_1`, topic: 'Nova Temática Conselheiros CACS', hours: 2.0 }
+      ]
     });
 
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
+    this.showToast(`✓ Módulo ${numStr} adicionado com sucesso!`, 'success');
+  }
+
+  deleteCourseModule(modIdx) {
+    if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    if (confirm('Deseja realmente remover este módulo da capacitação?')) {
+      this.currentTraining.courseModules.splice(modIdx, 1);
+      this.renderCourseStructureStep();
+      this.saveCurrentStepData();
+      this.showToast('Módulo removido da capacitação.', 'info');
+    }
+  }
+
+  moveCourseModule(modIdx, direction) {
+    if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    const targetIdx = modIdx + direction;
+    const mods = this.currentTraining.courseModules;
+    if (targetIdx < 0 || targetIdx >= mods.length) return;
+
+    const temp = mods[modIdx];
+    mods[modIdx] = mods[targetIdx];
+    mods[targetIdx] = temp;
+
+    // Atualizar order
+    mods.forEach((m, idx) => { m.order = idx + 1; });
+
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
+  }
+
+  updateCourseModuleNumber(modIdx, newNumber) {
+    if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    if (this.currentTraining.courseModules[modIdx]) {
+      this.currentTraining.courseModules[modIdx].moduleNumber = (newNumber || '').trim();
+      this.renderCourseStructureStep();
+      this.saveCurrentStepData();
+    }
+  }
+
+  addCourseTopic(modIdx, type) {
+    if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    const mod = this.currentTraining.courseModules[modIdx];
+    if (!mod) return;
+
+    if (type === 'gestor') {
+      if (!mod.gestorTopics) mod.gestorTopics = [];
+      mod.gestorTopics.push({
+        id: `top_g_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        topic: '',
+        hours: 1.0
+      });
+    } else {
+      if (!mod.cacsTopics) mod.cacsTopics = [];
+      mod.cacsTopics.push({
+        id: `top_c_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        topic: '',
+        hours: 1.0
+      });
+    }
+
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
+  }
+
+  removeCourseTopic(modIdx, type, topicIdx) {
+    if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    const mod = this.currentTraining.courseModules[modIdx];
+    if (!mod) return;
+
+    if (type === 'gestor' && mod.gestorTopics) {
+      mod.gestorTopics.splice(topicIdx, 1);
+      if (mod.gestorTopics.length === 0) {
+        mod.gestorTopics.push({ id: `top_g_${Date.now()}`, topic: '', hours: 0 });
+      }
+    } else if (type === 'cacs' && mod.cacsTopics) {
+      mod.cacsTopics.splice(topicIdx, 1);
+      if (mod.cacsTopics.length === 0) {
+        mod.cacsTopics.push({ id: `top_c_${Date.now()}`, topic: '', hours: 0 });
+      }
+    }
+
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
+  }
+
+  updateCourseTopic(modIdx, type, topicIdx, field, value) {
+    if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    const mod = this.currentTraining.courseModules[modIdx];
+    if (!mod) return;
+
+    const list = type === 'gestor' ? mod.gestorTopics : mod.cacsTopics;
+    if (list && list[topicIdx]) {
+      if (field === 'hours') {
+        list[topicIdx].hours = parseFloat(value) || 0;
+      } else {
+        list[topicIdx].topic = value;
+      }
+      this.renderCourseStructureStep();
+      this.saveCurrentStepData();
+    }
+  }
+
+  /* Modais de Restauração de Template & Cópia de Outra Capacitação */
+  openRestoreDefaultCourseModal() {
+    const modal = document.getElementById('modal-restore-course-template');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeRestoreDefaultCourseModal() {
+    const modal = document.getElementById('modal-restore-course-template');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => modal.style.display = 'none', 200);
+    }
+  }
+
+  confirmRestoreDefaultCourseStructure() {
+    if (!this.currentTraining || !window.courseStructureHelper) return;
+
+    // Deep copy do modelo padrão
+    this.currentTraining.courseModules = window.courseStructureHelper.getDefaultCopy();
+    this.renderCourseStructureStep();
+    this.saveCurrentStepData();
+    this.closeRestoreDefaultCourseModal();
+    this.showToast('✓ Modelo padrão oficial restaurado nesta capacitação!', 'success');
+  }
+
+  async openCopyCourseStructureModal() {
+    if (!this.currentTraining || !window.db) return;
+
+    const allTrainings = (await window.db.getAll('trainings')) || [];
+    const otherTrainings = allTrainings.filter(t => t.id !== this.currentTraining.id);
+
+    const select = document.getElementById('copy-course-source-select');
+    const previewContainer = document.getElementById('copy-course-preview-container');
+
+    if (!select || !previewContainer) return;
+
+    if (otherTrainings.length === 0) {
+      select.innerHTML = '<option value="">Nenhuma outra capacitação encontrada no banco</option>';
+      select.disabled = true;
+      previewContainer.innerHTML = '<em style="color:var(--text-muted);">Não há outras capacitações cadastradas para copiar a estrutura. Você pode utilizar o modelo padrão oficial.</em>';
+    } else {
+      select.disabled = false;
+      select.innerHTML = otherTrainings.map(t => `
+        <option value="${t.id}">${t.title || 'Capacitação sem título'} (${t.polo || 'Sem polo'}, ${t.year || '2026'})</option>
+      `).join('');
+
+      this.onCopyCourseSourceChange(otherTrainings[0].id);
+    }
+
+    const modal = document.getElementById('modal-copy-course-structure');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeCopyCourseStructureModal() {
+    const modal = document.getElementById('modal-copy-course-structure');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => modal.style.display = 'none', 200);
+    }
+  }
+
+  async onCopyCourseSourceChange(sourceTrainingId) {
+    const previewContainer = document.getElementById('copy-course-preview-container');
+    if (!previewContainer || !sourceTrainingId || !window.db) return;
+
+    const sourceTraining = await window.db.get('trainings', sourceTrainingId);
+    if (!sourceTraining || !sourceTraining.courseModules || sourceTraining.courseModules.length === 0) {
+      previewContainer.innerHTML = '<em style="color:var(--text-muted);">Esta capacitação não possui módulos de curso cadastrados.</em>';
+      return;
+    }
+
+    const normMods = window.courseStructureHelper ? window.courseStructureHelper.normalize(sourceTraining.courseModules) : sourceTraining.courseModules;
+    previewContainer.innerHTML = `
+      <div style="font-weight:700; color:var(--accent-blue-text); margin-bottom:0.4rem;">
+        Estrutura encontrada (${normMods.length} módulos):
+      </div>
+      <ul style="margin:0; padding-left:1.2rem; color:var(--text-secondary);">
+        ${normMods.map(m => `
+          <li><strong>Módulo ${m.moduleNumber}:</strong> Gestor: ${(m.gestorTopics || []).map(t => `${t.topic} (${t.hours}h)`).join('; ')} | CACS: ${(m.cacsTopics || []).map(t => `${t.topic} (${t.hours}h)`).join('; ')}</li>
+        `).join('')}
+      </ul>
+    `;
+  }
+
+  async confirmCopyCourseStructure() {
+    const select = document.getElementById('copy-course-source-select');
+    if (!select || !select.value || !window.db || !this.currentTraining) return;
+
+    const sourceTraining = await window.db.get('trainings', select.value);
+    if (!sourceTraining || !sourceTraining.courseModules || sourceTraining.courseModules.length === 0) {
+      this.showToast('Capacitação de origem não possui módulos cadastrados.', 'warning');
+      return;
+    }
+
+    // Deep copy independente
+    const rawCopy = JSON.parse(JSON.stringify(sourceTraining.courseModules));
+    this.currentTraining.courseModules = window.courseStructureHelper ? window.courseStructureHelper.normalize(rawCopy) : rawCopy;
+
+    this.renderCourseStructureStep();
+    await window.db.saveTrainingFull(this.currentTraining, `Cópia independente da estrutura do curso de "${sourceTraining.title || sourceTraining.id}"`);
+    this.closeCopyCourseStructureModal();
+    this.showToast(`✓ Estrutura copiada com sucesso de "${sourceTraining.title || 'outra capacitação'}"!`, 'success');
   }
 
   /* ==========================================================================

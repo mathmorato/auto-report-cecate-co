@@ -2323,6 +2323,75 @@ body.light-theme .mun-table-preview-scroll {
   border-color: #cbd5e1;
 }
 
+/* ==========================================================================
+   Editor Hierárquico da Estrutura do Curso (Módulos & Temáticas)
+   ========================================================================== */
+.course-mod-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+}
+
+.course-mod-card:hover {
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+body.light-theme .course-mod-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.course-mod-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.course-mod-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 860px) {
+  .course-mod-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.course-topic-col {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+body.light-theme .course-topic-col {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.course-topic-item {
+  display: grid;
+  grid-template-columns: 1fr 95px 34px;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+
 
 
 

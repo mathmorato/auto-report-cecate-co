@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial em Word (.docx)
- * Versão: v.1.9.1
+ * Versão: v.1.9.2
  */
 
 class ReportDocxGenerator {
@@ -229,25 +229,41 @@ class ReportDocxGenerator {
         new TableRow({
           tableHeader: true,
           children: [
-            new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Módulo', bold: true })] })] }),
-            new TableCell({ width: { size: 35, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Temática Gestor', bold: true })] })] }),
-            new TableCell({ width: { size: 35, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Temática CACS', bold: true })] })] }),
-            new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Carga Horária', bold: true })] })] })
+            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Módulo', bold: true })] })] }),
+            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Temática Gestor', bold: true })] })] }),
+            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Temática CACS', bold: true })] })] }),
+            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Carga Horária', bold: true })] })] })
           ]
         })
       ];
 
-      (training.courseModules || []).forEach(mod => {
-        modRows.push(
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: mod.moduleNumber || '01', bold: true })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: mod.topicGestor || '-' })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: mod.topicCACS || '-' })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${parseFloat(mod.hoursGestor || 0).toFixed(1)} h` })] })] })
-            ]
-          })
-        );
+      const normCourseModules = window.courseStructureHelper ? window.courseStructureHelper.normalize(training.courseModules || []) : (training.courseModules || []);
+      const sortedMods = [...normCourseModules].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      sortedMods.forEach(mod => {
+        const gTopics = Array.isArray(mod.gestorTopics) ? mod.gestorTopics : [];
+        const cTopics = Array.isArray(mod.cacsTopics) ? mod.cacsTopics : [];
+        const maxRows = Math.max(gTopics.length, cTopics.length, 1);
+
+        for (let i = 0; i < maxRows; i++) {
+          const g = gTopics[i] || null;
+          const c = cTopics[i] || null;
+
+          const hText = [];
+          if (g) hText.push(`Gestor: ${parseFloat(g.hours || 0).toFixed(1).replace('.', ',')} h`);
+          if (c) hText.push(`CACS: ${parseFloat(c.hours || 0).toFixed(1).replace('.', ',')} h`);
+
+          modRows.push(
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: i === 0 ? (mod.moduleNumber || '01') : '', bold: true })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: g ? (g.topic || '-') : '' })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: c ? (c.topic || '-') : '' })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: hText.join(' | ') || '-' })] })] })
+              ]
+            })
+          );
+        }
       });
 
       docChildren.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: modRows }));

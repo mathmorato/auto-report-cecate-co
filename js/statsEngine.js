@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Motor Estatístico e Geração de Tabelas Automáticas
- * Versão: v.1.0.2
+ * AutoReport CECATE - Motor Estatístico e Calculador de Métricas Analíticas
+ * Versão: v.1.9.2
  */
 
 class StatsEngine {
@@ -208,29 +208,83 @@ class StatsEngine {
   }
 
   /**
-   * Gera o HTML da Tabela 2: Estrutura do Curso
+  /**
+   * Gera o HTML da Tabela 2: Estrutura do Curso (com suporte a módulos com múltiplas temáticas e rowspans)
    */
   generateTable2Html(modules = []) {
-    const sorted = [...modules].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const normMods = window.courseStructureHelper ? window.courseStructureHelper.normalize(modules) : modules;
+    const sorted = [...normMods].sort((a, b) => (a.order || 0) - (b.order || 0));
+
     let rowsHtml = '';
     let totalHoursGestor = 0;
     let totalHoursCACS = 0;
 
     sorted.forEach(m => {
-      const hG = parseFloat(m.hoursGestor) || 0;
-      const hC = parseFloat(m.hoursCACS) || 0;
-      totalHoursGestor += hG;
-      totalHoursCACS += hC;
+      const gTopics = Array.isArray(m.gestorTopics) ? m.gestorTopics : [];
+      const cTopics = Array.isArray(m.cacsTopics) ? m.cacsTopics : [];
+      const maxRows = Math.max(gTopics.length, cTopics.length, 1);
 
-      rowsHtml += `
-        <tr>
-          <td style="text-align:center; font-weight:700;">${m.moduleNumber || '01'}</td>
-          <td>${m.topicGestor || '-'}</td>
-          <td>${m.topicCACS || '-'}</td>
-          <td style="text-align:center;">${hG.toFixed(1)} h</td>
-          <td style="text-align:center;">${hC.toFixed(1)} h</td>
-        </tr>
-      `;
+      for (let i = 0; i < maxRows; i++) {
+        const g = gTopics[i] || null;
+        const c = cTopics[i] || null;
+
+        rowsHtml += '<tr>';
+
+        // Célula do Módulo (com rowspan se houver múltiplas linhas)
+        if (i === 0) {
+          rowsHtml += `<td ${maxRows > 1 ? `rowspan="${maxRows}"` : ''} style="text-align:center; font-weight:700; vertical-align:middle; background:rgba(255,255,255,0.02);">${m.moduleNumber || '01'}</td>`;
+        }
+
+        // Coluna Temática Gestor
+        if (g) {
+          totalHoursGestor += parseFloat(g.hours) || 0;
+          if (gTopics.length === 1 && maxRows > 1 && i === 0) {
+            rowsHtml += `<td rowspan="${maxRows}" style="vertical-align:middle;">${g.topic || '-'}</td>`;
+          } else if (gTopics.length > 1 || maxRows === 1) {
+            rowsHtml += `<td>${g.topic || '-'}</td>`;
+          }
+        } else if (gTopics.length > 1) {
+          rowsHtml += `<td style="color:var(--text-muted);">-</td>`;
+        }
+
+        // Coluna Temática CACS
+        if (c) {
+          totalHoursCACS += parseFloat(c.hours) || 0;
+          if (cTopics.length === 1 && maxRows > 1 && i === 0) {
+            rowsHtml += `<td rowspan="${maxRows}" style="vertical-align:middle;">${c.topic || '-'}</td>`;
+          } else if (cTopics.length > 1 || maxRows === 1) {
+            rowsHtml += `<td>${c.topic || '-'}</td>`;
+          }
+        } else if (cTopics.length > 1) {
+          rowsHtml += `<td style="color:var(--text-muted);">-</td>`;
+        }
+
+        // Coluna Carga Horária Gestor
+        if (g) {
+          const hG = parseFloat(g.hours) || 0;
+          if (gTopics.length === 1 && maxRows > 1 && i === 0) {
+            rowsHtml += `<td rowspan="${maxRows}" style="text-align:center; vertical-align:middle; font-weight:600;">${hG.toFixed(1).replace('.', ',')} h</td>`;
+          } else if (gTopics.length > 1 || maxRows === 1) {
+            rowsHtml += `<td style="text-align:center; font-weight:600;">${hG.toFixed(1).replace('.', ',')} h</td>`;
+          }
+        } else if (gTopics.length > 1) {
+          rowsHtml += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
+        }
+
+        // Coluna Carga Horária CACS
+        if (c) {
+          const hC = parseFloat(c.hours) || 0;
+          if (cTopics.length === 1 && maxRows > 1 && i === 0) {
+            rowsHtml += `<td rowspan="${maxRows}" style="text-align:center; vertical-align:middle; font-weight:600;">${hC.toFixed(1).replace('.', ',')} h</td>`;
+          } else if (cTopics.length > 1 || maxRows === 1) {
+            rowsHtml += `<td style="text-align:center; font-weight:600;">${hC.toFixed(1).replace('.', ',')} h</td>`;
+          }
+        } else if (cTopics.length > 1) {
+          rowsHtml += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
+        }
+
+        rowsHtml += '</tr>';
+      }
     });
 
     return `
@@ -238,13 +292,13 @@ class StatsEngine {
         <table class="report-data-table">
           <thead>
             <tr>
-              <th rowspan="2" style="width: 80px; text-align:center;">Módulo</th>
+              <th rowspan="2" style="width: 80px; text-align:center; vertical-align:middle;">Módulo</th>
               <th colspan="2" style="text-align:center;">Temática</th>
               <th colspan="2" style="text-align:center;">Carga Horária</th>
             </tr>
             <tr>
-              <th>Gestor</th>
-              <th>CACS</th>
+              <th style="text-align:left;">Gestor</th>
+              <th style="text-align:left;">CACS</th>
               <th style="width: 100px; text-align:center;">Gestor</th>
               <th style="width: 100px; text-align:center;">CACS</th>
             </tr>
@@ -254,9 +308,9 @@ class StatsEngine {
           </tbody>
           <tfoot>
             <tr style="font-weight:700; background:rgba(99, 102, 241, 0.08);">
-              <td colspan="3" style="text-align:right;">Total Carga Horária:</td>
-              <td style="text-align:center;">${totalHoursGestor.toFixed(1)} h</td>
-              <td style="text-align:center;">${totalHoursCACS.toFixed(1)} h</td>
+              <td colspan="3" style="text-align:right;">Total Geral de Carga Horária:</td>
+              <td style="text-align:center; font-weight:800; color:var(--accent-blue-text);">${totalHoursGestor.toFixed(1).replace('.', ',')} h</td>
+              <td style="text-align:center; font-weight:800; color:var(--accent-emerald-text);">${totalHoursCACS.toFixed(1).replace('.', ',')} h</td>
             </tr>
           </tfoot>
         </table>
