@@ -14,6 +14,7 @@ class AutoReportApp {
     this.trainingToDeleteId = null;
     this.theme = localStorage.getItem('autoreport_theme') || 'light';
     this.metrics = null;
+    this.currentTeamFilter = 'all';
   }
 
   /**
@@ -361,7 +362,7 @@ class AutoReportApp {
       locationAddress: '',
       status: 'in_progress',
       progressPercent: 0,
-      team: [],
+      team: (window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m })),
       municipalities: [],
       courseModules: [
         { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, order: 0 },
@@ -603,7 +604,7 @@ class AutoReportApp {
           locationVenue: data.venue || 'Auditório Municipal',
           status: 'in_progress',
           progressPercent: 15,
-          team: [],
+          team: (window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m })),
           municipalities: [],
           courseModules: [
             { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, order: 0 },
@@ -1138,73 +1139,222 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     ETAPA 2: EQUIPE
+     ETAPA 2: EQUIPE PARTICIPANTE (UFG & FNDE)
      ========================================================================== */
+  setTeamFilter(filter) {
+    this.currentTeamFilter = filter;
+    document.querySelectorAll('.team-tab-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById(`team-tab-${filter.toLowerCase()}`);
+    if (activeBtn) activeBtn.classList.add('active');
+    this.renderTeamList();
+  }
+
+  restoreDefaultTeam() {
+    if (!this.currentTraining) return;
+    if (confirm('Deseja restaurar a Equipe Padrão Oficial do CECATE/UFG e FNDE? Todas as alterações manuais nesta capacitação serão redefinidas para o padrão.')) {
+      this.currentTraining.team = (window.DEFAULT_OFFICIAL_TEAM || []).map(m => ({ ...m }));
+      this.renderTeamList();
+      this.saveCurrentStepData();
+      this.showToast('🔄 Equipe padrão oficial CECATE (UFG) e FNDE restaurada com sucesso!', 'success');
+    }
+  }
+
   renderTeamList() {
     const container = document.getElementById('wizard-team-list-container');
     if (!container || !this.currentTraining) return;
 
-    const team = this.currentTraining.team || [];
-    if (team.length === 0) {
-      container.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem;">Nenhum integrante cadastrado na equipe. Clique abaixo para adicionar.</p>`;
+    if (!this.currentTraining.team || this.currentTraining.team.length === 0) {
+      if (window.DEFAULT_OFFICIAL_TEAM && window.DEFAULT_OFFICIAL_TEAM.length > 0) {
+        this.currentTraining.team = window.DEFAULT_OFFICIAL_TEAM.map(m => ({ ...m }));
+      } else {
+        this.currentTraining.team = [];
+      }
+    }
+
+    const team = this.currentTraining.team;
+
+    // Atualizar contadores das sub-abas
+    const ufgCount = team.filter(m => (m.institutionGroup === 'UFG' || m.institution === 'UFG' || m.type === 'coordenacao' || m.type === 'tecnica')).length;
+    const fndeCount = team.filter(m => (m.institutionGroup === 'FNDE' || m.institution === 'FNDE' || m.type === 'fnde')).length;
+
+    const countAllEl = document.getElementById('team-count-all');
+    const countUfgEl = document.getElementById('team-count-ufg');
+    const countFndeEl = document.getElementById('team-count-fnde');
+
+    if (countAllEl) countAllEl.textContent = team.length;
+    if (countUfgEl) countUfgEl.textContent = ufgCount;
+    if (countFndeEl) countFndeEl.textContent = fndeCount;
+
+    // Filtrar membros conforme a aba ativa
+    let displayList = team.map((m, originalIndex) => ({ ...m, originalIndex }));
+    if (this.currentTeamFilter === 'UFG') {
+      displayList = displayList.filter(m => (m.institutionGroup === 'UFG' || m.institution === 'UFG' || m.type === 'coordenacao' || m.type === 'tecnica'));
+    } else if (this.currentTeamFilter === 'FNDE') {
+      displayList = displayList.filter(m => (m.institutionGroup === 'FNDE' || m.institution === 'FNDE' || m.type === 'fnde'));
+    }
+
+    if (displayList.length === 0) {
+      container.innerHTML = `
+        <div style="padding:2rem; text-align:center; color:var(--text-muted); background:var(--bg-input); border-radius:var(--radius-md);">
+          Nenhum integrante nesta categoria. Clique em <strong>+ Adicionar Integrante</strong> acima para cadastrar.
+        </div>
+      `;
       return;
     }
+
+    const titleOptions = window.OFFICIAL_TITLE_PREFIXES || [
+      { value: 'Prof. Dr.', label: 'Prof. Dr. (Professor Doutor)' },
+      { value: 'Prof.ª Dra.', label: 'Prof.ª Dra. (Professora Doutora)' },
+      { value: 'Eng. M.Sc.', label: 'Eng. M.Sc. (Engenheiro Mestre)' },
+      { value: 'Eng. Dr.', label: 'Eng. Dr. (Engenheiro Doutor)' },
+      { value: 'Eng.ª M.Sc.', label: 'Eng.ª M.Sc. (Engenheira Mestre)' },
+      { value: 'Eng.ª Dra.', label: 'Eng.ª Dra. (Engenheira Doutora)' },
+      { value: 'Dr.', label: 'Dr. (Doutor)' },
+      { value: 'Dra.', label: 'Dra. (Doutora)' },
+      { value: 'M.Sc.', label: 'M.Sc. (Mestre)' },
+      { value: 'Esp.', label: 'Esp. (Especialista)' },
+      { value: 'Eng.', label: 'Eng. (Engenheiro/a)' },
+      { value: 'Prof.', label: 'Prof. (Professor)' },
+      { value: 'Prof.ª', label: 'Prof.ª (Professora)' },
+      { value: 'Pesquisadora Visitante Dra.', label: 'Pesquisadora Visitante Dra.' },
+      { value: 'Pesquisador Visitante', label: 'Pesquisador Visitante' },
+      { value: 'Sr.', label: 'Sr. (Senhor)' },
+      { value: 'Sra.', label: 'Sra. (Senhora)' },
+      { value: '', label: '(Sem titulação)' }
+    ];
+
+    const roleOptionsUFG = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'UFG');
+    const roleOptionsFNDE = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'FNDE');
 
     container.innerHTML = `
       <div class="table-responsive-wrapper">
         <table class="report-data-table">
           <thead>
             <tr>
-              <th>Nome</th>
-              <th>Instituição</th>
-              <th>Função / Cargo</th>
-              <th>Tipo</th>
-              <th style="width:100px; text-align:center;">Ações</th>
+              <th style="width:210px;">Titulação / Pronome</th>
+              <th style="min-width:230px;">Nome do Integrante</th>
+              <th style="width:110px;">Instituição</th>
+              <th style="min-width:320px;">Cargo / Função Oficial</th>
+              <th style="width:70px; text-align:center;">Ações</th>
             </tr>
           </thead>
           <tbody>
-            ${team.map((m, idx) => `
-              <tr>
-                <td><strong>${m.name}</strong></td>
-                <td>${m.institution || 'UFG'}</td>
-                <td>${m.role || 'Instrutor'}</td>
-                <td><span class="nav-badge" style="background:rgba(99, 102, 241, 0.15); color:#818cf8;">${m.type === 'coordenacao' ? 'Coordenação' : (m.type === 'fnde' ? 'FNDE' : 'Técnica')}</span></td>
-                <td style="text-align:center;">
-                  <button class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" title="Excluir">✕</button>
-                </td>
-              </tr>
-            `).join('')}
+            ${displayList.map(item => {
+              const idx = item.originalIndex;
+              const isFnde = item.institutionGroup === 'FNDE' || item.institution === 'FNDE' || item.type === 'fnde';
+
+              return `
+                <tr>
+                  <td>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateTeamMemberField(${idx}, 'titlePrefix', this.value)">
+                      ${titleOptions.map(t => `
+                        <option value="${t.value}" ${item.titlePrefix === t.value ? 'selected' : ''}>${t.label}</option>
+                      `).join('')}
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" style="font-size:0.83rem; font-weight:700;" value="${item.name || ''}" placeholder="Nome do integrante" onchange="app.updateTeamMemberField(${idx}, 'name', this.value)">
+                  </td>
+                  <td>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:700; color:var(--accent-secondary);" onchange="app.updateTeamMemberField(${idx}, 'institution', this.value)">
+                      <option value="UFG" ${item.institution === 'UFG' ? 'selected' : ''}>UFG</option>
+                      <option value="FNDE" ${item.institution === 'FNDE' ? 'selected' : ''}>FNDE</option>
+                      <option value="MEC" ${item.institution === 'MEC' ? 'selected' : ''}>MEC</option>
+                      <option value="Outro" ${item.institution !== 'UFG' && item.institution !== 'FNDE' && item.institution !== 'MEC' ? 'selected' : ''}>Outro</option>
+                    </select>
+                  </td>
+                  <td>
+                    <select class="form-control form-control-sm" style="font-size:0.8rem;" onchange="app.updateTeamMemberField(${idx}, 'role', this.value)">
+                      <optgroup label="Universidade Federal de Goiás - UFG">
+                        ${roleOptionsUFG.map(r => `
+                          <option value="${r.value}" ${item.role === r.value ? 'selected' : ''}>${r.value}</option>
+                        `).join('')}
+                      </optgroup>
+                      <optgroup label="Fundo Nacional de Desenvolvimento da Educação - FNDE">
+                        ${roleOptionsFNDE.map(r => `
+                          <option value="${r.value}" ${item.role === r.value ? 'selected' : ''}>${r.value}</option>
+                        `).join('')}
+                      </optgroup>
+                      ${!roleOptionsUFG.some(r => r.value === item.role) && !roleOptionsFNDE.some(r => r.value === item.role) ? `
+                        <option value="${item.role}" selected>${item.role}</option>
+                      ` : ''}
+                    </select>
+                  </td>
+                  <td style="text-align:center;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25);" title="Excluir este integrante">✕</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
           </tbody>
         </table>
       </div>
     `;
   }
 
-  addTeamMemberPrompt() {
-    const name = prompt('Nome do Integrante da Equipe:');
-    if (!name) return;
-    const role = prompt('Função / Cargo:', 'Pesquisador e Equipe Técnica');
-    const institution = prompt('Instituição:', 'UFG');
+  updateTeamMemberField(index, field, value) {
+    if (!this.currentTraining?.team?.[index]) return;
+    const member = this.currentTraining.team[index];
+    member[field] = value;
 
+    if (field === 'titlePrefix' || field === 'name') {
+      member.fullName = `${member.titlePrefix ? member.titlePrefix + ' ' : ''}${member.name}`.trim();
+    }
+
+    if (field === 'institution') {
+      member.institutionGroup = value;
+      if (value === 'FNDE') member.type = 'fnde';
+      else if (member.role?.includes('Coordenador do Projeto')) member.type = 'coordenacao';
+      else member.type = 'tecnica';
+    }
+
+    if (field === 'role') {
+      if (value.includes('CGPTE') || value.includes('CMATE') || value.includes('COATE') || value.includes('COACE') || value.includes('FNDE')) {
+        member.institution = 'FNDE';
+        member.institutionGroup = 'FNDE';
+        member.type = 'fnde';
+      }
+    }
+
+    this.saveCurrentStepData();
+  }
+
+  addTeamMemberPrompt() {
+    if (!this.currentTraining) return;
     if (!this.currentTraining.team) this.currentTraining.team = [];
+
+    const name = prompt('Nome do Novo Integrante:');
+    if (!name || !name.trim()) return;
+
+    const prefix = prompt('Pronome de Tratamento / Titulação (Ex: Prof. Dr., Eng. M.Sc., Dra., ou deixe vazio):', 'Prof. Dr.') || '';
+    const role = prompt('Cargo / Função:', 'Pesquisador e Equipe Técnica') || 'Equipe Técnica';
+    const isFnde = role.includes('FNDE') || role.includes('CGPTE') || role.includes('CMATE') || role.includes('COATE') || role.includes('COACE');
+    const institution = isFnde ? 'FNDE' : 'UFG';
+
     this.currentTraining.team.push({
-      id: `team_${Date.now()}`,
-      name,
-      role: role || 'Instrutor',
-      institution: institution || 'UFG',
-      type: 'tecnica',
+      id: `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      institutionGroup: institution,
+      titlePrefix: prefix.trim(),
+      name: name.trim(),
+      fullName: `${prefix.trim() ? prefix.trim() + ' ' : ''}${name.trim()}`,
+      role: role.trim(),
+      institution: institution,
+      type: isFnde ? 'fnde' : (role.includes('Coordenador do Projeto') ? 'coordenacao' : 'tecnica'),
       order: this.currentTraining.team.length
     });
 
     this.renderTeamList();
     this.saveCurrentStepData();
+    this.showToast(`👤 ${prefix ? prefix + ' ' : ''}${name.trim()} adicionado à equipe!`, 'success');
   }
 
   removeTeamMember(index) {
+    if (!this.currentTraining?.team?.[index]) return;
+    const removedName = this.currentTraining.team[index].name;
     this.currentTraining.team.splice(index, 1);
     this.renderTeamList();
     this.saveCurrentStepData();
-    this.showToast('Integrante removido da equipe.');
+    this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
   }
 
   /* ==========================================================================

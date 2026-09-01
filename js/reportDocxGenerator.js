@@ -132,10 +132,11 @@ class ReportDocxGenerator {
       ];
 
       team.forEach(tm => {
+        const displayName = tm.fullName || (tm.titlePrefix ? `${tm.titlePrefix} ${tm.name}` : tm.name) || '';
         teamRows.push(
           new TableRow({
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: tm.name || '', bold: true })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: displayName, bold: true })] })] }),
               new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: tm.institution || 'UFG' })] })] }),
               new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: tm.role || 'Equipe Técnica' })] })] })
             ]
