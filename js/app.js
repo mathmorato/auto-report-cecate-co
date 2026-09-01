@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.4.5
+ * Versão: v.1.4.6
  */
 
 class AutoReportApp {
@@ -1282,12 +1282,10 @@ class AutoReportApp {
   removeTeamMember(index) {
     if (!this.currentTraining?.team?.[index]) return;
     const removedName = this.currentTraining.team[index].name;
-    if (confirm(`Deseja realmente remover o integrante "${removedName}" da equipe desta capacitação?`)) {
-      this.currentTraining.team.splice(index, 1);
-      this.renderTeamList();
-      this.saveCurrentStepData();
-      this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
-    }
+    this.currentTraining.team.splice(index, 1);
+    this.renderTeamList();
+    this.saveCurrentStepData();
+    this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
   }
 
   /* ==========================================================================
@@ -1404,12 +1402,10 @@ class AutoReportApp {
     if (!masterTeam[index]) return;
     const removedName = masterTeam[index].name;
 
-    if (confirm(`Deseja realmente remover o integrante "${removedName}" do catálogo geral de equipe?`)) {
-      masterTeam.splice(index, 1);
-      window.saveMasterTeam(masterTeam);
-      this.renderMasterTeamManagement();
-      this.showToast(`🗑️ Integrante ${removedName} removido do catálogo geral.`);
-    }
+    masterTeam.splice(index, 1);
+    window.saveMasterTeam(masterTeam);
+    this.renderMasterTeamManagement();
+    this.showToast(`🗑️ Integrante ${removedName} removido do catálogo geral.`);
   }
 
   /* ==========================================================================
