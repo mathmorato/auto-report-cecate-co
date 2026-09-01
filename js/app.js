@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.6.7
+ * Versão: v.1.6.8
  */
 
 window.icons = {
@@ -748,7 +748,7 @@ class AutoReportApp {
       if (!workload) missing.push('Carga Horária');
 
       if (missing.length > 0) {
-        this.showToast(`⚠️ Preencha os campos obrigatórios (*) para avançar: ${missing.join(', ')}.`, 'warning');
+        this.showToast(`Por favor, preencha os campos obrigatórios (*) para avançar: ${missing.join(', ')}.`, 'warning');
         
         if (!num) { const el = document.getElementById('wiz-train-number'); if (el) el.focus(); }
         else if (!title) { const el = document.getElementById('wiz-train-title'); if (el) el.focus(); }
@@ -765,14 +765,14 @@ class AutoReportApp {
 
     if (stepNumber === 2) {
       if (!t.team || t.team.length === 0) {
-        this.showToast('⚠️ Adicione pelo menos um integrante à Equipe Participante na Etapa 2 antes de avançar.', 'warning');
+        this.showToast('Adicione pelo menos um integrante à Equipe Participante na Etapa 2 antes de avançar.', 'warning');
         return false;
       }
     }
 
     if (stepNumber === 3) {
       if (!t.municipalities || t.municipalities.length === 0) {
-        this.showToast('⚠️ Cadastre pelo menos um Município Convocado na Etapa 3 antes de avançar.', 'warning');
+        this.showToast('Cadastre pelo menos um Município Convocado na Etapa 3 antes de avançar.', 'warning');
         return false;
       }
     }
@@ -1648,19 +1648,19 @@ class AutoReportApp {
     }
 
     if (!name) {
-      this.showToast('⚠️ Por favor, informe o Nome do integrante.', 'warning');
+      this.showToast('Por favor, informe o Nome do integrante.', 'warning');
       document.getElementById(`${context}-team-name-input`)?.focus();
       return;
     }
 
     if (!institution) {
-      this.showToast('⚠️ Por favor, selecione a Instituição do integrante.', 'warning');
+      this.showToast('Por favor, selecione a Instituição do integrante.', 'warning');
       document.getElementById(`${context}-team-institution-select`)?.focus();
       return;
     }
 
     if (!role) {
-      this.showToast('⚠️ Por favor, selecione o Cargo / Função do integrante.', 'warning');
+      this.showToast('Por favor, selecione o Cargo / Função do integrante.', 'warning');
       document.getElementById(`${context}-team-role-select`)?.focus();
       return;
     }
@@ -2983,13 +2983,43 @@ class AutoReportApp {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
+    // Sanitizar mensagem removendo emojis legados do início
+    let cleanMessage = String(message || '')
+      .replace(/^[\s\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2612}\u{2713}\u{2714}\u{26A0}\u{FE0F}✓⚠️⚡✨💾🔄🛡️👤📍🗑️]+/gu, '')
+      .trim();
+    if (!cleanMessage) cleanMessage = message;
+
+    // Detectar automaticamente o tipo de notificação se não especificado
+    if (type === 'info') {
+      const msgLower = message.toLowerCase();
+      if (message.includes('⚠️') || msgLower.includes('por favor') || msgLower.includes('atenção') || msgLower.includes('preencha') || msgLower.includes('obrigatório')) {
+        type = 'warning';
+      } else if (message.includes('✓') || message.includes('✨') || message.includes('💾') || msgLower.includes('sucesso')) {
+        type = 'success';
+      } else if (msgLower.includes('erro') || msgLower.includes('falha')) {
+        type = 'error';
+      }
+    }
+
+    const toastIcons = {
+      warning: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:8px; color:#f59e0b; flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+      success: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:8px; color:#10b981; flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+      error: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:8px; color:#ef4444; flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`,
+      info: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:8px; color:#60a5fa; flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
+    };
+
     const toast = document.createElement('div');
     toast.className = 'toast';
-    if (type === 'success') toast.style.borderLeft = '4px solid var(--accent-success)';
-    if (type === 'error') toast.style.borderLeft = '4px solid var(--accent-danger)';
-    if (type === 'warning') toast.style.borderLeft = '4px solid var(--accent-warning)';
+    toast.style.display = 'flex';
+    toast.style.alignItems = 'center';
 
-    toast.innerHTML = message;
+    if (type === 'success') toast.style.borderLeft = '4px solid var(--accent-success)';
+    else if (type === 'error') toast.style.borderLeft = '4px solid var(--accent-danger)';
+    else if (type === 'warning') toast.style.borderLeft = '4px solid var(--accent-warning)';
+    else toast.style.borderLeft = '4px solid var(--accent-secondary)';
+
+    const iconSvg = toastIcons[type] || toastIcons.info;
+    toast.innerHTML = `${iconSvg}<span style="line-height:1.4;">${cleanMessage}</span>`;
     container.appendChild(toast);
 
     setTimeout(() => {
