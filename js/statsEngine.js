@@ -170,15 +170,20 @@ class StatsEngine {
    * Gera o HTML da Tabela 1: Municípios Convocados
    */
   generateTable1Html(municipalities = []) {
-    const sorted = [...municipalities].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    const sorted = [...municipalities].sort((a, b) => {
+      if (a.isSede && !b.isSede) return -1;
+      if (!a.isSede && b.isSede) return 1;
+      return (a.name || '').localeCompare(b.name || '');
+    });
     let rowsHtml = '';
 
     sorted.forEach((m, idx) => {
       rowsHtml += `
         <tr>
-          <td style="text-align:center; font-family:monospace;">${m.ibgeCode || '-'}</td>
-          <td><strong>${m.name}</strong> (${m.uf || 'MT'})</td>
-          <td style="text-align:right;">${parseFloat(m.distanceKm || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km</td>
+          <td style="text-align:center; font-family:monospace; font-weight:700;">${m.ibgeCode || '-'}</td>
+          <td><strong>${m.name}</strong> ${m.isSede ? '<span class="nav-badge badge-amber" style="font-size:0.7rem; padding:0.1rem 0.4rem;">Sede</span>' : ''}</td>
+          <td style="text-align:center;"><span class="nav-badge badge-blue" style="font-size:0.75rem; padding:0.1rem 0.45rem;">${m.uf || 'GO'}</span></td>
+          <td style="text-align:right; font-family:monospace; font-weight:700;">${m.isSede ? '0,0 km' : `${parseFloat(m.distanceKm || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`}</td>
         </tr>
       `;
     });
@@ -190,11 +195,12 @@ class StatsEngine {
             <tr>
               <th style="width: 140px; text-align:center;">Código IBGE</th>
               <th>Nome do Município</th>
+              <th style="width: 80px; text-align:center;">UF</th>
               <th style="width: 160px; text-align:right;">Distância (km)</th>
             </tr>
           </thead>
           <tbody>
-            ${rowsHtml || '<tr><td colspan="3" style="text-align:center;">Nenhum município cadastrado.</td></tr>'}
+            ${rowsHtml || '<tr><td colspan="4" style="text-align:center;">Nenhum município cadastrado.</td></tr>'}
           </tbody>
         </table>
       </div>

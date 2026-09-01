@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.8.2
+ * Versão: v.1.8.3
  */
 
 window.icons = {
@@ -1746,26 +1746,84 @@ class AutoReportApp {
   /* ==========================================================================
      ETAPA 3: MUNICÍPIOS & TABELA 1
      ========================================================================== */
+  ensurePoloInMunicipalities() {
+    if (!this.currentTraining || !this.currentTraining.polo) return;
+    const poloName = (this.currentTraining.polo || '').trim();
+    if (!poloName) return;
+    const poloUf = this.currentTraining.uf || 'GO';
+    const poloIbge = this.currentTraining.poloIbge || '';
+
+    if (!this.currentTraining.municipalities) {
+      this.currentTraining.municipalities = [];
+    }
+
+    const muns = this.currentTraining.municipalities;
+
+    // Verificar se o município polo/sede já está na lista
+    let poloMun = muns.find(m => 
+      (m.name && m.name.toLowerCase() === poloName.toLowerCase() && (m.uf || poloUf).toUpperCase() === poloUf.toUpperCase()) ||
+      (poloIbge && String(m.ibgeCode) === String(poloIbge)) ||
+      m.isSede === true
+    );
+
+    if (!poloMun) {
+      // Buscar código IBGE do polo se estiver vazio
+      let finalIbge = poloIbge;
+      if (!finalIbge && window.IBGE_DATA) {
+        const found = window.IBGE_DATA.find(m => m.u === poloUf && m.n.toLowerCase() === poloName.toLowerCase());
+        if (found) finalIbge = found.c;
+      }
+
+      poloMun = {
+        id: `mun_sede_${Date.now()}`,
+        ibgeCode: String(finalIbge || ''),
+        name: poloName,
+        uf: poloUf,
+        distanceKm: 0.0,
+        isSummoned: true,
+        isSede: true,
+        inscribedCACS: 2,
+        inscribedGestores: 2,
+        inscribedTotal: 4,
+        presentCACS: 0,
+        presentGestores: 0,
+        presentTotal: 0
+      };
+      // Insere o município polo no início da lista
+      muns.unshift(poloMun);
+    } else {
+      poloMun.isSede = true;
+      poloMun.distanceKm = 0.0;
+      if (poloIbge && !poloMun.ibgeCode) poloMun.ibgeCode = String(poloIbge);
+    }
+  }
+
   renderMunicipalitiesStep() {
     const container = document.getElementById('wizard-municipalities-table-preview');
     if (!container || !this.currentTraining) return;
 
+    // Sempre incluir automaticamente o município sede/polo na lista e na contagem
+    this.ensurePoloInMunicipalities();
+
     const muns = this.currentTraining.municipalities || [];
     const poloName = this.currentTraining.polo || 'Polo';
-    const poloUf = this.currentTraining.uf || 'MT';
+    const poloUf = this.currentTraining.uf || 'GO';
 
-    // Recalcular Previsão de Participantes (4 × quantidade de municípios convocados)
+    // Recalcular Previsão de Participantes (4 × quantidade total de municípios, incluindo a sede)
     const autoExpected = muns.length * 4;
-    if (autoExpected > 0 || !this.currentTraining.expectedParticipants) {
-      this.currentTraining.expectedParticipants = autoExpected;
-    }
+    this.currentTraining.expectedParticipants = autoExpected;
 
     const countEl = document.getElementById('wiz-muns-total-count');
     if (countEl) countEl.textContent = `${muns.length} Municípios Cadastrados`;
 
     const expectedInput = document.getElementById('wiz-train-expected');
     if (expectedInput) {
-      expectedInput.value = this.currentTraining.expectedParticipants || (muns.length * 4) || '';
+      expectedInput.value = autoExpected || '';
+    }
+
+    const calcDesc = document.getElementById('wiz-participants-calc-desc');
+    if (calcDesc) {
+      calcDesc.innerHTML = `Calculado automaticamente: <strong>4 participantes × ${muns.length} municípios</strong> (incluindo o município sede/polo <em>${poloName}</em>) = <strong>${autoExpected} participantes previstos</strong>.`;
     }
 
     if (muns.length === 0) {
@@ -1782,7 +1840,12 @@ class AutoReportApp {
       return;
     }
 
-    const sorted = [...muns].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    // Ordenar municípios: Município Polo/Sede primeiro, seguido dos demais em ordem alfabética
+    const sorted = [...muns].sort((a, b) => {
+      if (a.isSede && !b.isSede) return -1;
+      if (!a.isSede && b.isSede) return 1;
+      return (a.name || '').localeCompare(b.name || '');
+    });
 
     let rowsHtml = sorted.map((m, idx) => {
       const realIndex = muns.findIndex(item => item.id === m.id || (item.ibgeCode === m.ibgeCode && item.name === m.name));
@@ -1796,18 +1859,24 @@ class AutoReportApp {
           <td>
             <div style="display:flex; gap:0.5rem; align-items:center;">
               <strong style="color:var(--text-primary); font-size:0.92rem;">${m.name || ''}</strong>
-              <span class="nav-badge badge-blue" style="font-size:0.72rem; padding:0.1rem 0.4rem;">${m.uf || poloUf}</span>
+              ${m.isSede ? '<span class="nav-badge badge-amber" style="font-size:0.7rem; padding:0.1rem 0.45rem; font-weight:700;">Sede / Polo</span>' : ''}
             </div>
           </td>
+          <td style="text-align:center;">
+            <span class="nav-badge badge-blue font-bold" style="font-size:0.75rem; padding:0.15rem 0.5rem;">${m.uf || poloUf}</span>
+          </td>
           <td style="text-align:right;">
-            <span class="font-mono" style="font-weight:700; color:var(--accent-emerald-text); font-size:0.95rem;">
-              ${parseFloat(m.distanceKm || 0).toFixed(1).replace('.', ',')} km
+            <span class="font-mono" style="font-weight:700; color:${m.isSede ? 'var(--accent-amber-text)' : 'var(--accent-emerald-text)'}; font-size:0.95rem;">
+              ${m.isSede ? '0,0 km' : `${parseFloat(m.distanceKm || 0).toFixed(1).replace('.', ',')} km`}
             </span>
           </td>
           <td style="text-align:center; white-space:nowrap;">
             <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
               <button type="button" class="btn btn-secondary btn-sm btn-action-edit" onclick="app.openMunicipalityInPageEditor(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar dados do município">${window.icons.edit} Editar</button>
-              <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMunicipality(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir município">${window.icons.delete} Excluir</button>
+              ${m.isSede 
+                ? `<span style="font-size:0.75rem; color:var(--text-muted); padding:0.25rem 0.4rem;" title="Município Polo / Sede (Não removível)">🏛️ Sede</span>`
+                : `<button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMunicipality(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir município">${window.icons.delete} Excluir</button>`
+              }
             </div>
           </td>
         </tr>
@@ -1821,6 +1890,7 @@ class AutoReportApp {
             <tr>
               <th style="width: 140px; text-align:center;">Código IBGE</th>
               <th>Nome do Município</th>
+              <th style="width: 80px; text-align:center;">UF</th>
               <th style="width: 160px; text-align:right;">Distância (km)</th>
               <th style="width: 140px; text-align:center;">Ações</th>
             </tr>
@@ -1836,7 +1906,7 @@ class AutoReportApp {
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg> Recalcular Distâncias pelo Polo (${poloName})
         </button>
         <div style="font-size:0.82rem; color:var(--text-secondary);">
-          Total de <strong>${muns.length}</strong> município(s) cadastrado(s) na Tabela 1.
+          Total de <strong>${muns.length}</strong> município(s) cadastrado(s) na Tabela 1 (incluindo o Polo <em>${poloName}</em>).
         </div>
       </div>
     `;
