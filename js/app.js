@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.5.6
+ * Versão: v.1.5.7
  */
 
 window.icons = {
@@ -50,7 +50,10 @@ class AutoReportApp {
     // 2. Aplicar Tema
     this.applyTheme(this.theme);
 
-    // 3. Vincular Eventos Globais
+    // 3. Inicializar Configurações Globais
+    this.initGlobalSettings();
+
+    // 4. Vincular Eventos Globais
     this.bindEvents();
 
     // 4. Carregar lista de capacitações e atualizar Dashboard
@@ -352,25 +355,30 @@ class AutoReportApp {
   }
 
   async createNewTrainingBlank() {
-    const nextNumber = this.trainingList.length > 0 ? Math.max(...this.trainingList.map(t => parseInt(t.number) || 0)) + 1 : 15;
     const newId = `cap_${Date.now()}`;
+
+    const defaultOrg = localStorage.getItem('autoreport_setting_org') || 'CECATE Centro-Oeste / UFG';
+    const defaultFunding = localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
+    const defaultProject = localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
+    const defaultProcess = localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00';
 
     const newTraining = {
       id: newId,
-      number: nextNumber,
-      title: '',
+      number: '',
+      title: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
       polo: '',
       uf: '',
+      poloIbge: '',
       startDate: '',
       endDate: '',
       datesFormatted: '',
       workload: '',
       targetAudience: '',
       expectedParticipants: '',
-      responsibleOrg: '',
-      relatedProject: '',
-      processNumber: '',
-      fundingOrg: '',
+      responsibleOrg: defaultOrg,
+      relatedProject: defaultProject,
+      processNumber: defaultProcess,
+      fundingOrg: defaultFunding,
       partnerOrgs: '',
       locationVenue: '',
       locationAddress: '',
@@ -838,10 +846,14 @@ class AutoReportApp {
     this.setVal('wiz-train-target', t.targetAudience || '');
     this.setVal('wiz-train-expected', t.expectedParticipants || '');
     this.setVal('wiz-train-venue', t.locationVenue || '');
-    this.setVal('wiz-train-org', t.responsibleOrg || '');
-    this.setVal('wiz-train-project', t.relatedProject || '');
-    this.setVal('wiz-train-process', t.processNumber || '');
-    this.setVal('wiz-train-funding', t.fundingOrg || '');
+    this.setVal('wiz-train-address', t.locationAddress || '');
+    this.setVal('wiz-train-org', t.responsibleOrg || localStorage.getItem('autoreport_setting_org') || 'CECATE Centro-Oeste / UFG');
+
+    const defaultProj = localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
+    const defaultProc = localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00';
+    this.setVal('wiz-train-project', t.relatedProject || defaultProj);
+    this.setVal('wiz-train-process', t.processNumber || defaultProc);
+    this.setVal('wiz-train-funding', t.fundingOrg || localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE');
     this.setVal('wiz-train-partners', t.partnerOrgs || '');
 
     // Exibir card do arquivo de convocação anexado em Etapa 1 (se existir)
@@ -912,10 +924,11 @@ class AutoReportApp {
     t.targetAudience = this.getVal('wiz-train-target');
     t.expectedParticipants = parseInt(this.getVal('wiz-train-expected')) || '';
     t.locationVenue = this.getVal('wiz-train-venue');
-    t.responsibleOrg = this.getVal('wiz-train-org');
-    t.relatedProject = this.getVal('wiz-train-project');
-    t.processNumber = this.getVal('wiz-train-process');
-    t.fundingOrg = this.getVal('wiz-train-funding');
+    t.locationAddress = this.getVal('wiz-train-address');
+    t.responsibleOrg = this.getVal('wiz-train-org') || localStorage.getItem('autoreport_setting_org') || 'CECATE Centro-Oeste / UFG';
+    t.relatedProject = this.getVal('wiz-train-project') || localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
+    t.processNumber = this.getVal('wiz-train-process') || localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00';
+    t.fundingOrg = this.getVal('wiz-train-funding') || localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
     t.partnerOrgs = this.getVal('wiz-train-partners');
 
     // Sincronizar dados da Etapa 5
@@ -2785,6 +2798,40 @@ class AutoReportApp {
   getVal(id) {
     const el = document.getElementById(id);
     return el ? el.value.trim() : '';
+  }
+
+  initGlobalSettings() {
+    const org = localStorage.getItem('autoreport_setting_org') || 'CECATE Centro-Oeste / UFG';
+    const funding = localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
+    const proj = localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
+    const process = localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00';
+
+    this.setVal('setting-org-name', org);
+    this.setVal('setting-funding-name', funding);
+    this.setVal('setting-proj-name', proj);
+    this.setVal('setting-process-name', process);
+  }
+
+  saveGlobalSettings() {
+    const org = this.getVal('setting-org-name') || 'CECATE Centro-Oeste / UFG';
+    const funding = this.getVal('setting-funding-name') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
+    const proj = this.getVal('setting-proj-name') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
+    const process = this.getVal('setting-process-name') || '23070.012345/2026-00';
+
+    localStorage.setItem('autoreport_setting_org', org);
+    localStorage.setItem('autoreport_setting_funding', funding);
+    localStorage.setItem('autoreport_setting_proj', proj);
+    localStorage.setItem('autoreport_setting_process', process);
+
+    if (this.currentTraining) {
+      this.currentTraining.responsibleOrg = org;
+      this.currentTraining.fundingOrg = funding;
+      this.currentTraining.relatedProject = proj;
+      this.currentTraining.processNumber = process;
+      this.populateAllWizardForms();
+    }
+
+    this.showToast('✓ Configurações salvas com sucesso!', 'success');
   }
 
   fileToDataUrl(file) {
