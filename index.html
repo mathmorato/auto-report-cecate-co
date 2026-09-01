@@ -261,27 +261,43 @@
                 <p class="wizard-card-desc">Informe os dados institucionais, polo territorial, datas e informações administrativas do evento.</p>
 
                 <!-- Banner de Preenchimento Automático via Convocação PDF -->
-                <div style="background:rgba(99, 102, 241, 0.06); border:1px dashed var(--accent-secondary); border-radius:var(--radius-md); padding:0.85rem 1.1rem; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem;">
-                  <div style="display:flex; align-items:center; gap:0.75rem;">
-                    <div style="font-size:1.5rem;">📄</div>
-                    <div>
-                      <div style="font-weight:700; font-size:0.9rem; color:var(--text-primary);">Preenchimento Automático via Convocação CECATE (PDF / OCR)</div>
-                      <div style="font-size:0.78rem; color:var(--text-muted);">Envie o documento da Convocação para identificar automaticamente o Polo, Datas, Local e Municípios Convocados.</div>
+                <div style="background:rgba(99, 102, 241, 0.06); border:1px dashed var(--accent-secondary); border-radius:var(--radius-md); padding:0.85rem 1.1rem; margin-bottom:1.25rem;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem;">
+                      <div style="font-size:1.5rem;">📄</div>
+                      <div>
+                        <div style="font-weight:700; font-size:0.9rem; color:var(--text-primary);">Preenchimento Automático via Convocação CECATE (PDF / OCR)</div>
+                        <div style="font-size:0.78rem; color:var(--text-muted);">Envie o documento da Convocação para identificar automaticamente o Polo, Datas, Local e Municípios Convocados.</div>
+                      </div>
                     </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openImportConvocacaoModal()" style="border-color:var(--accent-secondary); color:var(--accent-secondary); font-weight:600;">
+                      ✨ Enviar Convocação PDF
+                    </button>
                   </div>
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.openImportConvocacaoModal()" style="border-color:var(--accent-secondary); color:var(--accent-secondary); font-weight:600;">
-                    ✨ Enviar Convocação PDF
-                  </button>
+
+                  <!-- Card do Arquivo Anexado (Posicionado Embaixo do Botão de Anexar) -->
+                  <div id="etapa1-convocacao-attached-card" style="display:none; margin-top:0.75rem; background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.3); border-radius:var(--radius-md); padding:0.6rem 0.85rem; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+                    <div style="display:flex; align-items:center; gap:0.6rem;">
+                      <span style="font-size:1.3rem; color:#10b981;">📄</span>
+                      <div>
+                        <div id="etapa1-attached-filename" style="font-weight:700; font-size:0.85rem; color:var(--text-primary);">convocacao.pdf</div>
+                        <div style="font-size:0.72rem; color:#10b981;">✓ Convocação anexada e formulário preenchido automaticamente</div>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeEtapa1ConvocacaoFile()" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3); font-size:0.75rem; padding:0.25rem 0.6rem;" title="Remover este arquivo PDF anexado">
+                      🗑️ Remover Arquivo
+                    </button>
+                  </div>
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 3fr; gap:1rem;">
                   <div class="form-group">
                     <label class="form-label">Número do Relatório *:</label>
-                    <input type="number" id="wiz-train-number" class="form-control" placeholder="16" min="1" oninput="if(this.value<1)this.value=1;">
+                    <input type="number" id="wiz-train-number" class="form-control" placeholder="Ex: 16" min="1" oninput="if(this.value<1)this.value=1;">
                   </div>
                   <div class="form-group">
                     <label class="form-label">Título da Capacitação *:</label>
-                    <input type="text" id="wiz-train-title" class="form-control" placeholder="CAPACITAÇÃO EM TRANSPORTE ESCOLAR">
+                    <input type="text" id="wiz-train-title" class="form-control" placeholder="Ex: CAPACITAÇÃO EM TRANSPORTE ESCOLAR">
                   </div>
                 </div>
 
@@ -361,10 +377,10 @@
                     <label class="form-label">Carga Horária (horas) *:</label>
                     <div class="stepper-spinner-group">
                       <button type="button" class="spinner-btn" onclick="app.spinWorkload(-2)" title="Diminuir carga horária">−</button>
-                      <input type="number" id="wiz-train-workload-num" value="16" min="1" max="200" step="1" onchange="app.updateWorkloadFromSpinner()">
+                      <input type="number" id="wiz-train-workload-num" value="" placeholder="Ex: 16" min="1" max="200" step="1" onchange="app.updateWorkloadFromSpinner()">
                       <button type="button" class="spinner-btn" onclick="app.spinWorkload(+2)" title="Aumentar carga horária">+</button>
                       <span class="spinner-unit">horas</span>
-                      <input type="hidden" id="wiz-train-workload" value="16 horas">
+                      <input type="hidden" id="wiz-train-workload" value="">
                     </div>
                     <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem;" id="wiz-workload-auto-hint"></div>
                   </div>
@@ -373,22 +389,22 @@
                 <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1rem;">
                   <div class="form-group">
                     <label class="form-label">Público-Alvo:</label>
-                    <input type="text" id="wiz-train-target" class="form-control" placeholder="Gestores Municipais e Conselheiros CACS-FUNDEB">
+                    <input type="text" id="wiz-train-target" class="form-control" placeholder="Ex: Gestores Municipais e Conselheiros CACS-FUNDEB">
                   </div>
                   <div class="form-group">
                     <label class="form-label">Previsão de Participantes:</label>
-                    <input type="number" id="wiz-train-expected" class="form-control" placeholder="50">
+                    <input type="number" id="wiz-train-expected" class="form-control" placeholder="Ex: 88 (calculado automaticamente após convocação)">
                   </div>
                 </div>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
                   <div class="form-group">
                     <label class="form-label">Projeto Relacionado:</label>
-                    <input type="text" id="wiz-train-project" class="form-control" placeholder="FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL">
+                    <input type="text" id="wiz-train-project" class="form-control" placeholder="Ex: FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL">
                   </div>
                   <div class="form-group">
                     <label class="form-label">Número do Processo:</label>
-                    <input type="text" id="wiz-train-process" class="form-control" placeholder="23070.012345/2026-00">
+                    <input type="text" id="wiz-train-process" class="form-control" placeholder="Ex: 23070.012345/2026-00">
                   </div>
                 </div>
 

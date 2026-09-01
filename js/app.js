@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.4
+ * Versão: v.1.3.5
  */
 
 class AutoReportApp {
@@ -343,20 +343,20 @@ class AutoReportApp {
     const newTraining = {
       id: newId,
       number: nextNumber,
-      title: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+      title: '',
       polo: '',
-      uf: 'MT',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date().toISOString().split('T')[0],
+      uf: '',
+      startDate: '',
+      endDate: '',
       datesFormatted: '',
-      workload: '16 horas',
-      targetAudience: 'Gestores Municipais e Conselheiros CACS-FUNDEB',
-      expectedParticipants: 0,
-      responsibleOrg: 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
-      relatedProject: 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
-      processNumber: '23070.012345/2026-00',
-      fundingOrg: 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
-      partnerOrgs: 'Ministério da Educação / Prefeituras Municipais',
+      workload: '',
+      targetAudience: '',
+      expectedParticipants: '',
+      responsibleOrg: '',
+      relatedProject: '',
+      processNumber: '',
+      fundingOrg: '',
+      partnerOrgs: '',
       locationVenue: '',
       locationAddress: '',
       status: 'in_progress',
@@ -418,6 +418,8 @@ class AutoReportApp {
       this.showToast('Por favor, selecione um arquivo PDF de Convocação.', 'warning');
       return;
     }
+
+    this.currentConvocacaoFile = file;
 
     const uploadStep = document.getElementById('convocacao-upload-step');
     const procStep = document.getElementById('convocacao-processing-step');
@@ -637,23 +639,24 @@ class AutoReportApp {
         const poloName = data.polo || training.polo || '';
         const poloUf = data.uf || training.uf || 'MT';
 
-        training.municipalities = data.allMunicipalities.map(m => {
-          const dist = m.distanceKm !== undefined ? m.distanceKm : window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || poloUf, poloName, poloUf);
-          return {
-            id: `mun_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-            ibgeCode: String(m.code || ''),
-            name: m.name,
-            uf: m.uf || poloUf,
-            convocadosCount: 4,
-            presentesCount: 0,
-            dateGroup: m.dateGroup || 'Geral',
-            distanceKm: dist,
-            isSummoned: true,
-            inscribedCACS: 2,
-            inscribedGestores: 2,
-            inscribedTotal: 4
-          };
-        });
+        // Salvar nome do arquivo anexado para exibir o card em Etapa 1
+        const filename = this.currentConvocacaoFile?.name || 'Convocacao_CECATE.pdf';
+        training.attachedFileName = filename;
+
+        training.municipalities = data.allMunicipalities.map((m, idx) => ({
+          id: `mun_${Date.now()}_${idx}`,
+          ibgeCode: String(m.code || '0000000'),
+          name: m.name,
+          uf: m.uf || poloUf,
+          distanceKm: m.distanceKm !== undefined ? m.distanceKm : window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || poloUf, poloName, poloUf),
+          isSummoned: true,
+          inscribedCACS: 2,
+          inscribedGestores: 2,
+          inscribedTotal: 4,
+          presentCACS: 0,
+          presentGestores: 0,
+          presentTotal: 0
+        }));
       }
 
       await window.db.saveTrainingFull(training, 'Preenchimento automático via Convocação PDF');
@@ -817,6 +820,18 @@ class AutoReportApp {
     this.setVal('wiz-train-funding', t.fundingOrg);
     this.setVal('wiz-train-partners', t.partnerOrgs);
 
+    // Exibir card do arquivo de convocação anexado em Etapa 1 (se existir)
+    const attachedCard = document.getElementById('etapa1-convocacao-attached-card');
+    const attachedFilename = document.getElementById('etapa1-attached-filename');
+    if (attachedCard && attachedFilename) {
+      if (t.attachedFileName) {
+        attachedCard.style.display = 'flex';
+        attachedFilename.textContent = t.attachedFileName;
+      } else {
+        attachedCard.style.display = 'none';
+      }
+    }
+
     // Etapa 2: Equipe
     this.renderTeamList();
 
@@ -828,8 +843,27 @@ class AutoReportApp {
       this.setVal('wiz-contact-count', t.contactsData.contactedCount);
       this.setVal('wiz-contact-emails', t.contactsData.emailsSent);
       this.setVal('wiz-contact-phones', t.contactsData.phoneCalls);
-      this.setVal('wiz-contact-notes', t.contactsData.notes);
     }
+  }
+
+  removeEtapa1ConvocacaoFile() {
+    if (!this.currentTraining) return;
+    this.currentTraining.attachedFileName = null;
+    this.currentTraining.polo = '';
+    this.currentTraining.poloIbge = '';
+    this.currentTraining.datesFormatted = '';
+    this.currentTraining.locationVenue = '';
+    this.currentTraining.locationAddress = '';
+    this.currentTraining.expectedParticipants = '';
+    this.currentTraining.municipalities = [];
+
+    const attachedCard = document.getElementById('etapa1-convocacao-attached-card');
+    if (attachedCard) attachedCard.style.display = 'none';
+
+    this.populateAllWizardForms();
+    if (this.currentStep === 3) this.renderMunicipalitiesStep();
+    this.saveCurrentStepData();
+    this.showToast('🗑️ Convocação desanexada e dados redefinidos.');
   }
 
   saveCurrentStepData() {
