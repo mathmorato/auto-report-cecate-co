@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.2.5
+ * Versão: v.1.3.0
  */
 
 class AutoReportApp {
@@ -537,37 +537,7 @@ class AutoReportApp {
   }
 
   addConvocacaoMunicipalityPrompt() {
-    if (!this.extractedConvocacaoData) return;
-    const uf = this.extractedConvocacaoData.uf || 'MT';
-    const poloName = this.extractedConvocacaoData.polo || 'Polo';
-    if (!window.IBGE_DATA) return;
-
-    const availableCities = window.IBGE_DATA
-      .filter(m => m.u === uf)
-      .sort((a, b) => a.n.localeCompare(b.n));
-
-    const cityName = prompt(`Digite o nome do município (${uf}) para adicionar aos convocados:`);
-    if (!cityName || !cityName.trim()) return;
-
-    const match = availableCities.find(c => c.n.toLowerCase().includes(cityName.trim().toLowerCase()));
-    if (match) {
-      if (!this.extractedConvocacaoData.allMunicipalities.some(m => m.code === match.c)) {
-        const dist = window.convocacaoParser.calculateDistanceToPolo(match.n, match.u, poloName, uf);
-        this.extractedConvocacaoData.allMunicipalities.push({
-          name: match.n,
-          code: match.c,
-          uf: match.u,
-          dateGroup: 'Geral',
-          distanceKm: dist
-        });
-        this.renderConvocacaoExtractedMunicipalities();
-        this.showToast(`📍 ${match.n} (IBGE ${match.c}) adicionado! Distância ao polo: ${dist} km`);
-      } else {
-        this.showToast(`O município ${match.n} já está na lista.`, 'warning');
-      }
-    } else {
-      this.showToast(`Município "${cityName}" não encontrado no estado de ${uf}.`, 'error');
-    }
+    this.openAddMunicipalityModal('convocacao');
   }
 
   async applyExtractedConvocacaoData() {
@@ -1295,47 +1265,146 @@ class AutoReportApp {
   }
 
   addMunicipalityPrompt() {
-    const query = prompt('Digite o nome ou código IBGE do município para adicionar:');
-    if (!query || !query.trim()) return;
+    this.openAddMunicipalityModal('wizard');
+  }
 
-    let matched = null;
-    const ufDefault = this.currentTraining.uf || 'MT';
-    const poloName = this.currentTraining.polo || 'Polo';
+  /* ==========================================================================
+     MODAL SELETOR WEB DE MUNICÍPIOS (UF + IBGE)
+     ========================================================================== */
+  openAddMunicipalityModal(context = 'wizard') {
+    this.addMunContext = context; // 'convocacao' ou 'wizard'
 
-    if (window.IBGE_DATA) {
-      matched = window.IBGE_DATA.find(i => 
-        String(i.c) === query.trim() || 
-        i.n.toLowerCase() === query.trim().toLowerCase() ||
-        i.n.toLowerCase().includes(query.trim().toLowerCase())
-      );
+    let defaultUf = 'MT';
+    if (context === 'convocacao' && this.extractedConvocacaoData) {
+      defaultUf = this.extractedConvocacaoData.uf || 'MT';
+    } else if (this.currentTraining) {
+      defaultUf = this.currentTraining.uf || 'MT';
     }
 
-    const munName = matched ? matched.n : query.trim();
-    const ibgeCode = matched ? matched.c : (parseInt(prompt('Código IBGE (7 dígitos):') || '0') || 0);
-    const uf = matched ? matched.u : ufDefault;
+    const ufSelect = document.getElementById('add-mun-uf-select');
+    if (ufSelect) ufSelect.value = defaultUf;
 
-    // Cálculo automático em linha reta (Haversine) sem prompt manual
-    const calcDist = window.convocacaoParser.calculateDistanceToPolo(munName, uf, poloName, ufDefault);
+    this.onAddMunUfChange(defaultUf);
 
-    if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
-    this.currentTraining.municipalities.push({
-      id: `mun_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      ibgeCode: String(ibgeCode),
-      name: munName,
-      uf,
-      distanceKm: calcDist,
-      isSummoned: true,
-      inscribedCACS: 2,
-      inscribedGestores: 2,
-      inscribedTotal: 4,
-      presentCACS: 0,
-      presentGestores: 0,
-      presentTotal: 0
-    });
+    const modal = document.getElementById('modal-add-municipality');
+    if (modal) modal.style.display = 'flex';
+  }
 
-    this.renderMunicipalitiesStep();
-    this.saveCurrentStepData();
-    this.showToast(`📍 ${munName} (${uf}) adicionado! Distância calculada em linha reta: ${calcDist} km`, 'success');
+  closeAddMunicipalityModal() {
+    const modal = document.getElementById('modal-add-municipality');
+    if (modal) modal.style.display = 'none';
+  }
+
+  onAddMunUfChange(uf) {
+    const citySelect = document.getElementById('add-mun-city-select');
+    if (!citySelect || !window.IBGE_DATA) return;
+
+    const filtered = window.IBGE_DATA
+      .filter(m => m.u === uf)
+      .sort((a, b) => a.n.localeCompare(b.n));
+
+    citySelect.innerHTML = filtered.map(m => `
+      <option value="${m.n}" data-ibge="${m.c}">${m.n} (IBGE: ${m.c})</option>
+    `).join('');
+
+    this.onAddMunCityChange();
+  }
+
+  onAddMunCityChange() {
+    const ufSelect = document.getElementById('add-mun-uf-select');
+    const citySelect = document.getElementById('add-mun-city-select');
+    const ibgePreview = document.getElementById('add-mun-preview-ibge');
+    const distPreview = document.getElementById('add-mun-preview-dist');
+
+    if (!citySelect || !citySelect.selectedOptions[0]) return;
+
+    const activeOption = citySelect.selectedOptions[0];
+    const cityName = activeOption.value;
+    const ibgeCode = activeOption.getAttribute('data-ibge') || '';
+    const uf = ufSelect?.value || 'MT';
+
+    let poloName = 'Polo';
+    let poloUf = uf;
+
+    if (this.addMunContext === 'convocacao' && this.extractedConvocacaoData) {
+      poloName = this.extractedConvocacaoData.polo || 'Polo';
+      poloUf = this.extractedConvocacaoData.uf || uf;
+    } else if (this.currentTraining) {
+      poloName = this.currentTraining.polo || 'Polo';
+      poloUf = this.currentTraining.uf || uf;
+    }
+
+    const dist = window.convocacaoParser.calculateDistanceToPolo(cityName, uf, poloName, poloUf);
+
+    if (ibgePreview) ibgePreview.textContent = ibgeCode;
+    if (distPreview) distPreview.textContent = `${parseFloat(dist).toFixed(1)} km`;
+  }
+
+  confirmAddMunicipalityFromModal() {
+    const ufSelect = document.getElementById('add-mun-uf-select');
+    const citySelect = document.getElementById('add-mun-city-select');
+    if (!citySelect || !citySelect.selectedOptions[0]) return;
+
+    const activeOption = citySelect.selectedOptions[0];
+    const cityName = activeOption.value;
+    const ibgeCode = activeOption.getAttribute('data-ibge') || '';
+    const uf = ufSelect?.value || 'MT';
+
+    let poloName = 'Polo';
+    let poloUf = uf;
+
+    if (this.addMunContext === 'convocacao' && this.extractedConvocacaoData) {
+      poloName = this.extractedConvocacaoData.polo || 'Polo';
+      poloUf = this.extractedConvocacaoData.uf || uf;
+    } else if (this.currentTraining) {
+      poloName = this.currentTraining.polo || 'Polo';
+      poloUf = this.currentTraining.uf || uf;
+    }
+
+    const calcDist = window.convocacaoParser.calculateDistanceToPolo(cityName, uf, poloName, poloUf);
+
+    if (this.addMunContext === 'convocacao') {
+      if (!this.extractedConvocacaoData) return;
+      if (!this.extractedConvocacaoData.allMunicipalities) this.extractedConvocacaoData.allMunicipalities = [];
+
+      if (!this.extractedConvocacaoData.allMunicipalities.some(m => String(m.code) === String(ibgeCode))) {
+        this.extractedConvocacaoData.allMunicipalities.push({
+          name: cityName,
+          code: parseInt(ibgeCode) || ibgeCode,
+          uf: uf,
+          dateGroup: 'Geral',
+          distanceKm: calcDist
+        });
+        this.renderConvocacaoExtractedMunicipalities();
+        this.showToast(`📍 ${cityName} (${uf}) adicionado à Convocação! Distância: ${calcDist} km`, 'success');
+      } else {
+        this.showToast(`O município ${cityName} (${uf}) já está na lista.`, 'warning');
+      }
+    } else {
+      if (!this.currentTraining) return;
+      if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
+
+      this.currentTraining.municipalities.push({
+        id: `mun_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        ibgeCode: String(ibgeCode),
+        name: cityName,
+        uf,
+        distanceKm: calcDist,
+        isSummoned: true,
+        inscribedCACS: 2,
+        inscribedGestores: 2,
+        inscribedTotal: 4,
+        presentCACS: 0,
+        presentGestores: 0,
+        presentTotal: 0
+      });
+
+      this.renderMunicipalitiesStep();
+      this.saveCurrentStepData();
+      this.showToast(`📍 ${cityName} (${uf}) adicionado à Tabela 1! Distância: ${calcDist} km`, 'success');
+    }
+
+    this.closeAddMunicipalityModal();
   }
 
   /* ==========================================================================

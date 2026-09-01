@@ -1127,6 +1127,83 @@
     </div>
   </div>
 
+  <!-- MODAL SELETOR WEB DE MUNICÍPIO (UF + CIDADE DO IBGE COM BUSCA) -->
+  <div class="modal-backdrop" id="modal-add-municipality" style="display:none; z-index:11000;">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div style="width:40px; height:40px; border-radius:var(--radius-md); background:rgba(99, 102, 241, 0.15); color:var(--accent-secondary); display:flex; align-items:center; justify-content:center; font-size:1.25rem;">
+            📍
+          </div>
+          <div>
+            <h3 class="modal-title">Adicionar Município Convocado</h3>
+            <p class="modal-subtitle">Selecione a UF e o Município na lista oficial do IBGE</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="app.closeAddMunicipalityModal()">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding-top:1.25rem;">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label class="form-label">Estado (UF) *:</label>
+          <select id="add-mun-uf-select" class="form-control" onchange="app.onAddMunUfChange(this.value)">
+            <option value="MT">Mato Grosso (MT)</option>
+            <option value="MS">Mato Grosso do Sul (MS)</option>
+            <option value="GO">Goiás (GO)</option>
+            <option value="DF">Distrito Federal (DF)</option>
+            <option value="AC">Acre (AC)</option>
+            <option value="AL">Alagoas (AL)</option>
+            <option value="AP">Amapá (AP)</option>
+            <option value="AM">Amazonas (AM)</option>
+            <option value="BA">Bahia (BA)</option>
+            <option value="CE">Ceará (CE)</option>
+            <option value="ES">Espírito Santo (ES)</option>
+            <option value="MA">Maranhão (MA)</option>
+            <option value="MG">Minas Gerais (MG)</option>
+            <option value="PA">Pará (PA)</option>
+            <option value="PB">Paraíba (PB)</option>
+            <option value="PR">Paraná (PR)</option>
+            <option value="PE">Pernambuco (PE)</option>
+            <option value="PI">Piauí (PI)</option>
+            <option value="RJ">Rio de Janeiro (RJ)</option>
+            <option value="RN">Rio Grande do Norte (RN)</option>
+            <option value="RS">Rio Grande do Sul (RS)</option>
+            <option value="RO">Rondônia (RO)</option>
+            <option value="RR">Roraima (RR)</option>
+            <option value="SC">Santa Catarina (SC)</option>
+            <option value="SP">São Paulo (SP)</option>
+            <option value="SE">Sergipe (SE)</option>
+            <option value="TO">Tocantins (TO)</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label class="form-label">Município (IBGE) *:</label>
+          <select id="add-mun-city-select" class="form-control" onchange="app.onAddMunCityChange()">
+            <!-- Populado dinamicamente -->
+          </select>
+        </div>
+
+        <!-- Prévia do Código IBGE e Distância em Linha Reta -->
+        <div id="add-mun-preview-card" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.75rem 1rem; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Código IBGE / INEP</div>
+            <div id="add-mun-preview-ibge" style="font-family:monospace; font-weight:700; color:var(--accent-secondary); font-size:1.05rem;">-</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:var(--text-muted);">Distância ao Polo (Linha Reta)</div>
+            <div id="add-mun-preview-dist" style="font-family:monospace; font-weight:700; color:var(--accent-success); font-size:1.05rem;">0.0 km</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.closeAddMunicipalityModal()">Cancelar</button>
+        <button class="btn btn-gradient" onclick="app.confirmAddMunicipalityFromModal()">+ Adicionar à Lista</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Container de Toasts -->
   <div class="toast-container" id="toast-container"></div>
 
