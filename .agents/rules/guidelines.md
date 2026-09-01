@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Diretrizes para Desenvolvimento e Manutenção do Projeto
 
 ## 1. Referência visual e identidade do projeto

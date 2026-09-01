@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Banco de Dados Local (IndexedDB & State Management)
- * Versão: v.1.0.2
+ * Versão: v.1.0.3
  */
 
 class TrainingDB {
@@ -437,120 +437,170 @@ class TrainingDB {
   }
 
   /**
-   * Duplica uma capacitação para servir de modelo para uma nova edição
+   * Duplica uma capacitação para servir de modelo para uma nova edição (Regras 63, 64 e 65)
    */
-  async duplicateTraining(sourceTrainingId, options = { copyTeam: true, copyModules: true, copyMunicipalities: false, copyTexts: true }) {
+  async duplicateTraining(sourceTrainingId, options = {}) {
     const source = await this.getTrainingFull(sourceTrainingId);
     if (!source) throw new Error('Capacitação de origem não encontrada');
 
-    const nextNumber = (parseInt(source.number) || 16) + 1;
+    const opts = {
+      copyInstitutional: options.copyInstitutional !== false,
+      copyModules: options.copyModules !== false,
+      copyMunicipalities: options.copyMunicipalities === true, // Padrão: false para forçar municípios do polo novo
+      copyTexts: options.copyTexts !== false,
+      copyTeam: options.copyTeam !== false,
+      copyEvaluationConfig: options.copyEvaluationConfig !== false,
+      copyParticipants: false, // Regra 65: NUNCA copiar participantes individuais de capacitações anteriores
+      copyEvaluations: false,  // Regra 65: NUNCA copiar avaliações individuais
+      copyPhotos: false,       // Regra 65: NUNCA copiar fotos do evento anterior
+      ...options
+    };
+
+    const allTrainings = await this.getAll('trainings');
+    const maxNum = allTrainings.length > 0 ? Math.max(...allTrainings.map(t => parseInt(t.number) || 0)) : 16;
+    const nextNumber = maxNum + 1;
     const newId = `cap_${Date.now()}`;
 
     const duplicatedData = {
       id: newId,
       number: nextNumber,
-      title: source.title,
-      polo: `${source.polo} (Cópia)`,
-      uf: source.uf,
-      startDate: source.startDate,
-      endDate: source.endDate,
-      datesFormatted: source.datesFormatted,
-      workload: source.workload,
-      targetAudience: source.targetAudience,
-      expectedParticipants: source.expectedParticipants,
-      responsibleOrg: source.responsibleOrg,
-      relatedProject: source.relatedProject,
-      processNumber: source.processNumber,
-      fundingOrg: source.fundingOrg,
-      partnerOrgs: source.partnerOrgs,
-      locationVenue: source.locationVenue,
-      contactsData: { ...source.contactsData },
-      texts: options.copyTexts ? { ...source.texts } : {},
+      title: source.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+      polo: `${source.polo || 'Novo Polo'} (Baseado na Cap. ${source.number})`,
+      uf: source.uf || 'MT',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+      datesFormatted: 'A definir',
+      workload: source.workload || '16 horas',
+      targetAudience: source.targetAudience || 'Gestores Municipais e Conselheiros CACS-FUNDEB',
+      expectedParticipants: source.expectedParticipants || 40,
+      responsibleOrg: opts.copyInstitutional ? source.responsibleOrg : 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
+      relatedProject: opts.copyInstitutional ? source.relatedProject : 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+      processNumber: opts.copyInstitutional ? source.processNumber : '23070.012345/2026-00',
+      fundingOrg: opts.copyInstitutional ? source.fundingOrg : 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
+      partnerOrgs: opts.copyInstitutional ? source.partnerOrgs : '',
+      locationVenue: 'Auditório Municipal',
+      contactsData: {
+        startDate: '',
+        methods: source.contactsData?.methods || 'Ofícios, E-mails, Telefones e WhatsApp',
+        responsible: source.contactsData?.responsible || 'Equipe de Articulação Institucional CECATE-CO',
+        contactedCount: 0,
+        notContactedCount: 0,
+        emailsSent: 0,
+        phoneCalls: 0,
+        notes: ''
+      },
+      texts: opts.copyTexts ? { ...source.texts } : {},
       status: 'in_progress',
-      progressPercent: 20,
-      team: options.copyTeam ? source.team.map((t, idx) => ({ ...t, id: `team_${newId}_${idx}` })) : [],
-      courseModules: options.copyModules ? source.courseModules.map((m, idx) => ({ ...m, id: `mod_${newId}_${idx}` })) : [],
-      municipalities: options.copyMunicipalities ? source.municipalities.map((m, idx) => ({ ...m, id: `mun_${newId}_${idx}` })) : [],
-      attendance: [],
-      evaluations: [],
-      media: []
+      isHistorical: false, // Novo registro em andamento, nunca histórico
+      progressPercent: 15,
+      team: opts.copyTeam && source.team ? source.team.map((t, idx) => ({ ...t, id: `team_${newId}_${idx}` })) : [],
+      courseModules: opts.copyModules && source.courseModules ? source.courseModules.map((m, idx) => ({ ...m, id: `mod_${newId}_${idx}` })) : [],
+      municipalities: opts.copyMunicipalities && source.municipalities ? source.municipalities.map((m, idx) => ({
+        ...m,
+        id: `mun_${newId}_${idx}`,
+        inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0,
+        presentCACS: 0, presentGestores: 0, presentTotal: 0
+      })) : [],
+      attendance: [],  // Limpo
+      evaluations: [], // Limpo
+      media: []        // Limpo
     };
 
-    await this.saveTrainingFull(duplicatedData, `Duplicado a partir da Capacitação Nº ${source.number}`);
+    await this.saveTrainingFull(duplicatedData, `Nova capacitação criada com base no modelo da Capacitação Nº ${source.number}`);
     return newId;
   }
 
   /**
-   * Popula dados padrão / semente da Capacitação Nº 16 (Pontes e Lacerda) a partir dos inputs reais
+   * Popula dados históricos das Capacitações Nº 6 a 15 e Capacitação Nº 16 (Regra 62 e 72)
    */
   async seedInitialData() {
     const existing = await this.getAll('trainings');
-    if (existing && existing.length > 0) return;
+    const existingNumbers = new Set((existing || []).map(t => parseInt(t.number)));
 
-    console.log('Seeding initial 16CTE data from input reference...');
+    // 1. Inserir Capacitações Históricas de 6 a 15 a partir de window.HISTORICAL_TRAININGS
+    if (window.HISTORICAL_TRAININGS && Array.isArray(window.HISTORICAL_TRAININGS)) {
+      for (const hist of window.HISTORICAL_TRAININGS) {
+        if (!existingNumbers.has(hist.number)) {
+          console.log(`Carregando Capacitação Histórica Nº ${hist.number} (${hist.polo})...`);
+          await this.saveTrainingFull({
+            ...hist,
+            status: 'historico',
+            isHistorical: true,
+            progressPercent: 100
+          }, `Carga histórica da Capacitação Nº ${hist.number} (${hist.polo})`);
+          existingNumbers.add(hist.number);
+        }
+      }
+    }
 
-    const defaultModules = [
-      { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, description: 'Apresentação do CECATE-CO, diretrizes nacionais e papel institucional.', order: 0 },
-      { moduleNumber: '02', topicGestor: 'Conhecendo os programas PNATE e Caminho da Escola', topicCACS: 'Conhecendo os programas PNATE e Caminho da Escola', hoursGestor: 1.5, hoursCACS: 1.5, description: 'Legislação aplicável, repasses financeiros e aquisição de frotas padronizadas.', order: 1 },
-      { moduleNumber: '03', topicGestor: 'Gestão do Transporte Escolar e Software SETE', topicCACS: 'Fiscalização e Controle Social do Transporte Escolar', hoursGestor: 2.0, hoursCACS: 2.0, description: 'Módulo técnico prático de roteirização e fiscalização in loco.', order: 2 },
-      { moduleNumber: '04', topicGestor: 'Prestação de Contas no SiGPC e Desafios Locais', topicCACS: 'Atuação do CACS-FUNDEB e Análise de Contas', hoursGestor: 3.0, hoursCACS: 3.0, description: 'Boas práticas regulatórias, prazos e resolução de problemas práticos.', order: 3 }
-    ];
+    // 2. Inserir Capacitação Nº 16 (Pontes e Lacerda) se não existir
+    if (!existingNumbers.has(16)) {
+      console.log('Carregando Capacitação Nº 16 (Pontes e Lacerda)...');
 
-    const defaultTeam = [
-      { name: 'Prof. Dr. Willer Luciano Carvalho', institution: 'UFG', role: 'Coordenador Geral do Projeto', type: 'coordenacao', order: 0 },
-      { name: 'Eng. M.Sc. Lara Batista Ferreira de Lima', institution: 'UFG', role: 'Pesquisadora e Equipe Técnica', type: 'tecnica', order: 1 },
-      { name: 'Eng. M.Sc. Matheus Henrique Morato de Moraes', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 2 },
-      { name: 'Prof. Dr. Marcos Paulino Roriz Junior', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 3 },
-      { name: 'Prof. Dr. Liosber Medina Garcia', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 4 },
-      { name: 'Haroldo da Silva Gomes', institution: 'FNDE', role: 'Coordenador-Geral da Política do Transporte Escolar - CGPTE', type: 'fnde', order: 5 }
-    ];
+      const defaultModules = [
+        { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, description: 'Apresentação do CECATE-CO, diretrizes nacionais e papel institucional.', order: 0 },
+        { moduleNumber: '02', topicGestor: 'Conhecendo os programas PNATE e Caminho da Escola', topicCACS: 'Conhecendo os programas PNATE e Caminho da Escola', hoursGestor: 1.5, hoursCACS: 1.5, description: 'Legislação aplicável, repasses financeiros e aquisição de frotas padronizadas.', order: 1 },
+        { moduleNumber: '03', topicGestor: 'Gestão do Transporte Escolar e Software SETE', topicCACS: 'Fiscalização e Controle Social do Transporte Escolar', hoursGestor: 2.0, hoursCACS: 2.0, description: 'Módulo técnico prático de roteirização e fiscalização in loco.', order: 2 },
+        { moduleNumber: '04', topicGestor: 'Prestação de Contas no SiGPC e Desafios Locais', topicCACS: 'Atuação do CACS-FUNDEB e Análise de Contas', hoursGestor: 3.0, hoursCACS: 3.0, description: 'Boas práticas regulatórias, prazos e resolução de problemas práticos.', order: 3 }
+      ];
 
-    const default16CTEMunicipalities = [
-      { ibgeCode: 5101258, name: 'Araputanga', uf: 'MT', distanceKm: 141.1, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
-      { ibgeCode: 5102686, name: 'Campos de Júlio', uf: 'MT', distanceKm: 273.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 1, presentGestores: 3, presentTotal: 4 },
-      { ibgeCode: 5103304, name: 'Comodoro', uf: 'MT', distanceKm: 197.1, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
-      { ibgeCode: 5103437, name: 'Curvelândia', uf: 'MT', distanceKm: 206.5, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 1, presentGestores: 2, presentTotal: 3 },
-      { ibgeCode: 5104104, name: 'Glória D\'Oeste', uf: 'MT', distanceKm: 104.8, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
-      { ibgeCode: 5104609, name: 'Indiavaí', uf: 'MT', distanceKm: 114.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
-      { ibgeCode: 5105002, name: 'Jauru', uf: 'MT', distanceKm: 81.3, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 1, presentGestores: 3, presentTotal: 4 },
-      { ibgeCode: 5105259, name: 'Lambari D\'Oeste', uf: 'MT', distanceKm: 169.4, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
-      { ibgeCode: 5106182, name: 'Nova Lacerda', uf: 'MT', distanceKm: 100.3, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 3, presentTotal: 3 },
-      { ibgeCode: 5106752, name: 'Pontes e Lacerda', uf: 'MT', distanceKm: 0.0, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
-      { ibgeCode: 5106828, name: 'Porto Esperidião', uf: 'MT', distanceKm: 122.6, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
-      { ibgeCode: 5107107, name: 'Reserva do Cabaçal', uf: 'MT', distanceKm: 161.7, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
-      { ibgeCode: 5107776, name: 'Rio Branco', uf: 'MT', distanceKm: 182.9, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
-      { ibgeCode: 5107958, name: 'Salto do Céu', uf: 'MT', distanceKm: 178.5, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
-      { ibgeCode: 5108006, name: 'São José dos Quatro Marcos', uf: 'MT', distanceKm: 170.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
-      { ibgeCode: 5108402, name: 'Vale de São Domingos', uf: 'MT', distanceKm: 46.8, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 3, presentTotal: 3 },
-      { ibgeCode: 5108857, name: 'Vila Bela da Santíssima Trindade', uf: 'MT', distanceKm: 76.9, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 }
-    ];
+      const defaultTeam = [
+        { name: 'Prof. Dr. Willer Luciano Carvalho', institution: 'UFG', role: 'Coordenador Geral do Projeto', type: 'coordenacao', order: 0 },
+        { name: 'Eng. M.Sc. Lara Batista Ferreira de Lima', institution: 'UFG', role: 'Pesquisadora e Equipe Técnica', type: 'tecnica', order: 1 },
+        { name: 'Eng. M.Sc. Matheus Henrique Morato de Moraes', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 2 },
+        { name: 'Prof. Dr. Marcos Paulino Roriz Junior', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 3 },
+        { name: 'Prof. Dr. Liosber Medina Garcia', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 4 },
+        { name: 'Haroldo da Silva Gomes', institution: 'FNDE', role: 'Coordenador-Geral da Política do Transporte Escolar - CGPTE', type: 'fnde', order: 5 }
+      ];
 
-    const sample16CTE = {
-      id: 'cap_16cte_pontes_lacerda',
-      number: 16,
-      title: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
-      polo: 'Pontes e Lacerda',
-      uf: 'MT',
-      startDate: '2026-06-23',
-      endDate: '2026-06-24',
-      datesFormatted: '23 e 24 de junho de 2026',
-      workload: '16 horas',
-      targetAudience: 'Gestores Municipais e Conselheiros CACS-FUNDEB',
-      expectedParticipants: 40,
-      responsibleOrg: 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
-      relatedProject: 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
-      processNumber: '23070.012345/2026-00',
-      fundingOrg: 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
-      partnerOrgs: 'Ministério da Educação / Prefeitura Municipal de Pontes e Lacerda',
-      locationVenue: 'Auditório da Secretaria Municipal de Educação',
-      status: 'completed',
-      progressPercent: 100,
-      team: defaultTeam,
-      courseModules: defaultModules,
-      municipalities: default16CTEMunicipalities
-    };
+      const default16CTEMunicipalities = [
+        { ibgeCode: 5101258, name: 'Araputanga', uf: 'MT', distanceKm: 141.1, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
+        { ibgeCode: 5102686, name: 'Campos de Júlio', uf: 'MT', distanceKm: 273.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 1, presentGestores: 3, presentTotal: 4 },
+        { ibgeCode: 5103304, name: 'Comodoro', uf: 'MT', distanceKm: 197.1, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
+        { ibgeCode: 5103437, name: 'Curvelândia', uf: 'MT', distanceKm: 206.5, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 1, presentGestores: 2, presentTotal: 3 },
+        { ibgeCode: 5104104, name: 'Glória D\'Oeste', uf: 'MT', distanceKm: 104.8, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
+        { ibgeCode: 5104609, name: 'Indiavaí', uf: 'MT', distanceKm: 114.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
+        { ibgeCode: 5105002, name: 'Jauru', uf: 'MT', distanceKm: 81.3, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 1, presentGestores: 3, presentTotal: 4 },
+        { ibgeCode: 5105259, name: 'Lambari D\'Oeste', uf: 'MT', distanceKm: 169.4, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
+        { ibgeCode: 5106182, name: 'Nova Lacerda', uf: 'MT', distanceKm: 100.3, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 3, presentTotal: 3 },
+        { ibgeCode: 5106752, name: 'Pontes e Lacerda', uf: 'MT', distanceKm: 0.0, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
+        { ibgeCode: 5106828, name: 'Porto Esperidião', uf: 'MT', distanceKm: 122.6, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
+        { ibgeCode: 5107107, name: 'Reserva do Cabaçal', uf: 'MT', distanceKm: 161.7, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
+        { ibgeCode: 5107776, name: 'Rio Branco', uf: 'MT', distanceKm: 182.9, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
+        { ibgeCode: 5107958, name: 'Salto do Céu', uf: 'MT', distanceKm: 178.5, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
+        { ibgeCode: 5108006, name: 'São José dos Quatro Marcos', uf: 'MT', distanceKm: 170.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
+        { ibgeCode: 5108402, name: 'Vale de São Domingos', uf: 'MT', distanceKm: 46.8, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 3, presentTotal: 3 },
+        { ibgeCode: 5108857, name: 'Vila Bela da Santíssima Trindade', uf: 'MT', distanceKm: 76.9, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 }
+      ];
 
-    await this.saveTrainingFull(sample16CTE, 'Carga inicial do 16CTE como referência');
+      const sample16CTE = {
+        id: 'cap_16cte_pontes_lacerda',
+        number: 16,
+        title: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+        polo: 'Pontes e Lacerda',
+        uf: 'MT',
+        startDate: '2026-06-23',
+        endDate: '2026-06-24',
+        datesFormatted: '23 e 24 de junho de 2026',
+        workload: '16 horas',
+        targetAudience: 'Gestores Municipais e Conselheiros CACS-FUNDEB',
+        expectedParticipants: 40,
+        responsibleOrg: 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
+        relatedProject: 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+        processNumber: '23070.012345/2026-00',
+        fundingOrg: 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
+        partnerOrgs: 'Ministério da Educação / Prefeitura Municipal de Pontes e Lacerda',
+        locationVenue: 'Auditório da Secretaria Municipal de Educação',
+        status: 'completed',
+        isHistorical: false,
+        progressPercent: 100,
+        team: defaultTeam,
+        courseModules: defaultModules,
+        municipalities: default16CTEMunicipalities
+      };
+
+      await this.saveTrainingFull(sample16CTE, 'Carga da Capacitação Nº 16 (Pontes e Lacerda)');
+    }
   }
 }
 

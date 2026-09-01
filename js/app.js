@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.0.2
+ * Versão: v.1.0.3
  */
 
 class AutoReportApp {
@@ -10,6 +10,7 @@ class AutoReportApp {
     this.totalSteps = 11;
     this.activeView = 'dashboard';
     this.trainingList = [];
+    this.dashboardFilter = 'all';
     this.theme = localStorage.getItem('autoreport_theme') || 'dark';
     this.metrics = null;
   }
@@ -163,52 +164,145 @@ class AutoReportApp {
     const elMunicipalities = document.getElementById('dash-total-municipalities');
     if (elMunicipalities) elMunicipalities.textContent = totalMuns;
 
-    // Renderizar tabela de capacitações recentes no dashboard
+    // Renderizar tabela de capacitações no dashboard respeitando filtro
     const container = document.getElementById('dashboard-trainings-list');
     if (container) {
-      if (this.trainingList.length === 0) {
+      let filtered = [...this.trainingList];
+      if (this.dashboardFilter === 'historico') {
+        filtered = filtered.filter(t => t.status === 'historico' || t.isHistorical);
+      } else if (this.dashboardFilter === 'in_progress') {
+        filtered = filtered.filter(t => t.status === 'in_progress' && !t.isHistorical);
+      } else if (this.dashboardFilter === 'completed') {
+        filtered = filtered.filter(t => (t.status === 'completed' || t.progressPercent === 100) && !t.isHistorical);
+      }
+
+      // Ordenar por número decrescente
+      filtered.sort((a, b) => (parseInt(b.number) || 0) - (parseInt(a.number) || 0));
+
+      if (filtered.length === 0) {
         container.innerHTML = `
           <div style="text-align:center; padding:2.5rem; color:var(--text-muted);">
             <div style="font-size:2.5rem; margin-bottom:0.5rem;">📁</div>
-            <p>Nenhuma capacitação cadastrada ainda.</p>
-            <button class="btn btn-gradient btn-sm" style="margin-top:1rem;" onclick="app.createNewTraining()">+ Criar Primeira Capacitação</button>
+            <p>Nenhuma capacitação encontrada para este filtro.</p>
           </div>
         `;
       } else {
-        container.innerHTML = this.trainingList.map(t => `
-          <div class="glass-card" style="margin-bottom:1rem; padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-            <div style="display:flex; align-items:center; gap:1rem;">
-              <div style="width:48px; height:48px; border-radius:var(--radius-md); background:var(--gradient-brand); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.1rem; color:white;">
-                ${t.number || 16}
-              </div>
-              <div>
-                <h4 style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-bottom:0.2rem;">
-                  Capacitação Nº ${t.number || 16} - ${t.polo || 'Polo Regional'} (${t.uf || 'MT'})
-                </h4>
-                <div style="font-size:0.8rem; color:var(--text-muted); display:flex; gap:1rem; flex-wrap:wrap;">
-                  <span>📅 ${t.datesFormatted || t.startDate || 'Data a definir'}</span>
-                  <span>📍 ${t.locationVenue || 'Auditório Local'}</span>
-                  <span>⏱️ ${t.workload || '16h'}</span>
-                </div>
-              </div>
-            </div>
+        container.innerHTML = filtered.map(t => {
+          const isHist = t.status === 'historico' || t.isHistorical;
+          const statusBadge = isHist
+            ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b;">🏛️ Histórico Protegido</span>`
+            : (t.progressPercent === 100
+                ? `<span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981;">✓ Concluída</span>`
+                : `<span class="nav-badge" style="background:rgba(6, 182, 212, 0.15); color:#22d3ee;">⏳ Em Andamento</span>`);
 
-            <div style="display:flex; align-items:center; gap:1.25rem;">
-              <div style="text-align:right;">
-                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Progresso</div>
-                <div style="font-size:0.9rem; font-weight:700; color:${t.progressPercent === 100 ? 'var(--accent-success)' : 'var(--accent-secondary)'};">
-                  ${t.progressPercent || 0}% Concluído
+          return `
+            <div class="glass-card" style="margin-bottom:1rem; padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; border-left: 4px solid ${isHist ? '#f59e0b' : 'var(--accent-secondary)'};">
+              <div style="display:flex; align-items:center; gap:1rem;">
+                <div style="width:48px; height:48px; border-radius:var(--radius-md); background:${isHist ? 'linear-gradient(135deg, #d97706, #b45309)' : 'var(--gradient-brand)'}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.1rem; color:white;">
+                  ${t.number}
+                </div>
+                <div>
+                  <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.2rem;">
+                    <h4 style="font-size:1.05rem; font-weight:700; color:var(--text-primary); margin:0;">
+                      Capacitação Nº ${t.number} - ${t.polo || 'Polo Regional'} (${t.uf || 'MT'})
+                    </h4>
+                    ${statusBadge}
+                  </div>
+                  <div style="font-size:0.8rem; color:var(--text-muted); display:flex; gap:1rem; flex-wrap:wrap;">
+                    <span>📅 ${t.datesFormatted || t.startDate || 'Data a definir'}</span>
+                    <span>📍 ${t.locationVenue || 'Auditório Local'}</span>
+                    <span>⏱️ ${t.workload || '16h'}</span>
+                    ${t.dataSourceMap?.documentOrigin ? `<span title="${t.dataSourceMap.documentOrigin}">📄 Fonte: ${t.dataSourceMap.documentOrigin.split('/').pop()}</span>` : ''}
+                  </div>
                 </div>
               </div>
-              <div style="display:flex; gap:0.5rem;">
-                <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="Editar e continuar">✏️ Continuar</button>
-                <button class="btn btn-secondary btn-sm" onclick="app.duplicateTrainingAction('${t.id}')" title="Duplicar como modelo">📋 Duplicar</button>
-                <button class="btn btn-gradient btn-sm" onclick="app.directDownloadDocx('${t.id}')" title="Gerar Relatório .docx">⚡ Gerar .docx</button>
+
+              <div style="display:flex; align-items:center; gap:1.25rem;">
+                <div style="text-align:right;">
+                  <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Situação</div>
+                  <div style="font-size:0.9rem; font-weight:700; color:${isHist ? '#f59e0b' : (t.progressPercent === 100 ? 'var(--accent-success)' : 'var(--accent-secondary)')};">
+                    ${isHist ? 'Preservada' : `${t.progressPercent || 0}% Concluído`}
+                  </div>
+                </div>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                  <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="${isHist ? 'Visualizar dados' : 'Continuar edição'}">
+                    ${isHist ? '🔍 Consultar' : '✏️ Continuar'}
+                  </button>
+                  <button class="btn btn-secondary btn-sm" onclick="app.openCloneModal('${t.id}')" title="Usar esta capacitação como modelo estrutural para nova">
+                    📋 Usar como Modelo
+                  </button>
+                  <button class="btn btn-gradient btn-sm" onclick="app.directDownloadDocx('${t.id}')" title="Gerar Relatório .docx Oficial">
+                    ⚡ Gerar .docx
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
+    }
+  }
+
+  setDashboardFilter(filterType) {
+    this.dashboardFilter = filterType;
+    document.querySelectorAll('.filter-tab-btn').forEach(btn => btn.classList.remove('active'));
+    const btn = document.getElementById(`filter-dash-${filterType === 'all' ? 'all' : (filterType === 'historico' ? 'hist' : (filterType === 'in_progress' ? 'prog' : 'comp'))}`);
+    if (btn) btn.classList.add('active');
+    this.renderDashboard();
+  }
+
+  /* ==========================================================================
+     MODAL DE CLONAGEM & REUTILIZAÇÃO HISTÓRICA (REGRAS 63, 64 E 65)
+     ========================================================================== */
+  openCloneModal(defaultSourceId = null) {
+    const modal = document.getElementById('modal-clone-training');
+    const select = document.getElementById('clone-source-select');
+    if (!modal || !select) return;
+
+    // Popula select com as capacitações ordenadas por número
+    const sorted = [...this.trainingList].sort((a, b) => (parseInt(a.number) || 0) - (parseInt(b.number) || 0));
+    select.innerHTML = sorted.map(t => {
+      const isHist = t.status === 'historico' || t.isHistorical;
+      return `<option value="${t.id}" ${t.id === defaultSourceId ? 'selected' : ''}>Capacitação Nº ${t.number} - ${t.polo || 'Polo Regional'} (${t.uf || 'MT'}) ${isHist ? ' [HISTÓRICO]' : ''}</option>`;
+    }).join('');
+
+    modal.style.display = 'block';
+  }
+
+  closeCloneModal() {
+    const modal = document.getElementById('modal-clone-training');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async executeCloneTraining() {
+    const select = document.getElementById('clone-source-select');
+    if (!select || !select.value) return;
+
+    const sourceId = select.value;
+    const copyInst = document.getElementById('clone-opt-inst')?.checked;
+    const copyModules = document.getElementById('clone-opt-modules')?.checked;
+    const copyTexts = document.getElementById('clone-opt-texts')?.checked;
+    const copyEval = document.getElementById('clone-opt-eval')?.checked;
+    const copyMuns = document.getElementById('clone-opt-muns')?.checked;
+
+    try {
+      this.showToast('Criando nova capacitação a partir do modelo...');
+      const newId = await window.db.duplicateTraining(sourceId, {
+        copyInstitutional: copyInst,
+        copyModules: copyModules,
+        copyTexts: copyTexts,
+        copyEvaluationConfig: copyEval,
+        copyMunicipalities: copyMuns,
+        copyTeam: true
+      });
+
+      this.closeCloneModal();
+      await this.refreshTrainingsList();
+      this.showToast('✓ Nova capacitação criada com sucesso! Dados anteriores preservados.', 'success');
+      this.openWizard(newId, 1);
+    } catch (err) {
+      console.error('Erro ao duplicar capacitação:', err);
+      this.showToast(`Erro: ${err.message}`, 'error');
     }
   }
 
@@ -334,7 +428,11 @@ class AutoReportApp {
     const t = this.currentTraining;
     const titleEl = document.getElementById('wizard-header-title');
     if (titleEl) {
-      titleEl.innerHTML = `Capacitação Nº ${t.number || 16} • <span style="color:var(--accent-secondary);">${t.polo || 'Novo Polo'} (${t.uf || 'MT'})</span>`;
+      if (t.isHistorical) {
+        titleEl.innerHTML = `Capacitação Nº ${t.number} • <span style="color:#f59e0b;">${t.polo || 'Polo'} (${t.uf || 'MT'}) [HISTÓRICO PRESERVADO]</span>`;
+      } else {
+        titleEl.innerHTML = `Capacitação Nº ${t.number || 16} • <span style="color:var(--accent-secondary);">${t.polo || 'Novo Polo'} (${t.uf || 'MT'})</span>`;
+      }
     }
 
     // Calcular percentual de preenchimento
@@ -405,6 +503,11 @@ class AutoReportApp {
   saveCurrentStepData() {
     if (!this.currentTraining || !window.db) return;
     const t = this.currentTraining;
+
+    // Regra 67: Proteção estrita de registros históricos
+    if (t.isHistorical) {
+      return;
+    }
 
     // Sincronizar dados da Etapa 1
     t.number = parseInt(this.getVal('wiz-train-number')) || t.number;
