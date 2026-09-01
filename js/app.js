@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.7.9
+ * Versão: v.1.8.0
  */
 
 window.icons = {
@@ -902,12 +902,6 @@ class AutoReportApp {
     const statusTextEl = document.getElementById('wizard-header-progress-text');
     if (statusTextEl) {
       statusTextEl.textContent = `${percent}% Concluído (${completedSteps} de 11 Etapas)`;
-    }
-
-    // Controle de visibilidade do botão Apagar no assistente (somente relatórios criados pelo usuário)
-    const delBtn = document.getElementById('wizard-btn-delete');
-    if (delBtn) {
-      delBtn.style.display = t.isHistorical ? 'none' : 'inline-flex';
     }
   }
 
