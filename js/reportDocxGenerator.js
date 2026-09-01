@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial em Word (.docx)
- * Versão: v.1.9.9
+ * Versão: v.2.0.0
  */
 
 class ReportDocxGenerator {

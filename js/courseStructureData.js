@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Modelo Padrão Oficial e Estrutura do Curso
- * Versão: v.1.9.9
+ * Versão: v.2.0.0
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
