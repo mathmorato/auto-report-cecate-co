@@ -1298,35 +1298,47 @@ textarea.form-control {
   gap: 0.75rem;
 }
 
-/* Toast Notifications */
+/* Toast Notifications - Posicionamento Acima do Rodapé */
 .toast-container {
   position: fixed;
-  bottom: 24px;
+  bottom: 72px;
   right: 24px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 1000;
+  z-index: 9999;
+  pointer-events: none;
 }
 
 .toast {
+  pointer-events: auto;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-left: 4px solid var(--accent-primary);
+  border-left: 4px solid #3b82f6;
   border-radius: var(--radius-md);
   padding: 0.85rem 1.25rem;
   color: var(--text-primary);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   gap: 0.75rem;
   font-size: 0.875rem;
+  font-weight: 500;
   animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+}
+
+body.light-theme .toast {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
 }
 
 .toast.success { border-left-color: var(--accent-success); }
-.toast.warning { border-left-color: var(--accent-warning); }
+.toast.warning { border-left-color: #f59e0b; }
 .toast.error { border-left-color: var(--accent-danger); }
+.toast.info { border-left-color: #3b82f6; }
 
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
