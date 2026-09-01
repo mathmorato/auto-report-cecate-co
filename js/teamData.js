@@ -1,9 +1,10 @@
 /**
  * AutoReport CECATE - Catálogo Oficial de Equipe Participante (UFG & FNDE)
- * Versão: v.1.6.8
+ * Versão: v.1.6.9
  */
 
 window.OFFICIAL_PRONOUNS = [
+  { value: 'NENHUM', label: '(Nenhum pronome)' },
   { value: 'Prof.', label: 'Prof. (Professor)' },
   { value: 'Prof.ª', label: 'Prof.ª (Professora)' },
   { value: 'Eng.', label: 'Eng. (Engenheiro/a)' },
@@ -11,18 +12,17 @@ window.OFFICIAL_PRONOUNS = [
   { value: 'Pesquisador Visitante', label: 'Pesquisador Visitante' },
   { value: 'Pesquisadora Visitante', label: 'Pesquisadora Visitante' },
   { value: 'Sr.', label: 'Sr. (Senhor)' },
-  { value: 'Sra.', label: 'Sra. (Senhora)' },
-  { value: '', label: '(Nenhum pronome)' }
+  { value: 'Sra.', label: 'Sra. (Senhora)' }
 ];
 
 window.OFFICIAL_TITLES = [
+  { value: 'NENHUM', label: '(Nenhuma titulação)' },
   { value: 'Dr.', label: 'Dr. (Doutor)' },
   { value: 'Dra.', label: 'Dra. (Doutora)' },
   { value: 'M.Sc.', label: 'M.Sc. (Mestre)' },
   { value: 'Esp.', label: 'Esp. (Especialista)' },
   { value: 'Bel.', label: 'Bel. (Bacharel)' },
-  { value: 'Grad.', label: 'Grad. (Graduado/a)' },
-  { value: '', label: '(Nenhuma titulação)' }
+  { value: 'Grad.', label: 'Grad. (Graduado/a)' }
 ];
 
 window.OFFICIAL_ROLES = [
@@ -52,9 +52,15 @@ window.OFFICIAL_ROLES = [
 window.formatTeamMemberFullName = function(m) {
   if (!m) return '';
   const parts = [];
-  if (m.pronoun && m.pronoun.trim()) parts.push(m.pronoun.trim());
-  if (m.title && m.title.trim()) parts.push(m.title.trim());
-  if (m.name && m.name.trim()) parts.push(m.name.trim());
+  if (m.pronoun && m.pronoun.trim() && m.pronoun !== 'NENHUM' && m.pronoun !== '__unselected__') {
+    parts.push(m.pronoun.trim());
+  }
+  if (m.title && m.title.trim() && m.title !== 'NENHUM' && m.title !== '__unselected__') {
+    parts.push(m.title.trim());
+  }
+  if (m.name && m.name.trim()) {
+    parts.push(m.name.trim());
+  }
   return parts.join(' ') || m.fullName || m.name || '';
 };
 

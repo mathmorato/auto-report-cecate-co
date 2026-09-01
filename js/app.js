@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.6.8
+ * Versão: v.1.6.9
  */
 
 window.icons = {
@@ -1502,7 +1502,7 @@ class AutoReportApp {
     const pronounSelect = document.getElementById(`${context}-team-pronoun-select`);
     if (pronounSelect) {
       pronounSelect.innerHTML = `
-        <option value="">Selecionar Pronome...</option>
+        <option value="__unselected__" disabled selected>Selecionar Pronome...</option>
         ${(window.OFFICIAL_PRONOUNS || []).map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
       `;
     }
@@ -1511,7 +1511,7 @@ class AutoReportApp {
     const titleSelect = document.getElementById(`${context}-team-title-select`);
     if (titleSelect) {
       titleSelect.innerHTML = `
-        <option value="">Selecionar Titulação...</option>
+        <option value="__unselected__" disabled selected>Selecionar Titulação...</option>
         ${(window.OFFICIAL_TITLES || []).map(t => `<option value="${t.value}">${t.label}</option>`).join('')}
       `;
     }
@@ -1522,7 +1522,7 @@ class AutoReportApp {
     const roleOptionsFNDE = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'FNDE');
     if (roleSelect) {
       roleSelect.innerHTML = `
-        <option value="">Selecionar Cargo / Função...</option>
+        <option value="__unselected__" disabled selected>Selecionar Cargo / Função...</option>
         <optgroup label="Universidade Federal de Goiás - UFG">
           ${roleOptionsUFG.map(r => `<option value="${r.value}">${r.value}</option>`).join('')}
         </optgroup>
@@ -1551,8 +1551,8 @@ class AutoReportApp {
 
       if (member) {
         if (titleTextEl) titleTextEl.textContent = `Editando Integrante: ${member.name || ''}`;
-        if (pronounSelect) pronounSelect.value = member.pronoun || '';
-        if (titleSelect) titleSelect.value = member.title || '';
+        if (pronounSelect) pronounSelect.value = (member.pronoun !== undefined && member.pronoun !== null) ? member.pronoun : '__unselected__';
+        if (titleSelect) titleSelect.value = (member.title !== undefined && member.title !== null) ? member.title : '__unselected__';
         if (nameInput) nameInput.value = member.name || '';
         if (instSelect) instSelect.value = member.institution || 'UFG';
 
@@ -1569,13 +1569,13 @@ class AutoReportApp {
         }
       }
     } else {
-      // Modo Adição - Tudo vem desmarcado/em branco para o usuário selecionar livremente
+      // Modo Adição - Tudo vem no estado __unselected__ para exigir escolha ativa do usuário
       if (titleTextEl) titleTextEl.textContent = `Cadastrar Novo Integrante da Equipe`;
-      if (pronounSelect) pronounSelect.value = '';
-      if (titleSelect) titleSelect.value = '';
+      if (pronounSelect) pronounSelect.value = '__unselected__';
+      if (titleSelect) titleSelect.value = '__unselected__';
       if (nameInput) nameInput.value = '';
       if (instSelect) instSelect.value = '';
-      if (roleSelect) roleSelect.value = '';
+      if (roleSelect) roleSelect.value = '__unselected__';
       if (customRoleGroup) customRoleGroup.style.display = 'none';
       if (customRoleInput) customRoleInput.value = '';
     }
@@ -1647,19 +1647,31 @@ class AutoReportApp {
       role = custom || 'Colaborador Técnico';
     }
 
+    if (!pronoun || pronoun === '__unselected__') {
+      this.showToast('Por favor, selecione o Pronome de Tratamento (ou "(Nenhum pronome)").', 'warning');
+      document.getElementById(`${context}-team-pronoun-select`)?.focus();
+      return;
+    }
+
+    if (!title || title === '__unselected__') {
+      this.showToast('Por favor, selecione a Titulação Acadêmica (ou "(Nenhuma titulação)").', 'warning');
+      document.getElementById(`${context}-team-title-select`)?.focus();
+      return;
+    }
+
     if (!name) {
       this.showToast('Por favor, informe o Nome do integrante.', 'warning');
       document.getElementById(`${context}-team-name-input`)?.focus();
       return;
     }
 
-    if (!institution) {
+    if (!institution || institution === '__unselected__') {
       this.showToast('Por favor, selecione a Instituição do integrante.', 'warning');
       document.getElementById(`${context}-team-institution-select`)?.focus();
       return;
     }
 
-    if (!role) {
+    if (!role || role === '__unselected__') {
       this.showToast('Por favor, selecione o Cargo / Função do integrante.', 'warning');
       document.getElementById(`${context}-team-role-select`)?.focus();
       return;
