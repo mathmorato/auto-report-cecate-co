@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.1
+ * Versão: v.2.0.2
  */
 
 window.icons = {
@@ -3096,56 +3096,127 @@ class AutoReportApp {
   /* ==========================================================================
      ESTRUTURAS DO CURSO (GERENCIAMENTO DE MODELOS & CATALOGO)
      ========================================================================== */
+  setCourseTemplateFilter(filterType = 'all') {
+    this.courseTemplateFilter = filterType;
+    document.querySelectorAll('.course-tpl-tab-btn').forEach(btn => btn.classList.remove('active'));
+    const activeTabBtn = document.getElementById(`course-tpl-tab-${filterType}`);
+    if (activeTabBtn) activeTabBtn.classList.add('active');
+    this.renderCourseTemplatesCatalog();
+  }
+
   renderCourseTemplatesCatalog() {
     if (!window.courseStructureHelper) return;
     const catalogContainer = document.getElementById('course-templates-catalog-list');
     if (!catalogContainer) return;
 
-    const templates = window.courseStructureHelper.getTemplatesList();
+    const allTemplates = window.courseStructureHelper.getTemplatesList();
     if (!this.activeTemplateId) {
       const defaultTpl = window.courseStructureHelper.getDefaultTemplate();
       this.activeTemplateId = defaultTpl ? defaultTpl.id : 'template_default_official';
     }
 
-    catalogContainer.innerHTML = templates.map(t => {
+    const filter = this.courseTemplateFilter || 'all';
+    let filtered = allTemplates;
+    if (filter === 'protected') {
+      filtered = allTemplates.filter(t => t.isProtected || t.isDefault);
+    } else if (filter === 'custom') {
+      filtered = allTemplates.filter(t => !t.isProtected && !t.isDefault);
+    }
+
+    // Atualizar badges dos botões de filtro
+    const countAll = document.getElementById('course-tpl-count-all');
+    const countProtected = document.getElementById('course-tpl-count-protected');
+    const countCustom = document.getElementById('course-tpl-count-custom');
+
+    if (countAll) countAll.textContent = allTemplates.length;
+    if (countProtected) countProtected.textContent = allTemplates.filter(t => t.isProtected || t.isDefault).length;
+    if (countCustom) countCustom.textContent = allTemplates.filter(t => !t.isProtected && !t.isDefault).length;
+
+    if (filtered.length === 0) {
+      catalogContainer.innerHTML = `
+        <div style="padding:2.5rem; text-align:center; color:var(--text-secondary);">
+          Nenhuma estrutura de curso encontrada nesta categoria.
+        </div>
+      `;
+      return;
+    }
+
+    let rowsHtml = filtered.map(t => {
       const isSelected = t.id === this.activeTemplateId;
       const isDefault = t.isDefault;
       const isProtected = t.isProtected;
+      const modsCount = (t.modules || []).length;
+
+      // Calcular carga horária total
+      let totalH = 0;
+      (t.modules || []).forEach(m => {
+        (m.gestorTopics || []).forEach(gt => { totalH += parseFloat(gt.hours) || 0; });
+      });
+
+      const rowStyle = isSelected ? 
+        'background: rgba(245, 158, 11, 0.12); border-left: 4px solid #f59e0b; font-weight:600;' : 
+        'cursor:pointer;';
 
       return `
-        <div class="card" style="padding:1.25rem; border:2px solid ${isSelected ? 'var(--accent-blue-text)' : 'var(--border-color)'}; background:${isSelected ? 'rgba(59,130,246,0.06)' : 'var(--bg-card)'}; transition:all 0.2s ease;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.65rem; gap:0.5rem; flex-wrap:wrap;">
-            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
-              ${isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem;">🔒 Modelo Padrão Protegido</span>' : '<span class="nav-badge font-bold" style="font-size:0.75rem; background:rgba(255,255,255,0.08);">Personalizada</span>'}
-              ${isDefault ? '<span class="nav-badge badge-emerald font-bold" style="font-size:0.75rem;">⭐ Ativo</span>' : ''}
+        <tr onclick="app.selectCourseTemplateForEdit('${t.id}')" style="${rowStyle}">
+          <td style="text-align:center; vertical-align:middle;">
+            ${isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem;">🔒 Protegido</span>' : '<span class="nav-badge font-bold" style="font-size:0.75rem; background:rgba(255,255,255,0.08);">✏️ Editável</span>'}
+            ${isDefault ? '<span class="nav-badge badge-emerald font-bold" style="font-size:0.75rem; margin-left:0.25rem;">⭐ Ativo</span>' : ''}
+          </td>
+          <td style="text-align:left; vertical-align:middle;">
+            <div style="font-weight:700; color:var(--text-primary); font-size:0.92rem;">${t.name || 'Sem nome'}</div>
+            <div style="font-size:0.78rem; color:var(--text-secondary); line-height:1.3;">${t.description || 'Modelo de estrutura de curso'}</div>
+          </td>
+          <td style="text-align:center; vertical-align:middle; font-weight:700;">
+            ${modsCount} Módulos • ${totalH.toFixed(1).replace('.', ',')} h Total
+          </td>
+          <td style="text-align:center; vertical-align:middle;" onclick="event.stopPropagation();">
+            <div style="display:flex; justify-content:center; gap:0.35rem; flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem;" title="Duplicar esta estrutura para criar um modelo editável">
+                📋 Duplicar
+              </button>
+              ${!isProtected ? `
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem;" title="Editar módulos desta estrutura">
+                  ✏️ Editar
+                </button>
+              ` : `
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem;" title="Visualizar estrutura e preview da tabela">
+                  👁️ Visualizar
+                </button>
+              `}
+              ${!isDefault ? `
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.setDefaultCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; color:var(--accent-emerald-text);" title="Definir como o Modelo Padrão Ativo para novas capacitações">
+                  ⭐ Definir como Padrão
+                </button>
+              ` : ''}
+              ${(!isProtected && !isDefault) ? `
+                <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem;" title="Excluir estrutura personalizada">
+                  🗑️ Excluir
+                </button>
+              ` : ''}
             </div>
-            <span class="nav-badge font-mono font-bold" style="font-size:0.75rem;">${(t.modules || []).length} Módulos</span>
-          </div>
-
-          <h4 style="margin:0 0 0.35rem 0; font-size:1.05rem; color:var(--text-primary); font-weight:700;">${t.name || 'Sem nome'}</h4>
-          <p style="margin:0 0 1rem 0; font-size:0.82rem; color:var(--text-secondary); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${t.description || 'Estrutura de curso'}</p>
-
-          <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:auto;">
-            <button type="button" class="btn ${isSelected ? 'btn-primary' : 'btn-secondary'} btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="font-size:0.78rem; font-weight:700;">
-              ${isSelected ? '✓ Editando Agora' : 'Visualizar / Editar'}
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseTemplate('${t.id}')" style="font-size:0.78rem; font-weight:600;" title="Duplicar esta estrutura para criar um novo modelo">
-              Duplicar
-            </button>
-            ${!isDefault ? `
-              <button type="button" class="btn btn-secondary btn-sm" onclick="app.setDefaultCourseTemplate('${t.id}')" style="font-size:0.78rem; font-weight:600; color:var(--accent-emerald-text);" title="Definir como o Modelo Padrão Ativo para novas capacitações">
-                Definir como Padrão
-              </button>
-            ` : ''}
-            ${(!isProtected && !isDefault) ? `
-              <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseTemplate('${t.id}')" style="font-size:0.78rem; font-weight:600;" title="Excluir estrutura personalizada">
-                Excluir
-              </button>
-            ` : ''}
-          </div>
-        </div>
+          </td>
+        </tr>
       `;
     }).join('');
+
+    catalogContainer.innerHTML = `
+      <div class="table-responsive-wrapper">
+        <table class="report-data-table">
+          <thead>
+            <tr>
+              <th style="width: 140px; text-align:center; vertical-align:middle;">Status</th>
+              <th style="text-align:center; vertical-align:middle;">Nome da Estrutura</th>
+              <th style="width: 180px; text-align:center; vertical-align:middle;">Módulos & Carga Horária</th>
+              <th style="width: 280px; text-align:center; vertical-align:middle;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+    `;
   }
 
   selectCourseTemplateForEdit(templateId) {
@@ -3309,11 +3380,56 @@ class AutoReportApp {
 
     const titleEl = document.getElementById('active-template-editor-title');
     const descEl = document.getElementById('active-template-editor-desc');
+    const actionsEl = document.getElementById('active-template-editor-actions');
+    const bannerEl = document.getElementById('active-template-protection-banner');
+
     if (titleEl && activeTpl) {
-      titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> <span>Editando: ${activeTpl.name}</span> ${activeTpl.isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem; margin-left:0.5rem;">🔒 Modelo Padrão Protegido</span>' : ''}`;
+      titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> <span>Estrutura Selecionada: ${activeTpl.name}</span> ${activeTpl.isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem; margin-left:0.5rem;">🔒 Modelo Padrão Protegido</span>' : ''}`;
     }
     if (descEl && activeTpl) {
-      descEl.textContent = activeTpl.description || 'Estrutura oficial do curso';
+      descEl.textContent = activeTpl.description || 'Estrutura de curso cadastrada no sistema';
+    }
+
+    if (bannerEl && activeTpl) {
+      if (activeTpl.isProtected) {
+        bannerEl.style.background = 'rgba(59, 130, 246, 0.1)';
+        bannerEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
+        bannerEl.innerHTML = `
+          <div style="color:var(--accent-blue-text); display:flex; align-items:center; gap:0.5rem;">
+            <span>🔒 <strong>Modelo Padrão Protegido:</strong> Este é o modelo institucional do CECATE-CO e não pode ter seus módulos alterados diretamente. Clique em "Duplicar" para criar uma cópia editável.</span>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="app.duplicateCourseTemplate('${activeTpl.id}')" style="font-weight:700;">
+            📋 Duplicar e Criar Cópia Editável
+          </button>
+        `;
+      } else {
+        bannerEl.style.background = 'rgba(16, 185, 129, 0.1)';
+        bannerEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+        bannerEl.innerHTML = `
+          <div style="color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.5rem;">
+            <span>✏️ <strong>Estrutura Personalizada Editável:</strong> Você pode alterar os módulos, temáticas e cargas horárias desta estrutura livremente.</span>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseModule()" style="font-weight:700;">
+            + Adicionar Módulo
+          </button>
+        `;
+      }
+    }
+
+    if (actionsEl && activeTpl) {
+      if (!activeTpl.isProtected) {
+        actionsEl.innerHTML = `
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseModule()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> + Adicionar Módulo
+          </button>
+        `;
+      } else {
+        actionsEl.innerHTML = `
+          <button type="button" class="btn btn-primary btn-sm" onclick="app.duplicateCourseTemplate('${activeTpl.id}')" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+            📋 Duplicar Estrutura
+          </button>
+        `;
+      }
     }
 
     const editorContainer = document.getElementById('global-master-course-editor');
