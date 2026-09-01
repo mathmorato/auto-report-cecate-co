@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Banco de Dados Local (IndexedDB & State Management)
- * Versão: v.1.6.3
+ * Versão: v.1.6.4
  */
 
 class TrainingDB {
@@ -241,22 +241,24 @@ class TrainingDB {
 
     const trainingRecord = {
       id: trainingId,
-      number: data.number || 16,
+      number: (data.number !== undefined && data.number !== null) ? data.number : '',
       title: data.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
-      polo: data.polo || 'Pontes e Lacerda',
-      uf: data.uf || 'MT',
-      startDate: data.startDate || '2026-06-23',
-      endDate: data.endDate || '2026-06-24',
-      datesFormatted: data.datesFormatted || '23 e 24 de junho de 2026',
-      workload: data.workload || '16 horas',
+      polo: data.polo || '',
+      uf: data.uf || '',
+      poloIbge: data.poloIbge || '',
+      startDate: data.startDate || '',
+      endDate: data.endDate || '',
+      datesFormatted: data.datesFormatted || '',
+      workload: data.workload || '',
       targetAudience: data.targetAudience || 'Gestores Municipais e Conselheiros CACS-FUNDEB',
-      expectedParticipants: data.expectedParticipants || 50,
-      responsibleOrg: data.responsibleOrg || 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
-      relatedProject: data.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
-      processNumber: data.processNumber || '23070.012345/2026-00',
-      fundingOrg: data.fundingOrg || 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
-      partnerOrgs: data.partnerOrgs || 'Ministério da Educação / Prefeituras Municipais',
-      locationVenue: data.locationVenue || 'Auditório Municipal',
+      expectedParticipants: data.expectedParticipants || '',
+      responsibleOrg: data.responsibleOrg || localStorage.getItem('autoreport_setting_org') || 'Centro Colaborador de Apoio ao Transporte Escolar da Região Centro-Oeste (CECATE-CO)',
+      relatedProject: data.relatedProject || localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+      processNumber: data.processNumber || localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00',
+      fundingOrg: data.fundingOrg || localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
+      partnerOrgs: data.partnerOrgs || '',
+      locationVenue: data.locationVenue || '',
+      locationAddress: data.locationAddress || '',
       contactsData: data.contactsData || {
         startDate: '2026-05-10',
         methods: 'Ofícios, E-mails, Telefones e WhatsApp',

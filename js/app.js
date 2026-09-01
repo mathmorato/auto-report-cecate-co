@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.6.3
+ * Versão: v.1.6.4
  */
 
 window.icons = {
@@ -374,7 +374,7 @@ class AutoReportApp {
       endDate: '',
       datesFormatted: '',
       workload: '',
-      targetAudience: '',
+      targetAudience: 'Gestores Municipais e Conselheiros CACS-FUNDEB',
       expectedParticipants: '',
       responsibleOrg: defaultOrg,
       relatedProject: defaultProject,
@@ -719,8 +719,81 @@ class AutoReportApp {
     this.populateAllWizardForms();
   }
 
+  validateCurrentStep(stepNumber = this.currentStep) {
+    if (!this.currentTraining) return true;
+    const t = this.currentTraining;
+
+    // Registros históricos são livres de validação pois são apenas para consulta
+    if (t.isHistorical || t.status === 'historico') return true;
+
+    if (stepNumber === 1) {
+      const missing = [];
+      const num = this.getVal('wiz-train-number');
+      const title = this.getVal('wiz-train-title');
+      const uf = this.getVal('wiz-train-uf');
+      const polo = this.getVal('wiz-train-polo');
+      const venue = this.getVal('wiz-train-venue');
+      const address = this.getVal('wiz-train-address');
+      const startDate = this.getVal('wiz-train-start-date');
+      const workload = this.getVal('wiz-train-workload-num') || this.getVal('wiz-train-workload');
+
+      if (!num) missing.push('Número do Relatório');
+      if (!title) missing.push('Título da Capacitação');
+      if (!uf) missing.push('Estado (UF)');
+      if (!polo) missing.push('Município Polo');
+      if (!venue) missing.push('Local / Auditório');
+      if (!address) missing.push('Endereço Completo');
+      if (!startDate) missing.push('Data Inicial');
+      if (!workload) missing.push('Carga Horária');
+
+      if (missing.length > 0) {
+        this.showToast(`⚠️ Preencha os campos obrigatórios (*) para avançar: ${missing.join(', ')}.`, 'warning');
+        
+        if (!num) { const el = document.getElementById('wiz-train-number'); if (el) el.focus(); }
+        else if (!title) { const el = document.getElementById('wiz-train-title'); if (el) el.focus(); }
+        else if (!uf) { const el = document.getElementById('wiz-train-uf'); if (el) el.focus(); }
+        else if (!polo) { const el = document.getElementById('wiz-train-polo-select'); if (el) el.focus(); }
+        else if (!venue) { const el = document.getElementById('wiz-train-venue'); if (el) el.focus(); }
+        else if (!address) { const el = document.getElementById('wiz-train-address'); if (el) el.focus(); }
+        else if (!startDate) { const el = document.getElementById('wiz-train-start-date'); if (el) el.focus(); }
+        else if (!workload) { const el = document.getElementById('wiz-train-workload-num'); if (el) el.focus(); }
+
+        return false;
+      }
+    }
+
+    if (stepNumber === 2) {
+      if (!t.team || t.team.length === 0) {
+        this.showToast('⚠️ Adicione pelo menos um integrante à Equipe Participante na Etapa 2 antes de avançar.', 'warning');
+        return false;
+      }
+    }
+
+    if (stepNumber === 3) {
+      if (!t.municipalities || t.municipalities.length === 0) {
+        this.showToast('⚠️ Cadastre pelo menos um Município Convocado na Etapa 3 antes de avançar.', 'warning');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   setWizardStep(stepNumber) {
-    this.currentStep = Math.max(1, Math.min(this.totalSteps, stepNumber));
+    const targetStep = Math.max(1, Math.min(this.totalSteps, stepNumber));
+
+    // Se estiver tentando avançar para uma etapa posterior, salvar e validar a etapa atual
+    if (targetStep > this.currentStep) {
+      this.saveCurrentStepData();
+      if (!this.validateCurrentStep(this.currentStep)) {
+        return; // Impede avançar se não preencheu todos os itens!
+      }
+    } else if (targetStep < this.currentStep) {
+      // Salvar progresso ao retornar para etapas anteriores
+      this.saveCurrentStepData();
+    }
+
+    this.currentStep = targetStep;
     window.location.hash = `wizard/${this.currentTraining?.id || ''}/${this.currentStep}`;
 
     // Atualizar abas do Stepper
@@ -761,6 +834,9 @@ class AutoReportApp {
 
   wizardNext() {
     this.saveCurrentStepData();
+    if (!this.validateCurrentStep()) {
+      return; // Bloqueado se não preencheu todos os itens!
+    }
     if (this.currentStep < this.totalSteps) {
       this.setWizardStep(this.currentStep + 1);
     }
