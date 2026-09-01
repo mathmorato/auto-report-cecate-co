@@ -1905,6 +1905,18 @@ textarea.form-control {
   padding-right: 0.35rem;
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.drop-zone.dragover {
+  border-color: var(--accent-success) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  transform: scale(1.01);
+}
+
+
 
 
 

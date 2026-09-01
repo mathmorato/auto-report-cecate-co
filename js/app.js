@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.1.1
+ * Versão: v.1.2.0
  */
 
 class AutoReportApp {
@@ -316,7 +316,27 @@ class AutoReportApp {
   /* ==========================================================================
      ASSISTENTE DE 11 ETAPAS (WIZARD ENGINE)
      ========================================================================== */
-  async createNewTraining() {
+  createNewTraining() {
+    this.openNewTrainingOptionsModal();
+  }
+
+  openNewTrainingOptionsModal() {
+    const modal = document.getElementById('modal-new-training-options');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeNewTrainingOptionsModal() {
+    const modal = document.getElementById('modal-new-training-options');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => modal.style.display = 'none', 200);
+    }
+  }
+
+  async createNewTrainingBlank() {
     const nextNumber = this.trainingList.length > 0 ? Math.max(...this.trainingList.map(t => parseInt(t.number) || 0)) + 1 : 16;
     const newId = `cap_${Date.now()}`;
 
@@ -356,6 +376,200 @@ class AutoReportApp {
 
     await window.db.saveTrainingFull(newTraining, 'Criação de nova capacitação');
     this.openWizard(newId, 1);
+  }
+
+  /* ==========================================================================
+     LEITURA INTELIGENTE OCR DE CONVOCAÇÃO CECATE (PDF)
+     ========================================================================== */
+  openImportConvocacaoModal() {
+    this.extractedConvocacaoData = null;
+    
+    // Resetar visões do modal
+    const uploadStep = document.getElementById('convocacao-upload-step');
+    const procStep = document.getElementById('convocacao-processing-step');
+    const resStep = document.getElementById('convocacao-results-step');
+    const applyBtn = document.getElementById('convocacao-apply-btn');
+
+    if (uploadStep) uploadStep.style.display = 'block';
+    if (procStep) procStep.style.display = 'none';
+    if (resStep) resStep.style.display = 'none';
+    if (applyBtn) applyBtn.style.display = 'none';
+
+    const modal = document.getElementById('modal-import-convocacao');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeImportConvocacaoModal() {
+    const modal = document.getElementById('modal-import-convocacao');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => modal.style.display = 'none', 200);
+    }
+  }
+
+  async handleConvocacaoFileSelected(file) {
+    if (!file || !window.convocacaoParser) return;
+
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      this.showToast('Por favor, selecione um arquivo PDF de Convocação.', 'warning');
+      return;
+    }
+
+    const uploadStep = document.getElementById('convocacao-upload-step');
+    const procStep = document.getElementById('convocacao-processing-step');
+    const resStep = document.getElementById('convocacao-results-step');
+    const statusText = document.getElementById('convocacao-status-text');
+    const progressFill = document.getElementById('convocacao-progress-fill');
+
+    if (uploadStep) uploadStep.style.display = 'none';
+    if (procStep) procStep.style.display = 'block';
+    if (resStep) resStep.style.display = 'none';
+
+    try {
+      if (statusText) statusText.textContent = 'Carregando arquivo PDF e inicializando leitor OCR...';
+      if (progressFill) progressFill.style.width = '30%';
+
+      const { fullText, pageTexts } = await window.convocacaoParser.extractTextFromPdf(file);
+
+      if (statusText) statusText.textContent = 'Executando OCR e analisando tópicos da convocação...';
+      if (progressFill) progressFill.style.width = '70%';
+
+      await new Promise(r => setTimeout(r, 300));
+
+      const parsed = window.convocacaoParser.parseConvocacaoText(fullText);
+      this.extractedConvocacaoData = parsed;
+
+      if (progressFill) progressFill.style.width = '100%';
+      await new Promise(r => setTimeout(r, 200));
+
+      // Atualizar interface dos resultados
+      if (procStep) procStep.style.display = 'none';
+      if (resStep) resStep.style.display = 'block';
+
+      document.getElementById('res-conv-polo').textContent = parsed.polo ? `${parsed.polo} (${parsed.uf})` : `Não identificado (${parsed.uf})`;
+      document.getElementById('res-conv-ibge').textContent = parsed.poloIbge ? `Código IBGE: ${parsed.poloIbge}` : `IBGE: Não encontrado`;
+      document.getElementById('res-conv-dates').textContent = parsed.datesFormatted || 'Datas não identificadas';
+      document.getElementById('res-conv-workload').textContent = `Carga Horária: ${parsed.workload}`;
+      document.getElementById('res-conv-venue').textContent = parsed.venue || 'Local não informado';
+      document.getElementById('res-conv-address').textContent = parsed.address || 'Endereço não informado';
+
+      const munsBadge = document.getElementById('res-conv-muns-badge');
+      const munsList = document.getElementById('res-conv-muns-list');
+
+      if (munsBadge) munsBadge.textContent = `${parsed.allMunicipalities.length} Municípios Convocados`;
+      if (munsList) {
+        if (parsed.allMunicipalities.length === 0) {
+          munsList.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">Nenhum município listado explicitamente no documento.</span>`;
+        } else {
+          munsList.innerHTML = parsed.allMunicipalities.map(m => `
+            <span class="nav-badge" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); font-size:0.75rem;" title="IBGE: ${m.code || 'N/A'} • ${m.dateGroup}">
+              📍 ${m.name} (${m.dateGroup})
+            </span>
+          `).join('');
+        }
+      }
+
+      const applyBtn = document.getElementById('convocacao-apply-btn');
+      if (applyBtn) applyBtn.style.display = 'inline-flex';
+
+      this.showToast('✨ Convocação analisada com sucesso!');
+
+    } catch (err) {
+      console.error('Erro na leitura da convocação:', err);
+      this.showToast(`Erro ao ler PDF: ${err.message}`, 'error');
+      if (procStep) procStep.style.display = 'none';
+      if (uploadStep) uploadStep.style.display = 'block';
+    }
+  }
+
+  async applyExtractedConvocacaoData() {
+    if (!this.extractedConvocacaoData) return;
+
+    const data = this.extractedConvocacaoData;
+    this.closeImportConvocacaoModal();
+
+    try {
+      // Se não houver relatório aberto ou se for histórico, criar um novo
+      let training = this.currentTraining;
+      if (!training || training.isHistorical) {
+        const nextNumber = this.trainingList.length > 0 ? Math.max(...this.trainingList.map(t => parseInt(t.number) || 0)) + 1 : 16;
+        const newId = `cap_${Date.now()}`;
+
+        training = {
+          id: newId,
+          number: nextNumber,
+          title: data.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+          polo: data.polo || '',
+          uf: data.uf || 'MT',
+          startDate: data.startDate || new Date().toISOString().split('T')[0],
+          endDate: data.endDate || new Date().toISOString().split('T')[0],
+          datesFormatted: data.datesFormatted || 'A definir',
+          workload: data.workload || '16 horas',
+          targetAudience: data.targetAudience || 'Gestores Municipais e Conselheiros CACS-FUNDEB',
+          expectedParticipants: data.expectedParticipants || 40,
+          responsibleOrg: 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
+          relatedProject: 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+          processNumber: '23070.012345/2026-00',
+          fundingOrg: 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
+          partnerOrgs: 'Ministério da Educação / Prefeituras Municipais',
+          locationVenue: data.venue || 'Auditório Municipal',
+          status: 'in_progress',
+          progressPercent: 15,
+          team: [],
+          municipalities: [],
+          courseModules: [
+            { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, order: 0 },
+            { moduleNumber: '02', topicGestor: 'Conhecendo os programas PNATE e Caminho da Escola', topicCACS: 'Conhecendo os programas PNATE e Caminho da Escola', hoursGestor: 1.5, hoursCACS: 1.5, order: 1 },
+            { moduleNumber: '03', topicGestor: 'Gestão do Transporte Escolar e Software SETE', topicCACS: 'Fiscalização e Controle Social do Transporte Escolar', hoursGestor: 2.0, hoursCACS: 2.0, order: 2 },
+            { moduleNumber: '04', topicGestor: 'Prestação de Contas no SiGPC e Desafios Locais', topicCACS: 'Atuação do CACS-FUNDEB e Análise de Contas', hoursGestor: 3.0, hoursCACS: 3.0, order: 3 }
+          ],
+          courseMoments: [],
+          attendance: [],
+          evaluations: [],
+          media: []
+        };
+      } else {
+        // Atualizar dados no relatório existente
+        training.polo = data.polo || training.polo;
+        training.uf = data.uf || training.uf;
+        training.poloIbge = data.poloIbge || training.poloIbge;
+        training.startDate = data.startDate || training.startDate;
+        training.endDate = data.endDate || training.endDate;
+        training.datesFormatted = data.datesFormatted || training.datesFormatted;
+        training.workload = data.workload || training.workload;
+        training.locationVenue = data.venue || training.locationVenue;
+        training.locationAddress = data.address || training.locationAddress;
+        training.targetAudience = data.targetAudience || training.targetAudience;
+        training.expectedParticipants = data.expectedParticipants || training.expectedParticipants;
+      }
+
+      // Sincronizar Municípios Convocados
+      if (data.allMunicipalities.length > 0) {
+        training.municipalities = data.allMunicipalities.map(m => ({
+          ibgeCode: String(m.code || ''),
+          name: m.name,
+          uf: m.uf || data.uf,
+          convocadosCount: 4,
+          presentesCount: 0,
+          dateGroup: m.dateGroup || 'Geral',
+          distanciaPolo: 0
+        }));
+      }
+
+      await window.db.saveTrainingFull(training, 'Preenchimento automático via Convocação PDF');
+      this.currentTraining = training;
+      await this.refreshTrainingsList();
+
+      this.showToast('✨ Relatório preenchido automaticamente com sucesso!', 'success');
+      this.openWizard(training.id, 1);
+
+    } catch (err) {
+      console.error('Erro ao aplicar convocação:', err);
+      this.showToast(`Erro ao aplicar dados: ${err.message}`, 'error');
+    }
   }
 
   async openWizard(trainingId, step = 1) {
