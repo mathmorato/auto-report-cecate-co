@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.4.6
+ * Versão: v.1.4.7
  */
 
 class AutoReportApp {
@@ -16,6 +16,7 @@ class AutoReportApp {
     this.metrics = null;
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
+    this.memberToDelete = null;
   }
 
   /**
@@ -1280,12 +1281,7 @@ class AutoReportApp {
   }
 
   removeTeamMember(index) {
-    if (!this.currentTraining?.team?.[index]) return;
-    const removedName = this.currentTraining.team[index].name;
-    this.currentTraining.team.splice(index, 1);
-    this.renderTeamList();
-    this.saveCurrentStepData();
-    this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
+    this.openConfirmDeleteMemberModal('wizard', index);
   }
 
   /* ==========================================================================
@@ -1398,14 +1394,7 @@ class AutoReportApp {
   }
 
   removeMasterTeamMember(index) {
-    const masterTeam = window.getMasterTeam();
-    if (!masterTeam[index]) return;
-    const removedName = masterTeam[index].name;
-
-    masterTeam.splice(index, 1);
-    window.saveMasterTeam(masterTeam);
-    this.renderMasterTeamManagement();
-    this.showToast(`🗑️ Integrante ${removedName} removido do catálogo geral.`);
+    this.openConfirmDeleteMemberModal('master', index);
   }
 
   /* ==========================================================================
@@ -2484,6 +2473,86 @@ class AutoReportApp {
         }
       }, 200);
     }
+  }
+
+  /* ==========================================================================
+     MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE INTEGRANTE
+     ========================================================================== */
+  openConfirmDeleteMemberModal(type, index) {
+    let member = null;
+    if (type === 'master') {
+      const masterTeam = window.getMasterTeam();
+      member = masterTeam[index];
+    } else if (type === 'wizard') {
+      member = this.currentTraining?.team?.[index];
+    }
+
+    if (!member) return;
+
+    this.memberToDelete = { type, index };
+
+    const msgEl = document.getElementById('modal-delete-member-message');
+    const nameEl = document.getElementById('modal-delete-member-name');
+    const roleEl = document.getElementById('modal-delete-member-role');
+
+    if (msgEl) {
+      msgEl.textContent = type === 'master'
+        ? 'Deseja realmente remover este integrante do catálogo geral de equipe?'
+        : 'Deseja realmente remover este integrante da equipe desta capacitação?';
+    }
+    if (nameEl) {
+      nameEl.textContent = window.formatTeamMemberFullName ? window.formatTeamMemberFullName(member) : (member.name || 'Integrante');
+    }
+    if (roleEl) {
+      const inst = member.institution || member.institutionGroup || 'UFG';
+      const role = member.role || 'Equipe Técnica';
+      roleEl.textContent = `${inst} • ${role}`;
+    }
+
+    const modal = document.getElementById('modal-confirm-delete-member');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeConfirmDeleteMemberModal() {
+    this.memberToDelete = null;
+    const modal = document.getElementById('modal-confirm-delete-member');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => {
+        if (!modal.classList.contains('active')) {
+          modal.style.display = 'none';
+        }
+      }, 200);
+    }
+  }
+
+  executeDeleteMemberConfirmed() {
+    if (!this.memberToDelete) return;
+    const { type, index } = this.memberToDelete;
+
+    if (type === 'master') {
+      const masterTeam = window.getMasterTeam();
+      if (masterTeam[index]) {
+        const removedName = masterTeam[index].name;
+        masterTeam.splice(index, 1);
+        window.saveMasterTeam(masterTeam);
+        this.renderMasterTeamManagement();
+        this.showToast(`🗑️ Integrante ${removedName} removido do catálogo geral.`);
+      }
+    } else if (type === 'wizard') {
+      if (this.currentTraining?.team?.[index]) {
+        const removedName = this.currentTraining.team[index].name;
+        this.currentTraining.team.splice(index, 1);
+        this.renderTeamList();
+        this.saveCurrentStepData();
+        this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
+      }
+    }
+
+    this.closeConfirmDeleteMemberModal();
   }
 
   async executeDeleteTrainingConfirmed() {
