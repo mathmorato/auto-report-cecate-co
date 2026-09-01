@@ -94,7 +94,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.5.4</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.5.5</span> • CECATE</div>
       </div>
     </aside>
 
@@ -144,7 +144,9 @@
           <!-- Grade de Métricas Globais -->
           <div class="metrics-grid">
             <div class="metric-card">
-              <div class="metric-icon">📑</div>
+              <div class="metric-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              </div>
               <div class="metric-info">
                 <h4>Total de Capacitações</h4>
                 <div class="metric-value" id="dash-total-reports">0</div>
@@ -153,7 +155,9 @@
             </div>
 
             <div class="metric-card cyan">
-              <div class="metric-icon">✓</div>
+              <div class="metric-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
               <div class="metric-info">
                 <h4>Capacitações Concluídas</h4>
                 <div class="metric-value" id="dash-completed-reports">0</div>
@@ -162,7 +166,9 @@
             </div>
 
             <div class="metric-card">
-              <div class="metric-icon">👥</div>
+              <div class="metric-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
               <div class="metric-info">
                 <h4>Participantes Atendidos</h4>
                 <div class="metric-value" id="dash-total-participants">0</div>
@@ -171,7 +177,9 @@
             </div>
 
             <div class="metric-card cyan">
-              <div class="metric-icon">🏛️</div>
+              <div class="metric-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="9" y1="18" x2="15" y2="18"></line></svg>
+              </div>
               <div class="metric-info">
                 <h4>Municípios Alcançados</h4>
                 <div class="metric-value" id="dash-total-municipalities">0</div>
@@ -187,9 +195,15 @@
                 <h3 style="margin-bottom:0.25rem;">Banco de Capacitações & Relatórios</h3>
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                   <button class="btn btn-sm btn-secondary filter-tab-btn active" id="filter-dash-all" onclick="app.setDashboardFilter('all')">Todos</button>
-                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-hist" onclick="app.setDashboardFilter('historico')">🏛️ Histórico (Nº 6 a 14)</button>
-                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-prog" onclick="app.setDashboardFilter('in_progress')">⏳ Em Andamento</button>
-                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-comp" onclick="app.setDashboardFilter('completed')">✓ Concluídas</button>
+                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-hist" onclick="app.setDashboardFilter('historico')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="6" x2="15" y2="6"></line><line x1="9" y1="10" x2="15" y2="10"></line></svg> Histórico (Nº 6 a 14)
+                  </button>
+                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-prog" onclick="app.setDashboardFilter('in_progress')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Em Andamento
+                  </button>
+                  <button class="btn btn-sm btn-secondary filter-tab-btn" id="filter-dash-comp" onclick="app.setDashboardFilter('completed')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluídas
+                  </button>
                 </div>
               </div>
               <button class="btn btn-secondary btn-sm" onclick="app.navigateTo('trainings')">Ver Todas as Capacitações</button>
@@ -272,7 +286,10 @@
             <!-- ETAPA 1: IDENTIFICAÇÃO -->
             <div class="wizard-step-panel active" id="wizard-step-1">
               <div class="wizard-card">
-                <h3 class="wizard-card-title">📝 Etapa 1: Identificação da Capacitação</h3>
+                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  <span>Etapa 1: Identificação da Capacitação</span>
+                </h3>
                 <p class="wizard-card-desc">Informe os dados institucionais, polo territorial, datas e informações administrativas do evento.</p>
 
                 <div style="display:grid; grid-template-columns: 1fr 3fr; gap:1rem; margin-top:1.25rem;">
@@ -399,7 +416,10 @@
               <div class="wizard-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
                   <div>
-                    <h3 class="wizard-card-title">👥 Etapa 2: Equipe Participante</h3>
+                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                      <span>Etapa 2: Equipe Participante</span>
+                    </h3>
                     <p class="wizard-card-desc">Gerencie o Coordenador do Projeto, a Equipe Técnica da UFG e os Coordenadores do FNDE.</p>
                   </div>
                   <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
@@ -412,13 +432,13 @@
                 <!-- Sub-abas de Edição da Equipe -->
                 <div style="display:flex; gap:0.5rem; margin-bottom:1.25rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; flex-wrap:wrap;">
                   <button type="button" class="btn btn-sm btn-secondary team-tab-btn active" id="team-tab-all" onclick="app.setTeamFilter('all')">
-                    📋 Todos (<span id="team-count-all">0</span>)
+                    Todos (<span id="team-count-all">0</span>)
                   </button>
                   <button type="button" class="btn btn-sm btn-secondary team-tab-btn" id="team-tab-ufg" onclick="app.setTeamFilter('UFG')">
-                    🏛️ UFG - Coordenação & Técnica (<span id="team-count-ufg">0</span>)
+                    UFG - Coordenação & Técnica (<span id="team-count-ufg">0</span>)
                   </button>
                   <button type="button" class="btn btn-sm btn-secondary team-tab-btn" id="team-tab-fnde" onclick="app.setTeamFilter('FNDE')">
-                    🏢 FNDE - Coordenações (<span id="team-count-fnde">0</span>)
+                    FNDE - Coordenações (<span id="team-count-fnde">0</span>)
                   </button>
                 </div>
 
@@ -426,9 +446,12 @@
                 <div id="wizard-team-editor-card" style="display:none; margin-bottom:1.5rem; background:rgba(15, 23, 42, 0.95); border:1px solid rgba(245, 158, 11, 0.4); border-radius:var(--radius-lg); padding:1.25rem; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
                     <h4 style="margin:0; color:#fbbf24; display:flex; align-items:center; gap:0.5rem;">
-                      <span>👤</span> <span id="wizard-team-editor-title-text">Cadastrar Novo Integrante</span>
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                      <span id="wizard-team-editor-title-text">Cadastrar Novo Integrante</span>
                     </h4>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('wizard')">✕ Cancelar</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('wizard')" style="display:inline-flex; align-items:center; gap:0.25rem;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Cancelar
+                    </button>
                   </div>
 
                   <input type="hidden" id="wizard-team-edit-index" value="-1">
@@ -481,7 +504,9 @@
                     </div>
                     <div style="display:flex; gap:0.5rem;">
                       <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('wizard')">Cancelar</button>
-                      <button type="button" class="btn btn-primary btn-sm" onclick="app.saveTeamMemberInPage('wizard')" style="background:var(--accent-primary); border-color:var(--accent-primary); font-weight:700;">💾 Salvar Integrante</button>
+                      <button type="button" class="btn btn-primary btn-sm" onclick="app.saveTeamMemberInPage('wizard')" style="background:var(--accent-primary); border-color:var(--accent-primary); font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Salvar Integrante
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -502,7 +527,10 @@
               <div class="wizard-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
                   <div>
-                    <h3 class="wizard-card-title">🏛️ Etapa 3: Municípios Convocados</h3>
+                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+                      <span>Etapa 3: Municípios Convocados</span>
+                    </h3>
                     <p class="wizard-card-desc">Adicione os municípios convocados da microrregião e suas respectivas distâncias em km até o polo.</p>
                   </div>
                   <div style="display:flex; gap:0.5rem;">
@@ -515,7 +543,7 @@
                 <div style="background:var(--bg-input); border:1px solid var(--border-color); border-left:4px solid var(--accent-primary); border-radius:var(--radius-md); padding:1rem; margin-top:1rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
                   <div>
                     <label class="form-label" style="margin-bottom:0.2rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
-                      👥 Previsão de Participantes:
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Previsão de Participantes:
                     </label>
                     <div style="font-size:0.78rem; color:var(--text-muted);">
                       Calculado automaticamente com base na quantidade de municípios convocados (<strong>4 participantes × número de municípios</strong>).
@@ -546,7 +574,10 @@
               <div class="wizard-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                   <div>
-                    <h3 class="wizard-card-title">📚 Etapa 4: Estrutura do Curso</h3>
+                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                      <span>Etapa 4: Estrutura do Curso</span>
+                    </h3>
                     <p class="wizard-card-desc">Configure os módulos teóricos e práticos aplicados para Gestores Municipais e Conselheiros CACS.</p>
                   </div>
                   <button class="btn btn-secondary btn-sm" onclick="app.addModulePrompt()">+ Adicionar Módulo</button>
@@ -566,7 +597,10 @@
             <!-- ETAPA 5: CONTATO COM OS MUNICÍPIOS -->
             <div class="wizard-step-panel" id="wizard-step-5">
               <div class="wizard-card">
-                <h3 class="wizard-card-title">📞 Etapa 5: Contato com os Municípios</h3>
+                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                  <span>Etapa 5: Contato com os Municípios</span>
+                </h3>
                 <p class="wizard-card-desc">Registre as datas de início de convocação, canais utilizados e quantitativos de contatos.</p>
 
                 <div style="display:grid; grid-template-columns: 1fr 2fr; gap:1rem;">
@@ -614,12 +648,17 @@
             <!-- ETAPA 6: LISTA DE PRESENÇA (UPLOAD EXCEL & TABELA 4) -->
             <div class="wizard-step-panel" id="wizard-step-6">
               <div class="wizard-card">
-                <h3 class="wizard-card-title">📋 Etapa 6: Importação da Lista de Presença</h3>
+                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                  <span>Etapa 6: Importação da Lista de Presença</span>
+                </h3>
                 <p class="wizard-card-desc">Faça upload da planilha Excel de respostas da lista de presença (Google Forms / Excel). O sistema mapeará automaticamente as colunas e calculará as taxas de participação.</p>
 
                 <!-- Dropzone Upload Excel -->
                 <div class="upload-dropzone" onclick="document.getElementById('file-input-attendance').click()">
-                  <div class="upload-dropzone-icon">📊</div>
+                  <div class="upload-dropzone-icon">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                  </div>
                   <div class="upload-dropzone-text">Clique ou arraste a Planilha de Lista de Presença (.xlsx)</div>
                   <div class="upload-dropzone-hint">Ex: 16CTE - Lista de presença (respostas).xlsx</div>
                   <input type="file" id="file-input-attendance" accept=".xlsx, .xls" style="display:none;" onchange="app.handleAttendanceFileUpload(event)">
@@ -651,7 +690,10 @@
               <div class="wizard-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
                   <div>
-                    <h3 class="wizard-card-title">⭐ Etapa 7: Avaliação da Capacitação</h3>
+                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                      <span>Etapa 7: Avaliação da Capacitação</span>
+                    </h3>
                     <p class="wizard-card-desc">Importe a planilha de avaliação para gerar automaticamente as médias das 7 perguntas, gráficos comparativos e nuvens de palavras nativas.</p>
                   </div>
                   <div style="display:flex; gap:0.75rem;">
@@ -662,7 +704,9 @@
 
                 <!-- Dropzone Upload Avaliação -->
                 <div class="upload-dropzone" onclick="document.getElementById('file-input-evaluation').click()">
-                  <div class="upload-dropzone-icon">📈</div>
+                  <div class="upload-dropzone-icon">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                  </div>
                   <div class="upload-dropzone-text">Clique ou arraste a Planilha de Avaliação (.xlsx)</div>
                   <div class="upload-dropzone-hint">Ex: 16CTE - Avaliação (respostas).xlsx</div>
                   <input type="file" id="file-input-evaluation" accept=".xlsx, .xls" style="display:none;" onchange="app.handleEvaluationFileUpload(event)">
@@ -727,7 +771,10 @@
               <div class="wizard-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                   <div>
-                    <h3 class="wizard-card-title">📸 Etapa 8: Registros Fotográficos da Capacitação</h3>
+                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                      <span>Etapa 8: Registros Fotográficos da Capacitação</span>
+                    </h3>
                     <p class="wizard-card-desc">Insira fotos do evento (Figuras 9 a 13). O sistema renumerará e organizará as legendas automaticamente.</p>
                   </div>
                   <button class="btn btn-primary btn-sm" onclick="document.getElementById('file-input-photos').click()">+ Enviar Fotos</button>
@@ -748,7 +795,10 @@
             <!-- ETAPA 9: APÊNDICES I & II -->
             <div class="wizard-step-panel" id="wizard-step-9">
               <div class="wizard-card">
-                <h3 class="wizard-card-title">📎 Etapa 9: Documentos e Apêndices</h3>
+                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                  <span>Etapa 9: Documentos e Apêndices</span>
+                </h3>
                 <p class="wizard-card-desc">Anexe os ofícios de convocação do FNDE (Apêndice I) e as convocações/e-mails do CECATE (Apêndice II).</p>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:1.5rem;">
@@ -787,7 +837,10 @@
             <!-- ETAPA 10: CONFERÊNCIA GERAL & AUDITORIA -->
             <div class="wizard-step-panel" id="wizard-step-10">
               <div class="wizard-card">
-                <h3 class="wizard-card-title">🔍 Etapa 10: Painel de Conferência & Auditoria</h3>
+                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <span>Etapa 10: Painel de Conferência & Auditoria</span>
+                </h3>
                 <p class="wizard-card-desc">Audite a integridade dos dados, reconciliação entre lista de presença e avaliação antes de gerar o relatório oficial.</p>
 
                 <div id="wizard-conference-content">
@@ -806,11 +859,16 @@
               <div class="wizard-card">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                   <div>
-                    <h3 class="wizard-card-title">⚡ Etapa 11: Geração & Download do Relatório</h3>
+                    <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                      <span>Etapa 11: Geração & Download do Relatório</span>
+                    </h3>
                     <p class="wizard-card-desc">Pré-visualize o documento institucional e baixe o arquivo editável em Word (.docx) estruturado conforme o padrão de referência.</p>
                   </div>
                   <div style="display:flex; gap:0.5rem;">
-                    <button class="btn btn-secondary" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                    <button class="btn btn-secondary" onclick="window.print()" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Imprimir / Salvar PDF
+                    </button>
                   </div>
                 </div>
 
@@ -866,7 +924,10 @@
         <section id="view-team" class="view-section">
           <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
             <div>
-              <h2 class="view-title">👥 Catálogo Geral de Equipe Técnica & Participante</h2>
+              <h2 class="view-title" style="display:flex; align-items:center; gap:0.5rem;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span>Catálogo Geral de Equipe Técnica & Participante</span>
+              </h2>
               <p class="view-subtitle">Gerencie o cadastro padrão oficial dos integrantes da Universidade Federal de Goiás (UFG) e do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
             </div>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
@@ -877,13 +938,13 @@
           <!-- Sub-abas da Equipe Master -->
           <div style="display:flex; gap:0.5rem; margin-bottom:1.25rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem; flex-wrap:wrap;">
             <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn active" id="master-team-tab-all" onclick="app.setMasterTeamFilter('all')">
-              📋 Todos (<span id="master-team-count-all">0</span>)
+              Todos (<span id="master-team-count-all">0</span>)
             </button>
             <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn" id="master-team-tab-ufg" onclick="app.setMasterTeamFilter('UFG')">
-              🏛️ UFG - Coordenação & Técnica (<span id="master-team-count-ufg">0</span>)
+              UFG - Coordenação & Técnica (<span id="master-team-count-ufg">0</span>)
             </button>
             <button type="button" class="btn btn-sm btn-secondary master-team-tab-btn" id="master-team-tab-fnde" onclick="app.setMasterTeamFilter('FNDE')">
-              🏢 FNDE - Coordenações (<span id="master-team-count-fnde">0</span>)
+              FNDE - Coordenações (<span id="master-team-count-fnde">0</span>)
             </button>
           </div>
 
@@ -891,9 +952,12 @@
           <div id="master-team-editor-card" style="display:none; margin-bottom:1.5rem; background:rgba(15, 23, 42, 0.95); border:1px solid rgba(245, 158, 11, 0.4); border-radius:var(--radius-lg); padding:1.25rem; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
               <h4 style="margin:0; color:#fbbf24; display:flex; align-items:center; gap:0.5rem;">
-                <span>👤</span> <span id="master-team-editor-title-text">Cadastrar Novo Integrante</span>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span id="master-team-editor-title-text">Cadastrar Novo Integrante</span>
               </h4>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('master')">✕ Cancelar</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('master')" style="display:inline-flex; align-items:center; gap:0.25rem;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Cancelar
+              </button>
             </div>
 
             <input type="hidden" id="master-team-edit-index" value="-1">
@@ -946,7 +1010,9 @@
               </div>
               <div style="display:flex; gap:0.5rem;">
                 <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeTeamMemberInPageEditor('master')">Cancelar</button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="app.saveTeamMemberInPage('master')" style="background:var(--accent-primary); border-color:var(--accent-primary); font-weight:700;">💾 Salvar Integrante</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="app.saveTeamMemberInPage('master')" style="background:var(--accent-primary); border-color:var(--accent-primary); font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Salvar Integrante
+                </button>
               </div>
             </div>
           </div>
@@ -991,13 +1057,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.5.4 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.5.5 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.5.4</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.5.5</span>
         </div>
       </footer>
     </div>
