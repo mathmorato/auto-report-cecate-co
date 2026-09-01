@@ -563,73 +563,11 @@ class TrainingDB {
       }
     }
 
-    // 2. Inserir Capacitação Nº 16 (Pontes e Lacerda) se não existir
-    if (!existingNumbers.has(16)) {
-      console.log('Carregando Capacitação Nº 16 (Pontes e Lacerda)...');
-
-      const defaultModules = [
-        { moduleNumber: '01', topicGestor: 'Transporte Escolar no Brasil – CECATE-CO', topicCACS: 'Transporte Escolar no Brasil – CECATE-CO', hoursGestor: 1.5, hoursCACS: 1.5, description: 'Apresentação do CECATE-CO, diretrizes nacionais e papel institucional.', order: 0 },
-        { moduleNumber: '02', topicGestor: 'Conhecendo os programas PNATE e Caminho da Escola', topicCACS: 'Conhecendo os programas PNATE e Caminho da Escola', hoursGestor: 1.5, hoursCACS: 1.5, description: 'Legislação aplicável, repasses financeiros e aquisição de frotas padronizadas.', order: 1 },
-        { moduleNumber: '03', topicGestor: 'Gestão do Transporte Escolar e Software SETE', topicCACS: 'Fiscalização e Controle Social do Transporte Escolar', hoursGestor: 2.0, hoursCACS: 2.0, description: 'Módulo técnico prático de roteirização e fiscalização in loco.', order: 2 },
-        { moduleNumber: '04', topicGestor: 'Prestação de Contas no SiGPC e Desafios Locais', topicCACS: 'Atuação do CACS-FUNDEB e Análise de Contas', hoursGestor: 3.0, hoursCACS: 3.0, description: 'Boas práticas regulatórias, prazos e resolução de problemas práticos.', order: 3 }
-      ];
-
-      const defaultTeam = [
-        { name: 'Prof. Dr. Willer Luciano Carvalho', institution: 'UFG', role: 'Coordenador Geral do Projeto', type: 'coordenacao', order: 0 },
-        { name: 'Eng. M.Sc. Lara Batista Ferreira de Lima', institution: 'UFG', role: 'Pesquisadora e Equipe Técnica', type: 'tecnica', order: 1 },
-        { name: 'Eng. M.Sc. Matheus Henrique Morato de Moraes', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 2 },
-        { name: 'Prof. Dr. Marcos Paulino Roriz Junior', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 3 },
-        { name: 'Prof. Dr. Liosber Medina Garcia', institution: 'UFG', role: 'Pesquisador e Equipe Técnica', type: 'tecnica', order: 4 },
-        { name: 'Haroldo da Silva Gomes', institution: 'FNDE', role: 'Coordenador-Geral da Política do Transporte Escolar - CGPTE', type: 'fnde', order: 5 }
-      ];
-
-      const default16CTEMunicipalities = [
-        { ibgeCode: 5101258, name: 'Araputanga', uf: 'MT', distanceKm: 141.1, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
-        { ibgeCode: 5102686, name: 'Campos de Júlio', uf: 'MT', distanceKm: 273.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 1, presentGestores: 3, presentTotal: 4 },
-        { ibgeCode: 5103304, name: 'Comodoro', uf: 'MT', distanceKm: 197.1, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
-        { ibgeCode: 5103437, name: 'Curvelândia', uf: 'MT', distanceKm: 206.5, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 1, presentGestores: 2, presentTotal: 3 },
-        { ibgeCode: 5104104, name: 'Glória D\'Oeste', uf: 'MT', distanceKm: 104.8, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
-        { ibgeCode: 5104609, name: 'Indiavaí', uf: 'MT', distanceKm: 114.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
-        { ibgeCode: 5105002, name: 'Jauru', uf: 'MT', distanceKm: 81.3, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 1, presentGestores: 3, presentTotal: 4 },
-        { ibgeCode: 5105259, name: 'Lambari D\'Oeste', uf: 'MT', distanceKm: 169.4, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
-        { ibgeCode: 5106182, name: 'Nova Lacerda', uf: 'MT', distanceKm: 100.3, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 3, presentTotal: 3 },
-        { ibgeCode: 5106752, name: 'Pontes e Lacerda', uf: 'MT', distanceKm: 0.0, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
-        { ibgeCode: 5106828, name: 'Porto Esperidião', uf: 'MT', distanceKm: 122.6, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
-        { ibgeCode: 5107107, name: 'Reserva do Cabaçal', uf: 'MT', distanceKm: 161.7, isSummoned: true, inscribedCACS: 0, inscribedGestores: 0, inscribedTotal: 0, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
-        { ibgeCode: 5107776, name: 'Rio Branco', uf: 'MT', distanceKm: 182.9, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 },
-        { ibgeCode: 5107958, name: 'Salto do Céu', uf: 'MT', distanceKm: 178.5, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 1, presentTotal: 1 },
-        { ibgeCode: 5108006, name: 'São José dos Quatro Marcos', uf: 'MT', distanceKm: 170.2, isSummoned: true, inscribedCACS: 0, inscribedGestores: 1, inscribedTotal: 1, presentCACS: 0, presentGestores: 0, presentTotal: 0 },
-        { ibgeCode: 5108402, name: 'Vale de São Domingos', uf: 'MT', distanceKm: 46.8, isSummoned: true, inscribedCACS: 0, inscribedGestores: 3, inscribedTotal: 3, presentCACS: 0, presentGestores: 3, presentTotal: 3 },
-        { ibgeCode: 5108857, name: 'Vila Bela da Santíssima Trindade', uf: 'MT', distanceKm: 76.9, isSummoned: true, inscribedCACS: 0, inscribedGestores: 2, inscribedTotal: 2, presentCACS: 0, presentGestores: 2, presentTotal: 2 }
-      ];
-
-      const sample16CTE = {
-        id: 'cap_16cte_pontes_lacerda',
-        number: 16,
-        title: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
-        polo: 'Pontes e Lacerda',
-        uf: 'MT',
-        startDate: '2026-06-23',
-        endDate: '2026-06-24',
-        datesFormatted: '23 e 24 de junho de 2026',
-        workload: '16 horas',
-        targetAudience: 'Gestores Municipais e Conselheiros CACS-FUNDEB',
-        expectedParticipants: 40,
-        responsibleOrg: 'Universidade Federal de Goiás - UFG / CECATE Centro-Oeste',
-        relatedProject: 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
-        processNumber: '23070.012345/2026-00',
-        fundingOrg: 'Fundo Nacional de Desenvolvimento da Educação - FNDE',
-        partnerOrgs: 'Ministério da Educação / Prefeitura Municipal de Pontes e Lacerda',
-        locationVenue: 'Auditório da Secretaria Municipal de Educação',
-        status: 'completed',
-        isHistorical: false,
-        progressPercent: 100,
-        team: defaultTeam,
-        courseModules: defaultModules,
-        municipalities: default16CTEMunicipalities
-      };
-
-      await this.saveTrainingFull(sample16CTE, 'Carga da Capacitação Nº 16 (Pontes e Lacerda)');
+    // 2. Limpeza de registros de teste pré-semeados antigos se existirem
+    const oldSample16 = await this.get('trainings', 'cap_16cte_pontes_lacerda');
+    if (oldSample16 && !oldSample16.userModified) {
+      console.log('Removendo registro de teste antigo da Capacitação Nº 16 para inserção limpa do usuário...');
+      await this.deleteTraining('cap_16cte_pontes_lacerda').catch(() => {});
     }
   }
 }
