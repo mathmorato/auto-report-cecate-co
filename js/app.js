@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.0.9
+ * Versão: v.1.1.0
  */
 
 class AutoReportApp {
@@ -659,6 +659,66 @@ class AutoReportApp {
     if (hiddenInput) hiddenInput.value = fmt;
     if (this.currentTraining) {
       this.currentTraining.workload = fmt;
+      this.saveCurrentStepData();
+    }
+  }
+
+  onDatesChanged() {
+    const startStr = this.getVal('wiz-train-start-date');
+    const endStr = this.getVal('wiz-train-end-date');
+    if (!startStr) return;
+
+    const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+    const startDate = new Date(startStr + 'T12:00:00');
+    const endDate = endStr ? new Date(endStr + 'T12:00:00') : startDate;
+
+    const dayStart = startDate.getDate();
+    const dayEnd = endDate.getDate();
+    const monthStart = startDate.getMonth();
+    const monthEnd = endDate.getMonth();
+    const yearStart = startDate.getFullYear();
+    const yearEnd = endDate.getFullYear();
+
+    // Número de dias
+    const diffMs = endDate.getTime() - startDate.getTime();
+    const numDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
+
+    // Construir texto formatado
+    let formatted = '';
+    if (numDays === 1 || !endStr) {
+      // Dia único
+      formatted = `${dayStart} de ${MESES[monthStart]} de ${yearStart}`;
+    } else if (monthStart === monthEnd && yearStart === yearEnd) {
+      // Mesmo mês
+      if (numDays === 2) {
+        formatted = `${dayStart} e ${dayEnd} de ${MESES[monthStart]} de ${yearStart}`;
+      } else {
+        formatted = `${dayStart} a ${dayEnd} de ${MESES[monthStart]} de ${yearStart}`;
+      }
+    } else if (yearStart === yearEnd) {
+      // Meses diferentes, mesmo ano
+      formatted = `${dayStart} de ${MESES[monthStart]} a ${dayEnd} de ${MESES[monthEnd]} de ${yearStart}`;
+    } else {
+      // Anos diferentes
+      formatted = `${dayStart} de ${MESES[monthStart]} de ${yearStart} a ${dayEnd} de ${MESES[monthEnd]} de ${yearEnd}`;
+    }
+
+    this.setVal('wiz-train-dates-fmt', formatted);
+
+    // Calcular carga horária automática: 8 horas por dia
+    const autoWorkload = numDays * 8;
+    const numInput = document.getElementById('wiz-train-workload-num');
+    const hiddenInput = document.getElementById('wiz-train-workload');
+    const hintEl = document.getElementById('wiz-workload-auto-hint');
+
+    if (numInput) numInput.value = autoWorkload;
+    if (hiddenInput) hiddenInput.value = `${autoWorkload} horas`;
+    if (hintEl) hintEl.textContent = `✓ Calculado automaticamente: ${numDays} dia${numDays > 1 ? 's' : ''} × 8h = ${autoWorkload}h (editável)`;
+
+    if (this.currentTraining) {
+      this.currentTraining.datesFormatted = formatted;
+      this.currentTraining.workload = `${autoWorkload} horas`;
       this.saveCurrentStepData();
     }
   }
