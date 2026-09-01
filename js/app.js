@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.0.6
+ * Versão: v.1.0.7
  */
 
 class AutoReportApp {
@@ -483,12 +483,20 @@ class AutoReportApp {
     // Etapa 1: Identificação
     this.setVal('wiz-train-number', t.number);
     this.setVal('wiz-train-title', t.title);
-    this.setVal('wiz-train-polo', t.polo);
-    this.setVal('wiz-train-uf', t.uf);
+
+    // Carga Horária com botão de rotação (spinner)
+    const workloadNum = parseInt(t.workload) || 16;
+    this.setVal('wiz-train-workload-num', workloadNum);
+    this.setVal('wiz-train-workload', `${workloadNum} horas`);
+
+    // Estado (UF) PRIMEIRO e Município Polo Suspenso com Código IBGE/INEP
+    const uf = t.uf || 'MT';
+    this.setVal('wiz-train-uf', uf);
+    this.populateCitiesDropdown(uf, t.polo, t.poloIbge);
+
     this.setVal('wiz-train-start-date', t.startDate);
     this.setVal('wiz-train-end-date', t.endDate);
     this.setVal('wiz-train-dates-fmt', t.datesFormatted);
-    this.setVal('wiz-train-workload', t.workload);
     this.setVal('wiz-train-target', t.targetAudience);
     this.setVal('wiz-train-expected', t.expectedParticipants);
     this.setVal('wiz-train-venue', t.locationVenue);
@@ -525,12 +533,13 @@ class AutoReportApp {
     // Sincronizar dados da Etapa 1
     t.number = parseInt(this.getVal('wiz-train-number')) || t.number;
     t.title = this.getVal('wiz-train-title') || t.title;
-    t.polo = this.getVal('wiz-train-polo') || t.polo;
     t.uf = this.getVal('wiz-train-uf') || t.uf;
+    t.polo = this.getVal('wiz-train-polo') || t.polo;
+    t.poloIbge = this.getVal('wiz-train-inep') || t.poloIbge;
+    t.workload = this.getVal('wiz-train-workload') || `${parseInt(this.getVal('wiz-train-workload-num')) || 16} horas`;
     t.startDate = this.getVal('wiz-train-start-date') || t.startDate;
     t.endDate = this.getVal('wiz-train-end-date') || t.endDate;
     t.datesFormatted = this.getVal('wiz-train-dates-fmt') || t.datesFormatted;
-    t.workload = this.getVal('wiz-train-workload') || t.workload;
     t.targetAudience = this.getVal('wiz-train-target') || t.targetAudience;
     t.expectedParticipants = parseInt(this.getVal('wiz-train-expected')) || t.expectedParticipants;
     t.locationVenue = this.getVal('wiz-train-venue') || t.locationVenue;
@@ -558,7 +567,92 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     ETAPA 2: EQUIPE PARTICIPANTE
+     ETAPA 1: ESTADO, CIDADE, CÓDIGO IBGE/INEP & BOTÃO DE ROTAÇÃO DE CARGA
+     ========================================================================== */
+  onStateChange(uf) {
+    this.populateCitiesDropdown(uf);
+    if (this.currentTraining) {
+      this.currentTraining.uf = uf;
+      this.updateWizardHeader();
+      this.saveCurrentStepData();
+    }
+  }
+
+  onCityChange(city) {
+    const citySelect = document.getElementById('wiz-train-polo-select');
+    const inepInput = document.getElementById('wiz-train-inep');
+    const activeOption = citySelect?.selectedOptions[0];
+    const ibgeCode = activeOption?.getAttribute('data-ibge') || '';
+
+    if (inepInput) inepInput.value = ibgeCode;
+    this.setVal('wiz-train-polo', city);
+
+    if (this.currentTraining) {
+      this.currentTraining.polo = city;
+      this.currentTraining.poloIbge = ibgeCode;
+      this.updateWizardHeader();
+      this.saveCurrentStepData();
+    }
+  }
+
+  populateCitiesDropdown(uf, selectedCity = null, selectedIbge = null) {
+    const citySelect = document.getElementById('wiz-train-polo-select');
+    const inepInput = document.getElementById('wiz-train-inep');
+    if (!citySelect || !window.IBGE_DATA) return;
+
+    const filtered = window.IBGE_DATA.filter(m => m.u === uf).sort((a, b) => a.n.localeCompare(b.n));
+
+    if (filtered.length === 0) {
+      citySelect.innerHTML = `<option value="">Nenhuma cidade encontrada para ${uf}</option>`;
+      if (inepInput) inepInput.value = '';
+      return;
+    }
+
+    citySelect.innerHTML = filtered.map(m => {
+      const isSel = (selectedCity && m.n.toLowerCase() === selectedCity.toLowerCase()) ||
+                    (selectedIbge && String(m.c) === String(selectedIbge));
+      return `<option value="${m.n}" data-ibge="${m.c}" ${isSel ? 'selected' : ''}>${m.n}</option>`;
+    }).join('');
+
+    // Sincronizar seleção ativa
+    const activeOption = citySelect.selectedOptions[0] || citySelect.options[0];
+    if (activeOption) {
+      const cityName = activeOption.value;
+      const ibgeCode = activeOption.getAttribute('data-ibge') || '';
+      if (inepInput) inepInput.value = ibgeCode;
+      this.setVal('wiz-train-polo', cityName);
+      if (this.currentTraining) {
+        this.currentTraining.polo = cityName;
+        this.currentTraining.poloIbge = ibgeCode;
+      }
+    }
+  }
+
+  spinWorkload(delta) {
+    const numInput = document.getElementById('wiz-train-workload-num');
+    if (!numInput) return;
+    let val = (parseInt(numInput.value) || 16) + delta;
+    if (val < 1) val = 1;
+    if (val > 200) val = 200;
+    numInput.value = val;
+    this.updateWorkloadFromSpinner();
+  }
+
+  updateWorkloadFromSpinner() {
+    const numInput = document.getElementById('wiz-train-workload-num');
+    const hiddenInput = document.getElementById('wiz-train-workload');
+    if (!numInput) return;
+    const val = parseInt(numInput.value) || 16;
+    const fmt = `${val} horas`;
+    if (hiddenInput) hiddenInput.value = fmt;
+    if (this.currentTraining) {
+      this.currentTraining.workload = fmt;
+      this.saveCurrentStepData();
+    }
+  }
+
+  /* ==========================================================================
+     ETAPA 2: EQUIPE
      ========================================================================== */
   renderTeamList() {
     const container = document.getElementById('wizard-team-list-container');

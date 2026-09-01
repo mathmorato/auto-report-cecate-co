@@ -1837,6 +1837,75 @@ textarea.form-control {
   100% { background-position: -100% 0; }
 }
 
+/* ==========================================================================
+   BOTÃO DE ROTAÇÃO / STEPPER DE CARGA HORÁRIA
+   ========================================================================== */
+.stepper-spinner-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.25rem 0.5rem;
+  height: 42px;
+}
+
+.stepper-spinner-group input[type="number"] {
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-align: center;
+  width: 60px;
+  padding: 0.35rem 0;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.stepper-spinner-group input[type="number"]::-webkit-inner-spin-button,
+.stepper-spinner-group input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.spinner-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.spinner-btn:hover {
+  background: var(--gradient-brand);
+  color: white;
+  border-color: transparent;
+  transform: scale(1.08);
+}
+
+.spinner-btn:active {
+  transform: scale(0.92);
+}
+
+.spinner-unit {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding-right: 0.35rem;
+}
+
+
 
 
 

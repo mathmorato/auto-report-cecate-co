@@ -84,7 +84,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.0.6</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.0.7</span> • CECATE</div>
       </div>
     </aside>
 
@@ -259,7 +259,7 @@
                 <h3 class="wizard-card-title">📝 Etapa 1: Identificação da Capacitação</h3>
                 <p class="wizard-card-desc">Informe os dados institucionais, polo territorial, datas e informações administrativas do evento.</p>
 
-                <div style="display:grid; grid-template-columns: 1fr 2fr 1fr; gap:1rem;">
+                <div style="display:grid; grid-template-columns: 1fr 2.2fr 1.3fr; gap:1rem;">
                   <div class="form-group">
                     <label class="form-label">Número do Relatório *:</label>
                     <input type="number" id="wiz-train-number" class="form-control" placeholder="16">
@@ -269,20 +269,65 @@
                     <input type="text" id="wiz-train-title" class="form-control" placeholder="CAPACITAÇÃO EM TRANSPORTE ESCOLAR">
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Carga Horária *:</label>
-                    <input type="text" id="wiz-train-workload" class="form-control" placeholder="16 horas">
+                    <label class="form-label">Carga Horária (horas) *:</label>
+                    <div class="stepper-spinner-group">
+                      <button type="button" class="spinner-btn" onclick="app.spinWorkload(-2)" title="Diminuir carga horária">−</button>
+                      <input type="number" id="wiz-train-workload-num" value="16" min="1" max="200" step="1" onchange="app.updateWorkloadFromSpinner()">
+                      <button type="button" class="spinner-btn" onclick="app.spinWorkload(+2)" title="Aumentar carga horária">+</button>
+                      <span class="spinner-unit">horas</span>
+                      <input type="hidden" id="wiz-train-workload" value="16 horas">
+                    </div>
                   </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: 2fr 1fr 2fr; gap:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">Município Polo *:</label>
-                    <input type="text" id="wiz-train-polo" class="form-control" placeholder="Ex: Pontes e Lacerda">
-                  </div>
+                <!-- Estado (UF) PRIMEIRO, depois Cidade e Código IBGE / INEP -->
+                <div style="display:grid; grid-template-columns: 1.3fr 2fr 1.2fr 2fr; gap:1rem;">
                   <div class="form-group">
                     <label class="form-label">Estado (UF) *:</label>
-                    <input type="text" id="wiz-train-uf" class="form-control" placeholder="MT">
+                    <select id="wiz-train-uf" class="form-control" onchange="app.onStateChange(this.value)">
+                      <option value="MT">Mato Grosso (MT)</option>
+                      <option value="MS">Mato Grosso do Sul (MS)</option>
+                      <option value="GO">Goiás (GO)</option>
+                      <option value="DF">Distrito Federal (DF)</option>
+                      <option value="AC">Acre (AC)</option>
+                      <option value="AL">Alagoas (AL)</option>
+                      <option value="AP">Amapá (AP)</option>
+                      <option value="AM">Amazonas (AM)</option>
+                      <option value="BA">Bahia (BA)</option>
+                      <option value="CE">Ceará (CE)</option>
+                      <option value="ES">Espírito Santo (ES)</option>
+                      <option value="MA">Maranhão (MA)</option>
+                      <option value="MG">Minas Gerais (MG)</option>
+                      <option value="PA">Pará (PA)</option>
+                      <option value="PB">Paraíba (PB)</option>
+                      <option value="PR">Paraná (PR)</option>
+                      <option value="PE">Pernambuco (PE)</option>
+                      <option value="PI">Piauí (PI)</option>
+                      <option value="RJ">Rio de Janeiro (RJ)</option>
+                      <option value="RN">Rio Grande do Norte (RN)</option>
+                      <option value="RS">Rio Grande do Sul (RS)</option>
+                      <option value="RO">Rondônia (RO)</option>
+                      <option value="RR">Roraima (RR)</option>
+                      <option value="SC">Santa Catarina (SC)</option>
+                      <option value="SP">São Paulo (SP)</option>
+                      <option value="SE">Sergipe (SE)</option>
+                      <option value="TO">Tocantins (TO)</option>
+                    </select>
                   </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Município Polo *:</label>
+                    <select id="wiz-train-polo-select" class="form-control" onchange="app.onCityChange(this.value)">
+                      <!-- Preenchido dinamicamente conforme estado selecionado -->
+                    </select>
+                    <input type="hidden" id="wiz-train-polo" value="">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Código IBGE / INEP:</label>
+                    <input type="text" id="wiz-train-inep" class="form-control" style="font-family:monospace; font-weight:700; color:var(--accent-secondary); background:var(--bg-input);" readonly placeholder="Ex: 5106752">
+                  </div>
+
                   <div class="form-group">
                     <label class="form-label">Local / Auditório de Realização:</label>
                     <input type="text" id="wiz-train-venue" class="form-control" placeholder="Ex: Auditório Municipal de Educação">
@@ -739,13 +784,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.0.6 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.0.7 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.0.6</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.0.7</span>
         </div>
       </footer>
     </div>
