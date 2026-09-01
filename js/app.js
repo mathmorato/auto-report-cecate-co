@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.4.2
+ * Versão: v.1.4.3
  */
 
 class AutoReportApp {
@@ -1211,65 +1211,33 @@ class AutoReportApp {
         <table class="report-data-table">
           <thead>
             <tr>
-              <th style="width:170px;">Pronome</th>
-              <th style="width:150px;">Titulação</th>
-              <th style="min-width:210px;">Nome do Integrante</th>
-              <th style="width:100px;">Instituição</th>
-              <th style="min-width:300px;">Cargo / Função Oficial</th>
-              <th style="width:60px; text-align:center;">Ações</th>
+              <th style="width:140px;">Pronome</th>
+              <th style="width:120px;">Titulação</th>
+              <th style="min-width:240px;">Nome do Integrante</th>
+              <th style="width:110px; text-align:center;">Instituição</th>
+              <th style="min-width:320px;">Cargo / Função Oficial</th>
+              <th style="width:160px; text-align:center;">Ações</th>
             </tr>
           </thead>
           <tbody>
             ${displayList.map(item => {
               const idx = item.originalIndex;
+              const isUfg = item.institutionGroup === 'UFG' || item.institution === 'UFG';
 
               return `
                 <tr>
-                  <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateTeamMemberField(${idx}, 'pronoun', this.value)">
-                      ${pronouns.map(p => `
-                        <option value="${p.value}" ${item.pronoun === p.value ? 'selected' : ''}>${p.label}</option>
-                      `).join('')}
-                    </select>
+                  <td><span style="color:var(--text-secondary); font-weight:600;">${item.pronoun || '-'}</span></td>
+                  <td><span style="color:var(--text-secondary); font-weight:600;">${item.title || '-'}</span></td>
+                  <td><strong style="color:var(--text-primary); font-size:0.9rem;">${item.name || ''}</strong></td>
+                  <td style="text-align:center;">
+                    <span class="nav-badge" style="background:${isUfg ? 'rgba(245, 158, 11, 0.12)' : 'rgba(59, 130, 246, 0.12)'}; color:${isUfg ? '#fbbf24' : '#60a5fa'}; font-weight:700; border:1px solid ${isUfg ? 'rgba(245, 158, 11, 0.25)' : 'rgba(59, 130, 246, 0.25)'};">
+                      ${item.institution || 'UFG'}
+                    </span>
                   </td>
-                  <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateTeamMemberField(${idx}, 'title', this.value)">
-                      ${titles.map(t => `
-                        <option value="${t.value}" ${item.title === t.value ? 'selected' : ''}>${t.label}</option>
-                      `).join('')}
-                    </select>
-                  </td>
-                  <td>
-                    <input type="text" class="form-control form-control-sm" style="font-size:0.83rem; font-weight:700;" value="${item.name || ''}" placeholder="Nome do integrante" onchange="app.updateTeamMemberField(${idx}, 'name', this.value)">
-                  </td>
-                  <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:700; color:var(--accent-secondary);" onchange="app.updateTeamMemberField(${idx}, 'institution', this.value)">
-                      <option value="UFG" ${item.institution === 'UFG' ? 'selected' : ''}>UFG</option>
-                      <option value="FNDE" ${item.institution === 'FNDE' ? 'selected' : ''}>FNDE</option>
-                      <option value="MEC" ${item.institution === 'MEC' ? 'selected' : ''}>MEC</option>
-                      <option value="Outro" ${item.institution !== 'UFG' && item.institution !== 'FNDE' && item.institution !== 'MEC' ? 'selected' : ''}>Outro</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem;" onchange="app.updateTeamMemberField(${idx}, 'role', this.value)">
-                      <optgroup label="Universidade Federal de Goiás - UFG">
-                        ${roleOptionsUFG.map(r => `
-                          <option value="${r.value}" ${item.role === r.value ? 'selected' : ''}>${r.value}</option>
-                        `).join('')}
-                      </optgroup>
-                      <optgroup label="Fundo Nacional de Desenvolvimento da Educação - FNDE">
-                        ${roleOptionsFNDE.map(r => `
-                          <option value="${r.value}" ${item.role === r.value ? 'selected' : ''}>${r.value}</option>
-                        `).join('')}
-                      </optgroup>
-                      ${!roleOptionsUFG.some(r => r.value === item.role) && !roleOptionsFNDE.some(r => r.value === item.role) ? `
-                        <option value="${item.role}" selected>${item.role}</option>
-                      ` : ''}
-                    </select>
-                  </td>
+                  <td><span style="color:var(--text-secondary); font-size:0.85rem;">${item.role || 'Equipe Técnica'}</span></td>
                   <td style="text-align:center; white-space:nowrap;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('wizard', ${idx})" style="margin-right:0.35rem; color:var(--accent-secondary); font-size:0.75rem; padding:0.25rem 0.5rem;" title="Editar este integrante">✏️ Editar</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.5rem;" title="Excluir este integrante">🗑️ Excluir</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('wizard', ${idx})" style="margin-right:0.35rem; color:#fbbf24; border-color:rgba(245, 158, 11, 0.3); font-size:0.75rem; padding:0.25rem 0.55rem;" title="Editar este integrante">✏️ Editar</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem;" title="Excluir este integrante">🗑️ Excluir</button>
                   </td>
                 </tr>
               `;
@@ -1357,20 +1325,15 @@ class AutoReportApp {
       displayList = displayList.filter(m => (m.institutionGroup === 'FNDE' || m.institution === 'FNDE' || m.type === 'fnde'));
     }
 
-    const pronouns = window.OFFICIAL_PRONOUNS || [];
-    const titles = window.OFFICIAL_TITLES || [];
-    const roleOptionsUFG = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'UFG');
-    const roleOptionsFNDE = (window.OFFICIAL_ROLES || []).filter(r => r.group === 'FNDE');
-
     container.innerHTML = `
       <div class="table-responsive-wrapper">
         <table class="report-data-table">
           <thead>
             <tr>
-              <th style="width:170px;">Pronome</th>
-              <th style="width:150px;">Titulação</th>
-              <th style="min-width:210px;">Nome do Integrante</th>
-              <th style="width:110px;">Instituição</th>
+              <th style="width:140px;">Pronome</th>
+              <th style="width:120px;">Titulação</th>
+              <th style="min-width:240px;">Nome do Integrante</th>
+              <th style="width:110px; text-align:center;">Instituição</th>
               <th style="min-width:320px;">Cargo / Função Oficial</th>
               <th style="width:160px; text-align:center;">Ações</th>
             </tr>
@@ -1378,54 +1341,22 @@ class AutoReportApp {
           <tbody>
             ${displayList.map(item => {
               const idx = item.originalIndex;
+              const isUfg = item.institutionGroup === 'UFG' || item.institution === 'UFG';
 
               return `
                 <tr>
-                  <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateMasterTeamMemberField(${idx}, 'pronoun', this.value)">
-                      ${pronouns.map(p => `
-                        <option value="${p.value}" ${item.pronoun === p.value ? 'selected' : ''}>${p.label}</option>
-                      `).join('')}
-                    </select>
+                  <td><span style="color:var(--text-secondary); font-weight:600;">${item.pronoun || '-'}</span></td>
+                  <td><span style="color:var(--text-secondary); font-weight:600;">${item.title || '-'}</span></td>
+                  <td><strong style="color:var(--text-primary); font-size:0.9rem;">${item.name || ''}</strong></td>
+                  <td style="text-align:center;">
+                    <span class="nav-badge" style="background:${isUfg ? 'rgba(245, 158, 11, 0.12)' : 'rgba(59, 130, 246, 0.12)'}; color:${isUfg ? '#fbbf24' : '#60a5fa'}; font-weight:700; border:1px solid ${isUfg ? 'rgba(245, 158, 11, 0.25)' : 'rgba(59, 130, 246, 0.25)'};">
+                      ${item.institution || 'UFG'}
+                    </span>
                   </td>
-                  <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:600;" onchange="app.updateMasterTeamMemberField(${idx}, 'title', this.value)">
-                      ${titles.map(t => `
-                        <option value="${t.value}" ${item.title === t.value ? 'selected' : ''}>${t.label}</option>
-                      `).join('')}
-                    </select>
-                  </td>
-                  <td>
-                    <input type="text" class="form-control form-control-sm" style="font-size:0.83rem; font-weight:700;" value="${item.name || ''}" placeholder="Nome do integrante" onchange="app.updateMasterTeamMemberField(${idx}, 'name', this.value)">
-                  </td>
-                  <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem; font-weight:700; color:var(--accent-secondary);" onchange="app.updateMasterTeamMemberField(${idx}, 'institution', this.value)">
-                      <option value="UFG" ${item.institution === 'UFG' ? 'selected' : ''}>UFG</option>
-                      <option value="FNDE" ${item.institution === 'FNDE' ? 'selected' : ''}>FNDE</option>
-                      <option value="MEC" ${item.institution === 'MEC' ? 'selected' : ''}>MEC</option>
-                      <option value="Outro" ${item.institution !== 'UFG' && item.institution !== 'FNDE' && item.institution !== 'MEC' ? 'selected' : ''}>Outro</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select class="form-control form-control-sm" style="font-size:0.8rem;" onchange="app.updateMasterTeamMemberField(${idx}, 'role', this.value)">
-                      <optgroup label="Universidade Federal de Goiás - UFG">
-                        ${roleOptionsUFG.map(r => `
-                          <option value="${r.value}" ${item.role === r.value ? 'selected' : ''}>${r.value}</option>
-                        `).join('')}
-                      </optgroup>
-                      <optgroup label="Fundo Nacional de Desenvolvimento da Educação - FNDE">
-                        ${roleOptionsFNDE.map(r => `
-                          <option value="${r.value}" ${item.role === r.value ? 'selected' : ''}>${r.value}</option>
-                        `).join('')}
-                      </optgroup>
-                      ${!roleOptionsUFG.some(r => r.value === item.role) && !roleOptionsFNDE.some(r => r.value === item.role) ? `
-                        <option value="${item.role}" selected>${item.role}</option>
-                      ` : ''}
-                    </select>
-                  </td>
+                  <td><span style="color:var(--text-secondary); font-size:0.85rem;">${item.role || 'Equipe Técnica'}</span></td>
                   <td style="text-align:center; white-space:nowrap;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('master', ${idx})" style="margin-right:0.35rem; color:var(--accent-secondary); font-size:0.75rem; padding:0.25rem 0.5rem;" title="Editar este integrante">✏️ Editar</button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMasterTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.5rem;" title="Excluir do catálogo geral">🗑️ Excluir</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('master', ${idx})" style="margin-right:0.35rem; color:#fbbf24; border-color:rgba(245, 158, 11, 0.3); font-size:0.75rem; padding:0.25rem 0.55rem;" title="Editar este integrante">✏️ Editar</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMasterTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.55rem;" title="Excluir do catálogo geral">🗑️ Excluir</button>
                   </td>
                 </tr>
               `;

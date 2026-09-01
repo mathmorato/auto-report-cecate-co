@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Catálogo Oficial de Equipe Participante (UFG & FNDE)
- * Versão: v.1.4.2
+ * Versão: v.1.4.3
  */
 
 window.OFFICIAL_PRONOUNS = [
@@ -22,8 +22,6 @@ window.OFFICIAL_TITLES = [
   { value: 'Esp.', label: 'Esp. (Especialista)' },
   { value: 'Bel.', label: 'Bel. (Bacharel)' },
   { value: 'Grad.', label: 'Grad. (Graduado/a)' },
-  { value: 'Pós-Doutor', label: 'Pós-Doutor' },
-  { value: 'Pós-Doutora', label: 'Pós-Doutora' },
   { value: '', label: '(Nenhuma titulação)' }
 ];
 
