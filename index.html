@@ -84,7 +84,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.0.8</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.0.9</span> • CECATE</div>
       </div>
     </aside>
 
@@ -262,7 +262,7 @@
                 <div style="display:grid; grid-template-columns: 1fr 2.2fr 1.3fr; gap:1rem;">
                   <div class="form-group">
                     <label class="form-label">Número do Relatório *:</label>
-                    <input type="number" id="wiz-train-number" class="form-control" placeholder="16">
+                    <input type="number" id="wiz-train-number" class="form-control" placeholder="16" min="1" oninput="if(this.value<1)this.value=1;">
                   </div>
                   <div class="form-group">
                     <label class="form-label">Título da Capacitação *:</label>
@@ -285,6 +285,7 @@
                   <div class="form-group">
                     <label class="form-label">Estado (UF) *:</label>
                     <select id="wiz-train-uf" class="form-control" onchange="app.onStateChange(this.value)">
+                      <option value="" disabled selected>Selecionar UF...</option>
                       <option value="MT">Mato Grosso (MT)</option>
                       <option value="MS">Mato Grosso do Sul (MS)</option>
                       <option value="GO">Goiás (GO)</option>
@@ -784,13 +785,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.0.8 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.0.9 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.0.8</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.0.9</span>
         </div>
       </footer>
     </div>

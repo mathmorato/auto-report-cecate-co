@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.0.8
+ * Versão: v.1.0.9
  */
 
 class AutoReportApp {
@@ -570,6 +570,7 @@ class AutoReportApp {
      ETAPA 1: ESTADO, CIDADE, CÓDIGO IBGE/INEP & BOTÃO DE ROTAÇÃO DE CARGA
      ========================================================================== */
   onStateChange(uf) {
+    if (!uf) return;
     this.populateCitiesDropdown(uf);
     if (this.currentTraining) {
       this.currentTraining.uf = uf;
@@ -600,23 +601,32 @@ class AutoReportApp {
     const inepInput = document.getElementById('wiz-train-inep');
     if (!citySelect || !window.IBGE_DATA) return;
 
-    const filtered = window.IBGE_DATA.filter(m => m.u === uf).sort((a, b) => a.n.localeCompare(b.n));
-
-    if (filtered.length === 0) {
-      citySelect.innerHTML = `<option value="">Nenhuma cidade encontrada para ${uf}</option>`;
+    if (!uf) {
+      citySelect.innerHTML = `<option value="" disabled selected>Selecionar Município...</option>`;
       if (inepInput) inepInput.value = '';
       return;
     }
 
-    citySelect.innerHTML = filtered.map(m => {
+    const filtered = window.IBGE_DATA.filter(m => m.u === uf).sort((a, b) => a.n.localeCompare(b.n));
+
+    if (filtered.length === 0) {
+      citySelect.innerHTML = `<option value="" disabled selected>Nenhuma cidade para ${uf}</option>`;
+      if (inepInput) inepInput.value = '';
+      return;
+    }
+
+    const hasSelection = selectedCity || selectedIbge;
+    let options = hasSelection ? '' : `<option value="" disabled selected>Selecionar Município...</option>`;
+    options += filtered.map(m => {
       const isSel = (selectedCity && m.n.toLowerCase() === selectedCity.toLowerCase()) ||
                     (selectedIbge && String(m.c) === String(selectedIbge));
       return `<option value="${m.n}" data-ibge="${m.c}" ${isSel ? 'selected' : ''}>${m.n}</option>`;
     }).join('');
+    citySelect.innerHTML = options;
 
     // Sincronizar seleção ativa
-    const activeOption = citySelect.selectedOptions[0] || citySelect.options[0];
-    if (activeOption) {
+    const activeOption = citySelect.selectedOptions[0];
+    if (activeOption && activeOption.value) {
       const cityName = activeOption.value;
       const ibgeCode = activeOption.getAttribute('data-ibge') || '';
       if (inepInput) inepInput.value = ibgeCode;
@@ -625,6 +635,8 @@ class AutoReportApp {
         this.currentTraining.polo = cityName;
         this.currentTraining.poloIbge = ibgeCode;
       }
+    } else {
+      if (inepInput) inepInput.value = '';
     }
   }
 
