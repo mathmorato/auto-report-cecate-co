@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.9
+ * Versão: v.1.4.2
  */
 
 class AutoReportApp {
@@ -1267,8 +1267,9 @@ class AutoReportApp {
                       ` : ''}
                     </select>
                   </td>
-                  <td style="text-align:center;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25);" title="Excluir este integrante">✕</button>
+                  <td style="text-align:center; white-space:nowrap;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('wizard', ${idx})" style="margin-right:0.35rem; color:var(--accent-secondary); font-size:0.75rem; padding:0.25rem 0.5rem;" title="Editar este integrante">✏️ Editar</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.5rem;" title="Excluir este integrante">🗑️ Excluir</button>
                   </td>
                 </tr>
               `;
@@ -1307,44 +1308,18 @@ class AutoReportApp {
   }
 
   addTeamMemberPrompt() {
-    if (!this.currentTraining) return;
-    if (!this.currentTraining.team) this.currentTraining.team = [];
-
-    const name = prompt('Nome do Novo Integrante:');
-    if (!name || !name.trim()) return;
-
-    const pronoun = prompt('Pronome de Tratamento (Ex: Prof., Eng., Pesquisador Visitante, ou deixe vazio):', 'Prof.') || '';
-    const title = prompt('Titulação (Ex: Dr., Dra., M.Sc., Esp., ou deixe vazio):', 'Dr.') || '';
-    const role = prompt('Cargo / Função:', 'Pesquisador e Equipe Técnica') || 'Equipe Técnica';
-    const isFnde = role.includes('FNDE') || role.includes('CGPTE') || role.includes('CMATE') || role.includes('COATE') || role.includes('COACE');
-    const institution = isFnde ? 'FNDE' : 'UFG';
-
-    const newMember = {
-      id: `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      institutionGroup: institution,
-      pronoun: pronoun.trim(),
-      title: title.trim(),
-      name: name.trim(),
-      role: role.trim(),
-      institution: institution,
-      type: isFnde ? 'fnde' : (role.includes('Coordenador do Projeto') ? 'coordenacao' : 'tecnica'),
-      order: this.currentTraining.team.length
-    };
-    newMember.fullName = window.formatTeamMemberFullName(newMember);
-
-    this.currentTraining.team.push(newMember);
-    this.renderTeamList();
-    this.saveCurrentStepData();
-    this.showToast(`👤 ${newMember.fullName} adicionado à equipe!`, 'success');
+    this.openTeamMemberEditor('wizard', -1);
   }
 
   removeTeamMember(index) {
     if (!this.currentTraining?.team?.[index]) return;
     const removedName = this.currentTraining.team[index].name;
-    this.currentTraining.team.splice(index, 1);
-    this.renderTeamList();
-    this.saveCurrentStepData();
-    this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
+    if (confirm(`Deseja realmente remover o integrante "${removedName}" da equipe desta capacitação?`)) {
+      this.currentTraining.team.splice(index, 1);
+      this.renderTeamList();
+      this.saveCurrentStepData();
+      this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
+    }
   }
 
   /* ==========================================================================
@@ -1397,7 +1372,7 @@ class AutoReportApp {
               <th style="min-width:210px;">Nome do Integrante</th>
               <th style="width:110px;">Instituição</th>
               <th style="min-width:320px;">Cargo / Função Oficial</th>
-              <th style="width:70px; text-align:center;">Ações</th>
+              <th style="width:160px; text-align:center;">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -1448,8 +1423,9 @@ class AutoReportApp {
                       ` : ''}
                     </select>
                   </td>
-                  <td style="text-align:center;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMasterTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25);" title="Excluir do cadastro mestre">✕</button>
+                  <td style="text-align:center; white-space:nowrap;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openTeamMemberEditor('master', ${idx})" style="margin-right:0.35rem; color:var(--accent-secondary); font-size:0.75rem; padding:0.25rem 0.5rem;" title="Editar este integrante">✏️ Editar</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMasterTeamMember(${idx})" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.25); font-size:0.75rem; padding:0.25rem 0.5rem;" title="Excluir do catálogo geral">🗑️ Excluir</button>
                   </td>
                 </tr>
               `;
@@ -1489,33 +1465,7 @@ class AutoReportApp {
   }
 
   addMasterTeamMemberPrompt() {
-    const name = prompt('Nome Completo do Novo Integrante:');
-    if (!name || !name.trim()) return;
-
-    const pronoun = prompt('Pronome de Tratamento (Ex: Prof., Eng., Pesquisador Visitante, ou deixe vazio):', 'Prof.') || '';
-    const title = prompt('Titulação (Ex: Dr., Dra., M.Sc., Esp., ou deixe vazio):', 'Dr.') || '';
-    const role = prompt('Cargo / Função Oficial:', 'Pesquisador e Equipe Técnica') || 'Equipe Técnica';
-    const isFnde = role.includes('FNDE') || role.includes('CGPTE') || role.includes('CMATE') || role.includes('COATE') || role.includes('COACE');
-    const institution = isFnde ? 'FNDE' : 'UFG';
-
-    const masterTeam = window.getMasterTeam();
-    const newMember = {
-      id: `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-      institutionGroup: institution,
-      pronoun: pronoun.trim(),
-      title: title.trim(),
-      name: name.trim(),
-      role: role.trim(),
-      institution: institution,
-      type: isFnde ? 'fnde' : (role.includes('Coordenador do Projeto') ? 'coordenacao' : 'tecnica'),
-      order: masterTeam.length
-    };
-    newMember.fullName = window.formatTeamMemberFullName(newMember);
-
-    masterTeam.push(newMember);
-    window.saveMasterTeam(masterTeam);
-    this.renderMasterTeamManagement();
-    this.showToast(`👤 ${newMember.fullName} adicionado ao catálogo geral!`, 'success');
+    this.openTeamMemberEditor('master', -1);
   }
 
   removeMasterTeamMember(index) {
@@ -1523,10 +1473,12 @@ class AutoReportApp {
     if (!masterTeam[index]) return;
     const removedName = masterTeam[index].name;
 
-    masterTeam.splice(index, 1);
-    window.saveMasterTeam(masterTeam);
-    this.renderMasterTeamManagement();
-    this.showToast(`🗑️ Integrante ${removedName} removido do catálogo geral.`);
+    if (confirm(`Deseja realmente remover o integrante "${removedName}" do catálogo geral de equipe?`)) {
+      masterTeam.splice(index, 1);
+      window.saveMasterTeam(masterTeam);
+      this.renderMasterTeamManagement();
+      this.showToast(`🗑️ Integrante ${removedName} removido do catálogo geral.`);
+    }
   }
 
   restoreMasterTeamDefault() {
