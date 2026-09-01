@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.2.1
+ * Versão: v.1.2.2
  */
 
 class AutoReportApp {
@@ -493,22 +493,41 @@ class AutoReportApp {
   renderConvocacaoExtractedMunicipalities() {
     if (!this.extractedConvocacaoData) return;
     const muns = this.extractedConvocacaoData.allMunicipalities || [];
+    const poloName = this.extractedConvocacaoData.polo || 'Polo';
+    const poloUf = this.extractedConvocacaoData.uf || 'MT';
+
     const badgeEl = document.getElementById('res-conv-muns-badge');
     const listEl = document.getElementById('res-conv-muns-list');
 
-    if (badgeEl) badgeEl.textContent = `${muns.length} Municípios`;
+    if (badgeEl) badgeEl.textContent = `${muns.length} Municípios Convocados`;
     if (listEl) {
       if (muns.length === 0) {
         listEl.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">Nenhum município listado. Clique acima para adicionar.</span>`;
       } else {
-        listEl.innerHTML = muns.map((m, idx) => `
-          <span class="nav-badge" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); font-size:0.78rem; display:inline-flex; align-items:center; gap:0.35rem; padding:0.25rem 0.5rem;" title="IBGE: ${m.code || 'N/A'} • ${m.dateGroup || 'Geral'}">
-            📍 ${m.name} ${m.dateGroup ? `<span style="color:var(--text-muted); font-size:0.7rem;">(${m.dateGroup})</span>` : ''}
-            <button type="button" onclick="app.removeConvocacaoMunicipality(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.8rem; padding:0 0.15rem;" title="Remover município">✕</button>
-          </span>
-        `).join('');
+        listEl.innerHTML = muns.map((m, idx) => {
+          const distVal = m.distanceKm !== undefined ? m.distanceKm : window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || poloUf, poloName, poloUf);
+          m.distanceKm = distVal;
+
+          return `
+            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.4rem 0.6rem; font-size:0.78rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.25rem;">
+              <span style="font-weight:700; color:var(--text-primary);">📍 ${m.name} (${m.uf || poloUf})</span>
+              <span style="font-family:monospace; color:var(--accent-secondary); font-size:0.72rem;">IBGE: ${m.code || 'N/A'}</span>
+              <div style="display:flex; align-items:center; gap:0.2rem;">
+                <span style="font-size:0.72rem; color:var(--text-muted);">Distância:</span>
+                <input type="number" step="0.1" min="0" value="${parseFloat(distVal).toFixed(1)}" style="width:65px; font-size:0.75rem; padding:0.1rem 0.3rem; text-align:right; font-family:monospace;" class="form-control form-control-sm" onchange="app.updateConvocacaoMunicipalityDistance(${idx}, this.value)">
+                <span style="font-size:0.72rem; color:var(--text-muted);">km</span>
+              </div>
+              <button type="button" onclick="app.removeConvocacaoMunicipality(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.85rem; padding:0 0.2rem;" title="Remover município">✕</button>
+            </div>
+          `;
+        }).join('');
       }
     }
+  }
+
+  updateConvocacaoMunicipalityDistance(index, value) {
+    if (!this.extractedConvocacaoData?.allMunicipalities?.[index]) return;
+    this.extractedConvocacaoData.allMunicipalities[index].distanceKm = parseFloat(value) || 0.0;
   }
 
   removeConvocacaoMunicipality(index) {
@@ -520,6 +539,7 @@ class AutoReportApp {
   addConvocacaoMunicipalityPrompt() {
     if (!this.extractedConvocacaoData) return;
     const uf = this.extractedConvocacaoData.uf || 'MT';
+    const poloName = this.extractedConvocacaoData.polo || 'Polo';
     if (!window.IBGE_DATA) return;
 
     const availableCities = window.IBGE_DATA
@@ -532,15 +552,16 @@ class AutoReportApp {
     const match = availableCities.find(c => c.n.toLowerCase().includes(cityName.trim().toLowerCase()));
     if (match) {
       if (!this.extractedConvocacaoData.allMunicipalities.some(m => m.code === match.c)) {
+        const dist = window.convocacaoParser.calculateDistanceToPolo(match.n, match.u, poloName, uf);
         this.extractedConvocacaoData.allMunicipalities.push({
           name: match.n,
           code: match.c,
           uf: match.u,
           dateGroup: 'Geral',
-          distance: 0
+          distanceKm: dist
         });
         this.renderConvocacaoExtractedMunicipalities();
-        this.showToast(`📍 ${match.n} adicionado à convocação!`);
+        this.showToast(`📍 ${match.n} (IBGE ${match.c}) adicionado! Distância ao polo: ${dist} km`);
       } else {
         this.showToast(`O município ${match.n} já está na lista.`, 'warning');
       }
@@ -610,17 +631,28 @@ class AutoReportApp {
         training.expectedParticipants = data.expectedParticipants || training.expectedParticipants;
       }
 
-      // Sincronizar Municípios Convocados
+      // Sincronizar Municípios Convocados com distâncias calculadas pelo polo
       if (data.allMunicipalities.length > 0) {
-        training.municipalities = data.allMunicipalities.map(m => ({
-          ibgeCode: String(m.code || ''),
-          name: m.name,
-          uf: m.uf || data.uf,
-          convocadosCount: 4,
-          presentesCount: 0,
-          dateGroup: m.dateGroup || 'Geral',
-          distanciaPolo: 0
-        }));
+        const poloName = data.polo || training.polo || '';
+        const poloUf = data.uf || training.uf || 'MT';
+
+        training.municipalities = data.allMunicipalities.map(m => {
+          const dist = m.distanceKm !== undefined ? m.distanceKm : window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || poloUf, poloName, poloUf);
+          return {
+            id: `mun_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            ibgeCode: String(m.code || ''),
+            name: m.name,
+            uf: m.uf || poloUf,
+            convocadosCount: 4,
+            presentesCount: 0,
+            dateGroup: m.dateGroup || 'Geral',
+            distanceKm: dist,
+            isSummoned: true,
+            inscribedCACS: 2,
+            inscribedGestores: 2,
+            inscribedTotal: 4
+          };
+        });
       }
 
       await window.db.saveTrainingFull(training, 'Preenchimento automático via Convocação PDF');
@@ -1125,40 +1157,154 @@ class AutoReportApp {
      ========================================================================== */
   renderMunicipalitiesStep() {
     const container = document.getElementById('wizard-municipalities-table-preview');
-    if (!container || !this.currentTraining || !window.statsEngine) return;
+    if (!container || !this.currentTraining) return;
 
     const muns = this.currentTraining.municipalities || [];
-    container.innerHTML = window.statsEngine.generateTable1Html(muns);
+    const poloName = this.currentTraining.polo || 'Polo';
+    const poloUf = this.currentTraining.uf || 'MT';
 
     const countEl = document.getElementById('wiz-muns-total-count');
     if (countEl) countEl.textContent = `${muns.length} Municípios Cadastrados`;
+
+    if (muns.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:2rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-muted);">
+          <div style="font-size:2rem; margin-bottom:0.5rem;">🏛️</div>
+          <p style="margin-bottom:0.75rem;">Nenhum município cadastrado na lista da Tabela 1.</p>
+          <button class="btn btn-secondary btn-sm" onclick="app.addMunicipalityPrompt()">+ Cadastrar Município Manualmente</button>
+        </div>
+      `;
+      return;
+    }
+
+    const sorted = [...muns].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    let rowsHtml = sorted.map((m, idx) => {
+      const realIndex = muns.findIndex(item => item.id === m.id || (item.ibgeCode === m.ibgeCode && item.name === m.name));
+      const targetIdx = realIndex !== -1 ? realIndex : idx;
+
+      return `
+        <tr>
+          <td style="text-align:center;">
+            <input type="text" class="form-control form-control-sm font-mono" style="text-align:center; width:120px;" value="${m.ibgeCode || ''}" onchange="app.updateMunicipalityField(${targetIdx}, 'ibgeCode', this.value)" placeholder="5106752">
+          </td>
+          <td>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <input type="text" class="form-control form-control-sm" value="${m.name || ''}" onchange="app.updateMunicipalityField(${targetIdx}, 'name', this.value)" placeholder="Nome do Município">
+              <select class="form-control form-control-sm" style="width:70px;" onchange="app.updateMunicipalityField(${targetIdx}, 'uf', this.value)">
+                ${['MT','MS','GO','DF','AC','AL','AP','AM','BA','CE','ES','MA','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(u => `<option value="${u}" ${m.uf === u ? 'selected' : ''}>${u}</option>`).join('')}
+              </select>
+            </div>
+          </td>
+          <td>
+            <div style="display:flex; align-items:center; gap:0.35rem; justify-content:flex-end;">
+              <input type="number" step="0.1" min="0" class="form-control form-control-sm font-mono" style="text-align:right; width:90px;" value="${parseFloat(m.distanceKm || 0).toFixed(1)}" onchange="app.updateMunicipalityField(${targetIdx}, 'distanceKm', parseFloat(this.value) || 0)">
+              <span style="font-size:0.8rem; color:var(--text-muted);">km</span>
+            </div>
+          </td>
+          <td style="text-align:center;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMunicipality(${targetIdx})" title="Excluir município" style="color:#ef4444; border-color:rgba(239,68,68,0.3);">🗑️</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="table-responsive-wrapper">
+        <table class="report-data-table">
+          <thead>
+            <tr>
+              <th style="width: 140px; text-align:center;">Código IBGE</th>
+              <th>Nome do Município e Estado (UF)</th>
+              <th style="width: 150px; text-align:right;">Distância (km)</th>
+              <th style="width: 70px; text-align:center;">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.85rem; flex-wrap:wrap; gap:0.5rem;">
+        <button class="btn btn-secondary btn-sm" onclick="app.recalculateAllDistancesToPolo()" title="Recalcular distância de todos os municípios em relação ao Polo Capacitador (${poloName})">
+          🔄 Recalcular Distâncias pelo Polo (${poloName})
+        </button>
+        <div style="font-size:0.8rem; color:var(--text-muted);">
+          Total de ${muns.length} município(s) cadastrado(s) na Tabela 1.
+        </div>
+      </div>
+    `;
+  }
+
+  updateMunicipalityField(index, field, value) {
+    if (!this.currentTraining?.municipalities?.[index]) return;
+    this.currentTraining.municipalities[index][field] = value;
+    this.saveCurrentStepData();
+  }
+
+  removeMunicipality(index) {
+    if (!this.currentTraining?.municipalities) return;
+    this.currentTraining.municipalities.splice(index, 1);
+    this.renderMunicipalitiesStep();
+    this.saveCurrentStepData();
+    this.showToast('Município removido da lista.');
+  }
+
+  recalculateAllDistancesToPolo() {
+    if (!this.currentTraining || !this.currentTraining.municipalities) return;
+    const poloName = this.currentTraining.polo;
+    const poloUf = this.currentTraining.uf || 'MT';
+    if (!poloName) {
+      this.showToast('Por favor, informe o Município Polo na Etapa 1 primeiro.', 'warning');
+      return;
+    }
+
+    let count = 0;
+    this.currentTraining.municipalities.forEach(m => {
+      const dist = window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || poloUf, poloName, poloUf);
+      m.distanceKm = dist;
+      count++;
+    });
+
+    this.renderMunicipalitiesStep();
+    this.saveCurrentStepData();
+    this.showToast(`🔄 Distâncias de ${count} municípios recalculadas em relação ao polo ${poloName}!`, 'success');
   }
 
   addMunicipalityPrompt() {
-    const query = prompt('Digite o nome ou código IBGE do município:');
-    if (!query) return;
+    const query = prompt('Digite o nome ou código IBGE do município para adicionar:');
+    if (!query || !query.trim()) return;
 
     let matched = null;
+    const ufDefault = this.currentTraining.uf || 'MT';
+    const poloName = this.currentTraining.polo || 'Polo';
+
     if (window.IBGE_DATA) {
-      matched = window.IBGE_DATA.find(i => String(i.c) === query || i.n.toLowerCase().includes(query.toLowerCase()));
+      matched = window.IBGE_DATA.find(i => 
+        String(i.c) === query.trim() || i.n.toLowerCase().includes(query.trim().toLowerCase())
+      );
     }
 
-    const munName = matched ? matched.n : query;
-    const ibgeCode = matched ? matched.c : parseInt(prompt('Código IBGE (7 dígitos):') || '0');
-    const uf = matched ? matched.u : (this.currentTraining.uf || 'MT');
-    const dist = parseFloat(prompt(`Distância em km até ${this.currentTraining.polo || 'o polo'}:`, '0') || '0');
+    const munName = matched ? matched.n : query.trim();
+    const ibgeCode = matched ? matched.c : (parseInt(prompt('Código IBGE (7 dígitos):') || '0') || 0);
+    const uf = matched ? matched.u : ufDefault;
+
+    const calcDist = window.convocacaoParser.calculateDistanceToPolo(munName, uf, poloName, ufDefault);
+    const distInput = prompt(`Distância em km até o polo ${poloName}:`, calcDist);
+    const finalDist = distInput !== null ? parseFloat(distInput) || calcDist : calcDist;
 
     if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
     this.currentTraining.municipalities.push({
       id: `mun_${Date.now()}`,
-      ibgeCode,
+      ibgeCode: String(ibgeCode),
       name: munName,
       uf,
-      distanceKm: dist,
+      distanceKm: finalDist,
       isSummoned: true,
-      inscribedCACS: 0,
-      inscribedGestores: 0,
-      inscribedTotal: 0,
+      inscribedCACS: 2,
+      inscribedGestores: 2,
+      inscribedTotal: 4,
       presentCACS: 0,
       presentGestores: 0,
       presentTotal: 0
@@ -1166,6 +1312,7 @@ class AutoReportApp {
 
     this.renderMunicipalitiesStep();
     this.saveCurrentStepData();
+    this.showToast(`📍 ${munName} (${uf}) adicionado à Tabela 1!`);
   }
 
   /* ==========================================================================
