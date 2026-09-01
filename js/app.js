@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.8.4
+ * Versão: v.1.8.5
  */
 
 window.icons = {
@@ -16,7 +16,8 @@ window.icons = {
   check: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
   logout: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 5 12 10 7"></polyline><line x1="15" y1="12" x2="5" y2="12"></line></svg>`,
   filter: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`,
-  stepForward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-left:5px;"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>`
+  stepForward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-left:5px;"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>`,
+  sede: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 10v2"></path><path d="M15 10v2"></path><path d="M9 14v2"></path><path d="M15 14v2"></path></svg>`
 };
 
 class AutoReportApp {
@@ -1760,18 +1761,21 @@ class AutoReportApp {
 
     const muns = this.currentTraining.municipalities;
 
-    // Verificar se o município polo/sede já está na lista
-    let poloMun = muns.find(m => 
-      (m.name && m.name.toLowerCase() === poloName.toLowerCase() && (m.uf || poloUf).toUpperCase() === poloUf.toUpperCase()) ||
-      (poloIbge && String(m.ibgeCode) === String(poloIbge)) ||
-      m.isSede === true
-    );
+    // Normalização estrita para identificar exclusivamente o polo sede
+    const normPolo = window.convocacaoParser ? window.convocacaoParser.normalizeText(poloName) : poloName.toLowerCase();
+
+    // 1. Identificar se o município polo já existe
+    let poloMun = muns.find(m => {
+      const normM = window.convocacaoParser ? window.convocacaoParser.normalizeText(m.name) : (m.name || '').toLowerCase();
+      const matchName = normM === normPolo && (m.uf || poloUf).toUpperCase() === poloUf.toUpperCase();
+      const matchIbge = poloIbge && String(m.ibgeCode) === String(poloIbge);
+      return matchName || matchIbge;
+    });
 
     if (!poloMun) {
-      // Buscar código IBGE do polo se estiver vazio
       let finalIbge = poloIbge;
       if (!finalIbge && window.IBGE_DATA) {
-        const found = window.IBGE_DATA.find(m => m.u === poloUf && m.n.toLowerCase() === poloName.toLowerCase());
+        const found = window.IBGE_DATA.find(m => m.u === poloUf && (window.convocacaoParser ? window.convocacaoParser.normalizeText(m.n) === normPolo : m.n.toLowerCase() === poloName.toLowerCase()));
         if (found) finalIbge = found.c;
       }
 
@@ -1790,13 +1794,25 @@ class AutoReportApp {
         presentGestores: 0,
         presentTotal: 0
       };
-      // Insere o município polo no início da lista
       muns.unshift(poloMun);
     } else {
       poloMun.isSede = true;
       poloMun.distanceKm = 0.0;
       if (poloIbge && !poloMun.ibgeCode) poloMun.ibgeCode = String(poloIbge);
     }
+
+    // 2. Corrigir e recalcular qualquer outro município que não seja o polo
+    muns.forEach(m => {
+      const normM = window.convocacaoParser ? window.convocacaoParser.normalizeText(m.name) : (m.name || '').toLowerCase();
+      const isActuallyPolo = (normM === normPolo && (m.uf || poloUf).toUpperCase() === poloUf.toUpperCase()) || (poloIbge && String(m.ibgeCode) === String(poloIbge));
+      
+      if (!isActuallyPolo) {
+        m.isSede = false;
+        if (m.distanceKm === 0.0 || m.distanceKm === 0 || m.distanceKm === undefined) {
+          m.distanceKm = window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || poloUf, poloName, poloUf);
+        }
+      }
+    });
   }
 
   renderMunicipalitiesStep() {
@@ -1830,7 +1846,9 @@ class AutoReportApp {
     if (muns.length === 0) {
       container.innerHTML = `
         <div style="text-align:center; padding:2.5rem 1.5rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-muted);">
-          <div style="font-size:2.5rem; margin-bottom:0.75rem;">🏛️</div>
+          <div style="display:flex; justify-content:center; margin-bottom:0.75rem; color:var(--accent-primary);">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 10v2"></path><path d="M15 10v2"></path><path d="M9 14v2"></path><path d="M15 14v2"></path></svg>
+          </div>
           <h4 style="margin:0 0 0.5rem 0; color:var(--text-primary); font-weight:700;">Nenhum município cadastrado na lista da Tabela 1</h4>
           <p style="margin-bottom:1.25rem; font-size:0.88rem; color:var(--text-secondary);">Cadastre os municípios convocados da região polo para calcular distâncias e participantes automaticamente.</p>
           <button class="btn btn-primary" onclick="app.openMunicipalityInPageEditor(-1)" style="font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
@@ -1875,7 +1893,7 @@ class AutoReportApp {
             <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
               <button type="button" class="btn btn-secondary btn-sm btn-action-edit" onclick="app.openMunicipalityInPageEditor(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar dados do município">${window.icons.edit} Editar</button>
               ${m.isSede 
-                ? `<span style="font-size:0.75rem; color:var(--text-muted); padding:0.25rem 0.4rem;" title="Município Polo / Sede (Não removível)">🏛️ Sede</span>`
+                ? `<span class="btn btn-secondary btn-sm" style="opacity:0.65; cursor:default; font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Município Sede / Polo Oficial">${window.icons.sede} Sede</span>`
                 : `<button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMunicipality(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir município">${window.icons.delete} Excluir</button>`
               }
             </div>

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Leitura OCR e Extração Inteligente de Convocação PDF
- * Versão: v.1.8.4
+ * Versão: v.1.8.5
  */
 
 class ConvocacaoParser {
@@ -9,77 +9,68 @@ class ConvocacaoParser {
   }
 
   /**
-   * Auxiliar de normalização de texto para comparações insensíveis a acentos e maiúsculas
+   * Normaliza strings para busca e comparação
    */
-  normalizeText(str) {
-    return (str || '')
+  normalizeText(text) {
+    if (!text) return '';
+    return text
+      .toString()
+      .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/[^\w\s]/gi, '')
       .replace(/\s+/g, ' ')
       .trim();
   }
 
   /**
-   * Encontra um município no catálogo IBGE pela UF e Nome com correspondência exata primeiro
+   * Busca município no catálogo oficial do IBGE
    */
   findIbgeMunicipality(cityName, uf) {
     if (!window.IBGE_DATA || !cityName) return null;
-    const normSearch = this.normalizeText(cityName);
+    const norm = this.normalizeText(cityName);
+    const ufUpper = (uf || '').toUpperCase();
 
-    const stateCities = window.IBGE_DATA.filter(m => !uf || m.u === uf);
-    
-    // 1. Tentar correspondência exata
-    let match = stateCities.find(m => this.normalizeText(m.n) === normSearch);
-    
-    // 2. Se não encontrar exata, tentar no catálogo inteiro se UF não filtrou
-    if (!match && uf) {
-      match = window.IBGE_DATA.find(m => this.normalizeText(m.n) === normSearch);
-    }
+    // 1. Tentar correspondência exata de nome e UF
+    let match = window.IBGE_DATA.find(m => 
+      m.u === ufUpper && this.normalizeText(m.n) === norm
+    );
+    if (match) return match;
 
-    // 3. Fallback para contagem de substring
-    if (!match) {
-      match = stateCities.find(m => 
-        this.normalizeText(m.n).includes(normSearch) || normSearch.includes(this.normalizeText(m.n))
+    // 2. Tentar correspondência exata apenas de nome
+    match = window.IBGE_DATA.find(m => this.normalizeText(m.n) === norm);
+    if (match) return match;
+
+    // 3. Tentar busca com prefixo/sufixo na mesma UF
+    if (ufUpper) {
+      match = window.IBGE_DATA.find(m => 
+        m.u === ufUpper && (this.normalizeText(m.n).startsWith(norm) || norm.startsWith(this.normalizeText(m.n)))
       );
+      if (match) return match;
     }
 
-    return match || null;
+    return null;
   }
 
   /**
-   * Calcula a distância exata em LINHA RETA (fórmula de Haversine geodésica em km)
-   * no mapa real entre dois pontos de coordenadas (lat1, lon1) e (lat2, lon2).
-   * Sem consultar nenhuma base de dados externa ou histórica.
+   * Calcula a distância geodésica em LINHA RETA entre dois pontos (Fórmula de Haversine)
    */
   calculateStraightLineDistance(lat1, lon1, lat2, lon2) {
-    if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) {
-      return 0.0;
-    }
-    
-    // Se forem exatamente as mesmas coordenadas, distância é zero
-    if (Math.abs(lat1 - lat2) < 0.0001 && Math.abs(lon1 - lon2) < 0.0001) {
-      return 0.0;
-    }
+    if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return 0.0;
+    if (lat1 === null || lon1 === null || lat2 === null || lon2 === null) return 0.0;
 
-    const R = 6371.0088; // Raio médio da Terra em km (WGS84 / IUGG)
-    const toRad = Math.PI / 180;
-
-    const dLat = (lat2 - lat1) * toRad;
-    const dLon = (lon2 - lon1) * toRad;
-
-    const phi1 = lat1 * toRad;
-    const phi2 = lat2 * toRad;
+    const R = 6371.0; // Raio médio da Terra em km
+    const dLat = (lat2 - lat1) * Math.PI / 180.0;
+    const dLon = (lon2 - lon1) * Math.PI / 180.0;
 
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(phi1) * Math.cos(phi2) *
+              Math.cos(lat1 * Math.PI / 180.0) * Math.cos(lat2 * Math.PI / 180.0) *
               Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
+    
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distanceKm = R * c;
+    const distance = R * c;
 
-    return Math.round(distanceKm * 10) / 10;
+    return Math.round(distance * 10) / 10; // 1 casa decimal
   }
 
   /**
@@ -91,17 +82,24 @@ class ConvocacaoParser {
     
     const normCity = this.normalizeText(cityName);
     const normPolo = this.normalizeText(poloName);
+    const uCity = (cityUf || '').toUpperCase();
+    const uPolo = (poloUf || cityUf || '').toUpperCase();
 
-    // Se o município for o próprio polo capacitador, a distância em linha reta é 0.0 km
-    if (normCity === normPolo || normCity.includes(normPolo) || normPolo.includes(normCity)) {
+    // Se o município for exatamente o próprio polo capacitador (mesmo nome normalizado e mesmo estado)
+    if (normCity === normPolo && (uCity === uPolo || !uCity || !uPolo)) {
       return 0.0;
     }
 
     const cityObj = this.findIbgeMunicipality(cityName, cityUf);
     const poloObj = this.findIbgeMunicipality(poloName, poloUf || cityUf);
 
-    if (cityObj && poloObj && cityObj.la !== undefined && poloObj.la !== undefined) {
-      return this.calculateStraightLineDistance(cityObj.la, cityObj.lo, poloObj.la, poloObj.lo);
+    if (cityObj && poloObj) {
+      if (cityObj.c === poloObj.c) {
+        return 0.0;
+      }
+      if (cityObj.la !== undefined && poloObj.la !== undefined) {
+        return this.calculateStraightLineDistance(cityObj.la, cityObj.lo, poloObj.la, poloObj.lo);
+      }
     }
 
     return 0.0;
