@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Banco de Dados Local (IndexedDB & State Management)
- * Versão: v.1.0.3
+ * Versão: v.1.0.4
  */
 
 class TrainingDB {
@@ -172,6 +172,36 @@ class TrainingDB {
   /* ==========================================================================
      MÉTODOS ESPECÍFICOS: CAPACITAÇÕES
      ========================================================================== */
+  /**
+   * Exclui uma capacitação criada pelo usuário (com trava estrita de proteção para registros históricos)
+   */
+  async deleteTraining(trainingId) {
+    const training = await this.get('trainings', trainingId);
+    if (!training) {
+      throw new Error('Capacitação não encontrada no banco de dados.');
+    }
+
+    // Regra estrita de segurança: NUNCA permitir exclusão de registros do Histórico Protegido
+    if (training.isHistorical || training.status === 'historico') {
+      throw new Error('Capacitações do Histórico Protegido (Nº 6 a 15) não podem ser excluídas.');
+    }
+
+    // Exclusão em cascata de todos os registros filhos e mestre
+    await Promise.all([
+      this.clearStoreByIndex('team', 'trainingId', trainingId),
+      this.clearStoreByIndex('municipalities', 'trainingId', trainingId),
+      this.clearStoreByIndex('courseModules', 'trainingId', trainingId),
+      this.clearStoreByIndex('courseMoments', 'trainingId', trainingId),
+      this.clearStoreByIndex('attendance', 'trainingId', trainingId),
+      this.clearStoreByIndex('evaluations', 'trainingId', trainingId),
+      this.clearStoreByIndex('media', 'trainingId', trainingId),
+      this.clearStoreByIndex('auditLog', 'trainingId', trainingId),
+      this.delete('trainings', trainingId)
+    ]);
+
+    return true;
+  }
+
   async getAllTrainings() {
     const trainings = await this.getAll('trainings');
     return trainings.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));

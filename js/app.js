@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.0.3
+ * Versão: v.1.0.4
  */
 
 class AutoReportApp {
@@ -224,7 +224,7 @@ class AutoReportApp {
                     ${isHist ? 'Preservada' : `${t.progressPercent || 0}% Concluído`}
                   </div>
                 </div>
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                   <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="${isHist ? 'Visualizar dados' : 'Continuar edição'}">
                     ${isHist ? '🔍 Consultar' : '✏️ Continuar'}
                   </button>
@@ -234,6 +234,12 @@ class AutoReportApp {
                   <button class="btn btn-gradient btn-sm" onclick="app.directDownloadDocx('${t.id}')" title="Gerar Relatório .docx Oficial">
                     ⚡ Gerar .docx
                   </button>
+                  ${isHist
+                    ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b;" title="Registro do Histórico Protegido - Exclusão desabilitada">🔒 Protegido</span>`
+                    : `<button class="btn btn-secondary btn-sm" onclick="app.deleteTrainingAction('${t.id}')" style="color:var(--accent-danger); border-color:rgba(239, 68, 68, 0.3);" title="Excluir permanentemente este relatório">
+                        <span style="color:#ef4444;">🗑️ Apagar</span>
+                      </button>`
+                  }
                 </div>
               </div>
             </div>
@@ -457,6 +463,12 @@ class AutoReportApp {
     const statusTextEl = document.getElementById('wizard-header-progress-text');
     if (statusTextEl) {
       statusTextEl.textContent = `${percent}% Concluído (${completedSteps} de 11 Etapas)`;
+    }
+
+    // Controle de visibilidade do botão Apagar no assistente (somente relatórios criados pelo usuário)
+    const delBtn = document.getElementById('wizard-btn-delete');
+    if (delBtn) {
+      delBtn.style.display = t.isHistorical ? 'none' : 'inline-flex';
     }
   }
 
@@ -1175,6 +1187,135 @@ class AutoReportApp {
       this.showToast('⚡ Gerando arquivo Word (.docx)...');
       await window.reportDocxGenerator.generateAndDownload(full, metrics);
     }
+  }
+
+  /* ==========================================================================
+     EXCLUSÃO DE CAPACITAÇÕES (EXCETO HISTÓRICO PROTEGIDO)
+     ========================================================================== */
+  async deleteTrainingAction(trainingId) {
+    if (!window.db) return;
+    const training = await window.db.get('trainings', trainingId);
+    if (!training) {
+      this.showToast('Capacitação não encontrada.', 'error');
+      return;
+    }
+
+    // Regra estrita: impedir exclusão de registros do Histórico Protegido
+    if (training.isHistorical || training.status === 'historico') {
+      this.showToast('🛡️ Registros do Histórico Protegido (Nº 6 a 15) não podem ser excluídos.', 'warning');
+      return;
+    }
+
+    const confirmed = confirm(
+      `ATENÇÃO: Deseja realmente excluir permanentemente o relatório da Capacitação Nº ${training.number} - ${training.polo || 'Polo Regional'}?\n\n` +
+      `Esta ação removerá todos os dados preenchidos, participantes, módulos, avaliações e anexos vinculados a este relatório e NÃO poderá ser desfeita.`
+    );
+
+    if (confirmed) {
+      try {
+        await window.db.deleteTraining(trainingId);
+        this.showToast(`✓ Capacitação Nº ${training.number} excluída com sucesso!`, 'success');
+        await this.refreshTrainingsList();
+
+        if (this.currentTraining?.id === trainingId) {
+          this.currentTraining = null;
+          this.navigateTo('dashboard');
+        } else if (this.activeView === 'trainings') {
+          this.renderTrainingsList();
+        } else {
+          this.renderDashboard();
+        }
+      } catch (err) {
+        console.error('Erro ao excluir capacitação:', err);
+        this.showToast(`Erro ao excluir: ${err.message}`, 'error');
+      }
+    }
+  }
+
+  deleteCurrentWizardTraining() {
+    if (this.currentTraining) {
+      this.deleteTrainingAction(this.currentTraining.id);
+    }
+  }
+
+  /* ==========================================================================
+     TELA COMPLETA: BANCO DE CAPACITAÇÕES
+     ========================================================================== */
+  async renderTrainingsList() {
+    await this.refreshTrainingsList();
+    const container = document.getElementById('all-trainings-list-container');
+    if (!container) return;
+
+    if (this.trainingList.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+          <div style="font-size:3rem; margin-bottom:1rem;">📁</div>
+          <p>Nenhuma capacitação cadastrada.</p>
+          <button class="btn btn-gradient btn-sm" onclick="app.createNewTraining()">+ Nova Capacitação</button>
+        </div>
+      `;
+      return;
+    }
+
+    const sorted = [...this.trainingList].sort((a, b) => (parseInt(b.number) || 0) - (parseInt(a.number) || 0));
+
+    container.innerHTML = `
+      <div class="table-responsive-wrapper">
+        <table class="report-data-table">
+          <thead>
+            <tr>
+              <th style="width:70px; text-align:center;">Nº</th>
+              <th>Polo Regional</th>
+              <th>UF</th>
+              <th>Datas</th>
+              <th>Carga Horária</th>
+              <th>Situação</th>
+              <th style="text-align:center; width:280px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map(t => {
+              const isHist = t.status === 'historico' || t.isHistorical;
+              const statusBadge = isHist
+                ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b;">🏛️ Histórico Protegido</span>`
+                : (t.progressPercent === 100
+                    ? `<span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981;">✓ Concluída</span>`
+                    : `<span class="nav-badge" style="background:rgba(6, 182, 212, 0.15); color:#22d3ee;">⏳ Em Andamento</span>`);
+
+              return `
+                <tr>
+                  <td style="text-align:center; font-weight:800; font-size:1.05rem; color:var(--accent-secondary);">${t.number}</td>
+                  <td><strong>${t.polo || 'Polo Regional'}</strong></td>
+                  <td><span class="nav-badge">${t.uf || 'MT'}</span></td>
+                  <td style="font-size:0.85rem;">${t.datesFormatted || t.startDate || '-'}</td>
+                  <td style="font-size:0.85rem;">${t.workload || '16h'}</td>
+                  <td>${statusBadge}</td>
+                  <td style="text-align:center;">
+                    <div style="display:flex; gap:0.4rem; justify-content:center; align-items:center;">
+                      <button class="btn btn-secondary btn-sm" onclick="app.openWizard('${t.id}', 1)" title="${isHist ? 'Consultar' : 'Editar'}">
+                        ${isHist ? '🔍 Consultar' : '✏️ Editar'}
+                      </button>
+                      <button class="btn btn-secondary btn-sm" onclick="app.openCloneModal('${t.id}')" title="Usar como modelo">
+                        📋 Modelo
+                      </button>
+                      <button class="btn btn-gradient btn-sm" onclick="app.directDownloadDocx('${t.id}')" title="Gerar .docx">
+                        ⚡ .docx
+                      </button>
+                      ${isHist
+                        ? `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b;" title="Histórico protegido - exclusão desabilitada">🔒</span>`
+                        : `<button class="btn btn-secondary btn-sm" onclick="app.deleteTrainingAction('${t.id}')" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" title="Excluir este relatório">
+                            🗑️
+                          </button>`
+                      }
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
   }
 
   async duplicateTrainingAction(trainingId) {
