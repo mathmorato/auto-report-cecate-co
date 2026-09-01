@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.3
+ * Versão: v.1.3.4
  */
 
 class AutoReportApp {
@@ -317,7 +317,7 @@ class AutoReportApp {
      ASSISTENTE DE 11 ETAPAS (WIZARD ENGINE)
      ========================================================================== */
   createNewTraining() {
-    this.openNewTrainingOptionsModal();
+    this.createNewTrainingBlank();
   }
 
   openNewTrainingOptionsModal() {
