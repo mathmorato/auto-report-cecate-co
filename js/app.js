@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.7.3
+ * Versão: v.1.7.4
  */
 
 window.icons = {
@@ -2788,7 +2788,6 @@ class AutoReportApp {
         <div style="text-align:center; padding:3rem; color:var(--text-muted);">
           <div style="font-size:3rem; margin-bottom:1rem;">📁</div>
           <p>Nenhuma capacitação cadastrada.</p>
-          <button class="btn btn-gradient btn-sm" onclick="app.createNewTraining()">+ Nova Capacitação</button>
         </div>
       `;
       return;
