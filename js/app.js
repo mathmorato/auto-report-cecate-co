@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.2.4
+ * Versão: v.1.2.5
  */
 
 class AutoReportApp {
@@ -950,6 +950,17 @@ class AutoReportApp {
     if (this.currentTraining) {
       this.currentTraining.polo = city;
       this.currentTraining.poloIbge = ibgeCode;
+
+      // Recalcular automaticamente a distância em linha reta para todos os municípios cadastrados na Tabela 1 em relação ao novo polo
+      if (this.currentTraining.municipalities && this.currentTraining.municipalities.length > 0) {
+        const ufVal = this.currentTraining.uf || 'MT';
+        this.currentTraining.municipalities.forEach(m => {
+          m.distanceKm = window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || ufVal, city, ufVal);
+        });
+        if (this.currentStep === 3) this.renderMunicipalitiesStep();
+        this.showToast(`📍 Polo alterado para ${city}! Distâncias da Tabela 1 recalculadas em linha reta.`);
+      }
+
       this.updateWizardHeader();
       this.saveCurrentStepData();
     }
@@ -1240,6 +1251,17 @@ class AutoReportApp {
   updateMunicipalityField(index, field, value) {
     if (!this.currentTraining?.municipalities?.[index]) return;
     this.currentTraining.municipalities[index][field] = value;
+
+    if (field === 'name' || field === 'uf') {
+      const m = this.currentTraining.municipalities[index];
+      const poloName = this.currentTraining.polo;
+      const poloUf = this.currentTraining.uf || 'MT';
+      if (poloName) {
+        m.distanceKm = window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || poloUf, poloName, poloUf);
+        this.renderMunicipalitiesStep();
+      }
+    }
+
     this.saveCurrentStepData();
   }
 
@@ -1282,7 +1304,9 @@ class AutoReportApp {
 
     if (window.IBGE_DATA) {
       matched = window.IBGE_DATA.find(i => 
-        String(i.c) === query.trim() || i.n.toLowerCase().includes(query.trim().toLowerCase())
+        String(i.c) === query.trim() || 
+        i.n.toLowerCase() === query.trim().toLowerCase() ||
+        i.n.toLowerCase().includes(query.trim().toLowerCase())
       );
     }
 
@@ -1290,17 +1314,16 @@ class AutoReportApp {
     const ibgeCode = matched ? matched.c : (parseInt(prompt('Código IBGE (7 dígitos):') || '0') || 0);
     const uf = matched ? matched.u : ufDefault;
 
+    // Cálculo automático em linha reta (Haversine) sem prompt manual
     const calcDist = window.convocacaoParser.calculateDistanceToPolo(munName, uf, poloName, ufDefault);
-    const distInput = prompt(`Distância em km até o polo ${poloName}:`, calcDist);
-    const finalDist = distInput !== null ? parseFloat(distInput) || calcDist : calcDist;
 
     if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
     this.currentTraining.municipalities.push({
-      id: `mun_${Date.now()}`,
+      id: `mun_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       ibgeCode: String(ibgeCode),
       name: munName,
       uf,
-      distanceKm: finalDist,
+      distanceKm: calcDist,
       isSummoned: true,
       inscribedCACS: 2,
       inscribedGestores: 2,
@@ -1312,7 +1335,7 @@ class AutoReportApp {
 
     this.renderMunicipalitiesStep();
     this.saveCurrentStepData();
-    this.showToast(`📍 ${munName} (${uf}) adicionado à Tabela 1!`);
+    this.showToast(`📍 ${munName} (${uf}) adicionado! Distância calculada em linha reta: ${calcDist} km`, 'success');
   }
 
   /* ==========================================================================
