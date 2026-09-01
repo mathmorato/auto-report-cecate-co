@@ -1,11 +1,24 @@
 /**
  * AutoReport CECATE - Motor de Leitura OCR e Extração Inteligente de Convocação PDF
- * Versão: v.1.2.0
+ * Versão: v.1.2.1
  */
 
 class ConvocacaoParser {
   constructor() {
     this.pdfjsLoaded = false;
+  }
+
+  /**
+   * Auxiliar de normalização de texto para comparações insensíveis a acentos e maiúsculas
+   */
+  normalizeText(str) {
+    return (str || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   /**
@@ -100,7 +113,6 @@ class ConvocacaoParser {
     if (!result.uf) result.uf = 'MT'; // Padrão CECATE CO
 
     // 2. Identificar Polo Regional / Município Polo
-    // Ex: "Campus de Pontes e Lacerda", "Campus Pontes e Lacerda", "Pontes e Lacerda - MT"
     const poloMatch = text.match(/Campus\s+(?:de\s+|do\s+)?([A-Za-zÀ-ÖØ-öø-ÿ\s]+?)\s+(?:do|da|de|\-)/i) ||
                        text.match(/Endereço:.*?,?\s*([A-Za-zÀ-ÖØ-öø-ÿ\s]+?)\s*-\s*(?:MT|MS|GO|DF)/i) ||
                        text.match(/realizada\s+em\s+([A-Za-zÀ-ÖØ-öø-ÿ\s]+?)\s*-\s*(?:MT|MS|GO|DF)/i);
@@ -109,12 +121,15 @@ class ConvocacaoParser {
       let candidatePolo = poloMatch[1].trim()
         .replace(/^Instituto\s+Federal\s+/i, '')
         .replace(/^IFMT\s+/i, '')
-        .replace(/^Campus\s+/i, '');
+        .replace(/^Campus\s+/i, '')
+        .replace(/do\s+Instituto.*/i, '')
+        .replace(/\s+-\s+.*$/, '')
+        .trim();
       
-      // Validar contra a base IBGE
       if (window.IBGE_DATA) {
+        const normCand = this.normalizeText(candidatePolo);
         const matchedCity = window.IBGE_DATA.find(m => 
-          m.u === result.uf && candidatePolo.toLowerCase().includes(m.n.toLowerCase())
+          m.u === result.uf && (normCand.includes(this.normalizeText(m.n)) || this.normalizeText(m.n).includes(normCand))
         );
         if (matchedCity) {
           result.polo = matchedCity.n;
@@ -130,8 +145,9 @@ class ConvocacaoParser {
     // Se não achou polo por regex, buscar cidades do estado mencionadas perto de "Campus" ou "Auditório"
     if (!result.polo && window.IBGE_DATA) {
       const stateCities = window.IBGE_DATA.filter(m => m.u === result.uf);
+      const normText = this.normalizeText(text);
       for (const city of stateCities) {
-        if (text.toLowerCase().includes(city.n.toLowerCase())) {
+        if (normText.includes(this.normalizeText(city.n))) {
           result.polo = city.n;
           result.poloIbge = String(city.c);
           break;
@@ -140,7 +156,6 @@ class ConvocacaoParser {
     }
 
     // 3. Identificar Datas da Capacitação
-    // Ex: "nos dias 23 e 24 de junho de 2026", "Data capacitação: 23 e 24 de junho de 2026"
     const dateMatch = text.match(/(?:dias|capacitação:?)\s*(\d{1,2})(?:\s*e\s*|\s*a\s*|\s*,\s*)?(\d{1,2})?\s+de\s+([a-zç]+)\s+de\s+(\d{4})/i);
     
     if (dateMatch) {
@@ -153,7 +168,7 @@ class ConvocacaoParser {
       const monthIdx = MESES.findIndex(m => monthName.includes(m));
 
       if (monthIdx !== -1) {
-        const mm = String(monthIdx + 1).padStart(2, '0');
+        const mm = String((monthIdx % 12 === 3 && monthName.includes('ç') ? 3 : (monthIdx >= 12 ? monthIdx % 12 : monthIdx)) + 1).padStart(2, '0');
         const dd1 = String(day1).padStart(2, '0');
         const dd2 = String(day2).padStart(2, '0');
 
@@ -164,7 +179,7 @@ class ConvocacaoParser {
         result.workloadNum = numDays * 8;
         result.workload = `${result.workloadNum} horas`;
 
-        const monthFull = MESES[monthIdx === 3 && monthName.includes('ç') ? 2 : monthIdx];
+        const monthFull = MESES[monthIdx >= 12 ? monthIdx % 12 : monthIdx];
         if (day1 === day2) {
           result.datesFormatted = `${day1} de ${monthFull} de ${year}`;
         } else if (numDays === 2) {
@@ -189,21 +204,13 @@ class ConvocacaoParser {
       result.address = endMatch[1].trim();
     }
 
-    // 5. Identificar Links
-    const linkInsc = text.match(/Link inscrições:\s*(https?:\/\/[^\s]+)/i);
-    if (linkInsc) result.linkInscricao = linkInsc[1].trim();
-
-    const linkLoc = text.match(/Link localização:\s*(https?:\/\/[^\s]+)/i);
-    if (linkLoc) result.linkLocalizacao = linkLoc[1].trim();
-
-    // 6. Identificar Quantidade de Municípios Convocados
+    // 5. Identificar Quantidade de Municípios Convocados
     const countMatch = text.match(/(\d+)\s+municípios\s+do\s+Estado/i);
     if (countMatch) {
       result.invitedMunicipalitiesCount = parseInt(countMatch[1]);
     }
 
-    // 7. Extrair Lista de Municípios Convocados (por Data/Grupo)
-    // Ex: "Municípios convidados (23/06/2026)" ...
+    // 6. Varredura Completa de Municípios Convocados (divididos por data ou bloco)
     const groupSections = text.split(/(?:Municípios convidados|Convocados)\s*\((.*?)\)/gi);
 
     if (groupSections.length > 1) {
@@ -215,52 +222,77 @@ class ConvocacaoParser {
         result.municipalitiesByDate[groupLabel] = extractedCities;
         
         extractedCities.forEach(cityObj => {
-          if (!result.allMunicipalities.some(c => c.name.toLowerCase() === cityObj.name.toLowerCase())) {
+          if (!result.allMunicipalities.some(c => c.code === cityObj.code)) {
             result.allMunicipalities.push({ ...cityObj, dateGroup: groupLabel });
           }
         });
       }
-    } else {
-      // Se não houver divisão explícita por data, buscar todas as cidades do estado presentes no texto
+    }
+
+    // Se ainda não encontrou todas as cidades pelo split por data, fazer varredura no texto inteiro
+    if (result.allMunicipalities.length === 0 || (result.invitedMunicipalitiesCount > 0 && result.allMunicipalities.length < result.invitedMunicipalitiesCount)) {
       const allFound = this.extractCityNamesFromBlock(text, result.uf);
-      result.allMunicipalities = allFound.map(c => ({ ...c, dateGroup: 'Todos' }));
+      allFound.forEach(cityObj => {
+        if (!result.allMunicipalities.some(c => c.code === cityObj.code)) {
+          result.allMunicipalities.push({ ...cityObj, dateGroup: 'Geral' });
+        }
+      });
     }
 
     if (result.invitedMunicipalitiesCount === 0) {
       result.invitedMunicipalitiesCount = result.allMunicipalities.length;
     }
-    result.expectedParticipants = (result.invitedMunicipalitiesCount || result.allMunicipalities.length) * 2; // Estimativa baseline
+    result.expectedParticipants = (result.invitedMunicipalitiesCount || result.allMunicipalities.length) * 2;
 
     return result;
   }
 
   /**
-   * Procura nomes de municípios válidos da base IBGE dentro de um bloco de texto
+   * Realiza varredura completa de municípios válidos da base IBGE no texto do PDF
    */
   extractCityNamesFromBlock(blockText, uf) {
     if (!window.IBGE_DATA) return [];
     
-    const lines = blockText.split('\n');
     const foundCities = [];
     const stateCities = window.IBGE_DATA.filter(m => m.u === uf);
+    const normalizedBlock = this.normalizeText(blockText);
 
-    for (const line of lines) {
-      const cleanLine = line.replace(/^[■•\-\*\d\.\s]+/, '').trim();
-      if (!cleanLine || cleanLine.length < 3) continue;
+    // 1. Dividir em fragmentos por linhas, marcadores de tópicos (■, •, -) e tabulações/múltiplos espaços
+    const chunks = blockText
+      .split(/[\n\r■•\*\|\t;]+/)
+      .map(s => s.trim())
+      .filter(s => s.length >= 3);
 
-      // Buscar correspondência exata ou aproximada com nome de município do estado
-      const match = stateCities.find(m => 
-        m.n.toLowerCase() === cleanLine.toLowerCase() ||
-        cleanLine.toLowerCase().includes(m.n.toLowerCase())
-      );
+    for (const chunk of chunks) {
+      const normChunk = this.normalizeText(chunk);
+      for (const city of stateCities) {
+        const normCity = this.normalizeText(city.n);
+        if (normChunk === normCity || normChunk.includes(normCity)) {
+          if (!foundCities.some(c => c.code === city.c)) {
+            foundCities.push({
+              name: city.n,
+              code: city.c,
+              uf: city.u,
+              distance: 0
+            });
+          }
+        }
+      }
+    }
 
-      if (match && !foundCities.some(c => c.code === match.c)) {
-        foundCities.push({
-          name: match.n,
-          code: match.c,
-          uf: match.u,
-          distance: 0 // Será calculado posteriormente se houver polo
-        });
+    // 2. Varredura global de segurança insensível a acentos sobre o bloco inteiro
+    for (const city of stateCities) {
+      const normCity = this.normalizeText(city.n);
+      // Evitar falsos positivos com palavras curtas
+      if (normCity.length >= 4 && normalizedBlock.includes(normCity)) {
+        if (!foundCities.some(c => c.code === city.c)) {
+          foundCities.push({
+            name: city.n,
+            code: city.c,
+            uf: city.u,
+            distance: 0
+          });
+        }
       }
     }
 

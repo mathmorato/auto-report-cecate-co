@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.2.0
+ * Versão: v.1.2.1
  */
 
 class AutoReportApp {
@@ -434,7 +434,7 @@ class AutoReportApp {
 
       const { fullText, pageTexts } = await window.convocacaoParser.extractTextFromPdf(file);
 
-      if (statusText) statusText.textContent = 'Executando OCR e analisando tópicos da convocação...';
+      if (statusText) statusText.textContent = 'Executando OCR e varredura completa de tópicos e municípios...';
       if (progressFill) progressFill.style.width = '70%';
 
       await new Promise(r => setTimeout(r, 300));
@@ -445,43 +445,107 @@ class AutoReportApp {
       if (progressFill) progressFill.style.width = '100%';
       await new Promise(r => setTimeout(r, 200));
 
-      // Atualizar interface dos resultados
+      // Atualizar interface dos resultados com controles editáveis
       if (procStep) procStep.style.display = 'none';
       if (resStep) resStep.style.display = 'block';
 
-      document.getElementById('res-conv-polo').textContent = parsed.polo ? `${parsed.polo} (${parsed.uf})` : `Não identificado (${parsed.uf})`;
-      document.getElementById('res-conv-ibge').textContent = parsed.poloIbge ? `Código IBGE: ${parsed.poloIbge}` : `IBGE: Não encontrado`;
-      document.getElementById('res-conv-dates').textContent = parsed.datesFormatted || 'Datas não identificadas';
-      document.getElementById('res-conv-workload').textContent = `Carga Horária: ${parsed.workload}`;
-      document.getElementById('res-conv-venue').textContent = parsed.venue || 'Local não informado';
-      document.getElementById('res-conv-address').textContent = parsed.address || 'Endereço não informado';
+      this.setVal('res-conv-polo-input', parsed.polo || '');
+      this.setVal('res-conv-uf-select', parsed.uf || 'MT');
+      this.setVal('res-conv-ibge-input', parsed.poloIbge || '');
+      this.setVal('res-conv-dates-input', parsed.datesFormatted || '');
+      this.setVal('res-conv-workload-input', parsed.workload || '16 horas');
+      this.setVal('res-conv-venue-input', parsed.venue || '');
+      this.setVal('res-conv-address-input', parsed.address || '');
 
-      const munsBadge = document.getElementById('res-conv-muns-badge');
-      const munsList = document.getElementById('res-conv-muns-list');
-
-      if (munsBadge) munsBadge.textContent = `${parsed.allMunicipalities.length} Municípios Convocados`;
-      if (munsList) {
-        if (parsed.allMunicipalities.length === 0) {
-          munsList.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">Nenhum município listado explicitamente no documento.</span>`;
-        } else {
-          munsList.innerHTML = parsed.allMunicipalities.map(m => `
-            <span class="nav-badge" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); font-size:0.75rem;" title="IBGE: ${m.code || 'N/A'} • ${m.dateGroup}">
-              📍 ${m.name} (${m.dateGroup})
-            </span>
-          `).join('');
-        }
-      }
+      this.renderConvocacaoExtractedMunicipalities();
 
       const applyBtn = document.getElementById('convocacao-apply-btn');
       if (applyBtn) applyBtn.style.display = 'inline-flex';
 
-      this.showToast('✨ Convocação analisada com sucesso!');
+      this.showToast('✨ Convocação analisada com varredura completa!');
 
     } catch (err) {
       console.error('Erro na leitura da convocação:', err);
       this.showToast(`Erro ao ler PDF: ${err.message}`, 'error');
       if (procStep) procStep.style.display = 'none';
       if (uploadStep) uploadStep.style.display = 'block';
+    }
+  }
+
+  updateConvocacaoExtractedField(field, value) {
+    if (!this.extractedConvocacaoData) return;
+    this.extractedConvocacaoData[field] = value;
+
+    // Se alterou a UF, tentar re-sincronizar IBGE do polo se não houver um customizado
+    if (field === 'uf' || field === 'polo') {
+      const poloName = this.getVal('res-conv-polo-input') || this.extractedConvocacaoData.polo;
+      const ufVal = this.getVal('res-conv-uf-select') || this.extractedConvocacaoData.uf;
+      if (window.IBGE_DATA) {
+        const match = window.IBGE_DATA.find(m => m.u === ufVal && m.n.toLowerCase() === poloName.toLowerCase());
+        if (match) {
+          this.extractedConvocacaoData.poloIbge = String(match.c);
+          this.setVal('res-conv-ibge-input', match.c);
+        }
+      }
+    }
+  }
+
+  renderConvocacaoExtractedMunicipalities() {
+    if (!this.extractedConvocacaoData) return;
+    const muns = this.extractedConvocacaoData.allMunicipalities || [];
+    const badgeEl = document.getElementById('res-conv-muns-badge');
+    const listEl = document.getElementById('res-conv-muns-list');
+
+    if (badgeEl) badgeEl.textContent = `${muns.length} Municípios`;
+    if (listEl) {
+      if (muns.length === 0) {
+        listEl.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">Nenhum município listado. Clique acima para adicionar.</span>`;
+      } else {
+        listEl.innerHTML = muns.map((m, idx) => `
+          <span class="nav-badge" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border-color); font-size:0.78rem; display:inline-flex; align-items:center; gap:0.35rem; padding:0.25rem 0.5rem;" title="IBGE: ${m.code || 'N/A'} • ${m.dateGroup || 'Geral'}">
+            📍 ${m.name} ${m.dateGroup ? `<span style="color:var(--text-muted); font-size:0.7rem;">(${m.dateGroup})</span>` : ''}
+            <button type="button" onclick="app.removeConvocacaoMunicipality(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.8rem; padding:0 0.15rem;" title="Remover município">✕</button>
+          </span>
+        `).join('');
+      }
+    }
+  }
+
+  removeConvocacaoMunicipality(index) {
+    if (!this.extractedConvocacaoData?.allMunicipalities) return;
+    this.extractedConvocacaoData.allMunicipalities.splice(index, 1);
+    this.renderConvocacaoExtractedMunicipalities();
+  }
+
+  addConvocacaoMunicipalityPrompt() {
+    if (!this.extractedConvocacaoData) return;
+    const uf = this.extractedConvocacaoData.uf || 'MT';
+    if (!window.IBGE_DATA) return;
+
+    const availableCities = window.IBGE_DATA
+      .filter(m => m.u === uf)
+      .sort((a, b) => a.n.localeCompare(b.n));
+
+    const cityName = prompt(`Digite o nome do município (${uf}) para adicionar aos convocados:`);
+    if (!cityName || !cityName.trim()) return;
+
+    const match = availableCities.find(c => c.n.toLowerCase().includes(cityName.trim().toLowerCase()));
+    if (match) {
+      if (!this.extractedConvocacaoData.allMunicipalities.some(m => m.code === match.c)) {
+        this.extractedConvocacaoData.allMunicipalities.push({
+          name: match.n,
+          code: match.c,
+          uf: match.u,
+          dateGroup: 'Geral',
+          distance: 0
+        });
+        this.renderConvocacaoExtractedMunicipalities();
+        this.showToast(`📍 ${match.n} adicionado à convocação!`);
+      } else {
+        this.showToast(`O município ${match.n} já está na lista.`, 'warning');
+      }
+    } else {
+      this.showToast(`Município "${cityName}" não encontrado no estado de ${uf}.`, 'error');
     }
   }
 

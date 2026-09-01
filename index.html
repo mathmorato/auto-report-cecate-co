@@ -84,7 +84,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.2.0</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.2.1</span> • CECATE</div>
       </div>
     </aside>
 
@@ -805,13 +805,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.2.0 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.2.1 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.2.0</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.2.1</span>
         </div>
       </footer>
     </div>
@@ -1029,41 +1029,90 @@
           </div>
         </div>
 
-        <!-- Resumo dos Tópicos Identificados -->
+        <!-- Resumo dos Tópicos Identificados (Totalmente Editáveis) -->
         <div id="convocacao-results-step" style="display:none;">
-          <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.6rem; color:#10b981;">
-            <span style="font-size:1.2rem;">✨</span>
-            <div style="font-size:0.88rem; font-weight:700;">Convocação Analisada! Tópicos Identificados:</div>
+          <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.3); border-radius:var(--radius-md); padding:0.65rem 0.85rem; margin-bottom:1rem; display:flex; align-items:center; justify-content:space-between; color:#10b981;">
+            <div style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:700;">
+              <span>✨ Convocação Analisada com Sucesso!</span>
+            </div>
+            <span style="font-size:0.75rem; color:var(--text-muted);">Confira e edite os tópicos extraídos abaixo se necessário:</span>
           </div>
 
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.85rem; margin-bottom:1.25rem;">
-            <div style="background:var(--bg-input); padding:0.85rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">POLO REGIONAL & UF</div>
-              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);" id="res-conv-polo">--</div>
-              <div style="font-size:0.75rem; color:var(--accent-secondary); font-family:monospace;" id="res-conv-ibge">IBGE: --</div>
+          <div style="display:grid; grid-template-columns: 1.5fr 1fr 1.2fr; gap:0.65rem; margin-bottom:0.65rem;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:0.75rem;">Polo Regional *:</label>
+              <input type="text" id="res-conv-polo-input" class="form-control form-control-sm" placeholder="Pontes e Lacerda" onchange="app.updateConvocacaoExtractedField('polo', this.value)">
             </div>
-
-            <div style="background:var(--bg-input); padding:0.85rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">DATAS & CARGA HORÁRIA</div>
-              <div style="font-weight:700; font-size:0.95rem; color:var(--text-primary);" id="res-conv-dates">--</div>
-              <div style="font-size:0.75rem; color:var(--accent-success);" id="res-conv-workload">--</div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:0.75rem;">Estado (UF) *:</label>
+              <select id="res-conv-uf-select" class="form-control form-control-sm" onchange="app.updateConvocacaoExtractedField('uf', this.value)">
+                <option value="MT">MT</option>
+                <option value="MS">MS</option>
+                <option value="GO">GO</option>
+                <option value="DF">DF</option>
+                <option value="AC">AC</option>
+                <option value="AL">AL</option>
+                <option value="AP">AP</option>
+                <option value="AM">AM</option>
+                <option value="BA">BA</option>
+                <option value="CE">CE</option>
+                <option value="ES">ES</option>
+                <option value="MA">MA</option>
+                <option value="MG">MG</option>
+                <option value="PA">PA</option>
+                <option value="PB">PB</option>
+                <option value="PR">PR</option>
+                <option value="PE">PE</option>
+                <option value="PI">PI</option>
+                <option value="RJ">RJ</option>
+                <option value="RN">RN</option>
+                <option value="RS">RS</option>
+                <option value="RO">RO</option>
+                <option value="RR">RR</option>
+                <option value="SC">SC</option>
+                <option value="SP">SP</option>
+                <option value="SE">SE</option>
+                <option value="TO">TO</option>
+              </select>
             </div>
-
-            <div style="background:var(--bg-input); padding:0.85rem; border-radius:var(--radius-md); border:1px solid var(--border-color); grid-column: span 2;">
-              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">LOCAL & ENDEREÇO</div>
-              <div style="font-weight:700; font-size:0.9rem; color:var(--text-primary);" id="res-conv-venue">--</div>
-              <div style="font-size:0.78rem; color:var(--text-muted);" id="res-conv-address">--</div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:0.75rem;">Código IBGE / INEP:</label>
+              <input type="text" id="res-conv-ibge-input" class="form-control form-control-sm font-mono" placeholder="5106752" onchange="app.updateConvocacaoExtractedField('poloIbge', this.value)">
             </div>
           </div>
 
-          <!-- Lista de Municípios Convocados Extraídos -->
-          <div style="margin-bottom:1rem;">
-            <div style="font-weight:700; font-size:0.88rem; color:var(--text-primary); margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center;">
-              <span>Municípios Convocados Extraídos:</span>
-              <span class="nav-badge" style="background:rgba(99, 102, 241, 0.15); color:var(--accent-secondary);" id="res-conv-muns-badge">0 Municípios</span>
+          <div style="display:grid; grid-template-columns: 2fr 1fr; gap:0.65rem; margin-bottom:0.65rem;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:0.75rem;">Texto Formatado de Datas:</label>
+              <input type="text" id="res-conv-dates-input" class="form-control form-control-sm" placeholder="23 e 24 de junho de 2026" onchange="app.updateConvocacaoExtractedField('datesFormatted', this.value)">
             </div>
-            <div id="res-conv-muns-list" style="max-height:150px; overflow-y:auto; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.6rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
-              <!-- Badges de municípios -->
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:0.75rem;">Carga Horária:</label>
+              <input type="text" id="res-conv-workload-input" class="form-control form-control-sm" placeholder="16 horas" onchange="app.updateConvocacaoExtractedField('workload', this.value)">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.65rem; margin-bottom:0.65rem;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:0.75rem;">Local / Auditório:</label>
+              <input type="text" id="res-conv-venue-input" class="form-control form-control-sm" placeholder="Auditório IFMT" onchange="app.updateConvocacaoExtractedField('venue', this.value)">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:0.75rem;">Endereço Completo:</label>
+              <input type="text" id="res-conv-address-input" class="form-control form-control-sm" placeholder="Endereço..." onchange="app.updateConvocacaoExtractedField('address', this.value)">
+            </div>
+          </div>
+
+          <!-- Gerenciador de Municípios Convocados -->
+          <div style="margin-bottom:0.5rem;">
+            <div style="font-weight:700; font-size:0.83rem; color:var(--text-primary); margin-bottom:0.4rem; display:flex; justify-content:space-between; align-items:center;">
+              <span>Municípios Convocados (<span id="res-conv-muns-badge">0 Municípios</span>):</span>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.addConvocacaoMunicipalityPrompt()" style="font-size:0.75rem; padding:0.15rem 0.5rem; color:var(--accent-secondary); border-color:var(--accent-secondary);">
+                + Adicionar Município
+              </button>
+            </div>
+            <div id="res-conv-muns-list" style="max-height:130px; overflow-y:auto; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.5rem; display:flex; flex-wrap:wrap; gap:0.35rem;">
+              <!-- Badges de municípios com botão ✕ -->
             </div>
           </div>
         </div>
