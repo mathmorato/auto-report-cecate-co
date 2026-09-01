@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Leitura OCR e Extração Inteligente de Convocação PDF
- * Versão: v.1.2.3
+ * Versão: v.1.2.4
  */
 
 class ConvocacaoParser {
@@ -22,7 +22,69 @@ class ConvocacaoParser {
   }
 
   /**
-   * Calcula ou estima a distância em km entre um município e o Polo Capacitador
+   * Encontra um município no catálogo IBGE pela UF e Nome com correspondência exata primeiro
+   */
+  findIbgeMunicipality(cityName, uf) {
+    if (!window.IBGE_DATA || !cityName) return null;
+    const normSearch = this.normalizeText(cityName);
+
+    const stateCities = window.IBGE_DATA.filter(m => !uf || m.u === uf);
+    
+    // 1. Tentar correspondência exata
+    let match = stateCities.find(m => this.normalizeText(m.n) === normSearch);
+    
+    // 2. Se não encontrar exata, tentar no catálogo inteiro se UF não filtrou
+    if (!match && uf) {
+      match = window.IBGE_DATA.find(m => this.normalizeText(m.n) === normSearch);
+    }
+
+    // 3. Fallback para contagem de substring
+    if (!match) {
+      match = stateCities.find(m => 
+        this.normalizeText(m.n).includes(normSearch) || normSearch.includes(this.normalizeText(m.n))
+      );
+    }
+
+    return match || null;
+  }
+
+  /**
+   * Calcula a distância exata em LINHA RETA (fórmula de Haversine geodésica em km)
+   * no mapa real entre dois pontos de coordenadas (lat1, lon1) e (lat2, lon2).
+   * Sem consultar nenhuma base de dados externa ou histórica.
+   */
+  calculateStraightLineDistance(lat1, lon1, lat2, lon2) {
+    if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) {
+      return 0.0;
+    }
+    
+    // Se forem exatamente as mesmas coordenadas, distância é zero
+    if (Math.abs(lat1 - lat2) < 0.0001 && Math.abs(lon1 - lon2) < 0.0001) {
+      return 0.0;
+    }
+
+    const R = 6371.0088; // Raio médio da Terra em km (WGS84 / IUGG)
+    const toRad = Math.PI / 180;
+
+    const dLat = (lat2 - lat1) * toRad;
+    const dLon = (lon2 - lon1) * toRad;
+
+    const phi1 = lat1 * toRad;
+    const phi2 = lat2 * toRad;
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(phi1) * Math.cos(phi2) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanceKm = R * c;
+
+    return Math.round(distanceKm * 10) / 10;
+  }
+
+  /**
+   * Calcula a distância em LINHA RETA (km) no mapa real entre um município e o Polo Capacitador
+   * através da fórmula geodésica de Haversine, SEM consultar base de dados histórica.
    */
   calculateDistanceToPolo(cityName, cityUf, poloName, poloUf) {
     if (!cityName || !poloName) return 0.0;
@@ -30,42 +92,19 @@ class ConvocacaoParser {
     const normCity = this.normalizeText(cityName);
     const normPolo = this.normalizeText(poloName);
 
-    // Se o município for o próprio polo capacitador, a distância é 0.0 km
+    // Se o município for o próprio polo capacitador, a distância em linha reta é 0.0 km
     if (normCity === normPolo || normCity.includes(normPolo) || normPolo.includes(normCity)) {
       return 0.0;
     }
 
-    // 1. Procurar no histórico real (Capacitações 6 a 15)
-    if (window.HISTORICAL_TRAININGS) {
-      for (const t of window.HISTORICAL_TRAININGS) {
-        if (t.polo && this.normalizeText(t.polo) === normPolo) {
-          const foundMun = (t.municipalities || []).find(m => 
-            this.normalizeText(m.name) === normCity ||
-            this.normalizeText(m.name).includes(normCity) ||
-            normCity.includes(this.normalizeText(m.name))
-          );
-          if (foundMun && parseFloat(foundMun.distanceKm) >= 0) {
-            return parseFloat(foundMun.distanceKm);
-          }
-        }
-      }
+    const cityObj = this.findIbgeMunicipality(cityName, cityUf);
+    const poloObj = this.findIbgeMunicipality(poloName, poloUf || cityUf);
+
+    if (cityObj && poloObj && cityObj.la !== undefined && poloObj.la !== undefined) {
+      return this.calculateStraightLineDistance(cityObj.la, cityObj.lo, poloObj.la, poloObj.lo);
     }
 
-    // 2. Estimativa heurística por variação de código IBGE se pertencer ao mesmo estado
-    if (window.IBGE_DATA) {
-      const cityObj = window.IBGE_DATA.find(m => m.u === cityUf && this.normalizeText(m.n) === normCity);
-      const poloObj = window.IBGE_DATA.find(m => m.u === poloUf && this.normalizeText(m.n) === normPolo);
-
-      if (cityObj && poloObj) {
-        const codeDiff = Math.abs(cityObj.c - poloObj.c);
-        let estKm = Math.round((codeDiff % 180) + (codeDiff % 45) * 1.8 + 25);
-        if (estKm < 15) estKm = 24.5;
-        if (estKm > 450) estKm = 180.0;
-        return parseFloat(estKm.toFixed(1));
-      }
-    }
-
-    return 45.0; // Distância baseline estimada
+    return 0.0;
   }
 
   /**
@@ -172,17 +211,10 @@ class ConvocacaoParser {
         .replace(/\s+-\s+.*$/, '')
         .trim();
       
-      if (window.IBGE_DATA) {
-        const normCand = this.normalizeText(candidatePolo);
-        const matchedCity = window.IBGE_DATA.find(m => 
-          m.u === result.uf && (normCand.includes(this.normalizeText(m.n)) || this.normalizeText(m.n).includes(normCand))
-        );
-        if (matchedCity) {
-          result.polo = matchedCity.n;
-          result.poloIbge = String(matchedCity.c);
-        } else {
-          result.polo = candidatePolo;
-        }
+      const matchedCity = this.findIbgeMunicipality(candidatePolo, result.uf);
+      if (matchedCity) {
+        result.polo = matchedCity.n;
+        result.poloIbge = String(matchedCity.c);
       } else {
         result.polo = candidatePolo;
       }
@@ -286,7 +318,7 @@ class ConvocacaoParser {
       });
     }
 
-    // Garantir que a distância de todos esteja calculada em relação ao Polo
+    // Garantir que a distância de todos esteja calculada em LINHA RETA (Haversine real) em relação ao Polo
     result.allMunicipalities.forEach(m => {
       m.distanceKm = this.calculateDistanceToPolo(m.name, m.uf, result.polo, result.uf);
     });
