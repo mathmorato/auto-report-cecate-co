@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.8
+ * Versão: v.1.3.9
  */
 
 class AutoReportApp {
