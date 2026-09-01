@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.6
+ * Versão: v.1.3.7
  */
 
 class AutoReportApp {
@@ -337,7 +337,7 @@ class AutoReportApp {
   }
 
   async createNewTrainingBlank() {
-    const nextNumber = this.trainingList.length > 0 ? Math.max(...this.trainingList.map(t => parseInt(t.number) || 0)) + 1 : 16;
+    const nextNumber = this.trainingList.length > 0 ? Math.max(...this.trainingList.map(t => parseInt(t.number) || 0)) + 1 : 15;
     const newId = `cap_${Date.now()}`;
 
     const newTraining = {
@@ -580,7 +580,7 @@ class AutoReportApp {
       // Se não houver relatório aberto ou se for histórico, criar um novo
       let training = this.currentTraining;
       if (!training || training.isHistorical) {
-        const nextNumber = this.trainingList.length > 0 ? Math.max(...this.trainingList.map(t => parseInt(t.number) || 0)) + 1 : 16;
+        const nextNumber = this.trainingList.length > 0 ? Math.max(...this.trainingList.map(t => parseInt(t.number) || 0)) + 1 : 15;
         const newId = `cap_${Date.now()}`;
 
         training = {

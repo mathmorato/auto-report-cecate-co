@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Banco de Dados Local (IndexedDB & State Management)
- * Versão: v.1.3.6
+ * Versão: v.1.3.7
  */
 
 class TrainingDB {
@@ -541,13 +541,13 @@ class TrainingDB {
   }
 
   /**
-   * Popula dados históricos das Capacitações Nº 6 a 15 e Capacitação Nº 16 (Regra 62 e 72)
+   * Popula dados históricos das Capacitações Nº 6 a 14 (Regra 62 e 72)
    */
   async seedInitialData() {
     const existing = await this.getAll('trainings');
     const existingNumbers = new Set((existing || []).map(t => parseInt(t.number)));
 
-    // 1. Inserir Capacitações Históricas de 6 a 15 a partir de window.HISTORICAL_TRAININGS
+    // 1. Inserir Capacitações Históricas de 6 a 14 a partir de window.HISTORICAL_TRAININGS
     if (window.HISTORICAL_TRAININGS && Array.isArray(window.HISTORICAL_TRAININGS)) {
       for (const hist of window.HISTORICAL_TRAININGS) {
         if (!existingNumbers.has(hist.number)) {
@@ -568,6 +568,13 @@ class TrainingDB {
     if (oldSample16 && !oldSample16.userModified) {
       console.log('Removendo registro de teste antigo da Capacitação Nº 16 para inserção limpa do usuário...');
       await this.deleteTraining('cap_16cte_pontes_lacerda').catch(() => {});
+    }
+
+    // 3. Limpeza/remoção da Capacitação 15 da base protegida se existir como histórico
+    const oldCap15 = await this.get('trainings', 'cap_historico_15');
+    if (oldCap15 && oldCap15.isHistorical) {
+      console.log('Removendo Capacitação 15 da base protegida conforme solicitado pelo usuário...');
+      await this.deleteTraining('cap_historico_15').catch(() => {});
     }
   }
 }
