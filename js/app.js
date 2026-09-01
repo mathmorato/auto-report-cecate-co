@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.3.0
+ * Versão: v.1.3.1
  */
 
 class AutoReportApp {
@@ -499,7 +499,7 @@ class AutoReportApp {
     const badgeEl = document.getElementById('res-conv-muns-badge');
     const listEl = document.getElementById('res-conv-muns-list');
 
-    if (badgeEl) badgeEl.textContent = `${muns.length} Municípios Convocados`;
+    if (badgeEl) badgeEl.textContent = `${muns.length} Municípios`;
     if (listEl) {
       if (muns.length === 0) {
         listEl.innerHTML = `<span style="color:var(--text-muted); font-size:0.8rem;">Nenhum município listado. Clique acima para adicionar.</span>`;

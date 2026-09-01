@@ -84,7 +84,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.2.5</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.3.1</span> • CECATE</div>
       </div>
     </aside>
 
@@ -1103,13 +1103,10 @@
             </div>
           </div>
 
-          <!-- Gerenciador de Municípios Convocados -->
+          <!-- Municípios Localizados na Convocação -->
           <div style="margin-bottom:0.5rem;">
             <div style="font-weight:700; font-size:0.83rem; color:var(--text-primary); margin-bottom:0.4rem; display:flex; justify-content:space-between; align-items:center;">
-              <span>Municípios Convocados (<span id="res-conv-muns-badge">0 Municípios</span>):</span>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="app.addConvocacaoMunicipalityPrompt()" style="font-size:0.75rem; padding:0.15rem 0.5rem; color:var(--accent-secondary); border-color:var(--accent-secondary);">
-                + Adicionar Município
-              </button>
+              <span>Municípios localizados na convocação (<span id="res-conv-muns-badge">0 Municípios</span>):</span>
             </div>
             <div id="res-conv-muns-list" style="max-height:130px; overflow-y:auto; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.5rem; display:flex; flex-wrap:wrap; gap:0.35rem;">
               <!-- Badges de municípios com botão ✕ -->
