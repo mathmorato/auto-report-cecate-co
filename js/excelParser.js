@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.1.9.0
+ * Versão: v.1.9.1
  */
 
 class ExcelParser {
@@ -325,6 +325,28 @@ class ExcelParser {
       const suggestions = colMap.suggestions !== -1 && row[colMap.suggestions] ? String(row[colMap.suggestions]).trim() : '';
       const howFound = colMap.howFound !== -1 && row[colMap.howFound] ? String(row[colMap.howFound]).trim() : '';
       const comments = colMap.comments !== -1 && row[colMap.comments] ? String(row[colMap.comments]).trim() : '';
+
+      results.push({
+        id: `eval_parsed_${Date.now()}_${r}`,
+        name,
+        cpf,
+        email,
+        phone,
+        municipality: matchedMunName,
+        ibgeCode,
+        representation,
+        ratings,
+        likedAspects,
+        improveAspects,
+        institution,
+        suggestions,
+        howFound,
+        comments
+      });
+    }
+
+    return results;
+  }
 
   /**
    * Parser inteligente de planilha em lote de municípios (.xlsx, .xls, .csv)

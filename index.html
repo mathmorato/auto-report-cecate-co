@@ -1219,7 +1219,7 @@
 
       </main>
 
-      <!-- Rodapé Único Oficial da Aplicação com Logo CECATE e Versão v.1.9.0 -->
+      <!-- Rodapé Único Oficial da Aplicação com Logo CECATE e Versão v.1.9.1 -->
       <footer class="app-main-footer">
         <div class="footer-left" style="display:flex; align-items:center; gap:0.9rem;">
           <img src="assets/CECATE_Centro-Oeste_Logo_Negativo_Horizontal_Completa-PNG.png" alt="Logo CECATE Centro-Oeste" class="footer-logo footer-logo-dark" style="height:28px; width:auto; object-fit:contain;">
@@ -1229,7 +1229,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.9.0</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.9.1</span>
         </div>
       </footer>
     </div>
@@ -1719,9 +1719,9 @@
             Selecione uma planilha Excel (<strong>.xlsx</strong>, <strong>.xls</strong>) ou arquivo <strong>.csv</strong> estruturado com as colunas oficiais de identificação municipal.
           </p>
 
-          <input type="file" id="mun-excel-file-input" accept=".xlsx, .xls, .csv" style="display:none;" onchange="app.onMunicipalitiesSpreadsheetSelected(this.files[0])">
+          <input type="file" id="mun-excel-file-input" accept=".xlsx, .xls, .csv" style="display:none;" onchange="if(this.files && this.files.length) app.onMunicipalitiesSpreadsheetSelected(this.files[0])">
           
-          <div class="mun-import-dropzone" onclick="document.getElementById('mun-excel-file-input').click()" ondragover="event.preventDefault(); this.classList.add('dragover');" ondragleave="this.classList.remove('dragover');" ondrop="event.preventDefault(); this.classList.remove('dragover'); if(event.dataTransfer.files.length) app.onMunicipalitiesSpreadsheetSelected(event.dataTransfer.files[0]);">
+          <div class="mun-import-dropzone" onclick="document.getElementById('mun-excel-file-input').click()" ondragover="event.preventDefault(); this.classList.add('dragover');" ondragleave="this.classList.remove('dragover');" ondrop="event.preventDefault(); this.classList.remove('dragover'); if(event.dataTransfer.files && event.dataTransfer.files.length) app.onMunicipalitiesSpreadsheetSelected(event.dataTransfer.files[0]);">
             <div style="display:flex; justify-content:center; margin-bottom:1rem; color:var(--accent-blue);">
               <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
             </div>
