@@ -85,7 +85,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.8.0</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.8.1</span> • CECATE</div>
       </div>
     </aside>
 
@@ -241,45 +241,62 @@
               </div>
             </div>
 
-            <!-- Navegação de Abas do Stepper (11 Etapas) -->
-            <div class="stepper-nav">
-              <button class="step-tab-btn active" onclick="app.setWizardStep(1)">
-                <span class="step-tab-num">1</span> Identificação
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(2)">
-                <span class="step-tab-num">2</span> Equipe
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(3)">
-                <span class="step-tab-num">3</span> Municípios
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(4)">
-                <span class="step-tab-num">4</span> Estrutura do Curso
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(5)">
-                <span class="step-tab-num">5</span> Contatos
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(6)">
-                <span class="step-tab-num">6</span> Lista de Presença
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(7)">
-                <span class="step-tab-num">7</span> Avaliação
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(8)">
-                <span class="step-tab-num">8</span> Fotografias
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(9)">
-                <span class="step-tab-num">9</span> Apêndices
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(10)">
-                <span class="step-tab-num">10</span> Conferência
-              </button>
-              <button class="step-tab-btn" onclick="app.setWizardStep(11)">
-                <span class="step-tab-num">11</span> Geração
-              </button>
-            </div>
+            <!-- Layout de 2 Colunas: Stepper Lateral Esquerdo + Painel de Conteúdo -->
+            <div class="wizard-body-layout">
+              <aside class="wizard-stepper-sidebar">
+                <div class="stepper-nav">
+                  <button class="step-tab-btn active" onclick="app.setWizardStep(1)">
+                    <span class="step-tab-num">1</span>
+                    <span class="step-tab-text">Identificação da Capacitação</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(2)">
+                    <span class="step-tab-num">2</span>
+                    <span class="step-tab-text">Equipe Participante</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(3)">
+                    <span class="step-tab-num">3</span>
+                    <span class="step-tab-text">Municípios Convocados</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(4)">
+                    <span class="step-tab-num">4</span>
+                    <span class="step-tab-text">Estrutura do Curso</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(5)">
+                    <span class="step-tab-num">5</span>
+                    <span class="step-tab-text">Contatos & Telefones</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(6)">
+                    <span class="step-tab-num">6</span>
+                    <span class="step-tab-text">Lista de Presença</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(7)">
+                    <span class="step-tab-num">7</span>
+                    <span class="step-tab-text">Avaliação da Capacitação</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(8)">
+                    <span class="step-tab-num">8</span>
+                    <span class="step-tab-text">Registros Fotográficos</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(9)">
+                    <span class="step-tab-num">9</span>
+                    <span class="step-tab-text">Documentos & Apêndices</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(10)">
+                    <span class="step-tab-num">10</span>
+                    <span class="step-tab-text">Conferência & Auditoria</span>
+                  </button>
+                  <button class="step-tab-btn" onclick="app.setWizardStep(11)">
+                    <span class="step-tab-num">11</span>
+                    <span class="step-tab-text">Geração do Relatório</span>
+                  </button>
+                </div>
+              </aside>
 
-            <!-- ETAPA 1: IDENTIFICAÇÃO -->
-            <div class="wizard-step-panel active" id="wizard-step-1">
+              <!-- Painel Principal de Conteúdo do Wizard -->
+              <div class="wizard-main-content">
+
+                <!-- ETAPA 1: IDENTIFICAÇÃO -->
+                <div class="wizard-step-panel active" id="wizard-step-1">
               <div class="wizard-card">
                 <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
                   <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -906,7 +923,10 @@
               </div>
             </div>
 
-          </div>
+              </div><!-- /wizard-main-content -->
+            </div><!-- /wizard-body-layout -->
+
+          </div><!-- /wizard-container -->
         </section>
 
         <!-- ==========================================
@@ -1107,13 +1127,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.8.0 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.8.1 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.8.0</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.8.1</span>
         </div>
       </footer>
     </div>
