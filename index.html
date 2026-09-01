@@ -85,7 +85,7 @@
           <div class="status-dot"></div>
           <span>Motor de Relatórios Ativo</span>
         </div>
-        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.8.1</span> • CECATE</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);" id="sidebar-version-badge">AutoReport <span class="badge-ver">v.1.8.2</span> • CECATE</div>
       </div>
     </aside>
 
@@ -573,8 +573,89 @@
                     <p class="wizard-card-desc">Adicione os municípios convocados da microrregião e suas respectivas distâncias em km até o polo.</p>
                   </div>
                   <div style="display:flex; gap:0.5rem;">
-                    <span id="wiz-muns-total-count" class="nav-badge" style="align-self:center;">0 Municípios</span>
-                    <button class="btn btn-secondary btn-sm" onclick="app.addMunicipalityPrompt()">+ Cadastrar Município</button>
+                    <span id="wiz-muns-total-count" class="nav-badge badge-amber" style="align-self:center; font-weight:700;">0 Municípios</span>
+                    <button class="btn btn-primary btn-sm" onclick="app.openMunicipalityInPageEditor(-1)" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Cadastrar Município
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Form Card Integrado In-Page para Cadastro de Municípios -->
+                <div id="wizard-mun-editor-card" style="display:none; margin-bottom:1.5rem; background:rgba(15, 23, 42, 0.95); border:1px solid rgba(59, 130, 246, 0.4); border-radius:var(--radius-lg); padding:1.25rem; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+                    <h4 class="text-accent-blue" style="margin:0; display:flex; align-items:center; gap:0.5rem;">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                      <span id="wizard-mun-editor-title-text">Cadastrar Município Convocado</span>
+                    </h4>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeMunicipalityInPageEditor()" style="display:inline-flex; align-items:center; gap:0.25rem;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Cancelar
+                    </button>
+                  </div>
+
+                  <input type="hidden" id="wizard-mun-edit-index" value="-1">
+
+                  <div style="display:grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Estado (UF) *:</label>
+                      <select id="wizard-mun-uf-select" class="form-control form-control-sm" onchange="app.onWizardMunUfChange(this.value)">
+                        <option value="GO">Goiás (GO)</option>
+                        <option value="MT">Mato Grosso (MT)</option>
+                        <option value="MS">Mato Grosso do Sul (MS)</option>
+                        <option value="DF">Distrito Federal (DF)</option>
+                        <option value="AC">Acre (AC)</option>
+                        <option value="AL">Alagoas (AL)</option>
+                        <option value="AP">Amapá (AP)</option>
+                        <option value="AM">Amazonas (AM)</option>
+                        <option value="BA">Bahia (BA)</option>
+                        <option value="CE">Ceará (CE)</option>
+                        <option value="ES">Espírito Santo (ES)</option>
+                        <option value="MA">Maranhão (MA)</option>
+                        <option value="MG">Minas Gerais (MG)</option>
+                        <option value="PA">Pará (PA)</option>
+                        <option value="PB">Paraíba (PB)</option>
+                        <option value="PR">Paraná (PR)</option>
+                        <option value="PE">Pernambuco (PE)</option>
+                        <option value="PI">Piauí (PI)</option>
+                        <option value="RJ">Rio de Janeiro (RJ)</option>
+                        <option value="RN">Rio Grande do Norte (RN)</option>
+                        <option value="RS">Rio Grande do Sul (RS)</option>
+                        <option value="RO">Rondônia (RO)</option>
+                        <option value="RR">Roraima (RR)</option>
+                        <option value="SC">Santa Catarina (SC)</option>
+                        <option value="SP">São Paulo (SP)</option>
+                        <option value="SE">Sergipe (SE)</option>
+                        <option value="TO">Tocantins (TO)</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Município Convocado (IBGE) *:</label>
+                      <select id="wizard-mun-city-select" class="form-control form-control-sm" onchange="app.onWizardMunCityChange(this.value)">
+                        <!-- Populado dinamicamente via IBGE_DATA -->
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Código IBGE:</label>
+                      <input type="text" id="wizard-mun-ibge-input" class="form-control form-control-sm font-mono" readonly style="background:var(--bg-input); font-weight:700; text-align:center; color:var(--accent-blue-text);" placeholder="5101258">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:0.8rem;">Distância ao Polo:</label>
+                      <div style="display:flex; align-items:center; gap:0.25rem;">
+                        <input type="number" step="0.1" min="0" id="wizard-mun-dist-input" class="form-control form-control-sm font-mono" style="text-align:right; font-weight:700; color:var(--accent-emerald-text);" placeholder="0.0">
+                        <span style="font-size:0.8rem; color:var(--text-muted);">km</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.65rem 1rem; border-radius:var(--radius-md); border:1px solid var(--border-color); flex-wrap:wrap; gap:0.5rem;">
+                    <div style="font-size:0.8rem; color:var(--text-muted);" id="wizard-mun-info-bar">
+                      Polo de Referência: <strong id="wizard-mun-preview-polo" style="color:var(--text-primary);">-</strong> • Distância Calculada: <strong id="wizard-mun-preview-dist" style="color:var(--accent-emerald-text); font-family:monospace;">0,0 km</strong>
+                    </div>
+                    <div style="display:flex; gap:0.5rem;">
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeMunicipalityInPageEditor()">Cancelar</button>
+                      <button type="button" class="btn btn-primary btn-sm" onclick="app.saveMunicipalityInPage()" style="background:var(--accent-primary); border-color:var(--accent-primary); font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Salvar Município
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1127,13 +1208,13 @@
 
       </main>
 
-      <!-- Rodapé Oficial da Aplicação com Versão v.1.8.1 -->
+      <!-- Rodapé Oficial da Aplicação com Versão v.1.8.2 -->
       <footer class="app-main-footer">
         <div class="footer-left">
           <span>CECATE Centro-Oeste • Plataforma de Automatização de Relatórios de Capacitações</span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.1.8.1</span>
+          <span class="footer-version-tag" id="app-footer-version">v.1.8.2</span>
         </div>
       </footer>
     </div>

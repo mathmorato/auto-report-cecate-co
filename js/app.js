@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.8.1
+ * Versão: v.1.8.2
  */
 
 window.icons = {
@@ -1770,10 +1770,13 @@ class AutoReportApp {
 
     if (muns.length === 0) {
       container.innerHTML = `
-        <div style="text-align:center; padding:2rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-muted);">
-          <div style="font-size:2rem; margin-bottom:0.5rem;">🏛️</div>
-          <p style="margin-bottom:0.75rem;">Nenhum município cadastrado na lista da Tabela 1.</p>
-          <button class="btn btn-secondary btn-sm" onclick="app.addMunicipalityPrompt()">+ Cadastrar Município Manualmente</button>
+        <div style="text-align:center; padding:2.5rem 1.5rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-muted);">
+          <div style="font-size:2.5rem; margin-bottom:0.75rem;">🏛️</div>
+          <h4 style="margin:0 0 0.5rem 0; color:var(--text-primary); font-weight:700;">Nenhum município cadastrado na lista da Tabela 1</h4>
+          <p style="margin-bottom:1.25rem; font-size:0.88rem; color:var(--text-secondary);">Cadastre os municípios convocados da região polo para calcular distâncias e participantes automaticamente.</p>
+          <button class="btn btn-primary" onclick="app.openMunicipalityInPageEditor(-1)" style="font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Cadastrar Primeiro Município
+          </button>
         </div>
       `;
       return;
@@ -1788,24 +1791,24 @@ class AutoReportApp {
       return `
         <tr>
           <td style="text-align:center;">
-            <input type="text" class="form-control form-control-sm font-mono" style="text-align:center; width:120px;" value="${m.ibgeCode || ''}" onchange="app.updateMunicipalityField(${targetIdx}, 'ibgeCode', this.value)" placeholder="5106752">
+            <span class="font-mono" style="font-weight:700; color:var(--accent-blue-text); font-size:0.92rem;">${m.ibgeCode || '-'}</span>
           </td>
           <td>
             <div style="display:flex; gap:0.5rem; align-items:center;">
-              <input type="text" class="form-control form-control-sm" value="${m.name || ''}" onchange="app.updateMunicipalityField(${targetIdx}, 'name', this.value)" placeholder="Nome do Município">
-              <select class="form-control form-control-sm" style="width:70px;" onchange="app.updateMunicipalityField(${targetIdx}, 'uf', this.value)">
-                ${['MT','MS','GO','DF','AC','AL','AP','AM','BA','CE','ES','MA','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(u => `<option value="${u}" ${m.uf === u ? 'selected' : ''}>${u}</option>`).join('')}
-              </select>
+              <strong style="color:var(--text-primary); font-size:0.92rem;">${m.name || ''}</strong>
+              <span class="nav-badge badge-blue" style="font-size:0.72rem; padding:0.1rem 0.4rem;">${m.uf || poloUf}</span>
             </div>
           </td>
-          <td>
-            <div style="display:flex; align-items:center; gap:0.35rem; justify-content:flex-end;">
-              <input type="number" step="0.1" min="0" class="form-control form-control-sm font-mono" style="text-align:right; width:90px;" value="${parseFloat(m.distanceKm || 0).toFixed(1)}" onchange="app.updateMunicipalityField(${targetIdx}, 'distanceKm', parseFloat(this.value) || 0)">
-              <span style="font-size:0.8rem; color:var(--text-muted);">km</span>
-            </div>
+          <td style="text-align:right;">
+            <span class="font-mono" style="font-weight:700; color:var(--accent-emerald-text); font-size:0.95rem;">
+              ${parseFloat(m.distanceKm || 0).toFixed(1).replace('.', ',')} km
+            </span>
           </td>
           <td style="text-align:center; white-space:nowrap;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeMunicipality(${targetIdx})" title="Excluir município" style="color:#ef4444; border-color:rgba(239,68,68,0.3); font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;">${window.icons.delete} Excluir</button>
+            <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
+              <button type="button" class="btn btn-secondary btn-sm btn-action-edit" onclick="app.openMunicipalityInPageEditor(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar dados do município">${window.icons.edit} Editar</button>
+              <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMunicipality(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir município">${window.icons.delete} Excluir</button>
+            </div>
           </td>
         </tr>
       `;
@@ -1817,9 +1820,9 @@ class AutoReportApp {
           <thead>
             <tr>
               <th style="width: 140px; text-align:center;">Código IBGE</th>
-              <th>Nome do Município e Estado (UF)</th>
-              <th style="width: 150px; text-align:right;">Distância (km)</th>
-              <th style="width: 70px; text-align:center;">Ação</th>
+              <th>Nome do Município</th>
+              <th style="width: 160px; text-align:right;">Distância (km)</th>
+              <th style="width: 140px; text-align:center;">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -1829,14 +1832,169 @@ class AutoReportApp {
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.85rem; flex-wrap:wrap; gap:0.5rem;">
-        <button class="btn btn-secondary btn-sm" onclick="app.recalculateAllDistancesToPolo()" title="Recalcular distância de todos os municípios em relação ao Polo Capacitador (${poloName})">
-          🔄 Recalcular Distâncias pelo Polo (${poloName})
+        <button class="btn btn-secondary btn-sm" onclick="app.recalculateAllDistancesToPolo()" title="Recalcular distância de todos os municípios em relação ao Polo Capacitador (${poloName})" style="display:inline-flex; align-items:center; gap:0.35rem;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg> Recalcular Distâncias pelo Polo (${poloName})
         </button>
-        <div style="font-size:0.8rem; color:var(--text-muted);">
-          Total de ${muns.length} município(s) cadastrado(s) na Tabela 1.
+        <div style="font-size:0.82rem; color:var(--text-secondary);">
+          Total de <strong>${muns.length}</strong> município(s) cadastrado(s) na Tabela 1.
         </div>
       </div>
     `;
+  }
+
+  /* ==========================================================================
+     IN-PAGE EDITOR DE MUNICÍPIOS (ETAPA 3)
+     ========================================================================== */
+  openMunicipalityInPageEditor(editIndex = -1) {
+    const card = document.getElementById('wizard-mun-editor-card');
+    if (!card) {
+      this.openAddMunicipalityModal('wizard');
+      return;
+    }
+
+    const titleText = document.getElementById('wizard-mun-editor-title-text');
+    const editIndexEl = document.getElementById('wizard-mun-edit-index');
+    const ufSelect = document.getElementById('wizard-mun-uf-select');
+    const distInput = document.getElementById('wizard-mun-dist-input');
+    const ibgeInput = document.getElementById('wizard-mun-ibge-input');
+
+    if (editIndexEl) editIndexEl.value = editIndex;
+
+    const defaultUf = this.currentTraining?.uf || 'GO';
+
+    if (editIndex === -1) {
+      if (titleText) titleText.textContent = 'Cadastrar Município Convocado';
+      if (ufSelect) ufSelect.value = defaultUf;
+      this.onWizardMunUfChange(defaultUf);
+    } else {
+      if (titleText) titleText.textContent = 'Editar Município Convocado';
+      const m = this.currentTraining?.municipalities?.[editIndex];
+      if (m) {
+        const munUf = m.uf || defaultUf;
+        if (ufSelect) ufSelect.value = munUf;
+        this.onWizardMunUfChange(munUf, m.name, m.ibgeCode);
+        if (distInput) distInput.value = parseFloat(m.distanceKm || 0).toFixed(1);
+        if (ibgeInput) ibgeInput.value = m.ibgeCode || '';
+      }
+    }
+
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  closeMunicipalityInPageEditor() {
+    const card = document.getElementById('wizard-mun-editor-card');
+    if (card) card.style.display = 'none';
+  }
+
+  onWizardMunUfChange(uf, selectedCity = null, selectedIbge = null) {
+    const citySelect = document.getElementById('wizard-mun-city-select');
+    if (!citySelect || !window.IBGE_DATA) return;
+
+    const filtered = window.IBGE_DATA.filter(m => m.u === uf).sort((a, b) => a.n.localeCompare(b.n));
+
+    citySelect.innerHTML = `<option value="" disabled ${!selectedCity ? 'selected' : ''}>Selecionar Município...</option>` +
+      filtered.map(m => {
+        const isSel = (selectedCity && m.n.toLowerCase() === selectedCity.toLowerCase()) ||
+                      (selectedIbge && String(m.c) === String(selectedIbge));
+        return `<option value="${m.n}" data-ibge="${m.c}" ${isSel ? 'selected' : ''}>${m.n}</option>`;
+      }).join('');
+
+    this.onWizardMunCityChange();
+  }
+
+  onWizardMunCityChange() {
+    const ufSelect = document.getElementById('wizard-mun-uf-select');
+    const citySelect = document.getElementById('wizard-mun-city-select');
+    const ibgeInput = document.getElementById('wizard-mun-ibge-input');
+    const distInput = document.getElementById('wizard-mun-dist-input');
+    const previewPolo = document.getElementById('wizard-mun-preview-polo');
+    const previewDist = document.getElementById('wizard-mun-preview-dist');
+
+    if (!citySelect || !citySelect.selectedOptions[0]) return;
+
+    const activeOption = citySelect.selectedOptions[0];
+    const cityName = activeOption.value;
+    const ibgeCode = activeOption.getAttribute('data-ibge') || '';
+    const uf = ufSelect?.value || this.currentTraining?.uf || 'GO';
+
+    if (ibgeInput) ibgeInput.value = ibgeCode;
+
+    const poloName = this.currentTraining?.polo || 'Polo';
+    const poloUf = this.currentTraining?.uf || uf;
+
+    const calcDist = (cityName && poloName)
+      ? window.convocacaoParser.calculateDistanceToPolo(cityName, uf, poloName, poloUf)
+      : 0.0;
+
+    if (distInput) {
+      distInput.value = parseFloat(calcDist).toFixed(1);
+    }
+
+    if (previewPolo) previewPolo.textContent = `${poloName} (${poloUf})`;
+    if (previewDist) previewDist.textContent = `${parseFloat(calcDist).toFixed(1).replace('.', ',')} km`;
+  }
+
+  saveMunicipalityInPage() {
+    const editIndexEl = document.getElementById('wizard-mun-edit-index');
+    const ufSelect = document.getElementById('wizard-mun-uf-select');
+    const citySelect = document.getElementById('wizard-mun-city-select');
+    const ibgeInput = document.getElementById('wizard-mun-ibge-input');
+    const distInput = document.getElementById('wizard-mun-dist-input');
+
+    const editIndex = editIndexEl ? parseInt(editIndexEl.value) : -1;
+    const uf = ufSelect?.value || 'GO';
+    const cityName = citySelect?.value;
+    const ibgeCode = ibgeInput?.value || citySelect?.selectedOptions[0]?.getAttribute('data-ibge') || '';
+    const distanceKm = parseFloat(distInput?.value) || 0.0;
+
+    if (!cityName) {
+      this.showToast('Por favor, selecione um município na lista.', 'warning');
+      return;
+    }
+
+    if (!this.currentTraining) return;
+    if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
+
+    const muns = this.currentTraining.municipalities;
+
+    if (editIndex === -1) {
+      // Verificar se já existe
+      const alreadyExists = muns.some(m => String(m.ibgeCode) === String(ibgeCode) || (m.name.toLowerCase() === cityName.toLowerCase() && m.uf === uf));
+      if (alreadyExists) {
+        this.showToast(`O município ${cityName} (${uf}) já está cadastrado na Tabela 1.`, 'warning');
+        return;
+      }
+
+      muns.push({
+        id: `mun_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        ibgeCode: String(ibgeCode),
+        name: cityName,
+        uf: uf,
+        distanceKm: distanceKm,
+        isSummoned: true,
+        inscribedCACS: 2,
+        inscribedGestores: 2,
+        inscribedTotal: 4,
+        presentCACS: 0,
+        presentGestores: 0,
+        presentTotal: 0
+      });
+
+      this.showToast(`📍 ${cityName} (${uf}) adicionado à Tabela 1! Distância: ${distanceKm.toFixed(1).replace('.', ',')} km`, 'success');
+    } else {
+      if (muns[editIndex]) {
+        muns[editIndex].uf = uf;
+        muns[editIndex].name = cityName;
+        muns[editIndex].ibgeCode = String(ibgeCode);
+        muns[editIndex].distanceKm = distanceKm;
+        this.showToast(`✏️ Município ${cityName} (${uf}) atualizado com sucesso!`, 'success');
+      }
+    }
+
+    this.closeMunicipalityInPageEditor();
+    this.renderMunicipalitiesStep();
+    this.saveCurrentStepData();
   }
 
   updateMunicipalityField(index, field, value) {
@@ -1886,7 +2044,7 @@ class AutoReportApp {
   }
 
   addMunicipalityPrompt() {
-    this.openAddMunicipalityModal('wizard');
+    this.openMunicipalityInPageEditor(-1);
   }
 
   /* ==========================================================================
