@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.9.7
+ * Versão: v.1.9.8
  */
 
 window.icons = {
@@ -2665,7 +2665,7 @@ class AutoReportApp {
               <div style="margin:0.75rem 0 1rem 0; padding:0.5rem 0.75rem; background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-md);">
                 <label style="display:flex; align-items:center; gap:0.55rem; font-weight:700; font-size:0.86rem; color:var(--text-primary); cursor:pointer; margin:0;">
                   <input type="checkbox" ${mod.isShared ? 'checked' : ''} onchange="app.toggleCourseModuleShared(${modIdx}, this.checked)">
-                  <span>🤝 Módulo compartilhado entre Gestores e CACS (mesmo conteúdo e carga horária)</span>
+                  <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:0.25rem;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>Módulo compartilhado entre Gestores e CACS (mesmo conteúdo e carga horária)</span>
                 </label>
               </div>
 
@@ -2674,7 +2674,7 @@ class AutoReportApp {
                 <div style="background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
                   <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:0.75rem;">
                     <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
-                      🤝 Temática do Módulo Compartilhado
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg> Temática do Módulo Compartilhado
                     </strong>
                     <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
                       Carga Horária: ${gTotalHours.toFixed(1).replace('.', ',')} h
@@ -2705,7 +2705,7 @@ class AutoReportApp {
                   <div class="course-topic-col">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
                       <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
-                        🏛️ Gestão Municipal (Gestores)
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M3 7v1a3 3 0 0 0 6 0V7"></path><path d="M9 7v1a3 3 0 0 0 6 0V7"></path><path d="M15 7v1a3 3 0 0 0 6 0V7"></path><path d="M19 21V11"></path><path d="M5 21V11"></path><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"></path></svg> Gestão Municipal (Gestores)
                       </strong>
                       <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
                         Total: ${gTotalHours.toFixed(1).replace('.', ',')} h
@@ -2734,7 +2734,7 @@ class AutoReportApp {
                   <div class="course-topic-col">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
                       <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
-                        👥 Conselheiros CACS-FUNDEB
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Conselheiros CACS-FUNDEB
                       </strong>
                       <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
                         Total: ${cTotalHours.toFixed(1).replace('.', ',')} h
@@ -3128,7 +3128,7 @@ class AutoReportApp {
               <div style="margin:0.75rem 0 1rem 0; padding:0.5rem 0.75rem; background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-md);">
                 <label style="display:flex; align-items:center; gap:0.55rem; font-weight:700; font-size:0.86rem; color:var(--text-primary); cursor:pointer; margin:0;">
                   <input type="checkbox" ${mod.isShared ? 'checked' : ''} onchange="app.toggleGlobalMasterCourseModuleShared(${modIdx}, this.checked)">
-                  <span>🤝 Módulo compartilhado entre Gestores e CACS (mesmo conteúdo e carga horária)</span>
+                  <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:0.25rem;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>Módulo compartilhado entre Gestores e CACS (mesmo conteúdo e carga horária)</span>
                 </label>
               </div>
 
@@ -3137,7 +3137,7 @@ class AutoReportApp {
                 <div style="background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
                   <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem; margin-bottom:0.75rem;">
                     <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
-                      🤝 Temática do Módulo Compartilhado
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg> Temática do Módulo Compartilhado
                     </strong>
                     <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
                       Carga Horária: ${gTotalHours.toFixed(1).replace('.', ',')} h
@@ -3168,7 +3168,7 @@ class AutoReportApp {
                   <div class="course-topic-col">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
                       <strong style="font-size:0.85rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.35rem;">
-                        🏛️ Gestão Municipal (Gestores)
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M3 7v1a3 3 0 0 0 6 0V7"></path><path d="M9 7v1a3 3 0 0 0 6 0V7"></path><path d="M15 7v1a3 3 0 0 0 6 0V7"></path><path d="M19 21V11"></path><path d="M5 21V11"></path><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"></path></svg> Gestão Municipal (Gestores)
                       </strong>
                       <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(59,130,246,0.15); color:var(--accent-blue-text);">
                         Total: ${gTotalHours.toFixed(1).replace('.', ',')} h
@@ -3197,7 +3197,7 @@ class AutoReportApp {
                   <div class="course-topic-col">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
                       <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
-                        👥 Conselheiros CACS-FUNDEB
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Conselheiros CACS-FUNDEB
                       </strong>
                       <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
                         Total: ${cTotalHours.toFixed(1).replace('.', ',')} h

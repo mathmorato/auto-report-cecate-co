@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Estatístico e Calculador de Métricas Analíticas
- * Versão: v.1.9.7
+ * Versão: v.1.9.8
  */
 
 class StatsEngine {
@@ -221,68 +221,96 @@ class StatsEngine {
     sorted.forEach(m => {
       const gTopics = Array.isArray(m.gestorTopics) ? m.gestorTopics : [];
       const cTopics = Array.isArray(m.cacsTopics) ? m.cacsTopics : [];
-      const maxRows = Math.max(gTopics.length, cTopics.length, 1);
 
-      for (let i = 0; i < maxRows; i++) {
-        const g = gTopics[i] || null;
-        const c = cTopics[i] || null;
+      if (m.isShared) {
+        // Módulo compartilhado: mescla as células de Temática e Carga Horária horizontalmente (colspan=2)
+        const maxRows = Math.max(gTopics.length, 1);
+        for (let i = 0; i < maxRows; i++) {
+          const g = gTopics[i] || null;
+          rowsHtml += '<tr>';
 
-        rowsHtml += '<tr>';
-
-        // Célula do Módulo (com rowspan se houver múltiplas linhas)
-        if (i === 0) {
-          rowsHtml += `<td ${maxRows > 1 ? `rowspan="${maxRows}"` : ''} style="text-align:center; font-weight:700; vertical-align:middle; background:rgba(255,255,255,0.02);">${m.moduleNumber || '01'}</td>`;
-        }
-
-        // Coluna Temática Gestor
-        if (g) {
-          totalHoursGestor += parseFloat(g.hours) || 0;
-          if (gTopics.length === 1 && maxRows > 1 && i === 0) {
-            rowsHtml += `<td rowspan="${maxRows}" style="vertical-align:middle;">${g.topic || '-'}</td>`;
-          } else if (gTopics.length > 1 || maxRows === 1) {
-            rowsHtml += `<td>${g.topic || '-'}</td>`;
+          if (i === 0) {
+            rowsHtml += `<td ${maxRows > 1 ? `rowspan="${maxRows}"` : ''} style="text-align:center; font-weight:700; vertical-align:middle; background:rgba(255,255,255,0.02);">${m.moduleNumber || '01'}</td>`;
           }
-        } else if (gTopics.length > 1) {
-          rowsHtml += `<td style="color:var(--text-muted);">-</td>`;
-        }
 
-        // Coluna Temática CACS
-        if (c) {
-          totalHoursCACS += parseFloat(c.hours) || 0;
-          if (cTopics.length === 1 && maxRows > 1 && i === 0) {
-            rowsHtml += `<td rowspan="${maxRows}" style="vertical-align:middle;">${c.topic || '-'}</td>`;
-          } else if (cTopics.length > 1 || maxRows === 1) {
-            rowsHtml += `<td>${c.topic || '-'}</td>`;
+          if (g) {
+            const h = parseFloat(g.hours) || 0;
+            totalHoursGestor += h;
+            totalHoursCACS += h;
+            rowsHtml += `<td colspan="2" style="vertical-align:middle; text-align:left;">${g.topic || '-'}</td>`;
+            rowsHtml += `<td colspan="2" style="text-align:center; vertical-align:middle; font-weight:600;">${h.toFixed(1).replace('.', ',')} h</td>`;
+          } else {
+            rowsHtml += `<td colspan="2" style="color:var(--text-muted);">-</td>`;
+            rowsHtml += `<td colspan="2" style="text-align:center; color:var(--text-muted);">-</td>`;
           }
-        } else if (cTopics.length > 1) {
-          rowsHtml += `<td style="color:var(--text-muted);">-</td>`;
-        }
 
-        // Coluna Carga Horária Gestor
-        if (g) {
-          const hG = parseFloat(g.hours) || 0;
-          if (gTopics.length === 1 && maxRows > 1 && i === 0) {
-            rowsHtml += `<td rowspan="${maxRows}" style="text-align:center; vertical-align:middle; font-weight:600;">${hG.toFixed(1).replace('.', ',')} h</td>`;
-          } else if (gTopics.length > 1 || maxRows === 1) {
-            rowsHtml += `<td style="text-align:center; font-weight:600;">${hG.toFixed(1).replace('.', ',')} h</td>`;
+          rowsHtml += '</tr>';
+        }
+      } else {
+        // Módulo não compartilhado (independente): colunas separadas para Gestor e CACS
+        const maxRows = Math.max(gTopics.length, cTopics.length, 1);
+
+        for (let i = 0; i < maxRows; i++) {
+          const g = gTopics[i] || null;
+          const c = cTopics[i] || null;
+
+          rowsHtml += '<tr>';
+
+          // Célula do Módulo (com rowspan se houver múltiplas linhas)
+          if (i === 0) {
+            rowsHtml += `<td ${maxRows > 1 ? `rowspan="${maxRows}"` : ''} style="text-align:center; font-weight:700; vertical-align:middle; background:rgba(255,255,255,0.02);">${m.moduleNumber || '01'}</td>`;
           }
-        } else if (gTopics.length > 1) {
-          rowsHtml += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
-        }
 
-        // Coluna Carga Horária CACS
-        if (c) {
-          const hC = parseFloat(c.hours) || 0;
-          if (cTopics.length === 1 && maxRows > 1 && i === 0) {
-            rowsHtml += `<td rowspan="${maxRows}" style="text-align:center; vertical-align:middle; font-weight:600;">${hC.toFixed(1).replace('.', ',')} h</td>`;
-          } else if (cTopics.length > 1 || maxRows === 1) {
-            rowsHtml += `<td style="text-align:center; font-weight:600;">${hC.toFixed(1).replace('.', ',')} h</td>`;
+          // Coluna Temática Gestor
+          if (g) {
+            totalHoursGestor += parseFloat(g.hours) || 0;
+            if (gTopics.length === 1 && maxRows > 1 && i === 0) {
+              rowsHtml += `<td rowspan="${maxRows}" style="vertical-align:middle;">${g.topic || '-'}</td>`;
+            } else if (gTopics.length > 1 || maxRows === 1) {
+              rowsHtml += `<td>${g.topic || '-'}</td>`;
+            }
+          } else if (gTopics.length > 1) {
+            rowsHtml += `<td style="color:var(--text-muted);">-</td>`;
           }
-        } else if (cTopics.length > 1) {
-          rowsHtml += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
-        }
 
-        rowsHtml += '</tr>';
+          // Coluna Temática CACS
+          if (c) {
+            totalHoursCACS += parseFloat(c.hours) || 0;
+            if (cTopics.length === 1 && maxRows > 1 && i === 0) {
+              rowsHtml += `<td rowspan="${maxRows}" style="vertical-align:middle;">${c.topic || '-'}</td>`;
+            } else if (cTopics.length > 1 || maxRows === 1) {
+              rowsHtml += `<td>${c.topic || '-'}</td>`;
+            }
+          } else if (cTopics.length > 1) {
+            rowsHtml += `<td style="color:var(--text-muted);">-</td>`;
+          }
+
+          // Coluna Carga Horária Gestor
+          if (g) {
+            const hG = parseFloat(g.hours) || 0;
+            if (gTopics.length === 1 && maxRows > 1 && i === 0) {
+              rowsHtml += `<td rowspan="${maxRows}" style="text-align:center; vertical-align:middle; font-weight:600;">${hG.toFixed(1).replace('.', ',')} h</td>`;
+            } else if (gTopics.length > 1 || maxRows === 1) {
+              rowsHtml += `<td style="text-align:center; font-weight:600;">${hG.toFixed(1).replace('.', ',')} h</td>`;
+            }
+          } else if (gTopics.length > 1) {
+            rowsHtml += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
+          }
+
+          // Coluna Carga Horária CACS
+          if (c) {
+            const hC = parseFloat(c.hours) || 0;
+            if (cTopics.length === 1 && maxRows > 1 && i === 0) {
+              rowsHtml += `<td rowspan="${maxRows}" style="text-align:center; vertical-align:middle; font-weight:600;">${hC.toFixed(1).replace('.', ',')} h</td>`;
+            } else if (cTopics.length > 1 || maxRows === 1) {
+              rowsHtml += `<td style="text-align:center; font-weight:600;">${hC.toFixed(1).replace('.', ',')} h</td>`;
+            }
+          } else if (cTopics.length > 1) {
+            rowsHtml += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
+          }
+
+          rowsHtml += '</tr>';
+        }
       }
     });
 
