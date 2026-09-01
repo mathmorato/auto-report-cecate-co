@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.5.8
+ * Versão: v.1.5.9
  */
 
 window.icons = {
@@ -357,7 +357,7 @@ class AutoReportApp {
   async createNewTrainingBlank() {
     const newId = `cap_${Date.now()}`;
 
-    const defaultOrg = localStorage.getItem('autoreport_setting_org') || 'CECATE Centro-Oeste / UFG';
+    const defaultOrg = localStorage.getItem('autoreport_setting_org') || 'Centro Colaborador de Apoio ao Transporte Escolar da Região Centro-Oeste (CECATE-CO)';
     const defaultFunding = localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
     const defaultProject = localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
     const defaultProcess = localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00';
@@ -847,7 +847,7 @@ class AutoReportApp {
     this.setVal('wiz-train-expected', t.expectedParticipants || '');
     this.setVal('wiz-train-venue', t.locationVenue || '');
     this.setVal('wiz-train-address', t.locationAddress || '');
-    this.setVal('wiz-train-org', t.responsibleOrg || localStorage.getItem('autoreport_setting_org') || 'CECATE Centro-Oeste / UFG');
+    this.setVal('wiz-train-org', t.responsibleOrg || localStorage.getItem('autoreport_setting_org') || 'Centro Colaborador de Apoio ao Transporte Escolar da Região Centro-Oeste (CECATE-CO)');
 
     const defaultProj = localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
     const defaultProc = localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00';
@@ -925,7 +925,7 @@ class AutoReportApp {
     t.expectedParticipants = parseInt(this.getVal('wiz-train-expected')) || '';
     t.locationVenue = this.getVal('wiz-train-venue');
     t.locationAddress = this.getVal('wiz-train-address');
-    t.responsibleOrg = this.getVal('wiz-train-org') || localStorage.getItem('autoreport_setting_org') || 'CECATE Centro-Oeste / UFG';
+    t.responsibleOrg = this.getVal('wiz-train-org') || localStorage.getItem('autoreport_setting_org') || 'Centro Colaborador de Apoio ao Transporte Escolar da Região Centro-Oeste (CECATE-CO)';
     t.relatedProject = this.getVal('wiz-train-project') || localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
     t.processNumber = this.getVal('wiz-train-process') || localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00';
     t.fundingOrg = this.getVal('wiz-train-funding') || localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
@@ -2801,7 +2801,7 @@ class AutoReportApp {
   }
 
   initGlobalSettings() {
-    const org = localStorage.getItem('autoreport_setting_org') || 'CECATE Centro-Oeste / UFG';
+    const org = localStorage.getItem('autoreport_setting_org') || 'Centro Colaborador de Apoio ao Transporte Escolar da Região Centro-Oeste (CECATE-CO)';
     const funding = localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
     const proj = localStorage.getItem('autoreport_setting_proj') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
     const process = localStorage.getItem('autoreport_setting_process') || '23070.012345/2026-00';
@@ -2849,7 +2849,7 @@ class AutoReportApp {
   }
 
   saveGlobalSettings() {
-    const org = this.getVal('setting-org-name') || 'CECATE Centro-Oeste / UFG';
+    const org = this.getVal('setting-org-name') || 'Centro Colaborador de Apoio ao Transporte Escolar da Região Centro-Oeste (CECATE-CO)';
     const funding = this.getVal('setting-funding-name') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
     const proj = this.getVal('setting-proj-name') || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL';
     const process = this.getVal('setting-process-name') || '23070.012345/2026-00';
