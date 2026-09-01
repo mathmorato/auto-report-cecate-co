@@ -699,16 +699,13 @@
                   <div>
                     <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
                       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                      <span>Etapa 4: Estrutura do Curso (Modelo Global)</span>
+                      <span>Etapa 4: Estrutura do Curso</span>
                     </h3>
-                    <p class="wizard-card-desc">Configure os módulos e temáticas oficiais com suporte a múltiplas temáticas e cargas horárias independentes.</p>
+                    <p class="wizard-card-desc">Personalize a estrutura de módulos, temáticas e cargas horárias para esta capacitação. As alterações aqui feitas afetam <strong>apenas esta capacitação</strong>.</p>
                   </div>
                   <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.pullFromGlobalMasterCourseStructure()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Puxar a estrutura configurada no catálogo geral externo">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Puxar do Catálogo Geral
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openRestoreDefaultCourseModal()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Restaurar a estrutura do modelo padrão oficial">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg> Restaurar Padrão de Fábrica
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.openSelectCourseTemplateModal()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Selecionar modelo de estrutura de curso das Configurações">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Selecionar Estrutura
                     </button>
                     <button type="button" class="btn btn-secondary btn-sm" onclick="app.openCopyCourseStructureModal()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Copiar estrutura de outra capacitação">
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar de Outra Capacitação
@@ -716,6 +713,15 @@
                     <button type="button" class="btn btn-primary btn-sm" onclick="app.addNewCourseModule()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> + Adicionar Módulo
                     </button>
+                  </div>
+                </div>
+
+                <!-- Banner Informativo de Status da Estrutura -->
+                <div id="step4-structure-status-banner" style="margin-bottom:1.25rem; padding:0.75rem 1rem; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.25); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                  <div style="font-size:0.86rem; color:var(--text-primary); display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                    <span><strong style="color:var(--accent-blue-text);">Estrutura base:</strong> <span id="step4-base-template-name" style="font-weight:700;">Modelo Padrão</span></span>
+                    <span style="color:var(--border-color);">•</span>
+                    <span><strong style="color:var(--accent-emerald-text);">Status:</strong> <span id="step4-structure-status-tag" class="nav-badge badge-emerald" style="font-size:0.78rem;">Cópia independente da capacitação</span></span>
                   </div>
                 </div>
 
@@ -1192,45 +1198,67 @@
         </section>
 
         <!-- ==========================================
-             SEÇÃO: CATÁLOGO MESTRE DA ESTRUTURA DO CURSO (GLOBAL)
+             SEÇÃO: ESTRUTURAS DO CURSO (CATÁLOGO / MODELOS GLOBAIS)
              ========================================== -->
         <section id="view-course-structure" class="view-section">
           <div class="view-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
             <div>
               <h2 class="view-title" style="display:flex; align-items:center; gap:0.5rem; margin:0;">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                <span>Catálogo Geral da Estrutura do Curso (Template Padrão)</span>
+                <span>Estruturas do Curso (Gerenciamento de Modelos)</span>
               </h2>
               <p class="view-subtitle" style="margin:0.25rem 0 0 0; color:var(--text-secondary); font-size:0.95rem;">
-                Configure o modelo padrão oficial de módulos, temáticas e cargas horárias (Gestores e CACS). Esse template é copiado automaticamente para todas as novas capacitações e pode ser puxado a qualquer momento.
+                Gerencie o 🔒 <strong>Modelo Padrão protegido</strong> e crie novas estruturas reutilizáveis para servirem de base às capacitações.
               </p>
             </div>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="app.resetGlobalMasterCourseStructure()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg> Restaurar Padrão de Fábrica
-              </button>
-              <button type="button" class="btn btn-primary btn-sm" onclick="app.addGlobalMasterCourseModule()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> + Adicionar Módulo
+              <button type="button" class="btn btn-primary btn-sm" onclick="app.openCreateCourseTemplateModal()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> + Nova Estrutura
               </button>
             </div>
           </div>
 
-          <!-- Editor Global dos Módulos Mestre -->
-          <div id="global-master-course-editor" style="margin-bottom:1.5rem;">
-            <!-- Populado dinamicamente via JS -->
+          <!-- Grade de Cards das Estruturas / Modelos Disponíveis -->
+          <div style="margin-bottom:1.75rem;">
+            <h3 style="font-size:1rem; font-weight:700; margin-bottom:0.75rem; color:var(--text-primary);">Modelos de Estrutura de Curso Disponíveis:</h3>
+            <div id="course-templates-catalog-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:1rem;">
+              <!-- Populado dinamicamente via JS -->
+            </div>
           </div>
 
-          <!-- Prévia da Tabela 2 Oficial Mestre -->
-          <div class="card" style="padding:1.5rem; margin-top:1.5rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-              <h3 style="margin:0; font-size:1.1rem; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-                <span>Visualização da Estrutura do Modelo Global</span>
-              </h3>
-              <span class="nav-badge badge-emerald font-bold">Template Ativo</span>
+          <!-- Editor da Estrutura Selecionada -->
+          <div id="course-template-editor-wrapper" class="card" style="padding:1.5rem; margin-top:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
+              <div>
+                <h3 style="margin:0; font-size:1.1rem; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;" id="active-template-editor-title">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                  <span>Editando: Modelo Padrão</span>
+                </h3>
+                <p style="margin:0.25rem 0 0 0; font-size:0.84rem; color:var(--text-secondary);" id="active-template-editor-desc">
+                  Estrutura oficial protegida utilizada como padrão institucional do CECATE-CO.
+                </p>
+              </div>
+              <div style="display:flex; align-items:center; gap:0.5rem;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseModule()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> + Adicionar Módulo
+                </button>
+              </div>
             </div>
-            <div id="global-master-course-table-preview">
-              <!-- Tabela 2 Mestre -->
+
+            <!-- Editor de Módulos da Estrutura -->
+            <div id="global-master-course-editor" style="margin-bottom:1.5rem;">
+              <!-- Populado dinamicamente via JS -->
+            </div>
+
+            <!-- Prévia da Tabela Oficial Mestre -->
+            <div style="border-top:1px solid var(--border-color); padding-top:1.25rem; margin-top:1.5rem;">
+              <h4 style="margin:0 0 0.75rem 0; font-size:0.95rem; color:var(--text-primary); font-weight:700; display:flex; align-items:center; gap:0.4rem;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                <span>Visualização da Estrutura do Modelo Selecionado</span>
+              </h4>
+              <div id="global-master-course-table-preview">
+                <!-- Tabela Mestre -->
+              </div>
             </div>
           </div>
         </section>
@@ -1317,9 +1345,79 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.0.0</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.0.1</span>
         </div>
       </footer>
+    </div>
+  </div>
+
+  <!-- Modal: Criar Nova Estrutura de Curso (Catálogo / Modelos) -->
+  <div class="modal-backdrop" id="modal-create-course-template" style="display:none;">
+    <div class="glass-card modal-content" style="max-width:550px; width:90%; margin: 7vh auto; padding:2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+        <h3 style="margin:0; font-size:1.1rem; display:flex; align-items:center; gap:0.4rem;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Criar Nova Estrutura do Curso</span>
+        </h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeCreateCourseTemplateModal()">✕</button>
+      </div>
+
+      <form id="form-create-course-template" onsubmit="event.preventDefault(); app.confirmCreateCourseTemplate();">
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label class="form-label" style="font-weight:700;">Nome da Estrutura:</label>
+          <input type="text" id="create-template-name" class="form-control" placeholder="Ex: Estrutura Transporte Escolar 2026" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label class="form-label">Descrição da Estrutura:</label>
+          <input type="text" id="create-template-desc" class="form-control" placeholder="Ex: Modelo de 5 módulos para polos regionais estendidos">
+        </div>
+
+        <div class="form-group" style="margin-bottom:1.5rem;">
+          <label class="form-label" style="font-weight:700;">Origem da Estrutura:</label>
+          <div style="background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color); display:flex; flex-direction:column; gap:0.75rem;">
+            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.88rem; cursor:pointer; margin:0;">
+              <input type="radio" name="create-template-origin" value="template_default_official" checked>
+              <span><strong>Copiar do Modelo Padrão</strong> (Recomendado)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.88rem; cursor:pointer; margin:0;">
+              <input type="radio" name="create-template-origin" value="clean">
+              <span><strong>Começar vazia</strong> (Sem módulos pré-configurados)</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid var(--border-color); padding-top:1.25rem;">
+          <button type="button" class="btn btn-secondary" onclick="app.closeCreateCourseTemplateModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" style="font-weight:700;">Criar Estrutura</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Selecionar Estrutura para a Capacitação -->
+  <div class="modal-backdrop" id="modal-select-course-template" style="display:none;">
+    <div class="glass-card modal-content" style="max-width:580px; width:90%; margin: 7vh auto; padding:2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+        <h3 style="margin:0; font-size:1.1rem; display:flex; align-items:center; gap:0.4rem;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Selecionar Estrutura do Curso</span>
+        </h3>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeSelectCourseTemplateModal()">✕</button>
+      </div>
+
+      <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:1.25rem;">
+        Escolha o modelo de estrutura que será copiado para esta capacitação. Uma <strong>cópia independente</strong> será gerada para esta capacitação, protegendo os modelos globais contra alterações acidentais.
+      </p>
+
+      <div id="select-course-template-options-list" style="display:flex; flex-direction:column; gap:0.75rem; margin-bottom:1.5rem; max-height:50vh; overflow-y:auto;">
+        <!-- Populado dinamicamente via JS -->
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:0.75rem; border-top:1px solid var(--border-color); padding-top:1.25rem;">
+        <button type="button" class="btn btn-secondary" onclick="app.closeSelectCourseTemplateModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="app.confirmSelectCourseTemplateForTraining()" style="font-weight:700;">Aplicar Cópia nesta Capacitação</button>
+      </div>
     </div>
   </div>
 

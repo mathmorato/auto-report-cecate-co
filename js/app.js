@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.0
+ * Versão: v.2.0.1
  */
 
 window.icons = {
@@ -136,6 +136,7 @@ class AutoReportApp {
     } else if (viewId === 'team') {
       this.renderMasterTeamManagement();
     } else if (viewId === 'course-structure') {
+      this.renderCourseTemplatesCatalog();
       this.renderGlobalMasterCourseStructure();
     }
   }
@@ -2609,9 +2610,29 @@ class AutoReportApp {
   renderCourseStructureStep() {
     if (!this.currentTraining) return;
 
-    // Garantir normalização da estrutura do curso
-    if (window.courseStructureHelper) {
+    // Se a capacitação ainda não tem módulos, carrega automaticamente uma cópia do Modelo Padrão ativo
+    if (!Array.isArray(this.currentTraining.courseModules) || this.currentTraining.courseModules.length === 0) {
+      if (window.courseStructureHelper) {
+        this.currentTraining.courseModules = window.courseStructureHelper.getMasterCopy();
+        this.currentTraining.baseTemplateName = 'Modelo Padrão';
+        this.currentTraining.isCustomized = false;
+      }
+    } else if (window.courseStructureHelper) {
       this.currentTraining.courseModules = window.courseStructureHelper.normalize(this.currentTraining.courseModules);
+    }
+
+    // Atualizar banner de status da estrutura
+    const nameEl = document.getElementById('step4-base-template-name');
+    const statusEl = document.getElementById('step4-structure-status-tag');
+    if (nameEl) nameEl.textContent = this.currentTraining.baseTemplateName || 'Modelo Padrão';
+    if (statusEl) {
+      if (this.currentTraining.isCustomized) {
+        statusEl.className = 'nav-badge badge-blue';
+        statusEl.textContent = 'Personalizada para esta capacitação';
+      } else {
+        statusEl.className = 'nav-badge badge-emerald';
+        statusEl.textContent = 'Cópia independente da capacitação';
+      }
     }
 
     const mods = this.currentTraining.courseModules || [];
@@ -3073,12 +3094,228 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     CATÁLOGO MESTRE DA ESTRUTURA DO CURSO (GLOBAL / SIDEBAR)
+     ESTRUTURAS DO CURSO (GERENCIAMENTO DE MODELOS & CATALOGO)
      ========================================================================== */
+  renderCourseTemplatesCatalog() {
+    if (!window.courseStructureHelper) return;
+    const catalogContainer = document.getElementById('course-templates-catalog-list');
+    if (!catalogContainer) return;
+
+    const templates = window.courseStructureHelper.getTemplatesList();
+    if (!this.activeTemplateId) {
+      const defaultTpl = window.courseStructureHelper.getDefaultTemplate();
+      this.activeTemplateId = defaultTpl ? defaultTpl.id : 'template_default_official';
+    }
+
+    catalogContainer.innerHTML = templates.map(t => {
+      const isSelected = t.id === this.activeTemplateId;
+      const isDefault = t.isDefault;
+      const isProtected = t.isProtected;
+
+      return `
+        <div class="card" style="padding:1.25rem; border:2px solid ${isSelected ? 'var(--accent-blue-text)' : 'var(--border-color)'}; background:${isSelected ? 'rgba(59,130,246,0.06)' : 'var(--bg-card)'}; transition:all 0.2s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.65rem; gap:0.5rem; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+              ${isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem;">🔒 Modelo Padrão Protegido</span>' : '<span class="nav-badge font-bold" style="font-size:0.75rem; background:rgba(255,255,255,0.08);">Personalizada</span>'}
+              ${isDefault ? '<span class="nav-badge badge-emerald font-bold" style="font-size:0.75rem;">⭐ Ativo</span>' : ''}
+            </div>
+            <span class="nav-badge font-mono font-bold" style="font-size:0.75rem;">${(t.modules || []).length} Módulos</span>
+          </div>
+
+          <h4 style="margin:0 0 0.35rem 0; font-size:1.05rem; color:var(--text-primary); font-weight:700;">${t.name || 'Sem nome'}</h4>
+          <p style="margin:0 0 1rem 0; font-size:0.82rem; color:var(--text-secondary); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${t.description || 'Estrutura de curso'}</p>
+
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:auto;">
+            <button type="button" class="btn ${isSelected ? 'btn-primary' : 'btn-secondary'} btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="font-size:0.78rem; font-weight:700;">
+              ${isSelected ? '✓ Editando Agora' : 'Visualizar / Editar'}
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseTemplate('${t.id}')" style="font-size:0.78rem; font-weight:600;" title="Duplicar esta estrutura para criar um novo modelo">
+              Duplicar
+            </button>
+            ${!isDefault ? `
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.setDefaultCourseTemplate('${t.id}')" style="font-size:0.78rem; font-weight:600; color:var(--accent-emerald-text);" title="Definir como o Modelo Padrão Ativo para novas capacitações">
+                Definir como Padrão
+              </button>
+            ` : ''}
+            ${(!isProtected && !isDefault) ? `
+              <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseTemplate('${t.id}')" style="font-size:0.78rem; font-weight:600;" title="Excluir estrutura personalizada">
+                Excluir
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  selectCourseTemplateForEdit(templateId) {
+    this.activeTemplateId = templateId;
+    this.renderCourseTemplatesCatalog();
+    this.renderGlobalMasterCourseStructure();
+  }
+
+  openCreateCourseTemplateModal() {
+    const modal = document.getElementById('modal-create-course-template');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeCreateCourseTemplateModal() {
+    const modal = document.getElementById('modal-create-course-template');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => modal.style.display = 'none', 200);
+    }
+  }
+
+  confirmCreateCourseTemplate() {
+    const nameInput = document.getElementById('create-template-name');
+    const descInput = document.getElementById('create-template-desc');
+    const originRadios = document.getElementsByName('create-template-origin');
+    if (!nameInput || !window.courseStructureHelper) return;
+
+    const name = nameInput.value.trim();
+    const desc = descInput ? descInput.value.trim() : '';
+    let origin = 'template_default_official';
+    for (const r of originRadios) {
+      if (r.checked) origin = r.value;
+    }
+
+    if (!name) {
+      this.showToast('Informe um nome para a estrutura.', 'warning');
+      return;
+    }
+
+    const newTpl = window.courseStructureHelper.createTemplate(name, desc, origin);
+    this.activeTemplateId = newTpl.id;
+    this.closeCreateCourseTemplateModal();
+    this.renderCourseTemplatesCatalog();
+    this.renderGlobalMasterCourseStructure();
+    this.showToast(`✓ Estrutura "${newTpl.name}" criada com sucesso!`, 'success');
+  }
+
+  duplicateCourseTemplate(templateId) {
+    if (!window.courseStructureHelper) return;
+    const newTpl = window.courseStructureHelper.duplicateTemplate(templateId);
+    if (newTpl) {
+      this.activeTemplateId = newTpl.id;
+      this.renderCourseTemplatesCatalog();
+      this.renderGlobalMasterCourseStructure();
+      this.showToast(`✓ Estrutura duplicada como "${newTpl.name}"!`, 'success');
+    }
+  }
+
+  setDefaultCourseTemplate(templateId) {
+    if (!window.courseStructureHelper) return;
+    const tpl = window.courseStructureHelper.getTemplateById(templateId);
+    if (!tpl) return;
+    if (confirm(`Deseja definir "${tpl.name}" como o Modelo Padrão Ativo?\n\nEsta estrutura será utilizada como base para todas as novas capacitações criadas.`)) {
+      window.courseStructureHelper.setDefaultTemplate(templateId);
+      this.renderCourseTemplatesCatalog();
+      this.renderGlobalMasterCourseStructure();
+      this.showToast(`✓ "${tpl.name}" definido como Modelo Padrão Ativo!`, 'success');
+    }
+  }
+
+  deleteCourseTemplate(templateId) {
+    if (!window.courseStructureHelper) return;
+    const tpl = window.courseStructureHelper.getTemplateById(templateId);
+    if (!tpl) return;
+    if (confirm(`Deseja realmente excluir a estrutura "${tpl.name}"?`)) {
+      const ok = window.courseStructureHelper.deleteTemplate(templateId);
+      if (ok) {
+        this.activeTemplateId = 'template_default_official';
+        this.renderCourseTemplatesCatalog();
+        this.renderGlobalMasterCourseStructure();
+        this.showToast(`Estrutura "${tpl.name}" excluída.`, 'info');
+      } else {
+        this.showToast('Não é possível excluir o Modelo Padrão protegido.', 'error');
+      }
+    }
+  }
+
+  openSelectCourseTemplateModal() {
+    if (!window.courseStructureHelper) return;
+    const listContainer = document.getElementById('select-course-template-options-list');
+    if (!listContainer) return;
+
+    const templates = window.courseStructureHelper.getTemplatesList();
+    listContainer.innerHTML = templates.map((t, idx) => `
+      <label style="display:flex; align-items:flex-start; gap:0.75rem; padding:0.85rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); cursor:pointer;">
+        <input type="radio" name="select-training-template-radio" value="${t.id}" ${t.isDefault || idx === 0 ? 'checked' : ''} style="margin-top:0.25rem;">
+        <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
+            <strong style="color:var(--text-primary); font-size:0.92rem;">${t.isProtected ? '🔒 ' : ''}${t.name}</strong>
+            ${t.isDefault ? '<span class="nav-badge badge-emerald font-bold" style="font-size:0.72rem;">Modelo Padrão Ativo</span>' : ''}
+          </div>
+          <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.35;">${t.description || 'Estrutura com ' + (t.modules || []).length + ' módulos'}</div>
+        </div>
+      </label>
+    `).join('');
+
+    const modal = document.getElementById('modal-select-course-template');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeSelectCourseTemplateModal() {
+    const modal = document.getElementById('modal-select-course-template');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => modal.style.display = 'none', 200);
+    }
+  }
+
+  async confirmSelectCourseTemplateForTraining() {
+    if (!this.currentTraining || !window.courseStructureHelper) return;
+    const radios = document.getElementsByName('select-training-template-radio');
+    let selectedId = null;
+    for (const r of radios) {
+      if (r.checked) selectedId = r.value;
+    }
+
+    if (!selectedId) return;
+
+    const tpl = window.courseStructureHelper.getTemplateById(selectedId);
+    if (!tpl) return;
+
+    // Gerar cópia profunda independente da estrutura selecionada
+    this.currentTraining.courseModules = window.courseStructureHelper.makeDeepCopy(tpl.modules);
+    this.currentTraining.baseTemplateName = tpl.name;
+    this.currentTraining.isCustomized = false;
+
+    this.renderCourseStructureStep();
+    if (window.db) {
+      await window.db.saveTrainingFull(this.currentTraining, `Cópia independente da estrutura "${tpl.name}"`);
+    }
+    this.closeSelectCourseTemplateModal();
+    this.showToast(`✓ Cópia da estrutura "${tpl.name}" aplicada a esta capacitação!`, 'success');
+  }
+
   renderGlobalMasterCourseStructure() {
     if (!window.courseStructureHelper) return;
 
-    const masterMods = window.courseStructureHelper.getMasterStructure();
+    if (!this.activeTemplateId) {
+      const defaultTpl = window.courseStructureHelper.getDefaultTemplate();
+      this.activeTemplateId = defaultTpl ? defaultTpl.id : 'template_default_official';
+    }
+
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    const masterMods = activeTpl ? window.courseStructureHelper.normalize(activeTpl.modules || []) : [];
+
+    const titleEl = document.getElementById('active-template-editor-title');
+    const descEl = document.getElementById('active-template-editor-desc');
+    if (titleEl && activeTpl) {
+      titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> <span>Editando: ${activeTpl.name}</span> ${activeTpl.isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem; margin-left:0.5rem;">🔒 Modelo Padrão Protegido</span>' : ''}`;
+    }
+    if (descEl && activeTpl) {
+      descEl.textContent = activeTpl.description || 'Estrutura oficial do curso';
+    }
+
     const editorContainer = document.getElementById('global-master-course-editor');
     const tableContainer = document.getElementById('global-master-course-table-preview');
 
@@ -3086,8 +3323,8 @@ class AutoReportApp {
       if (masterMods.length === 0) {
         editorContainer.innerHTML = `
           <div style="text-align:center; padding:2.5rem; background:var(--bg-input); border:1px dashed var(--border-color); border-radius:var(--radius-md);">
-            <p style="color:var(--text-secondary); margin-bottom:1rem;">O catálogo mestre está vazio.</p>
-            <button class="btn btn-primary btn-sm" onclick="app.resetGlobalMasterCourseStructure()">+ Restaurar Padrão Oficial do CECATE (4 Módulos)</button>
+            <p style="color:var(--text-secondary); margin-bottom:1rem;">Esta estrutura está vazia.</p>
+            <button class="btn btn-primary btn-sm" onclick="app.addGlobalMasterCourseModule()">+ Adicionar Primeiro Módulo</button>
           </div>
         `;
       } else {
@@ -3118,7 +3355,7 @@ class AutoReportApp {
                   <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateGlobalMasterCourseModule(${modIdx})" title="Duplicar Módulo com todas as temáticas" style="padding:0.2rem 0.55rem; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
                   </button>
-                  <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteGlobalMasterCourseModule(${modIdx})" title="Excluir Módulo do Modelo Global" style="padding:0.2rem 0.5rem;">
+                  <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteGlobalMasterCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>
@@ -3236,51 +3473,68 @@ class AutoReportApp {
 
   addGlobalMasterCourseModule() {
     if (!window.courseStructureHelper) return;
-    const masterMods = window.courseStructureHelper.getMasterStructure();
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    const masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const nextNum = masterMods.length + 1;
     const numStr = nextNum < 10 ? `0${nextNum}` : `${nextNum}`;
 
     masterMods.push({
-      id: `mod_master_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: `mod_tpl_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       moduleNumber: numStr,
       order: nextNum,
+      isShared: true,
       gestorTopics: [
-        { id: `top_g_${Date.now()}_1`, topic: 'Nova Temática Gestão Municipal', hours: 2.0 }
+        { id: `top_g_${Date.now()}_1`, topic: 'Nova Temática Módulo', hours: 2.0 }
       ],
       cacsTopics: [
-        { id: `top_c_${Date.now()}_1`, topic: 'Nova Temática Conselheiros CACS', hours: 2.0 }
+        { id: `top_c_${Date.now()}_1`, topic: 'Nova Temática Módulo', hours: 2.0 }
       ]
     });
 
-    window.courseStructureHelper.saveMasterStructure(masterMods);
+    window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+    this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
-    this.showToast(`✓ Módulo ${numStr} adicionado ao Catálogo Mestre!`, 'success');
+    this.showToast(`✓ Módulo ${numStr} adicionado à estrutura "${activeTpl.name}"!`, 'success');
   }
 
   duplicateGlobalMasterCourseModule(modIdx) {
     if (!window.courseStructureHelper) return;
-    let masterMods = window.courseStructureHelper.getMasterStructure();
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     masterMods = window.courseStructureHelper.duplicateModule(masterMods, modIdx);
-    window.courseStructureHelper.saveMasterStructure(masterMods);
+
+    window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+    this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
-    this.showToast('✓ Módulo duplicado com sucesso no Modelo Padrão Global!', 'success');
+    this.showToast('✓ Módulo duplicado com sucesso!', 'success');
   }
 
   deleteGlobalMasterCourseModule(modIdx) {
     if (!window.courseStructureHelper) return;
-    let masterMods = window.courseStructureHelper.getMasterStructure();
-    if (confirm('Deseja realmente remover este módulo do Modelo Padrão Global?')) {
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
+    if (confirm(`Deseja realmente remover este módulo da estrutura "${activeTpl.name}"?`)) {
       masterMods.splice(modIdx, 1);
       masterMods = window.courseStructureHelper.autoRenumber(masterMods);
-      window.courseStructureHelper.saveMasterStructure(masterMods);
+      window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+      this.renderCourseTemplatesCatalog();
       this.renderGlobalMasterCourseStructure();
-      this.showToast('Módulo removido do Catálogo Mestre.', 'info');
+      this.showToast('Módulo removido da estrutura.', 'info');
     }
   }
 
   moveGlobalMasterCourseModule(modIdx, direction) {
     if (!window.courseStructureHelper) return;
-    let masterMods = window.courseStructureHelper.getMasterStructure();
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const targetIdx = modIdx + direction;
     if (targetIdx < 0 || targetIdx >= masterMods.length) return;
 
@@ -3289,23 +3543,31 @@ class AutoReportApp {
     masterMods[targetIdx] = temp;
     masterMods = window.courseStructureHelper.autoRenumber(masterMods);
 
-    window.courseStructureHelper.saveMasterStructure(masterMods);
+    window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+    this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
   }
 
   updateGlobalMasterCourseModuleNumber(modIdx, newNumber) {
     if (!window.courseStructureHelper) return;
-    const masterMods = window.courseStructureHelper.getMasterStructure();
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    const masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     if (masterMods[modIdx]) {
       masterMods[modIdx].moduleNumber = (newNumber || '').trim();
-      window.courseStructureHelper.saveMasterStructure(masterMods);
+      window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+      this.renderCourseTemplatesCatalog();
       this.renderGlobalMasterCourseStructure();
     }
   }
 
   toggleGlobalMasterCourseModuleShared(modIdx, isChecked) {
     if (!window.courseStructureHelper) return;
-    let masterMods = window.courseStructureHelper.getMasterStructure();
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const mod = masterMods[modIdx];
     if (!mod) return;
 
@@ -3327,13 +3589,17 @@ class AutoReportApp {
       }
     }
 
-    window.courseStructureHelper.saveMasterStructure(masterMods);
+    window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+    this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
   }
 
   addGlobalMasterCourseTopic(modIdx, type) {
     if (!window.courseStructureHelper) return;
-    let masterMods = window.courseStructureHelper.getMasterStructure();
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const mod = masterMods[modIdx];
     if (!mod) return;
 
@@ -3351,13 +3617,17 @@ class AutoReportApp {
       mod.cacsTopics.push(newTopic);
     }
 
-    window.courseStructureHelper.saveMasterStructure(masterMods);
+    window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+    this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
   }
 
   removeGlobalMasterCourseTopic(modIdx, type, topicIdx) {
     if (!window.courseStructureHelper) return;
-    let masterMods = window.courseStructureHelper.getMasterStructure();
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const mod = masterMods[modIdx];
     if (!mod) return;
 
@@ -3375,13 +3645,17 @@ class AutoReportApp {
       if (mod.cacsTopics.length === 0) mod.cacsTopics.push({ id: `top_c_${Date.now()}`, topic: '', hours: 0 });
     }
 
-    window.courseStructureHelper.saveMasterStructure(masterMods);
+    window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+    this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
   }
 
   updateGlobalMasterCourseTopic(modIdx, type, topicIdx, field, value) {
     if (!window.courseStructureHelper) return;
-    let masterMods = window.courseStructureHelper.getMasterStructure();
+    const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
+    if (!activeTpl) return;
+
+    let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const mod = masterMods[modIdx];
     if (!mod) return;
 
@@ -3399,7 +3673,8 @@ class AutoReportApp {
       }
     }
 
-    window.courseStructureHelper.saveMasterStructure(masterMods);
+    window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+    this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
   }
 

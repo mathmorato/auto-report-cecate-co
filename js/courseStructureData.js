@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Modelo Padrão Oficial e Estrutura do Curso
- * Versão: v.2.0.0
+ * Versão: v.2.0.1
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
@@ -57,42 +57,142 @@ window.DEFAULT_COURSE_STRUCTURE = [
 
 window.courseStructureHelper = {
   /**
-   * Obtém a Estrutura Mestre Global atual (do localStorage/IndexedDB ou do padrão oficial de fábrica)
+   * Obtém a lista completa de templates/modelos de estrutura de curso
    */
-  getMasterStructure() {
+  getTemplatesList() {
     try {
-      const stored = localStorage.getItem('cecate_master_course_structure');
+      const stored = localStorage.getItem('cecate_course_templates_v2');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return this.normalize(parsed);
+          return parsed;
         }
       }
     } catch (e) {
-      console.warn('Erro ao carregar estrutura mestre do localStorage:', e);
+      console.warn('Erro ao carregar templates do localStorage:', e);
     }
-    return this.getDefaultCopy();
+    const defaultTemplate = {
+      id: 'template_default_official',
+      name: 'Modelo Padrão',
+      description: 'Estrutura oficial protegida utilizada como padrão institucional do CECATE-CO.',
+      isDefault: true,
+      isProtected: true,
+      modules: this.getDefaultCopy()
+    };
+    this.saveTemplatesList([defaultTemplate]);
+    return [defaultTemplate];
   },
 
   /**
-   * Salva a Estrutura Mestre Global no armazenamento permanente
+   * Salva a lista de templates no localStorage
    */
-  saveMasterStructure(modules) {
-    const norm = this.normalize(modules);
+  saveTemplatesList(templates) {
     try {
-      localStorage.setItem('cecate_master_course_structure', JSON.stringify(norm));
+      localStorage.setItem('cecate_course_templates_v2', JSON.stringify(templates));
     } catch (e) {
-      console.warn('Erro ao salvar no localStorage:', e);
+      console.warn('Erro ao salvar templates:', e);
     }
-    return norm;
   },
 
   /**
-   * Retorna uma cópia profunda (deep copy) independente da Estrutura Mestre Global
+   * Obtém o modelo padrão atualmente ativo
    */
-  getMasterCopy() {
-    const master = this.getMasterStructure();
-    return JSON.parse(JSON.stringify(master)).map((mod, idx) => ({
+  getDefaultTemplate() {
+    const list = this.getTemplatesList();
+    return list.find(t => t.isDefault) || list[0];
+  },
+
+  /**
+   * Obtém um template pelo ID
+   */
+  getTemplateById(id) {
+    const list = this.getTemplatesList();
+    return list.find(t => t.id === id) || this.getDefaultTemplate();
+  },
+
+  /**
+   * Cria uma nova estrutura de curso personalizada a partir de um modelo ou limpa
+   */
+  createTemplate(name, description, originTemplateId = 'template_default_official') {
+    const list = this.getTemplatesList();
+    let sourceModules = [];
+    if (originTemplateId === 'clean') {
+      sourceModules = [];
+    } else {
+      const sourceTpl = this.getTemplateById(originTemplateId);
+      sourceModules = sourceTpl ? sourceTpl.modules : this.getDefaultCopy();
+    }
+
+    const newTpl = {
+      id: `tpl_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      name: (name || '').trim() || 'Nova Estrutura Personalizada',
+      description: (description || '').trim() || 'Estrutura de curso personalizada',
+      isDefault: false,
+      isProtected: false,
+      modules: this.makeDeepCopy(sourceModules)
+    };
+
+    list.push(newTpl);
+    this.saveTemplatesList(list);
+    return newTpl;
+  },
+
+  /**
+   * Atualiza os módulos de um template existente
+   */
+  updateTemplateModules(templateId, modules) {
+    const list = this.getTemplatesList();
+    const tpl = list.find(t => t.id === templateId);
+    if (!tpl) return;
+    tpl.modules = this.normalize(modules);
+    this.saveTemplatesList(list);
+    return tpl;
+  },
+
+  /**
+   * Duplica um template existente
+   */
+  duplicateTemplate(templateId, newName) {
+    const target = this.getTemplateById(templateId);
+    if (!target) return null;
+    return this.createTemplate(
+      newName || `${target.name} (Cópia)`,
+      `Cópia criada a partir de ${target.name}`,
+      target.id
+    );
+  },
+
+  /**
+   * Define uma estrutura como o Modelo Padrão Ativo
+   */
+  setDefaultTemplate(templateId) {
+    const list = this.getTemplatesList();
+    list.forEach(t => {
+      t.isDefault = (t.id === templateId);
+    });
+    this.saveTemplatesList(list);
+  },
+
+  /**
+   * Exclui uma estrutura personalizada (Modelo Padrão protegido não pode ser excluído)
+   */
+  deleteTemplate(templateId) {
+    let list = this.getTemplatesList();
+    const target = list.find(t => t.id === templateId);
+    if (!target || target.isProtected || target.isDefault) {
+      return false;
+    }
+    list = list.filter(t => t.id !== templateId);
+    this.saveTemplatesList(list);
+    return true;
+  },
+
+  /**
+   * Gera uma cópia profunda (deep copy) independente a partir de módulos
+   */
+  makeDeepCopy(modules = []) {
+    const norm = this.normalize(modules);
+    return JSON.parse(JSON.stringify(norm)).map((mod, idx) => ({
       ...mod,
       id: `mod_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 4)}`,
       gestorTopics: (mod.gestorTopics || []).map((t, ti) => ({
@@ -107,7 +207,30 @@ window.courseStructureHelper = {
   },
 
   /**
-   * Retorna uma cópia profunda (deep copy) independente do modelo padrão oficial de fábrica
+   * Obtém a Estrutura Mestre do Modelo Padrão ativo
+   */
+  getMasterStructure() {
+    const defaultTpl = this.getDefaultTemplate();
+    return this.normalize(defaultTpl.modules || []);
+  },
+
+  /**
+   * Salva a Estrutura Mestre no Modelo Padrão ativo
+   */
+  saveMasterStructure(modules) {
+    const defaultTpl = this.getDefaultTemplate();
+    return this.updateTemplateModules(defaultTpl.id, modules);
+  },
+
+  /**
+   * Retorna uma cópia profunda (deep copy) independente do Modelo Padrão ativo
+   */
+  getMasterCopy() {
+    return this.makeDeepCopy(this.getMasterStructure());
+  },
+
+  /**
+   * Retorna uma cópia profunda (deep copy) independente do modelo oficial de fábrica
    */
   getDefaultCopy() {
     return JSON.parse(JSON.stringify(window.DEFAULT_COURSE_STRUCTURE)).map((mod, idx) => ({
@@ -125,7 +248,7 @@ window.courseStructureHelper = {
   },
 
   /**
-   * Duplica um módulo com todas as suas temáticas (deep copy) e renumera os módulos
+   * Duplica um módulo dentro de uma estrutura (deep copy)
    */
   duplicateModule(modules = [], modIdx = 0) {
     const norm = this.normalize(modules);
