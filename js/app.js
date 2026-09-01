@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.1.1.0
+ * Versão: v.1.1.1
  */
 
 class AutoReportApp {
@@ -564,6 +564,55 @@ class AutoReportApp {
     window.db.triggerAutoSave(t.id, () => this.currentTraining, () => {
       this.updateWizardHeader();
     });
+  }
+
+  async manualSaveTraining() {
+    if (!this.currentTraining || !window.db) return;
+
+    // Proteção de históricos
+    if (this.currentTraining.isHistorical) {
+      this.showToast('🛡️ Registros históricos protegidos não podem ser editados.', 'warning');
+      return;
+    }
+
+    const saveBtn = document.getElementById('wizard-btn-save');
+    const originalText = saveBtn ? saveBtn.innerHTML : '';
+
+    // Feedback visual no botão
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '⏳ Salvando...';
+    }
+
+    try {
+      this.saveCurrentStepData();
+      await window.db.put('trainings', this.currentTraining);
+      await new Promise(r => setTimeout(r, 300));
+
+      if (saveBtn) {
+        saveBtn.innerHTML = '✓ Salvo!';
+        saveBtn.style.color = 'var(--accent-success)';
+        saveBtn.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      }
+
+      this.showToast('💾 Relatório salvo com sucesso!', 'success');
+
+      setTimeout(() => {
+        if (saveBtn) {
+          saveBtn.innerHTML = originalText;
+          saveBtn.style.color = '';
+          saveBtn.style.borderColor = '';
+          saveBtn.disabled = false;
+        }
+      }, 1500);
+    } catch (err) {
+      console.error('Erro ao salvar:', err);
+      this.showToast(`Erro ao salvar: ${err.message}`, 'error');
+      if (saveBtn) {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+      }
+    }
   }
 
   /* ==========================================================================
