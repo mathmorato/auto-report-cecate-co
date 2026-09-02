@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.2.3
+ * Versão: v.2.2.4
  */
 
 window.icons = {
@@ -4686,14 +4686,16 @@ class AutoReportApp {
     list.forEach(m => {
       if (m.name) {
         const n = m.name.trim();
-        if (n && n.length <= 45 && !n.toLowerCase().includes('declaro')) {
+        if (n && n.length <= 45 && !n.toLowerCase().includes('declaro') && !n.toLowerCase().includes('não informado')) {
           names.add(n);
         }
       }
     });
 
-    if (window.IBGE_DATA && Array.isArray(window.IBGE_DATA)) {
-      window.IBGE_DATA.forEach(item => {
+    // Se porventura a lista estiver vazia, recuar para os municípios do estado da formação
+    if (names.size === 0 && window.IBGE_DATA && Array.isArray(window.IBGE_DATA)) {
+      const uf = this.currentTraining?.uf || 'MT';
+      window.IBGE_DATA.filter(item => item.uf === uf).forEach(item => {
         if (item.n) names.add(item.n);
       });
     }
