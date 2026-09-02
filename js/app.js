@@ -2645,7 +2645,7 @@ class AutoReportApp {
     }
     const btnTextEl = document.getElementById('btn-toggle-course-editor-text');
     if (btnTextEl) {
-      btnTextEl.textContent = this.isCourseEditorOpen ? '✓ Concluir Edição' : '✏️ Editar Estrutura';
+      btnTextEl.textContent = this.isCourseEditorOpen ? 'Concluir Edição' : 'Editar Estrutura';
     }
 
     // 1. Renderizar Formuário de Edição de Módulos e Temáticas
@@ -2654,7 +2654,9 @@ class AutoReportApp {
         editorContainer.innerHTML = `
           <div style="text-align:center; padding:2.5rem; background:var(--bg-input); border:1px dashed var(--border-color); border-radius:var(--radius-md);">
             <p style="color:var(--text-secondary); margin-bottom:1rem;">Nenhum módulo configurado para esta capacitação.</p>
-            <button class="btn btn-primary btn-sm" onclick="app.confirmRestoreDefaultCourseStructure()">+ Carregar Modelo Padrão Oficial (4 Módulos)</button>
+            <button class="btn btn-primary btn-sm" onclick="app.confirmRestoreDefaultCourseStructure()" style="display:inline-flex; align-items:center; gap:0.35rem;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Carregar Modelo Padrão Oficial (4 Módulos)
+            </button>
           </div>
         `;
       } else {
@@ -2665,8 +2667,12 @@ class AutoReportApp {
               <span>Formulário de Edição de Módulos e Temáticas da Capacitação</span>
             </span>
             <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="app.addNewCourseModule()" style="font-weight:600;">+ Adicionar Módulo</button>
-              <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleCourseEditor(false)" style="font-weight:700;">✓ Concluir Edição</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.addNewCourseModule()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar Módulo
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleCourseEditor(false)" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluir Edição
+              </button>
             </div>
           </div>
         `;
@@ -2693,12 +2699,16 @@ class AutoReportApp {
                 </div>
 
                 <div style="display:flex; align-items:center; gap:0.4rem;">
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveCourseModule(${modIdx}, -1)" ${modIdx === 0 ? 'disabled' : ''} title="Mover para cima" style="padding:0.2rem 0.5rem;">↑</button>
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveCourseModule(${modIdx}, 1)" ${modIdx === mods.length - 1 ? 'disabled' : ''} title="Mover para baixo" style="padding:0.2rem 0.5rem;">↓</button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveCourseModule(${modIdx}, -1)" ${modIdx === 0 ? 'disabled' : ''} title="Mover para cima" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveCourseModule(${modIdx}, 1)" ${modIdx === mods.length - 1 ? 'disabled' : ''} title="Mover para baixo" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                  </button>
                   <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseModule(${modIdx})" title="Duplicar Módulo com todas as temáticas" style="padding:0.2rem 0.55rem; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
                   </button>
-                  <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem;">
+                  <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center;">
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>
@@ -2732,13 +2742,15 @@ class AutoReportApp {
                           <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'shared', ${tIdx}, 'hours', this.value)">
                           <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'shared', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'shared', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text); display:inline-flex; align-items:center;" title="Remover Temática">
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
                       </div>
                     `).join('')}
                   </div>
 
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'shared')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.5rem;">
-                    + Adicionar Temática
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'shared')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.5rem; display:inline-flex; align-items:center; gap:0.25rem;">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar Temática
                   </button>
                 </div>
               ` : `
@@ -2763,13 +2775,15 @@ class AutoReportApp {
                             <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
                             <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                           </div>
-                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text); display:inline-flex; align-items:center;" title="Remover Temática">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </button>
                         </div>
                       `).join('')}
                     </div>
 
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
-                      + Adicionar Temática Gestor
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem; display:inline-flex; align-items:center; gap:0.25rem;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar Temática Gestor
                     </button>
                   </div>
 
@@ -2792,13 +2806,15 @@ class AutoReportApp {
                             <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
                             <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                           </div>
-                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text); display:inline-flex; align-items:center;" title="Remover Temática">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </button>
                         </div>
                       `).join('')}
                     </div>
 
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
-                      + Adicionar Temática CACS
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem; display:inline-flex; align-items:center; gap:0.25rem;">
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Adicionar Temática CACS
                     </button>
                   </div>
                 </div>
@@ -2836,7 +2852,7 @@ class AutoReportApp {
     }
 
     if (btnTextEl) {
-      btnTextEl.textContent = this.isCourseEditorOpen ? '✓ Concluir Edição' : '✏️ Editar Estrutura';
+      btnTextEl.textContent = this.isCourseEditorOpen ? 'Concluir Edição' : 'Editar Estrutura';
     }
   }
 
@@ -3213,8 +3229,8 @@ class AutoReportApp {
       return `
         <tr onclick="app.selectCourseTemplateForEdit('${t.id}')" style="${rowStyle}">
           <td style="text-align:center; vertical-align:middle;">
-            ${isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem;">🔒 Protegido</span>' : '<span class="nav-badge font-bold" style="font-size:0.75rem; background:rgba(255,255,255,0.08);">✏️ Editável</span>'}
-            ${isDefault ? '<span class="nav-badge badge-emerald font-bold" style="font-size:0.75rem; margin-left:0.25rem;">⭐ Ativo</span>' : ''}
+            ${isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Protegido</span>' : '<span class="nav-badge font-bold" style="font-size:0.75rem; background:rgba(255,255,255,0.08); display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editável</span>'}
+            ${isDefault ? '<span class="nav-badge badge-emerald font-bold" style="font-size:0.75rem; margin-left:0.25rem; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Ativo</span>' : ''}
           </td>
           <td style="text-align:left; vertical-align:middle;">
             <div style="font-weight:700; color:var(--text-primary); font-size:0.92rem;">${t.name || 'Sem nome'}</div>
@@ -3225,26 +3241,26 @@ class AutoReportApp {
           </td>
           <td style="text-align:center; vertical-align:middle;" onclick="event.stopPropagation();">
             <div style="display:flex; justify-content:center; gap:0.35rem; flex-wrap:wrap;">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem;" title="Duplicar esta estrutura para criar um modelo editável">
-                📋 Duplicar
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Duplicar esta estrutura para criar um modelo editável">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
               </button>
               ${!isProtected ? `
-                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem;" title="Editar módulos desta estrutura">
-                  ✏️ Editar
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Editar módulos desta estrutura">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar
                 </button>
               ` : `
-                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem;" title="Visualizar estrutura e preview da tabela">
-                  👁️ Visualizar
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Visualizar estrutura e preview da tabela">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Visualizar
                 </button>
               `}
               ${!isDefault ? `
-                <button type="button" class="btn btn-secondary btn-sm" onclick="app.setDefaultCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; color:var(--accent-emerald-text);" title="Definir como o Modelo Padrão Ativo para novas capacitações">
-                  ⭐ Definir como Padrão
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.setDefaultCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; color:var(--accent-emerald-text); display:inline-flex; align-items:center; gap:0.25rem;" title="Definir como o Modelo Padrão Ativo para novas capacitações">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Definir como Padrão
                 </button>
               ` : ''}
               ${(!isProtected && !isDefault) ? `
-                <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem;" title="Excluir estrutura personalizada">
-                  🗑️ Excluir
+                <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Excluir estrutura personalizada">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Excluir
                 </button>
               ` : ''}
             </div>
@@ -3437,7 +3453,7 @@ class AutoReportApp {
     const bannerEl = document.getElementById('active-template-protection-banner');
 
     if (titleEl && activeTpl) {
-      titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> <span>Estrutura Selecionada: ${activeTpl.name}</span> ${activeTpl.isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem; margin-left:0.5rem;">🔒 Modelo Padrão Protegido</span>' : ''}`;
+      titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> <span>Estrutura Selecionada: ${activeTpl.name}</span> ${activeTpl.isProtected ? '<span class="nav-badge badge-blue font-bold" style="font-size:0.75rem; margin-left:0.5rem; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Modelo Padrão Protegido</span>' : ''}`;
     }
     if (descEl && activeTpl) {
       descEl.textContent = activeTpl.description || 'Estrutura de curso cadastrada no sistema';
@@ -3449,10 +3465,10 @@ class AutoReportApp {
         bannerEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
         bannerEl.innerHTML = `
           <div style="color:var(--accent-blue-text); display:flex; align-items:center; gap:0.5rem;">
-            <span>🔒 <strong>Modelo Padrão Protegido:</strong> Este é o modelo institucional do CECATE-CO e não pode ter seus módulos alterados diretamente. Clique em "Duplicar" para criar uma cópia editável.</span>
+            <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><strong>Modelo Padrão Protegido:</strong> Este é o modelo institucional do CECATE-CO e não pode ter seus módulos alterados diretamente. Clique em "Duplicar" para criar uma cópia editável.</span>
           </div>
-          <button type="button" class="btn btn-primary btn-sm" onclick="app.duplicateCourseTemplate('${activeTpl.id}')" style="font-weight:700;">
-            📋 Duplicar e Criar Cópia Editável
+          <button type="button" class="btn btn-primary btn-sm" onclick="app.duplicateCourseTemplate('${activeTpl.id}')" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar e Criar Cópia Editável
           </button>
         `;
       } else {
@@ -3460,11 +3476,11 @@ class AutoReportApp {
         bannerEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
         bannerEl.innerHTML = `
           <div style="color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.5rem;">
-            <span>✏️ <strong>Estrutura Personalizada Editável:</strong> Você pode alterar os módulos, temáticas e cargas horárias desta estrutura livremente.</span>
+            <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg><strong>Estrutura Personalizada Editável:</strong> Você pode alterar os módulos, temáticas e cargas horárias desta estrutura livremente.</span>
           </div>
           <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-            <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700;">
-              ${this.isMasterCourseEditorOpen ? '✓ Concluir Edição' : '✏️ Editar Módulos e Temáticas'}
+            <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+              ${this.isMasterCourseEditorOpen ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluir Edição' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar Módulos e Temáticas'}
             </button>
           </div>
         `;
@@ -3475,13 +3491,13 @@ class AutoReportApp {
       if (!activeTpl.isProtected) {
         actionsEl.innerHTML = `
           <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
-            ${this.isMasterCourseEditorOpen ? '✓ Concluir Edição' : '✏️ Editar Estrutura'}
+            ${this.isMasterCourseEditorOpen ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluir Edição' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar Estrutura'}
           </button>
         `;
       } else {
         actionsEl.innerHTML = `
           <button type="button" class="btn btn-primary btn-sm" onclick="app.duplicateCourseTemplate('${activeTpl.id}')" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
-            📋 Duplicar Estrutura
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar Estrutura
           </button>
         `;
       }
