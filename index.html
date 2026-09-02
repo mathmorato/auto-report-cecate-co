@@ -1369,7 +1369,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.0.5</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.0.6</span>
         </div>
       </footer>
     </div>
@@ -1688,6 +1688,47 @@
         <button class="btn btn-secondary" onclick="app.closeConfirmSetDefaultCourseTemplateModal()">Cancelar</button>
         <button class="btn btn-primary" onclick="app.executeSetDefaultCourseTemplateConfirmed()" style="background:var(--accent-emerald); border-color:var(--accent-emerald); display:inline-flex; align-items:center; gap:0.35rem; font-weight:700;">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Definir como Padrão
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Renomear Estrutura do Curso -->
+  <div class="modal-backdrop" id="modal-rename-course-template" style="display:none;">
+    <div class="modal-dialog" style="max-width:520px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(59, 130, 246, 0.15); display:flex; align-items:center; justify-content:center; color:#3b82f6;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          </div>
+          <div>
+            <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:var(--text-primary);">Renomear Estrutura do Curso</h3>
+            <div style="font-size:0.78rem; color:var(--text-muted);">Altere o nome e a descrição da estrutura</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="app.closeRenameCourseTemplateModal()" title="Fechar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="form-rename-course-template" onsubmit="event.preventDefault(); app.saveRenameCourseTemplate();">
+          <input type="hidden" id="rename-course-tpl-id" value="">
+          
+          <div class="form-group" style="margin-bottom:1.25rem;">
+            <label class="form-label" style="font-weight:700;">Nome da Estrutura *:</label>
+            <input type="text" id="rename-course-tpl-name" class="form-control" placeholder="Ex: Modelo Regional CO 2026" required style="font-weight:600;">
+          </div>
+
+          <div class="form-group" style="margin-bottom:0.5rem;">
+            <label class="form-label" style="font-weight:700;">Descrição / Observação:</label>
+            <textarea id="rename-course-tpl-desc" class="form-control" rows="3" placeholder="Insira uma breve descrição sobre este modelo de estrutura..."></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="app.closeRenameCourseTemplateModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" onclick="app.saveRenameCourseTemplate()" style="display:inline-flex; align-items:center; gap:0.35rem; font-weight:700;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Salvar Alterações
         </button>
       </div>
     </div>

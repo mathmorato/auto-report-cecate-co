@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.5
+ * Versão: v.2.0.6
  */
 
 window.icons = {
@@ -3248,6 +3248,9 @@ class AutoReportApp {
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
               </button>
               ${!isProtected ? `
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.openRenameCourseTemplateModal('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Renomear nome e descrição desta estrutura">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Renomear
+                </button>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Editar módulos desta estrutura">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 1-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar
                 </button>
@@ -3338,6 +3341,61 @@ class AutoReportApp {
     this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
     this.showToast(`✓ Estrutura "${newTpl.name}" criada com sucesso!`, 'success');
+  }
+
+  openRenameCourseTemplateModal(templateId) {
+    if (!window.courseStructureHelper) return;
+    const tpl = window.courseStructureHelper.getTemplateById(templateId);
+    if (!tpl) return;
+
+    if (tpl.isProtected) {
+      this.showToast('O Modelo Padrão Protegido não pode ser renomeado. Duplique-o para editar.', 'warning');
+      return;
+    }
+
+    this.setVal('rename-course-tpl-id', tpl.id);
+    this.setVal('rename-course-tpl-name', tpl.name || '');
+    this.setVal('rename-course-tpl-desc', tpl.description || '');
+
+    const modal = document.getElementById('modal-rename-course-template');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+      const input = document.getElementById('rename-course-tpl-name');
+      if (input) setTimeout(() => input.focus(), 100);
+    }
+  }
+
+  closeRenameCourseTemplateModal() {
+    const modal = document.getElementById('modal-rename-course-template');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => {
+        if (!modal.classList.contains('active')) {
+          modal.style.display = 'none';
+        }
+      }, 200);
+    }
+  }
+
+  saveRenameCourseTemplate() {
+    if (!window.courseStructureHelper) return;
+    const templateId = this.getVal('rename-course-tpl-id');
+    const name = this.getVal('rename-course-tpl-name');
+    const desc = this.getVal('rename-course-tpl-desc');
+
+    if (!templateId || !name.trim()) {
+      this.showToast('Por favor, informe o nome da estrutura.', 'warning');
+      return;
+    }
+
+    const updated = window.courseStructureHelper.updateTemplateDetails(templateId, name, desc);
+    if (updated) {
+      this.closeRenameCourseTemplateModal();
+      this.renderCourseTemplatesCatalog();
+      this.renderGlobalMasterCourseStructure();
+      this.showToast(`✓ Estrutura renomeada para "${updated.name}" com sucesso!`, 'success');
+    }
   }
 
   duplicateCourseTemplate(templateId) {
@@ -3574,6 +3632,9 @@ class AutoReportApp {
             <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg><strong>Estrutura Personalizada Editável:</strong> Você pode alterar os módulos, temáticas e cargas horárias desta estrutura livremente.</span>
           </div>
           <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="app.openRenameCourseTemplateModal('${activeTpl.id}')" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Renomear nome e descrição da estrutura">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Renomear
+            </button>
             <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
               ${this.isMasterCourseEditorOpen ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluir Edição' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar Módulos e Temáticas'}
             </button>
@@ -3585,6 +3646,9 @@ class AutoReportApp {
     if (actionsEl && activeTpl) {
       if (!activeTpl.isProtected) {
         actionsEl.innerHTML = `
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.openRenameCourseTemplateModal('${activeTpl.id}')" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Renomear nome e descrição da estrutura">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Renomear
+          </button>
           <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
             ${this.isMasterCourseEditorOpen ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluir Edição' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar Estrutura'}
           </button>

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Modelo Padrão Oficial e Estrutura do Curso
- * Versão: v.2.0.5
+ * Versão: v.2.0.6
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
@@ -135,6 +135,23 @@ window.courseStructureHelper = {
     list.push(newTpl);
     this.saveTemplatesList(list);
     return newTpl;
+  },
+
+  /**
+   * Atualiza o nome e a descrição de uma estrutura
+   */
+  updateTemplateDetails(templateId, name, description) {
+    const list = this.getTemplatesList();
+    const tpl = list.find(t => t.id === templateId);
+    if (!tpl) return null;
+    if (name !== undefined && name !== null) {
+      tpl.name = name.trim() || 'Estrutura sem nome';
+    }
+    if (description !== undefined && description !== null) {
+      tpl.description = description.trim();
+    }
+    this.saveTemplatesList(list);
+    return tpl;
   },
 
   /**
