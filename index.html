@@ -928,33 +928,33 @@
                   <input type="file" id="file-input-evaluation" accept=".xlsx, .xls" style="display:none;" onchange="app.handleEvaluationFileUpload(event)">
                 </div>
 
-                <!-- Grade de Gráficos e Nuvens de Palavras -->
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:2rem;">
+                <!-- Layout em Coluna Única (1 Figura por Linha) -->
+                <div style="display:flex; flex-direction:column; gap:1.5rem; margin-top:2rem;">
                   
                   <div class="glass-card" style="padding:1.25rem;">
                     <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 3. Participação CACS vs Gestores</h4>
-                    <div style="height:250px; position:relative;">
+                    <div style="height:280px; position:relative;">
                       <canvas id="chart-fig3-canvas"></canvas>
                     </div>
                   </div>
 
                   <div class="glass-card" style="padding:1.25rem;">
                     <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 4. Avaliação Geral (Todos os Participantes)</h4>
-                    <div style="height:250px; position:relative;">
+                    <div style="height:320px; position:relative;">
                       <canvas id="chart-fig4-canvas"></canvas>
                     </div>
                   </div>
 
                   <div class="glass-card" style="padding:1.25rem;">
                     <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 5. Avaliação Conselheiros CACS</h4>
-                    <div style="height:250px; position:relative;">
+                    <div style="height:320px; position:relative;">
                       <canvas id="chart-fig5-canvas"></canvas>
                     </div>
                   </div>
 
                   <div class="glass-card" style="padding:1.25rem;">
                     <h4 style="font-size:0.9rem; margin-bottom:1rem;">Figura 6. Avaliação Gestores Municipais</h4>
-                    <div style="height:250px; position:relative;">
+                    <div style="height:320px; position:relative;">
                       <canvas id="chart-fig6-canvas"></canvas>
                     </div>
                   </div>
@@ -962,14 +962,14 @@
                   <div class="glass-card" style="padding:1.25rem;">
                     <h4 style="font-size:0.9rem; margin-bottom:0.75rem;">Figura 7. Nuvem de Palavras: Aspectos Positivos</h4>
                     <div style="display:flex; justify-content:center; background:var(--bg-input); border-radius:var(--radius-md); padding:0.5rem;">
-                      <canvas id="wordcloud-fig7-canvas" width="550" height="300" style="max-width:100%; height:auto;"></canvas>
+                      <canvas id="wordcloud-fig7-canvas" width="650" height="320" style="max-width:100%; height:auto;"></canvas>
                     </div>
                   </div>
 
                   <div class="glass-card" style="padding:1.25rem;">
                     <h4 style="font-size:0.9rem; margin-bottom:0.75rem;">Figura 8. Nuvem de Palavras: Aspectos a Melhorar</h4>
                     <div style="display:flex; justify-content:center; background:var(--bg-input); border-radius:var(--radius-md); padding:0.5rem;">
-                      <canvas id="wordcloud-fig8-canvas" width="550" height="300" style="max-width:100%; height:auto;"></canvas>
+                      <canvas id="wordcloud-fig8-canvas" width="650" height="320" style="max-width:100%; height:auto;"></canvas>
                     </div>
                   </div>
 
@@ -1429,7 +1429,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.2.6</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.2.7</span>
         </div>
       </footer>
     </div>
