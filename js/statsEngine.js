@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Tabelas Consolidadas
- * Versão: v.2.2.8
+ * Versão: v.2.2.9
  */
 
 class StatsEngine {
@@ -133,36 +133,61 @@ class StatsEngine {
         totalResponses: 0,
         averages: this.criteriaLabels.map(() => 0),
         overallMean: 0,
-        distribution: [0, 0, 0, 0, 0]
+        distribution: [0, 0, 0, 0, 0],
+        distributionPercent: [0, 0, 0, 0, 0],
+        criterionCounts: Array.from({ length: 7 }, () => [0, 0, 0, 0, 0]),
+        criterionDistributionPercent: Array.from({ length: 7 }, () => [0, 0, 0, 0, 0])
       };
     }
 
     const n = evaluations.length;
     const sums = [0, 0, 0, 0, 0, 0, 0];
-    const distribution = [0, 0, 0, 0, 0]; // Contagem de 1, 2, 3, 4, 5
+    const distribution = [0, 0, 0, 0, 0]; // Contagem total de 1, 2, 3, 4, 5
+    const criterionCounts = Array.from({ length: 7 }, () => [0, 0, 0, 0, 0]);
 
     evaluations.forEach(ev => {
       const ratings = ev.ratings || [];
       for (let i = 0; i < 7; i++) {
-        const val = ratings[i] !== undefined ? parseFloat(ratings[i]) : 5;
+        const rawVal = ratings[i];
+        if (rawVal === undefined || rawVal === null || rawVal === '') continue;
+        const val = parseFloat(rawVal);
+        if (isNaN(val) || val < 1 || val > 5) continue;
+
         sums[i] += val;
         const star = Math.min(5, Math.max(1, Math.round(val)));
         distribution[star - 1]++;
+        criterionCounts[i][star - 1]++;
       }
     });
 
-    const averages = sums.map(s => parseFloat((s / n).toFixed(2)));
-    const overallMean = parseFloat((averages.reduce((a, b) => a + b, 0) / averages.length).toFixed(2));
+    const averages = sums.map((s, i) => {
+      const validCount = criterionCounts[i].reduce((a, b) => a + b, 0);
+      return validCount > 0 ? parseFloat((s / validCount).toFixed(2)) : 0;
+    });
 
-    const totalRatingsCount = n * 7;
-    const distributionPercent = distribution.map(count => parseFloat(((count / totalRatingsCount) * 100).toFixed(1)));
+    const validAverages = averages.filter(a => a > 0);
+    const overallMean = validAverages.length > 0
+      ? parseFloat((validAverages.reduce((a, b) => a + b, 0) / validAverages.length).toFixed(2))
+      : 0;
+
+    const totalRatingsCount = distribution.reduce((a, b) => a + b, 0);
+    const distributionPercent = distribution.map(count => totalRatingsCount > 0 ? parseFloat(((count / totalRatingsCount) * 100).toFixed(1)) : 0);
+
+    // Matriz de porcentagem 7 critérios x 5 notas (1 a 5)
+    const criterionDistributionPercent = criterionCounts.map(countsRow => {
+      const rowTotal = countsRow.reduce((a, b) => a + b, 0);
+      if (rowTotal === 0) return [0, 0, 0, 0, 0];
+      return countsRow.map(cnt => parseFloat(((cnt / rowTotal) * 100).toFixed(1)));
+    });
 
     return {
       totalResponses: n,
       averages,
       overallMean,
       distribution,
-      distributionPercent
+      distributionPercent,
+      criterionCounts,
+      criterionDistributionPercent
     };
   }
 
