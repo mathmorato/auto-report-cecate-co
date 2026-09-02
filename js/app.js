@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.2.0
+ * Versão: v.2.2.1
  */
 
 window.icons = {
@@ -4845,12 +4845,6 @@ class AutoReportApp {
         <span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:var(--accent-blue-text); font-size:0.78rem;">${p.representation}</span>
       `;
 
-      const roleTd = isEditable ? `
-        <input type="text" class="form-control form-control-sm" style="font-size:0.8rem; padding:0.25rem 0.45rem; min-width:150px;" placeholder="Cargo / Função..." value="${(roleVal === '-' ? '' : roleVal).replace(/"/g, '&quot;')}" onchange="app.updateParticipantField('${p.id}', 'role', this.value)">
-      ` : `
-        <span style="color:var(--text-secondary); font-size:0.84rem;">${roleVal}</span>
-      `;
-
       return `
         <tr style="${isUnmapped ? 'background: rgba(245, 158, 11, 0.05);' : ''}">
           <td style="vertical-align:middle;"><strong>${p.name || 'Não informado'}</strong></td>
@@ -4858,7 +4852,6 @@ class AutoReportApp {
           <td style="vertical-align:middle;">${statusBadge}</td>
           <td style="vertical-align:middle;">${munTd}</td>
           <td style="vertical-align:middle;">${repTd}</td>
-          <td style="vertical-align:middle;">${roleTd}</td>
         </tr>
       `;
     };
@@ -4871,7 +4864,7 @@ class AutoReportApp {
         attContainer.innerHTML = `
           <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
             <span>Exibindo <strong>${consolidatedList.length}</strong> participantes total (Inscritos: <strong>${regList.length}</strong> | Presentes: <strong>${attList.length}</strong>):</span>
-            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e cargo ativada exclusivamente para CPFs não validados.</span>
+            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e segmento ativada exclusivamente para CPFs não validados.</span>
           </div>
           <div class="table-responsive-wrapper" style="max-height:420px;">
             <table class="report-data-table">
@@ -4882,7 +4875,6 @@ class AutoReportApp {
                   <th onclick="app.sortAttendanceTable('status')" style="cursor:pointer; user-select:none;" title="Ordenar por Status">Status de Participação ${sortIcon('status')}</th>
                   <th onclick="app.sortAttendanceTable('municipality')" style="cursor:pointer; user-select:none;" title="Ordenar por Município">Município ${sortIcon('municipality')}</th>
                   <th onclick="app.sortAttendanceTable('representation')" style="cursor:pointer; user-select:none;" title="Ordenar por Segmento">Segmento ${sortIcon('representation')}</th>
-                  <th onclick="app.sortAttendanceTable('role')" style="cursor:pointer; user-select:none;" title="Ordenar por Cargo">Cargo / Função ${sortIcon('role')}</th>
                 </tr>
               </thead>
               <tbody>
