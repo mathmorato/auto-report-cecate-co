@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.2.1.7
+ * Versão: v.2.1.8
  */
 
 class ExcelParser {
@@ -163,6 +163,13 @@ class ExcelParser {
           ibgeCode = ibgeInfo.c;
           matchedMunName = ibgeInfo.n;
         }
+      }
+
+      // Validar se é realmente um nome de município (descartar declarações de formulário)
+      const munLower = (matchedMunName || '').toLowerCase();
+      if (munLower.includes('declaro') || munLower.includes('veracidade') || munLower.includes('confirmo') || munLower.includes('prestadas') || munLower.includes('formulario') || munLower.includes('termo') || matchedMunName.length > 45) {
+        matchedMunName = '';
+        ibgeCode = '';
       }
 
       // Representação

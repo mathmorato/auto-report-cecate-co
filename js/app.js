@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.7
+ * Versão: v.2.1.8
  */
 
 window.icons = {
@@ -4373,9 +4373,47 @@ class AutoReportApp {
     }
   }
 
+  clearStep6Data(type = 'all') {
+    if (!this.currentTraining) return;
+
+    let confirmMsg = 'Deseja realmente remover todas as planilhas importadas (Inscrição e Presença) e limpar as listas de participantes e estatísticas?';
+    if (type === 'registration') {
+      confirmMsg = 'Deseja remover a Planilha de Inscrições e limpar a lista de inscritos?';
+    } else if (type === 'attendance') {
+      confirmMsg = 'Deseja remover a Planilha de Presença e limpar a lista de presentes?';
+    }
+
+    if (!confirm(confirmMsg)) return;
+
+    if (type === 'all' || type === 'registration') {
+      this.currentTraining.registrations = [];
+      const inputReg = document.getElementById('file-input-registration');
+      if (inputReg) inputReg.value = '';
+    }
+
+    if (type === 'all' || type === 'attendance') {
+      this.currentTraining.attendance = [];
+      const inputAtt = document.getElementById('file-input-attendance');
+      if (inputAtt) inputAtt.value = '';
+    }
+
+    // Reconciliar e purgar municípios inválidos
+    this.reconcileMunicipalitiesFromRegistrationAndAttendance();
+
+    this.renderAttendanceStep();
+    this.saveCurrentStepData();
+    this.showToast('✓ Arquivos e listas limpos com sucesso!', 'success');
+  }
+
   reconcileMunicipalitiesFromRegistrationAndAttendance() {
     if (!this.currentTraining) return;
     if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
+
+    // Purga proativa de entradas de municípios inválidos/declarações
+    this.currentTraining.municipalities = this.currentTraining.municipalities.filter(m => {
+      const n = (m.name || '').toLowerCase();
+      return !n.includes('declaro') && !n.includes('veracidade') && !n.includes('confirmo') && !n.includes('prestadas') && !n.includes('formulario') && !n.includes('termo') && m.name.length <= 45;
+    });
 
     const regList = this.currentTraining.registrations || [];
     const attList = this.currentTraining.attendance || [];
@@ -4415,6 +4453,11 @@ class AutoReportApp {
     const regMap = {};
     regList.forEach(reg => {
       const munName = reg.municipality || 'Não Informado';
+      const munLower = munName.toLowerCase();
+      // Filtrar textos de declaração
+      if (munLower.includes('declaro') || munLower.includes('veracidade') || munLower.includes('confirmo') || munLower.includes('prestadas') || munLower.includes('formulario') || munLower.includes('termo') || munName.length > 45) {
+        return;
+      }
       if (!regMap[munName]) {
         regMap[munName] = { cacs: 0, gestores: 0, ibgeCode: reg.ibgeCode };
       }
@@ -4426,6 +4469,11 @@ class AutoReportApp {
     const attMap = {};
     attList.forEach(att => {
       const munName = att.municipality || 'Não Informado';
+      const munLower = munName.toLowerCase();
+      // Filtrar textos de declaração
+      if (munLower.includes('declaro') || munLower.includes('veracidade') || munLower.includes('confirmo') || munLower.includes('prestadas') || munLower.includes('formulario') || munLower.includes('termo') || munName.length > 45) {
+        return;
+      }
       if (!attMap[munName]) {
         attMap[munName] = { cacs: 0, gestores: 0, ibgeCode: att.ibgeCode };
       }
@@ -4433,7 +4481,7 @@ class AutoReportApp {
       else attMap[munName].gestores++;
     });
 
-    // Unir lista de todos os municípios mencionados
+    // Unir lista de todos os municípios válidos mencionados
     const allMunNames = new Set([
       ...Object.keys(regMap),
       ...Object.keys(attMap)
@@ -4477,6 +4525,12 @@ class AutoReportApp {
           presentTotal
         });
       }
+    });
+
+    // Filtro final garantido de purga de municípios com rótulo inválido
+    this.currentTraining.municipalities = this.currentTraining.municipalities.filter(m => {
+      const n = (m.name || '').toLowerCase();
+      return !n.includes('declaro') && !n.includes('veracidade') && !n.includes('confirmo') && !n.includes('prestadas') && !n.includes('formulario') && !n.includes('termo') && m.name.length <= 45;
     });
   }
 
@@ -4524,7 +4578,10 @@ class AutoReportApp {
               <strong style="color:var(--accent-blue-text); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Planilha 1: Inscrições
               </strong>
-              <span class="nav-badge badge-blue font-bold" style="font-size:0.8rem;">${regList.length} Inscritos</span>
+              <div style="display:flex; align-items:center; gap:0.35rem;">
+                <span class="nav-badge badge-blue font-bold" style="font-size:0.8rem;">${regList.length} Inscritos</span>
+                ${regList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('registration')" style="padding:0.1rem 0.35rem; font-size:0.72rem; font-weight:700;" title="Remover planilha de inscrições">✕ Limpar</button>` : ''}
+              </div>
             </div>
             <div style="font-size:0.82rem; color:var(--text-secondary); display:flex; gap:0.75rem;">
               <span>CACS-FUNDEB: <strong>${regCacs}</strong></span>
@@ -4537,7 +4594,10 @@ class AutoReportApp {
               <strong style="color:var(--accent-emerald-text); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Planilha 2: Presença
               </strong>
-              <span class="nav-badge badge-emerald font-bold" style="font-size:0.8rem;">${attList.length} Presentes</span>
+              <div style="display:flex; align-items:center; gap:0.35rem;">
+                <span class="nav-badge badge-emerald font-bold" style="font-size:0.8rem;">${attList.length} Presentes</span>
+                ${attList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('attendance')" style="padding:0.1rem 0.35rem; font-size:0.72rem; font-weight:700;" title="Remover planilha de presença">✕ Limpar</button>` : ''}
+              </div>
             </div>
             <div style="font-size:0.82rem; color:var(--text-secondary); display:flex; gap:0.75rem;">
               <span>CACS-FUNDEB: <strong>${attCacs}</strong></span>
