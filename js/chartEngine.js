@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Gráfico de Relatório (Chart Engine)
- * Versão: v.2.2.9
+ * Versão: v.2.3.0
  */
 
 class ChartEngine {
@@ -27,20 +27,28 @@ class ChartEngine {
     if (!canvas || !window.Chart) return null;
 
     const ctx = canvas.getContext('2d');
-    const total = (presentCACS + presentGestores) || 1;
-    const percCACS = ((presentCACS / total) * 100).toFixed(1);
-    const percGest = ((presentGestores / total) * 100).toFixed(1);
+    const total = presentCACS + presentGestores;
+    const hasData = total > 0;
+
+    const percCACS = hasData ? ((presentCACS / total) * 100).toFixed(1) : '0.0';
+    const percGest = hasData ? ((presentGestores / total) * 100).toFixed(1) : '0.0';
+
+    const chartData = hasData ? [presentCACS, presentGestores] : [1];
+    const bgColors = hasData ? ['#06b6d4', '#6366f1'] : [isDark ? 'rgba(148, 163, 184, 0.2)' : 'rgba(203, 213, 225, 0.5)'];
+    const labels = hasData
+      ? [`Conselheiros CACS-FUNDEB (${presentCACS} - ${percCACS}%)`, `Gestores Municipais (${presentGestores} - ${percGest}%)`]
+      : [`Sem participantes importados (0 - 0.0%)`];
 
     this.chartInstances[canvasId] = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: [`Conselheiros CACS-FUNDEB (${presentCACS} - ${percCACS}%)`, `Gestores Municipais (${presentGestores} - ${percGest}%)`],
+        labels: labels,
         datasets: [{
-          data: [presentCACS, presentGestores],
-          backgroundColor: ['#06b6d4', '#6366f1'],
-          borderWidth: 2,
+          data: chartData,
+          backgroundColor: bgColors,
+          borderWidth: hasData ? 2 : 1,
           borderColor: isDark ? '#111827' : '#ffffff',
-          hoverOffset: 6
+          hoverOffset: hasData ? 6 : 0
         }]
       },
       options: {
@@ -56,6 +64,7 @@ class ChartEngine {
             }
           },
           tooltip: {
+            enabled: hasData,
             callbacks: {
               label: (context) => ` ${context.label}: ${context.raw} participantes`
             }
@@ -174,7 +183,8 @@ class ChartEngine {
             stacked: true,
             ticks: {
               color: isDark ? '#e2e8f0' : '#1e293b',
-              font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' }
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' },
+              crossAlign: 'start' // Alinha os rótulos do eixo Y à esquerda
             },
             grid: { display: false }
           }
