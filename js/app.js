@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.2
+ * Versão: v.2.0.3
  */
 
 window.icons = {
@@ -2639,7 +2639,16 @@ class AutoReportApp {
     const editorContainer = document.getElementById('wizard-course-modules-editor');
     const tableContainer = document.getElementById('wizard-course-table-preview');
 
-    // 1. Renderizar Editor de Módulos e Temáticas
+    // Sincronizar estado visual do editor e do botão de edição
+    if (editorContainer) {
+      editorContainer.style.display = this.isCourseEditorOpen ? 'block' : 'none';
+    }
+    const btnTextEl = document.getElementById('btn-toggle-course-editor-text');
+    if (btnTextEl) {
+      btnTextEl.textContent = this.isCourseEditorOpen ? '✓ Concluir Edição' : '✏️ Editar Estrutura';
+    }
+
+    // 1. Renderizar Formuário de Edição de Módulos e Temáticas
     if (editorContainer) {
       if (mods.length === 0) {
         editorContainer.innerHTML = `
@@ -2649,7 +2658,20 @@ class AutoReportApp {
           </div>
         `;
       } else {
-        editorContainer.innerHTML = mods.map((mod, modIdx) => {
+        const headerBar = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; padding:0.75rem 1rem; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.25); border-radius:var(--radius-md); flex-wrap:wrap; gap:0.5rem;">
+            <span style="font-weight:700; font-size:0.88rem; color:var(--accent-blue-text); display:flex; align-items:center; gap:0.4rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <span>Formulário de Edição de Módulos e Temáticas da Capacitação</span>
+            </span>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.addNewCourseModule()" style="font-weight:600;">+ Adicionar Módulo</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleCourseEditor(false)" style="font-weight:700;">✓ Concluir Edição</button>
+            </div>
+          </div>
+        `;
+
+        const cardsHtml = mods.map((mod, modIdx) => {
           const gTopics = mod.gestorTopics || [];
           const cTopics = mod.cacsTopics || [];
 
@@ -2784,6 +2806,8 @@ class AutoReportApp {
             </div>
           `;
         }).join('');
+
+        editorContainer.innerHTML = headerBar + cardsHtml;
       }
     }
 
@@ -2793,8 +2817,32 @@ class AutoReportApp {
     }
   }
 
+  toggleCourseEditor(forceState) {
+    if (forceState !== undefined) {
+      this.isCourseEditorOpen = !!forceState;
+    } else {
+      this.isCourseEditorOpen = !this.isCourseEditorOpen;
+    }
+
+    const editorContainer = document.getElementById('wizard-course-modules-editor');
+    const btnTextEl = document.getElementById('btn-toggle-course-editor-text');
+
+    if (editorContainer) {
+      editorContainer.style.display = this.isCourseEditorOpen ? 'block' : 'none';
+      if (this.isCourseEditorOpen) {
+        this.renderCourseStructureStep();
+        editorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    if (btnTextEl) {
+      btnTextEl.textContent = this.isCourseEditorOpen ? '✓ Concluir Edição' : '✏️ Editar Estrutura';
+    }
+  }
+
   addNewCourseModule() {
     if (!this.currentTraining) return;
+    this.isCourseEditorOpen = true;
     if (!this.currentTraining.courseModules) this.currentTraining.courseModules = [];
     const nextNum = this.currentTraining.courseModules.length + 1;
     const numStr = nextNum < 10 ? `0${nextNum}` : `${nextNum}`;
@@ -2818,6 +2866,7 @@ class AutoReportApp {
 
   duplicateCourseModule(modIdx) {
     if (!this.currentTraining || !window.courseStructureHelper) return;
+    this.isCourseEditorOpen = true;
     this.currentTraining.courseModules = window.courseStructureHelper.duplicateModule(this.currentTraining.courseModules, modIdx);
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
@@ -2826,6 +2875,7 @@ class AutoReportApp {
 
   deleteCourseModule(modIdx) {
     if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    this.isCourseEditorOpen = true;
     if (confirm('Deseja realmente remover este módulo da capacitação?')) {
       this.currentTraining.courseModules.splice(modIdx, 1);
       if (window.courseStructureHelper) {
@@ -2839,6 +2889,7 @@ class AutoReportApp {
 
   moveCourseModule(modIdx, direction) {
     if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    this.isCourseEditorOpen = true;
     const targetIdx = modIdx + direction;
     const mods = this.currentTraining.courseModules;
     if (targetIdx < 0 || targetIdx >= mods.length) return;
@@ -2895,6 +2946,7 @@ class AutoReportApp {
 
   addCourseTopic(modIdx, type) {
     if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    this.isCourseEditorOpen = true;
     const mod = this.currentTraining.courseModules[modIdx];
     if (!mod) return;
 
@@ -2922,6 +2974,7 @@ class AutoReportApp {
 
   removeCourseTopic(modIdx, type, topicIdx) {
     if (!this.currentTraining || !this.currentTraining.courseModules) return;
+    this.isCourseEditorOpen = true;
     const mod = this.currentTraining.courseModules[modIdx];
     if (!mod) return;
 
@@ -3409,9 +3462,11 @@ class AutoReportApp {
           <div style="color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.5rem;">
             <span>✏️ <strong>Estrutura Personalizada Editável:</strong> Você pode alterar os módulos, temáticas e cargas horárias desta estrutura livremente.</span>
           </div>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseModule()" style="font-weight:700;">
-            + Adicionar Módulo
-          </button>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700;">
+              ${this.isMasterCourseEditorOpen ? '✓ Concluir Edição' : '✏️ Editar Módulos e Temáticas'}
+            </button>
+          </div>
         `;
       }
     }
@@ -3419,8 +3474,8 @@ class AutoReportApp {
     if (actionsEl && activeTpl) {
       if (!activeTpl.isProtected) {
         actionsEl.innerHTML = `
-          <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseModule()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> + Adicionar Módulo
+          <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
+            ${this.isMasterCourseEditorOpen ? '✓ Concluir Edição' : '✏️ Editar Estrutura'}
           </button>
         `;
       } else {
@@ -3434,6 +3489,10 @@ class AutoReportApp {
 
     const editorContainer = document.getElementById('global-master-course-editor');
     const tableContainer = document.getElementById('global-master-course-table-preview');
+
+    if (editorContainer) {
+      editorContainer.style.display = (this.isMasterCourseEditorOpen && activeTpl && !activeTpl.isProtected) ? 'block' : 'none';
+    }
 
     if (editorContainer) {
       if (masterMods.length === 0) {
@@ -3587,8 +3646,18 @@ class AutoReportApp {
     }
   }
 
+  toggleMasterCourseEditor(forceState) {
+    if (forceState !== undefined) {
+      this.isMasterCourseEditorOpen = !!forceState;
+    } else {
+      this.isMasterCourseEditorOpen = !this.isMasterCourseEditorOpen;
+    }
+    this.renderGlobalMasterCourseStructure();
+  }
+
   addGlobalMasterCourseModule() {
     if (!window.courseStructureHelper) return;
+    this.isMasterCourseEditorOpen = true;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
 
