@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.2.7
+ * Versão: v.2.2.8
  */
 
 window.icons = {
@@ -4976,6 +4976,31 @@ class AutoReportApp {
     }
   }
 
+  clearEvaluationData() {
+    if (!this.currentTraining) return;
+
+    this.openConfirmModal({
+      title: 'Remover Planilha de Avaliação',
+      msg: 'Tem certeza que deseja remover a Planilha de Avaliação e limpar todos os dados de gráficos, médias e nuvens de palavras?',
+      btnText: 'Sim, Remover',
+      onConfirm: () => this.executeClearEvaluationData()
+    });
+  }
+
+  executeClearEvaluationData() {
+    if (!this.currentTraining) return;
+
+    this.currentTraining.evaluations = [];
+    const inputEval = document.getElementById('file-input-evaluation');
+    if (inputEval) inputEval.value = '';
+
+    this.renderEvaluationStep();
+    this.renderEvaluationCharts();
+    this.renderWordClouds();
+    this.saveCurrentStepData();
+    this.showToast('✓ Planilha de avaliações limpa com sucesso!', 'success');
+  }
+
   renderEvaluationStep() {
     if (!this.currentTraining || !window.statsEngine) return;
     const evals = this.currentTraining.evaluations || [];
@@ -4986,6 +5011,29 @@ class AutoReportApp {
 
     const meanEl = document.getElementById('wiz-eval-overall-mean');
     if (meanEl) meanEl.textContent = `${stats.overallMean} / 5.0`;
+
+    const statusBanner = document.getElementById('wizard-evaluation-status-banner');
+    if (statusBanner) {
+      if (evals.length === 0) {
+        statusBanner.innerHTML = '';
+      } else {
+        const cacsCount = evals.filter(e => e.representation === 'CACS-FUNDEB').length;
+        const gestCount = evals.length - cacsCount;
+        statusBanner.innerHTML = `
+          <div style="background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); padding:0.85rem 1.1rem; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-top:1rem;">
+            <div>
+              <strong style="color:var(--accent-blue-text); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Planilha de Avaliação Importada
+              </strong>
+              <div style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.2rem;">
+                Total: <strong>${evals.length}</strong> respostas (CACS-FUNDEB: <strong>${cacsCount}</strong> | Gestão Municipal: <strong>${gestCount}</strong>)
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearEvaluationData()" style="padding:0.25rem 0.55rem; font-size:0.78rem; font-weight:700;">✕ Limpar Planilha</button>
+          </div>
+        `;
+      }
+    }
   }
 
   renderEvaluationCharts() {

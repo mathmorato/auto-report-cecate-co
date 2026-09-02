@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.2.2.7
+ * Versão: v.2.2.8
  */
 
 class ExcelParser {
@@ -285,70 +285,81 @@ class ExcelParser {
       }
     });
 
-    // Mapeamento das 7 colunas de perguntas de Avaliação (Escala 1 a 5)
+    // Mapeamento preciso das 7 colunas de perguntas de Avaliação (Escala 1 a 5)
+    const criteriaKeywords = [
+      ['inscricao'],
+      ['divulgacao'],
+      ['data'],
+      ['horario'],
+      ['local'],
+      ['duracao'],
+      ['comovoceavali', 'avaliacaogeral', 'avaliacao']
+    ];
+
+    const mappedOrdered = [null, null, null, null, null, null, null];
+    const unmappedRatingCols = [];
+
     headerRow.forEach((colName, idx) => {
       if (!colName) return;
-      const clean = this.normalizeStr(String(colName));
+      const rawStr = String(colName);
+      const clean = this.normalizeStr(rawStr);
 
       const isRatingHeader = clean.includes('avaliarde1a5') ||
                              clean.includes('1significagruim') ||
-                             clean.includes('comovoceavali') ||
-                             clean.includes('avaliacaoda') ||
-                             clean.includes('avaliadoduracao') ||
-                             clean.includes('avaliadolocal') ||
-                             clean.includes('avaliadohorario') ||
-                             clean.includes('avaliadodata');
+                             clean.includes('ruim') ||
+                             clean.includes('excelente') ||
+                             clean.includes('comovoceavali');
 
       if (isRatingHeader) {
-        mapping.ratings.push({ index: idx, label: colName });
+        let placed = false;
+        for (let cIdx = 0; cIdx < criteriaKeywords.length; cIdx++) {
+          if (mappedOrdered[cIdx] !== null) continue;
+          const kws = criteriaKeywords[cIdx];
+          if (kws.some(kw => clean.includes(kw) || rawStr.toLowerCase().includes(kw))) {
+            mappedOrdered[cIdx] = { index: idx, label: colName };
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          unmappedRatingCols.push({ index: idx, label: colName });
+        }
       }
     });
 
-    // Se o cabeçalho não identificou 7 colunas, inspecionar as linhas de dados de amostra
-    if (mapping.ratings.length < 7 && sampleRows && sampleRows.length > 0) {
-      const candidates = [];
-      const nonRatingIndices = [
-        mapping.timestamp, mapping.name, mapping.cpf, mapping.email, mapping.phone,
-        mapping.municipality, mapping.representation, mapping.likedAspects, mapping.improveAspects,
-        mapping.institution, mapping.suggestions, mapping.howFound, mapping.comments
-      ];
+    // Preencher slots nulos com colunas não mapeadas na ordem que apareceram
+    for (let i = 0; i < 7; i++) {
+      if (mappedOrdered[i] === null && unmappedRatingCols.length > 0) {
+        mappedOrdered[i] = unmappedRatingCols.shift();
+      }
+    }
 
+    // Se ainda não temos 7, buscar por amostragem de dados
+    if (mappedOrdered.some(slot => slot === null) && sampleRows && sampleRows.length > 0) {
       for (let colIdx = 0; colIdx < headerRow.length; colIdx++) {
-        if (nonRatingIndices.includes(colIdx)) continue;
-
-        let isNumericRatingCol = true;
+        if (mappedOrdered.some(slot => slot && slot.index === colIdx)) continue;
+        
+        let isNumericRating = true;
         let validCount = 0;
 
         for (let r = 0; r < Math.min(15, sampleRows.length); r++) {
           const valStr = String(sampleRows[r]?.[colIdx] || '').trim();
           if (!valStr) continue;
+          const num = parseFloat(valStr.match(/^([1-5])/)?.[1] || valStr);
+          if (!isNaN(num) && num >= 1 && num <= 5) validCount++;
+          else { isNumericRating = false; break; }
+        }
 
-          const match = valStr.match(/^([1-5])/);
-          if (match) {
-            validCount++;
-          } else {
-            const num = parseFloat(valStr);
-            if (!isNaN(num) && num >= 1 && num <= 5) {
-              validCount++;
-            } else {
-              isNumericRatingCol = false;
-              break;
-            }
+        if (isNumericRating && validCount > 0) {
+          const emptySlotIdx = mappedOrdered.findIndex(slot => slot === null);
+          if (emptySlotIdx !== -1) {
+            mappedOrdered[emptySlotIdx] = { index: colIdx, label: headerRow[colIdx] || `Pergunta ${colIdx + 1}` };
           }
         }
-
-        if (isNumericRatingCol && validCount > 0) {
-          candidates.push({ index: colIdx, label: headerRow[colIdx] || `Pergunta ${colIdx + 1}` });
-        }
-      }
-
-      if (candidates.length >= 7) {
-        mapping.ratings = candidates.slice(0, 7);
-      } else if (candidates.length > 0 && mapping.ratings.length === 0) {
-        mapping.ratings = candidates;
       }
     }
 
+    mapping.ratings = mappedOrdered.filter(Boolean);
     return mapping;
   }
 
