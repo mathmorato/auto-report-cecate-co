@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.0
+ * Versão: v.2.1.1
  */
 
 window.icons = {
@@ -2832,6 +2832,33 @@ class AutoReportApp {
     if (tableContainer && window.statsEngine) {
       tableContainer.innerHTML = window.statsEngine.generateTable2Html(mods);
     }
+  }
+
+  showCourseEditorRedirectWarning() {
+    const cardEl = document.getElementById('wizard-course-redirect-warning-card');
+    if (cardEl) {
+      cardEl.style.display = 'block';
+      cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  hideCourseEditorRedirectWarning() {
+    const cardEl = document.getElementById('wizard-course-redirect-warning-card');
+    if (cardEl) {
+      cardEl.style.display = 'none';
+    }
+  }
+
+  saveAndRedirectToCourseSettings() {
+    this.saveCurrentStepData();
+    this.showToast('✓ Progresso salvo com sucesso! Redirecionando para as Configurações...', 'success');
+    this.hideCourseEditorRedirectWarning();
+    this.navigateTo('master-course-structure');
+  }
+
+  redirectWithoutSavingToCourseSettings() {
+    this.hideCourseEditorRedirectWarning();
+    this.navigateTo('master-course-structure');
   }
 
   toggleCourseEditor(forceState) {
