@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Tabelas Consolidadas
- * Versão: v.2.3.0
+ * Versão: v.2.3.1
  */
 
 class StatsEngine {

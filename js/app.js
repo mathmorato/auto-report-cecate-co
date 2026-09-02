@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.0
+ * Versão: v.2.3.1
  */
 
 window.icons = {
@@ -5042,9 +5042,15 @@ class AutoReportApp {
     const evals = this.currentTraining.evaluations || [];
     const attendance = this.currentTraining.attendance || [];
 
-    // Figura 3: Participação CACS vs Gestor (Contagem real dos dados carregados)
-    const cacsPresent = attendance.filter(a => a.representation === 'CACS-FUNDEB').length;
-    const gestPresent = attendance.filter(a => a.representation !== 'CACS-FUNDEB').length;
+    // Figura 3: Participação CACS vs Gestor (Prioriza lista de presença, fallback inteligente para avaliações)
+    let cacsPresent = attendance.filter(a => a.representation === 'CACS-FUNDEB').length;
+    let gestPresent = attendance.filter(a => a.representation !== 'CACS-FUNDEB').length;
+
+    if (cacsPresent === 0 && gestPresent === 0 && evals.length > 0) {
+      cacsPresent = evals.filter(e => e.representation === 'CACS-FUNDEB').length;
+      gestPresent = evals.length - cacsPresent;
+    }
+
     window.chartEngine.renderFig3Participation('chart-fig3-canvas', cacsPresent, gestPresent, isDark);
 
     // Figura 4: Avaliação da capacitação de todos os participantes
