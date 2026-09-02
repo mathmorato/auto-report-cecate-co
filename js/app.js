@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.2.4
+ * Versão: v.2.2.5
  */
 
 window.icons = {
@@ -4999,17 +4999,17 @@ class AutoReportApp {
     const gestPresent = attendance.filter(a => a.representation !== 'CACS-FUNDEB').length || 28;
     window.chartEngine.renderFig3Participation('chart-fig3-canvas', cacsPresent, gestPresent, isDark);
 
-    // Figura 4: Avaliação Geral (Todos os participantes)
+    // Figura 4: Avaliação da capacitação de todos os participantes
     const statsGen = window.statsEngine.calculateEvaluationStats(evals);
-    window.chartEngine.renderEvaluationBarChart('chart-fig4-canvas', statsGen.averages, 'Figura 4. Avaliação de Todos os Participantes', isDark, '#6366f1');
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig4-canvas', statsGen.criterionDistributionPercent, 'Figura 4. Avaliação da capacitação de todos os participantes.', isDark);
 
-    // Figura 5: Avaliação CACS
+    // Figura 5: Avaliação dos conselheiros CACS
     const statsCACS = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation === 'CACS-FUNDEB'));
-    window.chartEngine.renderEvaluationBarChart('chart-fig5-canvas', statsCACS.averages, 'Figura 5. Avaliação dos Conselheiros CACS', isDark, '#06b6d4');
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig5-canvas', statsCACS.criterionDistributionPercent, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', isDark);
 
-    // Figura 6: Avaliação Gestores
+    // Figura 6: Avaliação dos gestores municipais
     const statsGest = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation !== 'CACS-FUNDEB'));
-    window.chartEngine.renderEvaluationBarChart('chart-fig6-canvas', statsGest.averages, 'Figura 6. Avaliação dos Gestores Municipais', isDark, '#8b5cf6');
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig6-canvas', statsGest.criterionDistributionPercent, 'Figura 6. Avaliação da capacitação dos gestores municipais.', isDark);
   }
 
   renderWordClouds() {

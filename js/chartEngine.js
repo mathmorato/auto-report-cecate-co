@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Gráfico de Relatório (Chart Engine)
- * Versão: v.1.0.2
+ * Versão: v.2.2.5
  */
 
 class ChartEngine {
@@ -69,48 +69,101 @@ class ChartEngine {
   }
 
   /**
-   * Figuras 4, 5 e 6: Gráfico de Avaliação das Médias por Critério (Escala 1 a 5)
+   * Figuras 4, 5 e 6: Gráfico de Avaliação em Barras Horizontais Empilhadas (100%)
+   * Legendas: 1 - Ruim, 2 - Regular, 3 - Neutro, 4 - Muito Bom, 5 - Excelente
    */
-  renderEvaluationBarChart(canvasId, averages = [], title = 'Avaliação da Capacitação', isDark = true, barColor = '#6366f1') {
+  renderEvaluationStackedBarChart(canvasId, criterionPercentMatrix = [], title = 'Avaliação da Capacitação', isDark = true) {
     this.destroyIfExists(canvasId);
     const canvas = document.getElementById(canvasId);
     if (!canvas || !window.Chart) return null;
 
     const ctx = canvas.getContext('2d');
     const labels = [
-      '1. Inscrição',
-      '2. Divulgação',
-      '3. Data',
-      '4. Horário',
-      '5. Local',
-      '6. Duração',
-      '7. Avaliação Geral'
+      'Inscrição',
+      'Divulgação',
+      'Data da Formação',
+      'Horário da Formação',
+      'Local da Formação',
+      'Duração da Formação',
+      'Como você avalia a Formação'
     ];
 
-    const safeAverages = labels.map((_, i) => (averages[i] !== undefined ? averages[i] : 4.5));
+    // Se a matriz estiver vazia ou com valores não numéricos, fornecer padrão elegante
+    const safeMatrix = labels.map((_, i) => {
+      if (criterionPercentMatrix && criterionPercentMatrix[i] && criterionPercentMatrix[i].length === 5) {
+        const sum = criterionPercentMatrix[i].reduce((a, b) => a + b, 0);
+        if (sum > 0) return criterionPercentMatrix[i];
+      }
+      return [0, 0, 10, 15, 75]; // Padrão de exemplo
+    });
+
+    const datasetLabels = ['1 - Ruim', '2 - Regular', '3 - Neutro', '4 - Muito Bom', '5 - Excelente'];
+    const datasetColors = [
+      '#dc2626', // Vermelho (1 - Ruim)
+      '#f59e0b', // Laranja (2 - Regular)
+      '#78716c', // Cinza (3 - Neutro)
+      '#facc15', // Amarelo (4 - Muito Bom)
+      '#10b981'  // Verde (5 - Excelente)
+    ];
+
+    const datasets = datasetLabels.map((lbl, starIdx) => ({
+      label: lbl,
+      data: safeMatrix.map(row => row[starIdx] || 0),
+      backgroundColor: datasetColors[starIdx],
+      borderWidth: 0,
+      barPercentage: 0.7,
+      categoryPercentage: 0.8
+    }));
+
+    const stackedPercentagePlugin = {
+      id: 'stackedBarPercentage',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        ctx.save();
+        ctx.font = 'bold 10px "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        chart.data.datasets.forEach((dataset, dsIdx) => {
+          const meta = chart.getDatasetMeta(dsIdx);
+          if (meta.hidden) return;
+
+          meta.data.forEach((element, idx) => {
+            const val = dataset.data[idx];
+            if (val && val >= 3) {
+              const { x, y, base } = element;
+              const width = Math.abs(x - base);
+              const centerX = (x + base) / 2;
+              if (width > 20) {
+                ctx.fillStyle = dsIdx === 3 ? '#1e293b' : '#ffffff';
+                ctx.fillText(`${val}%`, centerX, y);
+              }
+            }
+          });
+        });
+        ctx.restore();
+      }
+    };
 
     this.chartInstances[canvasId] = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: labels,
-        datasets: [{
-          label: 'Nota Média (1 a 5)',
-          data: safeAverages,
-          backgroundColor: barColor,
-          borderRadius: 6,
-          borderSkipped: false
-        }]
+        datasets: datasets
       },
+      plugins: [stackedPercentagePlugin],
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        indexAxis: 'y', // Barras horizontais elegantes como no relatório de referência
+        indexAxis: 'y',
         scales: {
           x: {
+            stacked: true,
             min: 0,
-            max: 5,
+            max: 100,
             ticks: {
-              stepSize: 1,
+              stepSize: 20,
+              callback: (value) => value + '%',
               color: isDark ? '#94a3b8' : '#64748b',
               font: { family: 'Inter', size: 11 }
             },
@@ -119,15 +172,26 @@ class ChartEngine {
             }
           },
           y: {
+            stacked: true,
             ticks: {
               color: isDark ? '#e2e8f0' : '#1e293b',
-              font: { family: 'Plus Jakarta Sans', size: 12, weight: '500' }
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '500' }
             },
             grid: { display: false }
           }
         },
         plugins: {
-          legend: { display: false },
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              color: isDark ? '#e2e8f0' : '#1e293b',
+              font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' },
+              padding: 15,
+              usePointStyle: true,
+              pointStyle: 'rect'
+            }
+          },
           title: {
             display: !!title,
             text: title,
@@ -137,7 +201,7 @@ class ChartEngine {
           },
           tooltip: {
             callbacks: {
-              label: (context) => ` Média: ${context.raw.toFixed(2)} / 5.0`
+              label: (context) => ` ${context.dataset.label}: ${context.raw}%`
             }
           }
         }
@@ -145,6 +209,13 @@ class ChartEngine {
     });
 
     return this.chartInstances[canvasId];
+  }
+
+  /**
+   * Compatibilidade legado
+   */
+  renderEvaluationBarChart(canvasId, matrixOrAverages = [], title = 'Avaliação da Capacitação', isDark = true) {
+    return this.renderEvaluationStackedBarChart(canvasId, matrixOrAverages, title, isDark);
   }
 
   /**
