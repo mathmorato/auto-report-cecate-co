@@ -831,31 +831,37 @@
             <!-- ETAPA 6: INSCRIÇÃO & LISTA DE PRESENÇA (UPLOAD EXCEL & TABELA 4) -->
             <div class="wizard-step-panel" id="wizard-step-6">
               <div class="wizard-card">
-                <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                  <span>Etapa 6: Importação de Inscrições e Lista de Presença</span>
-                </h3>
-                <p class="wizard-card-desc">Importe as planilhas Excel (Google Forms / Excel) de <strong>Inscrições (Convocados)</strong> e de <strong>Lista de Presença (Presentes)</strong> para contabilizar Gestores e CACS-FUNDEB por município na Tabela 4.</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                  <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem; margin:0;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    <span>Etapa 6: Importação de Inscrições e Lista de Presença</span>
+                  </h3>
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.reprocessDataStep6()" style="padding:0.35rem 0.75rem; font-weight:700; font-size:0.82rem; display:inline-flex; align-items:center; gap:0.35rem; color:var(--accent-amber-text);" title="Recalcular totais de inscritos e presentes por município">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Reprocessar Dados
+                  </button>
+                </div>
+                <p class="wizard-card-desc">Importe ou arraste as planilhas Excel (Google Forms / Excel) de <strong>Inscrições (Convocados)</strong> e de <strong>Lista de Presença (Presentes)</strong> para contabilizar Gestores e CACS-FUNDEB por município na Tabela 4.</p>
 
                 <!-- Grid de 2 Dropzones de Upload -->
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; margin-bottom:1.5rem;">
                   <!-- Dropzone 1: Planilha de Inscrição -->
-                  <div class="upload-dropzone" onclick="document.getElementById('file-input-registration').click()" style="padding:1.25rem 1rem;">
+                  <div class="upload-dropzone" id="dropzone-registration" onclick="document.getElementById('file-input-registration').click()" style="padding:1.25rem 1rem;">
                     <div class="upload-dropzone-icon" style="color:var(--accent-blue-text);">
                       <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     </div>
                     <div class="upload-dropzone-text" style="font-size:0.92rem;">1. Planilha de Inscrição (.xlsx)</div>
-                    <div class="upload-dropzone-hint">Respostas do Google Forms de Inscrições</div>
+                    <div class="upload-dropzone-hint">Clique ou arraste o arquivo .xlsx de Inscrições aqui</div>
                     <input type="file" id="file-input-registration" accept=".xlsx, .xls" style="display:none;" onchange="app.handleRegistrationFileUpload(event)">
                   </div>
 
                   <!-- Dropzone 2: Planilha de Lista de Presença -->
-                  <div class="upload-dropzone" onclick="document.getElementById('file-input-attendance').click()" style="padding:1.25rem 1rem;">
+                  <div class="upload-dropzone" id="dropzone-attendance" onclick="document.getElementById('file-input-attendance').click()" style="padding:1.25rem 1rem;">
                     <div class="upload-dropzone-icon" style="color:var(--accent-emerald-text);">
                       <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     </div>
                     <div class="upload-dropzone-text" style="font-size:0.92rem;">2. Planilha de Presença (.xlsx)</div>
-                    <div class="upload-dropzone-hint">Respostas do Google Forms de Presença</div>
+                    <div class="upload-dropzone-hint">Clique ou arraste o arquivo .xlsx de Presença aqui</div>
                     <input type="file" id="file-input-attendance" accept=".xlsx, .xls" style="display:none;" onchange="app.handleAttendanceFileUpload(event)">
                   </div>
                 </div>
@@ -1425,7 +1431,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.1.5</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.1.6</span>
         </div>
       </footer>
     </div>

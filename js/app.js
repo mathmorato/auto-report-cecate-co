@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.5
+ * Versão: v.2.1.6
  */
 
 window.icons = {
@@ -60,6 +60,7 @@ class AutoReportApp {
 
     // 4. Vincular Eventos Globais
     this.bindEvents();
+    this.initDragAndDropHandlers();
 
     // 4. Carregar lista de capacitações e atualizar Dashboard
     await this.refreshTrainingsList();
@@ -4232,6 +4233,88 @@ class AutoReportApp {
   /* ==========================================================================
      ETAPA 6: INSCRIÇÃO & LISTA DE PRESENÇA (UPLOAD & TABELA 4)
      ========================================================================== */
+  reprocessDataStep6() {
+    if (!this.currentTraining) return;
+
+    const regList = this.currentTraining.registrations || [];
+    const attList = this.currentTraining.attendance || [];
+
+    if (regList.length === 0 && attList.length === 0) {
+      this.showToast('Nenhuma planilha de inscrição ou presença carregada para reprocessar.', 'warning');
+      return;
+    }
+
+    this.showToast('Reprocessando e recalculando totais de inscritos e presentes...');
+
+    // Recalcular a reconciliação entre inscritos e presentes
+    this.reconcileMunicipalitiesFromRegistrationAndAttendance();
+
+    // Re-renderizar Etapa 6
+    this.renderAttendanceStep();
+    this.saveCurrentStepData();
+
+    this.showToast(`✓ Reprocessamento concluído! (${regList.length} inscritos | ${attList.length} presentes recalculados)`, 'success');
+  }
+
+  initDragAndDropHandlers() {
+    // Configurar manipuladores de arrastar e soltar (Drag & Drop) para todas as zonas de upload
+    const dropzones = document.querySelectorAll('.upload-dropzone');
+    dropzones.forEach(dropzone => {
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }, false);
+      });
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+          dropzone.classList.add('dragover');
+          dropzone.style.borderColor = 'var(--accent-blue)';
+          dropzone.style.background = 'rgba(59, 130, 246, 0.15)';
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+          dropzone.classList.remove('dragover');
+          dropzone.style.borderColor = '';
+          dropzone.style.background = '';
+        }, false);
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (!files || files.length === 0) return;
+
+        const file = files[0];
+        const input = dropzone.querySelector('input[type="file"]');
+
+        if (input) {
+          try {
+            const container = new DataTransfer();
+            container.items.add(file);
+            input.files = container.files;
+
+            const event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
+          } catch (err) {
+            console.warn('Fallback manual para leitura de arquivo via drag & drop:', err);
+            // Fallback caso DataTransfer não seja suportado em browsers legados
+            if (input.id === 'file-input-registration') {
+              this.handleRegistrationFileUpload({ target: { files: [file] } });
+            } else if (input.id === 'file-input-attendance') {
+              this.handleAttendanceFileUpload({ target: { files: [file] } });
+            } else if (input.id === 'file-input-evaluation') {
+              this.handleEvaluationFileUpload({ target: { files: [file] } });
+            }
+          }
+        }
+      }, false);
+    });
+  }
+
   async handleRegistrationFileUpload(event) {
     const file = event.target.files?.[0];
     if (!file || !window.excelParser) return;
