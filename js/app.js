@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.4
+ * Versão: v.2.0.5
  */
 
 window.icons = {
@@ -3237,7 +3237,10 @@ class AutoReportApp {
             <div style="font-size:0.78rem; color:var(--text-secondary); line-height:1.3;">${t.description || 'Modelo de estrutura de curso'}</div>
           </td>
           <td style="text-align:center; vertical-align:middle; font-weight:700;">
-            ${modsCount} Módulos • ${totalH.toFixed(1).replace('.', ',')} h Total
+            ${modsCount} Módulos
+          </td>
+          <td style="text-align:center; vertical-align:middle; font-weight:700; color:var(--accent-blue-text);">
+            ${totalH.toFixed(1).replace('.', ',')} h Total
           </td>
           <td style="text-align:center; vertical-align:middle;" onclick="event.stopPropagation();">
             <div style="display:flex; justify-content:center; gap:0.35rem; flex-wrap:wrap;">
@@ -3246,7 +3249,7 @@ class AutoReportApp {
               </button>
               ${!isProtected ? `
                 <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Editar módulos desta estrutura">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 1-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar
                 </button>
               ` : `
                 <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Visualizar estrutura e preview da tabela">
@@ -3274,10 +3277,11 @@ class AutoReportApp {
         <table class="report-data-table">
           <thead>
             <tr>
-              <th style="width: 140px; text-align:center; vertical-align:middle;">Status</th>
-              <th style="text-align:center; vertical-align:middle;">Nome da Estrutura</th>
-              <th style="width: 180px; text-align:center; vertical-align:middle;">Módulos & Carga Horária</th>
-              <th style="width: 280px; text-align:center; vertical-align:middle;">Ações</th>
+              <th style="width: 130px; text-align:center; vertical-align:middle;">Status</th>
+              <th style="text-align:left; vertical-align:middle;">Nome da Estrutura</th>
+              <th style="width: 110px; text-align:center; vertical-align:middle;">Módulos</th>
+              <th style="width: 130px; text-align:center; vertical-align:middle;">Carga Horária</th>
+              <th style="width: 270px; text-align:center; vertical-align:middle;">Ações</th>
             </tr>
           </thead>
           <tbody>
