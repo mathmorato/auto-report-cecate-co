@@ -1369,7 +1369,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.0.2</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.0.4</span>
         </div>
       </footer>
     </div>
@@ -1608,6 +1608,86 @@
         <button class="btn btn-secondary" onclick="app.closeConfirmDeleteMemberModal()">Cancelar</button>
         <button class="btn btn-danger" id="modal-delete-member-confirm-btn" onclick="app.executeDeleteMemberConfirmed()" style="display:inline-flex; align-items:center; gap:0.35rem;">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmação de Exclusão de Estrutura do Curso -->
+  <div class="modal-backdrop" id="modal-confirm-delete-course-template" style="display:none;">
+    <div class="modal-dialog" style="max-width:500px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(239, 68, 68, 0.15); display:flex; align-items:center; justify-content:center; color:#ef4444;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </div>
+          <div>
+            <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:var(--text-primary);">Excluir Estrutura do Curso</h3>
+            <div style="font-size:0.78rem; color:var(--text-muted);">Confirmação de exclusão</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="app.closeConfirmDeleteCourseTemplateModal()" title="Fechar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="color:var(--text-secondary); font-size:0.92rem; line-height:1.5; margin-bottom:1.25rem;">
+          Deseja realmente excluir a estrutura personalizada abaixo? Esta ação não pode ser desfeita.
+        </p>
+
+        <div style="background:var(--bg-input); border:1px solid var(--border-color); border-left:4px solid #ef4444; border-radius:var(--radius-md); padding:1rem; margin-bottom:1rem; display:flex; flex-direction:column; gap:0.4rem;">
+          <div style="font-weight:800; font-size:1.05rem; color:var(--text-primary);" id="modal-delete-tpl-name">
+            --
+          </div>
+          <div style="font-size:0.85rem; color:var(--text-secondary);" id="modal-delete-tpl-info">
+            --
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.closeConfirmDeleteCourseTemplateModal()">Cancelar</button>
+        <button class="btn btn-danger" onclick="app.executeDeleteCourseTemplateConfirmed()" style="display:inline-flex; align-items:center; gap:0.35rem; font-weight:700;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Excluir Estrutura
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmação de Definição de Modelo Padrão -->
+  <div class="modal-backdrop" id="modal-confirm-set-default-course-template" style="display:none;">
+    <div class="modal-dialog" style="max-width:500px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(16, 185, 129, 0.15); display:flex; align-items:center; justify-content:center; color:#10b981;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <div>
+            <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:var(--text-primary);">Definir Modelo Padrão Ativo</h3>
+            <div style="font-size:0.78rem; color:var(--text-muted);">Confirmação de modelo institucional</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="app.closeConfirmSetDefaultCourseTemplateModal()" title="Fechar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="color:var(--text-secondary); font-size:0.92rem; line-height:1.5; margin-bottom:1.25rem;">
+          Deseja definir esta estrutura como o <strong>Modelo Padrão Ativo</strong>? Ela será utilizada como base automática para todas as novas capacitações criadas.
+        </p>
+
+        <div style="background:var(--bg-input); border:1px solid var(--border-color); border-left:4px solid #10b981; border-radius:var(--radius-md); padding:1rem; margin-bottom:1rem; display:flex; flex-direction:column; gap:0.4rem;">
+          <div style="font-weight:800; font-size:1.05rem; color:var(--text-primary);" id="modal-set-default-tpl-name">
+            --
+          </div>
+          <div style="font-size:0.85rem; color:var(--text-secondary);" id="modal-set-default-tpl-info">
+            --
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.closeConfirmSetDefaultCourseTemplateModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="app.executeSetDefaultCourseTemplateConfirmed()" style="background:var(--accent-emerald); border-color:var(--accent-emerald); display:inline-flex; align-items:center; gap:0.35rem; font-weight:700;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Definir como Padrão
         </button>
       </div>
     </div>

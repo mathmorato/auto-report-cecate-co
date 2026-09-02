@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.3
+ * Versão: v.2.0.4
  */
 
 window.icons = {
@@ -3254,12 +3254,12 @@ class AutoReportApp {
                 </button>
               `}
               ${!isDefault ? `
-                <button type="button" class="btn btn-secondary btn-sm" onclick="app.setDefaultCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; color:var(--accent-emerald-text); display:inline-flex; align-items:center; gap:0.25rem;" title="Definir como o Modelo Padrão Ativo para novas capacitações">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.confirmSetDefaultCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; color:var(--accent-emerald-text); display:inline-flex; align-items:center; gap:0.25rem;" title="Definir como o Modelo Padrão Ativo para novas capacitações">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Definir como Padrão
                 </button>
               ` : ''}
               ${(!isProtected && !isDefault) ? `
-                <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Excluir estrutura personalizada">
+                <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmDeleteCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Excluir estrutura personalizada">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Excluir
                 </button>
               ` : ''}
@@ -3347,33 +3347,124 @@ class AutoReportApp {
     }
   }
 
-  setDefaultCourseTemplate(templateId) {
+  confirmSetDefaultCourseTemplate(templateId) {
     if (!window.courseStructureHelper) return;
     const tpl = window.courseStructureHelper.getTemplateById(templateId);
     if (!tpl) return;
-    if (confirm(`Deseja definir "${tpl.name}" como o Modelo Padrão Ativo?\n\nEsta estrutura será utilizada como base para todas as novas capacitações criadas.`)) {
-      window.courseStructureHelper.setDefaultTemplate(templateId);
-      this.renderCourseTemplatesCatalog();
-      this.renderGlobalMasterCourseStructure();
-      this.showToast(`✓ "${tpl.name}" definido como Modelo Padrão Ativo!`, 'success');
+
+    this.templateToSetDefaultId = templateId;
+
+    const nameEl = document.getElementById('modal-set-default-tpl-name');
+    const infoEl = document.getElementById('modal-set-default-tpl-info');
+
+    if (nameEl) nameEl.textContent = tpl.name || 'Estrutura do Curso';
+    if (infoEl) {
+      let totalH = 0;
+      (tpl.modules || []).forEach(m => {
+        (m.gestorTopics || []).forEach(gt => { totalH += parseFloat(gt.hours) || 0; });
+      });
+      infoEl.textContent = `${tpl.modules ? tpl.modules.length : 0} Módulos • ${totalH.toFixed(1).replace('.', ',')} h Total`;
+    }
+
+    const modal = document.getElementById('modal-confirm-set-default-course-template');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
     }
   }
 
-  deleteCourseTemplate(templateId) {
+  closeConfirmSetDefaultCourseTemplateModal() {
+    this.templateToSetDefaultId = null;
+    const modal = document.getElementById('modal-confirm-set-default-course-template');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => {
+        if (!modal.classList.contains('active')) {
+          modal.style.display = 'none';
+        }
+      }, 200);
+    }
+  }
+
+  executeSetDefaultCourseTemplateConfirmed() {
+    if (!this.templateToSetDefaultId || !window.courseStructureHelper) return;
+    const templateId = this.templateToSetDefaultId;
+    const tpl = window.courseStructureHelper.getTemplateById(templateId);
+
+    window.courseStructureHelper.setDefaultTemplate(templateId);
+    this.renderCourseTemplatesCatalog();
+    this.renderGlobalMasterCourseStructure();
+    this.showToast(`✓ "${tpl ? tpl.name : 'Estrutura'}" definido como Modelo Padrão Ativo!`, 'success');
+    this.closeConfirmSetDefaultCourseTemplateModal();
+  }
+
+  setDefaultCourseTemplate(templateId) {
+    this.confirmSetDefaultCourseTemplate(templateId);
+  }
+
+  confirmDeleteCourseTemplate(templateId) {
     if (!window.courseStructureHelper) return;
     const tpl = window.courseStructureHelper.getTemplateById(templateId);
     if (!tpl) return;
-    if (confirm(`Deseja realmente excluir a estrutura "${tpl.name}"?`)) {
-      const ok = window.courseStructureHelper.deleteTemplate(templateId);
-      if (ok) {
-        this.activeTemplateId = 'template_default_official';
-        this.renderCourseTemplatesCatalog();
-        this.renderGlobalMasterCourseStructure();
-        this.showToast(`Estrutura "${tpl.name}" excluída.`, 'info');
-      } else {
-        this.showToast('Não é possível excluir o Modelo Padrão protegido.', 'error');
-      }
+    if (tpl.isProtected) {
+      this.showToast('Não é possível excluir o Modelo Padrão protegido.', 'error');
+      return;
     }
+
+    this.templateToDeleteId = templateId;
+
+    const nameEl = document.getElementById('modal-delete-tpl-name');
+    const infoEl = document.getElementById('modal-delete-tpl-info');
+
+    if (nameEl) nameEl.textContent = tpl.name || 'Estrutura do Curso';
+    if (infoEl) {
+      let totalH = 0;
+      (tpl.modules || []).forEach(m => {
+        (m.gestorTopics || []).forEach(gt => { totalH += parseFloat(gt.hours) || 0; });
+      });
+      infoEl.textContent = `${tpl.modules ? tpl.modules.length : 0} Módulos • ${totalH.toFixed(1).replace('.', ',')} h Total`;
+    }
+
+    const modal = document.getElementById('modal-confirm-delete-course-template');
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+    }
+  }
+
+  closeConfirmDeleteCourseTemplateModal() {
+    this.templateToDeleteId = null;
+    const modal = document.getElementById('modal-confirm-delete-course-template');
+    if (modal) {
+      modal.classList.remove('active');
+      setTimeout(() => {
+        if (!modal.classList.contains('active')) {
+          modal.style.display = 'none';
+        }
+      }, 200);
+    }
+  }
+
+  executeDeleteCourseTemplateConfirmed() {
+    if (!this.templateToDeleteId || !window.courseStructureHelper) return;
+    const templateId = this.templateToDeleteId;
+    const tpl = window.courseStructureHelper.getTemplateById(templateId);
+    const tplName = tpl ? tpl.name : 'Estrutura';
+
+    const ok = window.courseStructureHelper.deleteTemplate(templateId);
+    if (ok) {
+      this.activeTemplateId = 'template_default_official';
+      this.renderCourseTemplatesCatalog();
+      this.renderGlobalMasterCourseStructure();
+      this.showToast(`Estrutura "${tplName}" excluída.`, 'info');
+    } else {
+      this.showToast('Não é possível excluir a estrutura.', 'error');
+    }
+    this.closeConfirmDeleteCourseTemplateModal();
+  }
+
+  deleteCourseTemplate(templateId) {
+    this.confirmDeleteCourseTemplate(templateId);
   }
 
   openSelectCourseTemplateModal() {
