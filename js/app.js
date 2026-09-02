@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.8
+ * Versão: v.2.1.9
  */
 
 window.icons = {
@@ -4553,6 +4553,121 @@ class AutoReportApp {
     }
   }
 
+  getInvitedMunicipalityOptions() {
+    const list = this.currentTraining?.municipalities || [];
+    const names = new Set();
+
+    list.forEach(m => {
+      if (m.name) {
+        const n = m.name.trim();
+        if (n && n.length <= 45 && !n.toLowerCase().includes('declaro')) {
+          names.add(n);
+        }
+      }
+    });
+
+    if (window.IBGE_DATA && Array.isArray(window.IBGE_DATA)) {
+      window.IBGE_DATA.forEach(item => {
+        if (item.n) names.add(item.n);
+      });
+    }
+
+    return Array.from(names).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }
+
+  sortAttendanceTable(colName) {
+    if (this.attendanceSortCol === colName) {
+      this.attendanceSortDir = this.attendanceSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.attendanceSortCol = colName;
+      this.attendanceSortDir = 'asc';
+    }
+    this.renderAttendanceStep();
+  }
+
+  sortParticipantsList(list = [], col = 'name', dir = 'asc') {
+    const sorted = [...list].sort((a, b) => {
+      let valA = '';
+      let valB = '';
+
+      if (col === 'name') {
+        valA = a.name || '';
+        valB = b.name || '';
+      } else if (col === 'cpf') {
+        valA = a.cpf || '';
+        valB = b.cpf || '';
+      } else if (col === 'municipality') {
+        valA = a.municipality || 'zzzz';
+        valB = b.municipality || 'zzzz';
+      } else if (col === 'representation') {
+        valA = a.representation || '';
+        valB = b.representation || '';
+      } else if (col === 'role') {
+        valA = a.roleGestao || a.roleCACS || '';
+        valB = b.roleGestao || b.roleCACS || '';
+      }
+
+      return valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' });
+    });
+
+    if (dir === 'desc') sorted.reverse();
+    return sorted;
+  }
+
+  updateParticipantField(listType, participantId, field, value) {
+    if (!this.currentTraining) return;
+
+    const list = listType === 'registration'
+      ? (this.currentTraining.registrations || [])
+      : (this.currentTraining.attendance || []);
+
+    const participant = list.find(p => p.id === participantId);
+    if (!participant) return;
+
+    const val = (value || '').trim();
+
+    if (field === 'municipality') {
+      participant.municipality = val;
+      if (val && window.excelParser) {
+        const normKey = window.excelParser.normalizeStr(val);
+        const ibgeInfo = window.excelParser.ibgeLookup.get(normKey);
+        if (ibgeInfo) participant.ibgeCode = ibgeInfo.c;
+      }
+    } else if (field === 'representation') {
+      participant.representation = val;
+    } else if (field === 'role') {
+      if (participant.representation === 'CACS-FUNDEB') {
+        participant.roleCACS = val;
+      } else {
+        participant.roleGestao = val;
+      }
+    }
+
+    // Sincronizar alteração entre inscrição e presença se houver CPF conciliado
+    if (participant.cpf) {
+      const cleanCpf = participant.cpf.replace(/\D/g, '');
+      const otherList = listType === 'registration'
+        ? (this.currentTraining.attendance || [])
+        : (this.currentTraining.registrations || []);
+
+      const matchedOther = otherList.find(o => o.cpf && o.cpf.replace(/\D/g, '') === cleanCpf);
+      if (matchedOther) {
+        if (field === 'municipality') matchedOther.municipality = val;
+        if (field === 'representation') matchedOther.representation = val;
+        if (field === 'role') {
+          if (matchedOther.representation === 'CACS-FUNDEB') matchedOther.roleCACS = val;
+          else matchedOther.roleGestao = val;
+        }
+      }
+    }
+
+    // Recalcular totais e atualizar
+    this.reconcileMunicipalitiesFromRegistrationAndAttendance();
+    this.renderAttendanceStep();
+    this.saveCurrentStepData();
+    this.showToast(`✓ Participante "${participant.name}" atualizado com sucesso!`, 'success');
+  }
+
   renderAttendanceStep() {
     const statusBanner = document.getElementById('wizard-attendance-status-banner');
     const regContainer = document.getElementById('wizard-registration-table-container');
@@ -4608,36 +4723,70 @@ class AutoReportApp {
       `;
     }
 
+    const sortCol = this.attendanceSortCol || 'name';
+    const sortDir = this.attendanceSortDir || 'asc';
+    const sortIcon = (col) => {
+      if (sortCol === col) return sortDir === 'asc' ? ' ▲' : ' ▼';
+      return ' ↕';
+    };
+
+    const invitedMunOptions = this.getInvitedMunicipalityOptions();
+
+    // Helper de renderização de linha de participante
+    const renderParticipantRow = (p, listType) => {
+      const isUnmapped = !p.municipality;
+      const roleVal = p.roleGestao || p.roleCACS || '';
+
+      return `
+        <tr style="${isUnmapped ? 'background: rgba(245, 158, 11, 0.05);' : ''}">
+          <td style="vertical-align:middle;">
+            <strong>${p.name || 'Não informado'}</strong>
+            ${p.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.35rem; padding:0.1rem 0.35rem;">✓ CPF Conciliado</span>' : ''}
+          </td>
+          <td style="font-family:monospace; vertical-align:middle;">${p.cpf || '-'}</td>
+          <td style="vertical-align:middle;">
+            <select class="form-control form-control-sm" style="font-size:0.82rem; padding:0.25rem 0.45rem; min-width:145px; ${isUnmapped ? 'border-color:var(--accent-amber); background:rgba(245, 158, 11, 0.12); font-weight:700; color:var(--accent-amber-text);' : ''}" onchange="app.updateParticipantField('${listType}', '${p.id}', 'municipality', this.value)">
+              <option value="">-- Selecionar Município --</option>
+              ${invitedMunOptions.map(m => `<option value="${m}" ${p.municipality && p.municipality.toLowerCase() === m.toLowerCase() ? 'selected' : ''}>${m}</option>`).join('')}
+            </select>
+          </td>
+          <td style="vertical-align:middle;">
+            <select class="form-control form-control-sm" style="font-size:0.78rem; padding:0.2rem 0.4rem; min-width:130px;" onchange="app.updateParticipantField('${listType}', '${p.id}', 'representation', this.value)">
+              <option value="Gestão municipal" ${p.representation === 'Gestão municipal' ? 'selected' : ''}>Gestão municipal</option>
+              <option value="CACS-FUNDEB" ${p.representation === 'CACS-FUNDEB' ? 'selected' : ''}>CACS-FUNDEB</option>
+            </select>
+          </td>
+          <td style="vertical-align:middle;">
+            <input type="text" class="form-control form-control-sm" style="font-size:0.8rem; padding:0.25rem 0.45rem; min-width:150px;" placeholder="Cargo / Função..." value="${roleVal.replace(/"/g, '&quot;')}" onchange="app.updateParticipantField('${listType}', '${p.id}', 'role', this.value)">
+          </td>
+        </tr>
+      `;
+    };
+
     // Renderizar Tabela de Inscritos
     if (regContainer) {
       if (regList.length === 0) {
         regContainer.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma planilha de inscrições importada ainda.</p>`;
       } else {
+        const sortedReg = this.sortParticipantsList(regList, sortCol, sortDir);
         regContainer.innerHTML = `
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted);">
-            Exibindo ${regList.length} participantes inscritos (Gestão: ${regGestores} | CACS: ${regCacs}):
+          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+            <span>Exibindo <strong>${regList.length}</strong> inscritos (Gestão: <strong>${regGestores}</strong> | CACS: <strong>${regCacs}</strong>):</span>
+            <span style="font-size:0.78rem; color:var(--text-secondary);">Clique nos cabeçalhos para ordenar. Selecione o município para participantes não identificados.</span>
           </div>
-          <div class="table-responsive-wrapper" style="max-height:350px;">
+          <div class="table-responsive-wrapper" style="max-height:380px;">
             <table class="report-data-table">
               <thead>
                 <tr>
-                  <th>Nome Completo</th>
-                  <th>CPF</th>
-                  <th>Município</th>
-                  <th>Segmento</th>
-                  <th>Cargo / Função</th>
+                  <th onclick="app.sortAttendanceTable('name')" style="cursor:pointer; user-select:none;" title="Ordenar por Nome">Nome Completo ${sortIcon('name')}</th>
+                  <th onclick="app.sortAttendanceTable('cpf')" style="cursor:pointer; user-select:none;" title="Ordenar por CPF">CPF ${sortIcon('cpf')}</th>
+                  <th onclick="app.sortAttendanceTable('municipality')" style="cursor:pointer; user-select:none;" title="Ordenar por Município">Município (Seleção Manual) ${sortIcon('municipality')}</th>
+                  <th onclick="app.sortAttendanceTable('representation')" style="cursor:pointer; user-select:none;" title="Ordenar por Segmento">Segmento ${sortIcon('representation')}</th>
+                  <th onclick="app.sortAttendanceTable('role')" style="cursor:pointer; user-select:none;" title="Ordenar por Cargo">Cargo / Função ${sortIcon('role')}</th>
                 </tr>
               </thead>
               <tbody>
-                ${regList.slice(0, 100).map(r => `
-                  <tr>
-                    <td><strong>${r.name}</strong></td>
-                    <td style="font-family:monospace;">${r.cpf || '-'}</td>
-                    <td>${r.municipality || '-'}</td>
-                    <td><span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:var(--accent-blue-text);">${r.representation}</span></td>
-                    <td>${r.roleGestao || r.roleCACS || '-'}</td>
-                  </tr>
-                `).join('')}
+                ${sortedReg.map(r => renderParticipantRow(r, 'registration')).join('')}
               </tbody>
             </table>
           </div>
@@ -4650,31 +4799,25 @@ class AutoReportApp {
       if (attList.length === 0) {
         attContainer.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma lista de presença importada ainda. Arraste ou selecione a planilha acima.</p>`;
       } else {
+        const sortedAtt = this.sortParticipantsList(attList, sortCol, sortDir);
         attContainer.innerHTML = `
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted);">
-            Exibindo ${attList.length} participantes presentes (Gestão: ${attGestores} | CACS: ${attCacs}):
+          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+            <span>Exibindo <strong>${attList.length}</strong> presentes (Gestão: <strong>${attGestores}</strong> | CACS: <strong>${attCacs}</strong>):</span>
+            <span style="font-size:0.78rem; color:var(--text-secondary);">Clique nos cabeçalhos para ordenar. Selecione o município para participantes não identificados.</span>
           </div>
-          <div class="table-responsive-wrapper" style="max-height:350px;">
+          <div class="table-responsive-wrapper" style="max-height:380px;">
             <table class="report-data-table">
               <thead>
                 <tr>
-                  <th>Nome Completo</th>
-                  <th>CPF</th>
-                  <th>Município</th>
-                  <th>Segmento</th>
-                  <th>Cargo / Função</th>
+                  <th onclick="app.sortAttendanceTable('name')" style="cursor:pointer; user-select:none;" title="Ordenar por Nome">Nome Completo ${sortIcon('name')}</th>
+                  <th onclick="app.sortAttendanceTable('cpf')" style="cursor:pointer; user-select:none;" title="Ordenar por CPF">CPF ${sortIcon('cpf')}</th>
+                  <th onclick="app.sortAttendanceTable('municipality')" style="cursor:pointer; user-select:none;" title="Ordenar por Município">Município (Seleção Manual) ${sortIcon('municipality')}</th>
+                  <th onclick="app.sortAttendanceTable('representation')" style="cursor:pointer; user-select:none;" title="Ordenar por Segmento">Segmento ${sortIcon('representation')}</th>
+                  <th onclick="app.sortAttendanceTable('role')" style="cursor:pointer; user-select:none;" title="Ordenar por Cargo">Cargo / Função ${sortIcon('role')}</th>
                 </tr>
               </thead>
               <tbody>
-                ${attList.slice(0, 100).map(a => `
-                  <tr>
-                    <td><strong>${a.name}</strong> ${a.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.35rem; padding:0.1rem 0.35rem;">✓ CPF Conciliado</span>' : ''}</td>
-                    <td style="font-family:monospace;">${a.cpf || '-'}</td>
-                    <td>${a.municipality || '-'}</td>
-                    <td><span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:var(--accent-emerald-text);">${a.representation}</span></td>
-                    <td>${a.roleGestao || a.roleCACS || '-'}</td>
-                  </tr>
-                `).join('')}
+                ${sortedAtt.map(a => renderParticipantRow(a, 'attendance')).join('')}
               </tbody>
             </table>
           </div>
