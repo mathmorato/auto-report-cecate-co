@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.3
+ * Versão: v.2.3.4
  */
 
 window.icons = {
@@ -5438,8 +5438,22 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     ETAPA 9: APÊNDICES I & II
+     ETAPA 9: APÊNDICES I & II & DRAG AND DROP
      ========================================================================== */
+  async handleAppendixDrop(type, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget && event.currentTarget.classList) {
+      event.currentTarget.classList.remove('dragover');
+    }
+
+    const files = event.dataTransfer?.files;
+    if (!files || files.length === 0 || !this.currentTraining) return;
+
+    const mockEvent = { target: { files: files } };
+    await this.handleAppendixUpload(type, mockEvent);
+  }
+
   async handleAppendixUpload(type, event) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -5465,6 +5479,28 @@ class AutoReportApp {
     this.showToast(`✓ Documento anexado com sucesso!`, 'success');
   }
 
+  confirmRemoveAppendix(docId) {
+    const doc = (this.currentTraining.media || []).find(m => m.id === docId);
+    const fileName = doc?.fileName || 'documento';
+
+    this.openConfirmModal({
+      title: 'Remover Documento de Apêndice',
+      msg: `Tem certeza que deseja remover o documento "${fileName}"?`,
+      btnText: 'Sim, Remover',
+      onConfirm: () => this.executeRemoveAppendix(docId)
+    });
+  }
+
+  executeRemoveAppendix(docId) {
+    if (!this.currentTraining) return;
+    if (!this.currentTraining.media) this.currentTraining.media = [];
+
+    this.currentTraining.media = this.currentTraining.media.filter(m => m.id !== docId);
+    this.renderAppendicesStep();
+    this.saveCurrentStepData();
+    this.showToast('✓ Documento removido com sucesso!', 'success');
+  }
+
   renderAppendicesStep() {
     const fndeContainer = document.getElementById('wizard-appendix-fnde-list');
     const cecateContainer = document.getElementById('wizard-appendix-cecate-list');
@@ -5476,13 +5512,13 @@ class AutoReportApp {
     if (fndeContainer) {
       fndeContainer.innerHTML = fndeDocs.length === 0
         ? `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhuma convocação do FNDE anexada.</p>`
-        : fndeDocs.map(d => `<div class="audit-item"><span>📄 ${d.fileName}</span><button class="btn btn-secondary btn-sm" onclick="app.removeMedia('${d.id}')">✕</button></div>`).join('');
+        : fndeDocs.map(d => `<div class="audit-item" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.5rem 0.75rem; border-radius:var(--radius-sm); margin-top:0.35rem;"><span>📄 ${d.fileName}</span><button class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover</button></div>`).join('');
     }
 
     if (cecateContainer) {
       cecateContainer.innerHTML = cecateDocs.length === 0
         ? `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhuma convocação do CECATE anexada.</p>`
-        : cecateDocs.map(d => `<div class="audit-item"><span>📄 ${d.fileName}</span><button class="btn btn-secondary btn-sm" onclick="app.removeMedia('${d.id}')">✕</button></div>`).join('');
+        : cecateDocs.map(d => `<div class="audit-item" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.5rem 0.75rem; border-radius:var(--radius-sm); margin-top:0.35rem;"><span>📄 ${d.fileName}</span><button class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover</button></div>`).join('');
     }
   }
 
