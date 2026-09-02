@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.2.2
+ * Versão: v.2.2.3
  */
 
 window.icons = {
@@ -4373,17 +4373,58 @@ class AutoReportApp {
     }
   }
 
+  openConfirmModal({ title, msg, btnText = 'Sim, Remover', onConfirm }) {
+    const overlay = document.getElementById('app-confirm-modal-overlay');
+    const titleEl = document.getElementById('app-confirm-modal-title');
+    const msgEl = document.getElementById('app-confirm-modal-msg');
+    const btnAction = document.getElementById('app-confirm-modal-btn-action');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = msg;
+    if (btnAction) btnAction.textContent = btnText;
+
+    this.onConfirmCallback = onConfirm;
+
+    if (overlay) overlay.style.display = 'flex';
+  }
+
+  closeConfirmModal() {
+    const overlay = document.getElementById('app-confirm-modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+    this.onConfirmCallback = null;
+  }
+
+  executeConfirmModalAction() {
+    if (typeof this.onConfirmCallback === 'function') {
+      this.onConfirmCallback();
+    }
+    this.closeConfirmModal();
+  }
+
   clearStep6Data(type = 'all') {
     if (!this.currentTraining) return;
 
-    let confirmMsg = 'Deseja realmente remover todas as planilhas importadas (Inscrição e Presença) e limpar as listas de participantes e estatísticas?';
+    let title = 'Remover Arquivos e Listas';
+    let msg = 'Tem certeza que deseja remover todas as planilhas importadas (Inscrição e Presença) e limpar as listas de participantes e estatísticas?';
+
     if (type === 'registration') {
-      confirmMsg = 'Deseja remover a Planilha de Inscrições e limpar a lista de inscritos?';
+      title = 'Remover Planilha de Inscrições';
+      msg = 'Tem certeza que deseja remover a Planilha de Inscrições e limpar a lista de inscritos?';
     } else if (type === 'attendance') {
-      confirmMsg = 'Deseja remover a Planilha de Presença e limpar a lista de presentes?';
+      title = 'Remover Planilha de Presença';
+      msg = 'Tem certeza que deseja remover a Planilha de Presença e limpar a lista de presentes?';
     }
 
-    if (!confirm(confirmMsg)) return;
+    this.openConfirmModal({
+      title,
+      msg,
+      btnText: 'Sim, Remover',
+      onConfirm: () => this.executeClearStep6Data(type)
+    });
+  }
+
+  executeClearStep6Data(type = 'all') {
+    if (!this.currentTraining) return;
 
     if (type === 'all' || type === 'registration') {
       this.currentTraining.registrations = [];
