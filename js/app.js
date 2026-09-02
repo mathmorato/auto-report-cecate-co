@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.2.1
+ * Versão: v.2.2.2
  */
 
 window.icons = {
@@ -4481,20 +4481,28 @@ class AutoReportApp {
       else attMap[munName].gestores++;
     });
 
-    // Unir lista de todos os municípios válidos mencionados
-    const allMunNames = new Set([
-      ...Object.keys(regMap),
-      ...Object.keys(attMap)
-    ]);
+    // Unir lista de TODOS os municípios (existentes na lista de convocados + mencionados nas planilhas)
+    const allMunNamesMap = new Map();
 
-    allMunNames.forEach(munName => {
-      let existing = this.currentTraining.municipalities.find(m => m.name.toLowerCase() === munName.toLowerCase());
+    // 1. Adicionar todos os municípios pré-existentes em currentTraining.municipalities
+    this.currentTraining.municipalities.forEach(m => {
+      if (m.name) allMunNamesMap.set(m.name.toLowerCase(), m.name);
+    });
 
-      const regData = regMap[munName] || { cacs: 0, gestores: 0, ibgeCode: '' };
-      const attData = attMap[munName] || { cacs: 0, gestores: 0, ibgeCode: '' };
+    // 2. Adicionar municípios de regMap e attMap
+    Object.keys(regMap).forEach(k => allMunNamesMap.set(k.toLowerCase(), k));
+    Object.keys(attMap).forEach(k => allMunNamesMap.set(k.toLowerCase(), k));
 
-      const inscribedCACS = regList.length > 0 ? regData.cacs : attData.cacs;
-      const inscribedGestores = regList.length > 0 ? regData.gestores : attData.gestores;
+    const hasRegistrationSheet = regList.length > 0;
+
+    allMunNamesMap.forEach((munNameOriginal, munKey) => {
+      let existing = this.currentTraining.municipalities.find(m => m.name.toLowerCase() === munKey);
+
+      const regData = regMap[munNameOriginal] || regMap[munKey] || { cacs: 0, gestores: 0, ibgeCode: '' };
+      const attData = attMap[munNameOriginal] || attMap[munKey] || { cacs: 0, gestores: 0, ibgeCode: '' };
+
+      const inscribedCACS = hasRegistrationSheet ? regData.cacs : attData.cacs;
+      const inscribedGestores = hasRegistrationSheet ? regData.gestores : attData.gestores;
       const inscribedTotal = inscribedCACS + inscribedGestores;
 
       const presentCACS = attData.cacs;
@@ -4511,9 +4519,9 @@ class AutoReportApp {
         existing.presentTotal = presentTotal;
       } else {
         this.currentTraining.municipalities.push({
-          id: `mun_${Date.now()}_${munName}`,
+          id: `mun_${Date.now()}_${munKey}`,
           ibgeCode: regData.ibgeCode || attData.ibgeCode || '',
-          name: munName,
+          name: munNameOriginal,
           uf: this.currentTraining.uf || 'MT',
           distanceKm: 0,
           isSummoned: true,
@@ -4703,6 +4711,9 @@ class AutoReportApp {
       participant = (this.currentTraining.registrations || []).find(p => p.id === participantId);
     }
     if (!participant) return;
+    
+    // RESTRIÇÃO: Permitir atualização apenas se for status "Apenas Presente"
+    if (participant.status !== 'Apenas Presente') return;
 
     if (field === 'municipality') {
       participant.municipality = val;
@@ -4815,9 +4826,9 @@ class AutoReportApp {
 
     // Helper de renderização de linha de participante
     const renderParticipantRow = (p) => {
-      const isEditable = !p.isCpfValidated;
+      // PERMITIR EDIÇÃO APENAS PARA PARTICIPANTES NO STATUS 'Apenas Presente'
+      const isEditable = p.status === 'Apenas Presente';
       const isUnmapped = !p.municipality;
-      const roleVal = p.roleGestao || p.roleCACS || '-';
 
       let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700;">🔷 Inscrito e Presente</span>`;
       if (p.status === 'Apenas Inscrito') {
@@ -4833,7 +4844,7 @@ class AutoReportApp {
         </select>
       ` : `
         <span style="font-weight:600; color:var(--text-primary);">${p.municipality || '-'}</span>
-        <span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.25rem; padding:0.1rem 0.3rem;">✓ CPF Conciliado</span>
+        ${p.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.25rem; padding:0.1rem 0.3rem;">✓ CPF Conciliado</span>' : ''}
       `;
 
       const repTd = isEditable ? `
@@ -4864,7 +4875,7 @@ class AutoReportApp {
         attContainer.innerHTML = `
           <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
             <span>Exibindo <strong>${consolidatedList.length}</strong> participantes total (Inscritos: <strong>${regList.length}</strong> | Presentes: <strong>${attList.length}</strong>):</span>
-            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e segmento ativada exclusivamente para CPFs não validados.</span>
+            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e segmento ativada exclusivamente para participantes no status "Apenas Presente".</span>
           </div>
           <div class="table-responsive-wrapper" style="max-height:420px;">
             <table class="report-data-table">
