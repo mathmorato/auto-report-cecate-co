@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.2
+ * Versão: v.2.0.3
  */
 
 window.icons = {
@@ -427,6 +427,9 @@ class AutoReportApp {
       team: (window.getMasterTeam ? window.getMasterTeam() : (window.DEFAULT_OFFICIAL_TEAM || [])).map(m => ({ ...m })),
       municipalities: [],
       courseModules: window.courseStructureHelper ? window.courseStructureHelper.getMasterCopy() : (window.DEFAULT_COURSE_STRUCTURE || []),
+      baseTemplateName: window.courseStructureHelper ? window.courseStructureHelper.getDefaultTemplate().name : 'Modelo Padrão',
+      baseTemplateId: window.courseStructureHelper ? window.courseStructureHelper.getDefaultTemplate().id : 'template_default_official',
+      isCustomized: false,
       courseMoments: [],
       attendance: [],
       evaluations: [],
@@ -2803,6 +2806,7 @@ class AutoReportApp {
       id: `mod_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       moduleNumber: numStr,
       order: nextNum,
+      isShared: true,
       gestorTopics: [
         { id: `top_g_${Date.now()}_1`, topic: 'Nova Temática Gestão Municipal', hours: 2.0 }
       ],
@@ -2811,6 +2815,7 @@ class AutoReportApp {
       ]
     });
 
+    this.currentTraining.isCustomized = true;
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
     this.showToast(`✓ Módulo ${numStr} adicionado com sucesso!`, 'success');
@@ -2819,6 +2824,7 @@ class AutoReportApp {
   duplicateCourseModule(modIdx) {
     if (!this.currentTraining || !window.courseStructureHelper) return;
     this.currentTraining.courseModules = window.courseStructureHelper.duplicateModule(this.currentTraining.courseModules, modIdx);
+    this.currentTraining.isCustomized = true;
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
     this.showToast('✓ Módulo duplicado com sucesso nesta capacitação!', 'success');
@@ -2831,6 +2837,7 @@ class AutoReportApp {
       if (window.courseStructureHelper) {
         this.currentTraining.courseModules = window.courseStructureHelper.autoRenumber(this.currentTraining.courseModules);
       }
+      this.currentTraining.isCustomized = true;
       this.renderCourseStructureStep();
       this.saveCurrentStepData();
       this.showToast('Módulo removido da capacitação.', 'info');
@@ -2853,6 +2860,7 @@ class AutoReportApp {
       mods.forEach((m, idx) => { m.order = idx + 1; });
     }
 
+    this.currentTraining.isCustomized = true;
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
   }
@@ -2861,6 +2869,7 @@ class AutoReportApp {
     if (!this.currentTraining || !this.currentTraining.courseModules) return;
     if (this.currentTraining.courseModules[modIdx]) {
       this.currentTraining.courseModules[modIdx].moduleNumber = (newNumber || '').trim();
+      this.currentTraining.isCustomized = true;
       this.renderCourseStructureStep();
       this.saveCurrentStepData();
     }
@@ -2889,6 +2898,7 @@ class AutoReportApp {
       }
     }
 
+    this.currentTraining.isCustomized = true;
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
   }
@@ -2916,6 +2926,7 @@ class AutoReportApp {
       mod.cacsTopics.push(newTopic);
     }
 
+    this.currentTraining.isCustomized = true;
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
   }
@@ -2945,6 +2956,7 @@ class AutoReportApp {
       }
     }
 
+    this.currentTraining.isCustomized = true;
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
   }
@@ -2971,6 +2983,7 @@ class AutoReportApp {
       }
     }
 
+    this.currentTraining.isCustomized = true;
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
   }
@@ -3225,7 +3238,20 @@ class AutoReportApp {
     this.renderGlobalMasterCourseStructure();
   }
 
+  toggleCreateTemplateSourceSelect(show) {
+    const select = document.getElementById('create-template-source-select');
+    if (!select) return;
+    if (show) {
+      const templates = window.courseStructureHelper ? window.courseStructureHelper.getTemplatesList() : [];
+      select.innerHTML = templates.map(t => `<option value="${t.id}">${t.isProtected ? '🔒 ' : ''}${t.name}</option>`).join('');
+      select.style.display = 'block';
+    } else {
+      select.style.display = 'none';
+    }
+  }
+
   openCreateCourseTemplateModal() {
+    this.toggleCreateTemplateSourceSelect(false);
     const modal = document.getElementById('modal-create-course-template');
     if (modal) {
       modal.style.display = 'flex';
@@ -3245,6 +3271,7 @@ class AutoReportApp {
     const nameInput = document.getElementById('create-template-name');
     const descInput = document.getElementById('create-template-desc');
     const originRadios = document.getElementsByName('create-template-origin');
+    const sourceSelect = document.getElementById('create-template-source-select');
     if (!nameInput || !window.courseStructureHelper) return;
 
     const name = nameInput.value.trim();
@@ -3252,6 +3279,10 @@ class AutoReportApp {
     let origin = 'template_default_official';
     for (const r of originRadios) {
       if (r.checked) origin = r.value;
+    }
+
+    if (origin === 'other' && sourceSelect && sourceSelect.value) {
+      origin = sourceSelect.value;
     }
 
     if (!name) {
@@ -3351,23 +3382,7 @@ class AutoReportApp {
 
     if (!selectedId) return;
 
-    const tpl = window.courseStructureHelper.getTemplateById(selectedId);
-    if (!tpl) return;
-
-    // Gerar cópia profunda independente da estrutura selecionada
-    this.currentTraining.courseModules = window.courseStructureHelper.makeDeepCopy(tpl.modules);
-    this.currentTraining.baseTemplateName = tpl.name;
-    this.currentTraining.isCustomized = false;
-
-    this.renderCourseStructureStep();
-    if (window.db) {
-      await window.db.saveTrainingFull(this.currentTraining, `Cópia independente da estrutura "${tpl.name}"`);
-    }
-    this.closeSelectCourseTemplateModal();
-    this.showToast(`✓ Cópia da estrutura "${tpl.name}" aplicada a esta capacitação!`, 'success');
-  }
-
-  renderGlobalMasterCourseStructure() {
+    c  renderGlobalMasterCourseStructure() {
     if (!window.courseStructureHelper) return;
 
     if (!this.activeTemplateId) {
@@ -3377,6 +3392,7 @@ class AutoReportApp {
 
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     const masterMods = activeTpl ? window.courseStructureHelper.normalize(activeTpl.modules || []) : [];
+    const isProtected = activeTpl ? activeTpl.isProtected : false;
 
     const titleEl = document.getElementById('active-template-editor-title');
     const descEl = document.getElementById('active-template-editor-desc');
@@ -3396,10 +3412,10 @@ class AutoReportApp {
         bannerEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
         bannerEl.innerHTML = `
           <div style="color:var(--accent-blue-text); display:flex; align-items:center; gap:0.5rem;">
-            <span>🔒 <strong>Modelo Padrão Protegido:</strong> Este é o modelo institucional do CECATE-CO e não pode ter seus módulos alterados diretamente. Clique em "Duplicar" para criar uma cópia editável.</span>
+            <span>🔒 <strong>Modelo Padrão Protegido:</strong> Este é o modelo institucional do CECATE-CO e não pode ter seus módulos alterados diretamente. Clique em "Duplicar Estrutura" para criar uma cópia editável.</span>
           </div>
           <button type="button" class="btn btn-primary btn-sm" onclick="app.duplicateCourseTemplate('${activeTpl.id}')" style="font-weight:700;">
-            📋 Duplicar e Criar Cópia Editável
+            📋 Duplicar Estrutura
           </button>
         `;
       } else {
@@ -3440,10 +3456,11 @@ class AutoReportApp {
         editorContainer.innerHTML = `
           <div style="text-align:center; padding:2.5rem; background:var(--bg-input); border:1px dashed var(--border-color); border-radius:var(--radius-md);">
             <p style="color:var(--text-secondary); margin-bottom:1rem;">Esta estrutura está vazia.</p>
-            <button class="btn btn-primary btn-sm" onclick="app.addGlobalMasterCourseModule()">+ Adicionar Primeiro Módulo</button>
+            ${!isProtected ? '<button class="btn btn-primary btn-sm" onclick="app.addGlobalMasterCourseModule()">+ Adicionar Primeiro Módulo</button>' : ''}
           </div>
         `;
       } else {
+        const disAttr = isProtected ? 'disabled' : '';
         editorContainer.innerHTML = masterMods.map((mod, modIdx) => {
           const gTopics = mod.gestorTopics || [];
           const cTopics = mod.cacsTopics || [];
@@ -3461,26 +3478,28 @@ class AutoReportApp {
                   </span>
                   <div style="display:flex; align-items:center; gap:0.4rem;">
                     <label style="font-size:0.78rem; color:var(--text-muted); margin:0;">Identificador:</label>
-                    <input type="text" class="form-control form-control-sm" style="width:70px; text-align:center; font-weight:700;" value="${mod.moduleNumber || `0${modIdx + 1}`}" onchange="app.updateGlobalMasterCourseModuleNumber(${modIdx}, this.value)">
+                    <input type="text" class="form-control form-control-sm" style="width:70px; text-align:center; font-weight:700;" value="${mod.moduleNumber || `0${modIdx + 1}`}" ${disAttr} onchange="app.updateGlobalMasterCourseModuleNumber(${modIdx}, this.value)">
                   </div>
                 </div>
 
-                <div style="display:flex; align-items:center; gap:0.4rem;">
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveGlobalMasterCourseModule(${modIdx}, -1)" ${modIdx === 0 ? 'disabled' : ''} title="Mover para cima" style="padding:0.2rem 0.5rem;">↑</button>
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveGlobalMasterCourseModule(${modIdx}, 1)" ${modIdx === masterMods.length - 1 ? 'disabled' : ''} title="Mover para baixo" style="padding:0.2rem 0.5rem;">↓</button>
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateGlobalMasterCourseModule(${modIdx})" title="Duplicar Módulo com todas as temáticas" style="padding:0.2rem 0.55rem; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
-                  </button>
-                  <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteGlobalMasterCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem;">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                  </button>
-                </div>
+                ${!isProtected ? `
+                  <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveGlobalMasterCourseModule(${modIdx}, -1)" ${modIdx === 0 ? 'disabled' : ''} title="Mover para cima" style="padding:0.2rem 0.5rem;">↑</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.moveGlobalMasterCourseModule(${modIdx}, 1)" ${modIdx === masterMods.length - 1 ? 'disabled' : ''} title="Mover para baixo" style="padding:0.2rem 0.5rem;">↓</button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateGlobalMasterCourseModule(${modIdx})" title="Duplicar Módulo com todas as temáticas" style="padding:0.2rem 0.55rem; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.deleteGlobalMasterCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem;">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                ` : ''}
               </div>
 
               <!-- Checkbox de Módulo Compartilhado -->
               <div style="margin:0.75rem 0 1rem 0; padding:0.5rem 0.75rem; background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-md);">
                 <label style="display:flex; align-items:center; gap:0.55rem; font-weight:700; font-size:0.86rem; color:var(--text-primary); cursor:pointer; margin:0;">
-                  <input type="checkbox" ${mod.isShared ? 'checked' : ''} onchange="app.toggleGlobalMasterCourseModuleShared(${modIdx}, this.checked)">
+                  <input type="checkbox" ${mod.isShared ? 'checked' : ''} ${disAttr} onchange="app.toggleGlobalMasterCourseModuleShared(${modIdx}, this.checked)">
                   <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:0.25rem;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>Módulo compartilhado entre Gestores e CACS (mesmo conteúdo e carga horária)</span>
                 </label>
               </div>
@@ -3500,19 +3519,21 @@ class AutoReportApp {
                   <div style="display:flex; flex-direction:column; gap:0.5rem;">
                     ${gTopics.map((t, tIdx) => `
                       <div class="course-topic-item">
-                        <input type="text" class="form-control form-control-sm" placeholder="Temática do Módulo" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx}, 'topic', this.value)">
+                        <input type="text" class="form-control form-control-sm" placeholder="Temática do Módulo" value="${(t.topic || '').replace(/"/g, '&quot;')}" ${disAttr} onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx}, 'topic', this.value)">
                         <div style="display:flex; align-items:center; gap:0.25rem;">
-                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx}, 'hours', this.value)">
+                          <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" ${disAttr} onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx}, 'hours', this.value)">
                           <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                        ${!isProtected ? `<button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>` : ''}
                       </div>
                     `).join('')}
                   </div>
 
-                  <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'shared')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.5rem;">
-                    + Adicionar Temática
-                  </button>
+                  ${!isProtected ? `
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'shared')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.5rem;">
+                      + Adicionar Temática
+                    </button>
+                  ` : ''}
                 </div>
               ` : `
                 <!-- Grade Dupla: Módulo Específico por Público (Gestor vs CACS) -->
@@ -3531,26 +3552,28 @@ class AutoReportApp {
                     <div style="display:flex; flex-direction:column; gap:0.5rem;">
                       ${gTopics.map((t, tIdx) => `
                         <div class="course-topic-item">
-                          <input type="text" class="form-control form-control-sm" placeholder="Temática para Gestores" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'topic', this.value)">
+                          <input type="text" class="form-control form-control-sm" placeholder="Temática para Gestores" value="${(t.topic || '').replace(/"/g, '&quot;')}" ${disAttr} onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'topic', this.value)">
                           <div style="display:flex; align-items:center; gap:0.25rem;">
-                            <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
+                            <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" ${disAttr} onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
                             <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                           </div>
-                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                          ${!isProtected ? `<button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>` : ''}
                         </div>
                       `).join('')}
                     </div>
 
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
-                      + Adicionar Temática Gestor
-                    </button>
+                    ${!isProtected ? `
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'gestor')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                        + Adicionar Temática Gestor
+                      </button>
+                    ` : ''}
                   </div>
 
                   <!-- Coluna Conselheiros CACS-FUNDEB -->
                   <div class="course-topic-col">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:0.4rem;">
                       <strong style="font-size:0.85rem; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.35rem;">
-                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Conselheiros CACS-FUNDEB
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 1-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Conselheiros CACS-FUNDEB
                       </strong>
                       <span class="nav-badge font-mono font-bold" style="font-size:0.75rem; background:rgba(16,185,129,0.15); color:var(--accent-emerald-text);">
                         Total: ${cTotalHours.toFixed(1).replace('.', ',')} h
@@ -3560,19 +3583,21 @@ class AutoReportApp {
                     <div style="display:flex; flex-direction:column; gap:0.5rem;">
                       ${cTopics.map((t, tIdx) => `
                         <div class="course-topic-item">
-                          <input type="text" class="form-control form-control-sm" placeholder="Temática para CACS" value="${(t.topic || '').replace(/"/g, '&quot;')}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'topic', this.value)">
+                          <input type="text" class="form-control form-control-sm" placeholder="Temática para CACS" value="${(t.topic || '').replace(/"/g, '&quot;')}" ${disAttr} onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'topic', this.value)">
                           <div style="display:flex; align-items:center; gap:0.25rem;">
-                            <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
+                            <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" ${disAttr} onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
                             <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                           </div>
-                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                          ${!isProtected ? `<button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>` : ''}
                         </div>
                       `).join('')}
                     </div>
 
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
-                      + Adicionar Temática CACS
-                    </button>
+                    ${!isProtected ? `
+                      <button type="button" class="btn btn-secondary btn-sm" onclick="app.addGlobalMasterCourseTopic(${modIdx}, 'cacs')" style="align-self:flex-start; font-size:0.78rem; font-weight:600; margin-top:0.25rem;">
+                        + Adicionar Temática CACS
+                      </button>
+                    ` : ''}
                   </div>
                 </div>
               `}
@@ -3591,6 +3616,10 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) {
+      this.showToast('O Modelo Padrão é protegido contra alterações diretas. Clique em "Duplicar Estrutura" para criar uma cópia editável.', 'warning');
+      return;
+    }
 
     const masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const nextNum = masterMods.length + 1;
@@ -3619,6 +3648,10 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) {
+      this.showToast('O Modelo Padrão é protegido contra alterações diretas. Clique em "Duplicar Estrutura" para criar uma cópia editável.', 'warning');
+      return;
+    }
 
     let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     masterMods = window.courseStructureHelper.duplicateModule(masterMods, modIdx);
@@ -3633,6 +3666,10 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) {
+      this.showToast('O Modelo Padrão é protegido contra alterações diretas. Clique em "Duplicar Estrutura" para criar uma cópia editável.', 'warning');
+      return;
+    }
 
     let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     if (confirm(`Deseja realmente remover este módulo da estrutura "${activeTpl.name}"?`)) {
@@ -3649,6 +3686,10 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) {
+      this.showToast('O Modelo Padrão é protegido contra alterações diretas. Clique em "Duplicar Estrutura" para criar uma cópia editável.', 'warning');
+      return;
+    }
 
     let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const targetIdx = modIdx + direction;
@@ -3668,6 +3709,7 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) return;
 
     const masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     if (masterMods[modIdx]) {
@@ -3682,6 +3724,7 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) return;
 
     let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const mod = masterMods[modIdx];
@@ -3714,6 +3757,7 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) return;
 
     let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const mod = masterMods[modIdx];
@@ -3742,6 +3786,7 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) return;
 
     let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const mod = masterMods[modIdx];
@@ -3770,6 +3815,7 @@ class AutoReportApp {
     if (!window.courseStructureHelper) return;
     const activeTpl = window.courseStructureHelper.getTemplateById(this.activeTemplateId);
     if (!activeTpl) return;
+    if (activeTpl.isProtected) return;
 
     let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
     const mod = masterMods[modIdx];

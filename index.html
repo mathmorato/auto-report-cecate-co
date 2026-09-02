@@ -1369,7 +1369,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.0.2</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.0.3</span>
         </div>
       </footer>
     </div>
@@ -1401,13 +1401,20 @@
           <label class="form-label" style="font-weight:700;">Origem da Estrutura:</label>
           <div style="background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color); display:flex; flex-direction:column; gap:0.75rem;">
             <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.88rem; cursor:pointer; margin:0;">
-              <input type="radio" name="create-template-origin" value="template_default_official" checked>
+              <input type="radio" name="create-template-origin" value="template_default_official" checked onchange="app.toggleCreateTemplateSourceSelect(false)">
               <span><strong>Copiar do Modelo Padrão</strong> (Recomendado)</span>
             </label>
             <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.88rem; cursor:pointer; margin:0;">
-              <input type="radio" name="create-template-origin" value="clean">
+              <input type="radio" name="create-template-origin" value="clean" onchange="app.toggleCreateTemplateSourceSelect(false)">
               <span><strong>Começar vazia</strong> (Sem módulos pré-configurados)</span>
             </label>
+            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.88rem; cursor:pointer; margin:0;">
+              <input type="radio" name="create-template-origin" value="other" onchange="app.toggleCreateTemplateSourceSelect(true)">
+              <span><strong>Copiar de outra estrutura</strong></span>
+            </label>
+            <select id="create-template-source-select" class="form-control form-control-sm" style="display:none; margin-left:1.5rem; font-weight:600; width:calc(100% - 1.5rem);">
+              <!-- Populado dinamicamente -->
+            </select>
           </div>
         </div>
 
