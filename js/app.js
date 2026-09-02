@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.6
+ * Versão: v.2.0.7
  */
 
 window.icons = {
@@ -17,7 +17,8 @@ window.icons = {
   logout: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 5 12 10 7"></polyline><line x1="15" y1="12" x2="5" y2="12"></line></svg>`,
   filter: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`,
   stepForward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-left:5px;"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>`,
-  sede: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 10v2"></path><path d="M15 10v2"></path><path d="M9 14v2"></path><path d="M15 14v2"></path></svg>`
+  sede: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 10v2"></path><path d="M15 10v2"></path><path d="M9 14v2"></path><path d="M15 14v2"></path></svg>`,
+  rename: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg>`
 };
 
 class AutoReportApp {
@@ -3249,7 +3250,7 @@ class AutoReportApp {
               </button>
               ${!isProtected ? `
                 <button type="button" class="btn btn-secondary btn-sm" onclick="app.openRenameCourseTemplateModal('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Renomear nome e descrição desta estrutura">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Renomear
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg> Renomear
                 </button>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Editar módulos desta estrutura">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 1-2 2v14a2 2 0 0 1 2 2h14a2 2 0 0 1 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar
@@ -3633,7 +3634,7 @@ class AutoReportApp {
           </div>
           <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
             <button type="button" class="btn btn-secondary btn-sm" onclick="app.openRenameCourseTemplateModal('${activeTpl.id}')" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Renomear nome e descrição da estrutura">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Renomear
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg> Renomear
             </button>
             <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
               ${this.isMasterCourseEditorOpen ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluir Edição' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar Módulos e Temáticas'}
@@ -3647,7 +3648,7 @@ class AutoReportApp {
       if (!activeTpl.isProtected) {
         actionsEl.innerHTML = `
           <button type="button" class="btn btn-secondary btn-sm" onclick="app.openRenameCourseTemplateModal('${activeTpl.id}')" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Renomear nome e descrição da estrutura">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Renomear
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg> Renomear
           </button>
           <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
             ${this.isMasterCourseEditorOpen ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluir Edição' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar Estrutura'}
