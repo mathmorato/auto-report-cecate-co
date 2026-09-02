@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.0.9
+ * Versão: v.2.1.0
  */
 
 window.icons = {
@@ -3255,24 +3255,24 @@ class AutoReportApp {
             ${totalH.toFixed(1).replace('.', ',')} h Total
           </td>
           <td style="text-align:center; vertical-align:middle; white-space:nowrap;" onclick="event.stopPropagation();">
-            <div style="display:flex; justify-content:center; align-items:center; gap:0.35rem; flex-wrap:nowrap; white-space:nowrap;">
-              <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Duplicar esta estrutura para criar um modelo editável">
+            <div style="display:inline-grid; grid-template-columns: repeat(3, 1fr); gap:0.35rem; align-items:center; justify-content:center; white-space:nowrap; max-width: 260px; margin: 0 auto;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.duplicateCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; justify-content:center; gap:0.25rem;" title="Duplicar esta estrutura para criar um modelo editável">
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
               </button>
               ${!isProtected ? `
-                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Editar módulos desta estrutura">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; justify-content:center; gap:0.25rem;" title="Editar módulos desta estrutura">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar
                 </button>
               ` : `
-                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Visualizar estrutura e preview da tabela">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.selectCourseTemplateForEdit('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; justify-content:center; gap:0.25rem;" title="Visualizar estrutura e preview da tabela">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Visualizar
                 </button>
               `}
               ${(!isProtected && !isDefault) ? `
-                <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmDeleteCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Excluir estrutura personalizada">
+                <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmDeleteCourseTemplate('${t.id}')" style="padding:0.25rem 0.55rem; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; justify-content:center; gap:0.25rem;" title="Excluir estrutura personalizada">
                   <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Excluir
                 </button>
-              ` : ''}
+              ` : '<div></div>'}
             </div>
           </td>
         </tr>
