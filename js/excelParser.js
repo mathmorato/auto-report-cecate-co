@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.2.1.6
+ * Versão: v.2.1.7
  */
 
 class ExcelParser {
@@ -94,22 +94,22 @@ class ExcelParser {
 
       if (clean.includes('carimbo') || clean.includes('timestamp') || clean.includes('datahora')) {
         mapping.timestamp = idx;
-      } else if (clean.includes('nomecompleto') || clean === 'nome') {
-        mapping.name = idx;
+      } else if (clean.includes('nomecompleto') || clean === 'nome' || clean.includes('nome')) {
+        if (mapping.name === -1) mapping.name = idx;
       } else if (clean.includes('cpf')) {
         mapping.cpf = idx;
       } else if (clean.includes('telefone') || clean.includes('celular') || clean.includes('contato')) {
         if (mapping.phone === -1) mapping.phone = idx;
       } else if (clean.includes('email') || clean.includes('correioeletronico')) {
-        mapping.email = idx;
+        if (mapping.email === -1) mapping.email = idx;
       } else if (clean.includes('jainscrito') || clean.includes('estainscrito') || clean.includes('inscricao')) {
         mapping.isEnrolled = idx;
       } else if (clean.includes('datanascimento') || clean.includes('nascimento')) {
         mapping.birthDate = idx;
-      } else if (clean.includes('municipio') || clean.includes('cidade') || clean.includes('polo')) {
-        mapping.municipality = idx;
-      } else if (clean.includes('fazpartedo') || clean.includes('representacao') || clean.includes('segmento')) {
-        mapping.representation = idx;
+      } else if (clean.includes('municipioquerepresenta') || clean.includes('municipio') || clean.includes('cidade') || clean.includes('polo')) {
+        if (mapping.municipality === -1 || clean.includes('municipioquerepresenta')) mapping.municipality = idx;
+      } else if (clean.includes('vocefazpartedo') || clean.includes('fazpartedo') || clean.includes('representacao') || clean.includes('segmento') || clean.includes('publicoalvo')) {
+        if (mapping.representation === -1 || clean.includes('vocefazpartedo') || clean.includes('fazpartedo')) mapping.representation = idx;
       } else if (clean.includes('cargona') && clean.includes('gestao') || clean.includes('gestaomunicipal')) {
         mapping.roleGestao = idx;
       } else if (clean.includes('cargono') && clean.includes('cacs') || clean.includes('cacsfundeb')) {

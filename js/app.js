@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.6
+ * Versão: v.2.1.7
  */
 
 window.icons = {
@@ -4380,7 +4380,38 @@ class AutoReportApp {
     const regList = this.currentTraining.registrations || [];
     const attList = this.currentTraining.attendance || [];
 
-    // Agrupar inscritos por município
+    // Map de inscritos por CPF (limpo e formatado)
+    const regMapByCpf = new Map();
+    regList.forEach(reg => {
+      if (reg.cpf) {
+        const cleanCpf = reg.cpf.replace(/\D/g, '');
+        if (cleanCpf && cleanCpf.length === 11) {
+          regMapByCpf.set(cleanCpf, reg);
+        }
+      }
+    });
+
+    // Cruzar dados da lista de presença com a planilha de inscrição pelo CPF
+    attList.forEach(att => {
+      if (att.cpf) {
+        const cleanCpf = att.cpf.replace(/\D/g, '');
+        if (cleanCpf && regMapByCpf.has(cleanCpf)) {
+          const reg = regMapByCpf.get(cleanCpf);
+          // Priorizar Nome Completo, Município que representa e Vínculo/Segmento (Gestor vs CACS) do formulário de inscrição
+          if (reg.name) att.name = reg.name;
+          if (reg.municipality) {
+            att.municipality = reg.municipality;
+            if (reg.ibgeCode) att.ibgeCode = reg.ibgeCode;
+          }
+          if (reg.representation) att.representation = reg.representation;
+          if (reg.roleGestao) att.roleGestao = reg.roleGestao;
+          if (reg.roleCACS) att.roleCACS = reg.roleCACS;
+          att.matchedByCpf = true;
+        }
+      }
+    });
+
+    // Agrupar inscritos por município (extraído da inscrição "Município que representa:")
     const regMap = {};
     regList.forEach(reg => {
       const munName = reg.municipality || 'Não Informado';
@@ -4391,7 +4422,7 @@ class AutoReportApp {
       else regMap[munName].gestores++;
     });
 
-    // Agrupar presentes por município
+    // Agrupar presentes por município (após cruzamento de CPF)
     const attMap = {};
     attList.forEach(att => {
       const munName = att.municipality || 'Não Informado';
@@ -4577,7 +4608,7 @@ class AutoReportApp {
               <tbody>
                 ${attList.slice(0, 100).map(a => `
                   <tr>
-                    <td><strong>${a.name}</strong></td>
+                    <td><strong>${a.name}</strong> ${a.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.35rem; padding:0.1rem 0.35rem;">✓ CPF Conciliado</span>' : ''}</td>
                     <td style="font-family:monospace;">${a.cpf || '-'}</td>
                     <td>${a.municipality || '-'}</td>
                     <td><span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:var(--accent-emerald-text);">${a.representation}</span></td>
