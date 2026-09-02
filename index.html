@@ -988,23 +988,25 @@
             <!-- ETAPA 8: REGISTROS FOTOGRÁFICOS -->
             <div class="wizard-step-panel" id="wizard-step-8">
               <div class="wizard-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
                   <div>
                     <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
                       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                       <span>Etapa 8: Registros Fotográficos da Capacitação</span>
                     </h3>
-                    <p class="wizard-card-desc">Insira fotos do evento (Figuras 9 a 13). O sistema renumerará e organizará as legendas automaticamente.</p>
+                    <p class="wizard-card-desc">Insira as imagens para cada momento oficial do relatório (Figura 9: Acomodação, Figura 10: Apresentação inicial, Figura 11: Módulos teóricos, Figura 12: Apresentação 1º dia, Figura 13 em diante: Final de cada dia de capacitação).</p>
                   </div>
-                  <button class="btn btn-primary btn-sm" onclick="document.getElementById('file-input-photos').click()">+ Enviar Fotos</button>
-                  <input type="file" id="file-input-photos" accept="image/*" multiple style="display:none;" onchange="app.handlePhotoUpload(event)">
+                  <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-primary btn-sm" onclick="document.getElementById('file-input-photos').click()">+ Upload em Lote</button>
+                    <input type="file" id="file-input-photos" accept="image/*" multiple style="display:none;" onchange="app.handlePhotoUpload(event)">
+                  </div>
                 </div>
 
-                <div class="photo-gallery-grid" id="wizard-photos-grid">
-                  <!-- Fotos renderizadas dinamicamente -->
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap:1.25rem; margin-top:1.5rem;" id="wizard-photos-grid">
+                  <!-- Fotos e slots padronizados renderizados dinamicamente pelo JS -->
                 </div>
 
-                <div class="wizard-actions-footer">
+                <div class="wizard-actions-footer" style="margin-top:2rem;">
                   <button class="btn btn-secondary" onclick="app.wizardPrev()">← Voltar</button>
                   <button class="btn btn-primary" onclick="app.wizardNext()" style="display:inline-flex; align-items:center; gap:0.35rem;">Salvar e Próxima Etapa (Apêndices) <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg></button>
                 </div>
@@ -1432,7 +1434,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.3.1</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.3.2</span>
         </div>
       </footer>
     </div>

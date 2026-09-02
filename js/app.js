@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.1
+ * Versão: v.2.3.2
  */
 
 window.icons = {
@@ -5092,25 +5092,91 @@ class AutoReportApp {
   /* ==========================================================================
      ETAPA 8: REGISTROS FOTOGRÁFICOS
      ========================================================================== */
-  async handlePhotoUpload(event) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+  getTrainingDaysCount() {
+    if (!this.currentTraining) return 2;
+    if (this.currentTraining.durationDays && parseInt(this.currentTraining.durationDays) > 0) {
+      return parseInt(this.currentTraining.durationDays);
+    }
+    const start = this.currentTraining.startDate ? new Date(this.currentTraining.startDate) : null;
+    const end = this.currentTraining.endDate ? new Date(this.currentTraining.endDate) : null;
+    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      const diffMs = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+      return Math.max(1, Math.min(10, diffDays));
+    }
+    return 2;
+  }
+
+  getStandardPhotoSlots() {
+    const daysCount = this.getTrainingDaysCount();
+
+    const slots = [
+      { slotId: 'fig_9', defaultTitle: 'Acomodação dos participantes.', defaultCaption: 'Figura 9. Acomodação dos participantes.' },
+      { slotId: 'fig_10', defaultTitle: 'Apresentação inicial do curso.', defaultCaption: 'Figura 10. Apresentação inicial do curso.' },
+      { slotId: 'fig_11', defaultTitle: 'Apresentação dos módulos teóricos.', defaultCaption: 'Figura 11. Apresentação dos módulos teóricos.' },
+      { slotId: 'fig_12', defaultTitle: 'Apresentação do primeiro dia.', defaultCaption: 'Figura 12. Apresentação do primeiro dia.' }
+    ];
+
+    for (let day = 1; day <= daysCount; day++) {
+      const figNum = 12 + day;
+      slots.push({
+        slotId: `fig_${figNum}_day_${day}`,
+        defaultTitle: `Final da capacitação do ${day}º dia.`,
+        defaultCaption: `Figura ${figNum}. Final da capacitação do ${day}º dia.`
+      });
+    }
+
+    return slots;
+  }
+
+  async handleSinglePhotoUpload(slotId, defaultCaption, event) {
+    const file = event.target.files?.[0];
+    if (!file || !this.currentTraining) return;
 
     if (!this.currentTraining.media) this.currentTraining.media = [];
+
+    const dataUrl = await this.fileToDataUrl(file);
+
+    // Remover se já existia foto neste slot
+    this.currentTraining.media = this.currentTraining.media.filter(m => m.slotId !== slotId && m.id !== slotId);
+
+    this.currentTraining.media.push({
+      id: `photo_${Date.now()}_${slotId}`,
+      slotId: slotId,
+      type: 'photo',
+      blob: dataUrl,
+      caption: defaultCaption,
+      fileName: file.name
+    });
+
+    this.renderPhotosStep();
+    this.saveCurrentStepData();
+    this.showToast(`✓ Imagem enviada com sucesso!`, 'success');
+  }
+
+  async handlePhotoUpload(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0 || !this.currentTraining) return;
+
+    if (!this.currentTraining.media) this.currentTraining.media = [];
+
+    const slots = this.getStandardPhotoSlots();
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const dataUrl = await this.fileToDataUrl(file);
-      const photoCount = this.currentTraining.media.filter(m => m.type === 'photo').length;
-      const figNumber = photoCount + 9; // Inicia em Figura 9 conforme referência 16CTE
+
+      // Encontrar slot sem foto
+      const emptySlot = slots.find(s => !this.currentTraining.media.some(m => m.slotId === s.slotId));
+      const targetSlotId = emptySlot ? emptySlot.slotId : `fig_extra_${Date.now()}_${i}`;
+      const targetCaption = emptySlot ? emptySlot.defaultCaption : `Figura Extra ${i + 1}. Registro da capacitação.`;
 
       this.currentTraining.media.push({
         id: `photo_${Date.now()}_${i}`,
+        slotId: targetSlotId,
         type: 'photo',
         blob: dataUrl,
-        caption: `Figura ${figNumber}. Registro da capacitação no polo ${this.currentTraining.polo || ''}.`,
-        order: photoCount,
-        section: '6. REGISTROS FOTOGRÁFICOS',
+        caption: targetCaption,
         fileName: file.name
       });
     }
@@ -5120,44 +5186,125 @@ class AutoReportApp {
     this.showToast(`✓ ${files.length} fotos adicionadas à galeria!`, 'success');
   }
 
-  renderPhotosStep() {
-    const container = document.getElementById('wizard-photos-grid');
-    if (!container || !this.currentTraining) return;
+  confirmRemovePhoto(slotId) {
+    const photo = (this.currentTraining.media || []).find(m => m.slotId === slotId || m.id === slotId);
+    const slots = this.getStandardPhotoSlots();
+    const slot = slots.find(s => s.slotId === slotId);
+    const captionText = photo?.caption || slot?.defaultCaption || 'Fotografia';
 
-    const photos = (this.currentTraining.media || []).filter(m => m.type === 'photo');
-    if (photos.length === 0) {
-      container.innerHTML = `<p style="color:var(--text-muted); grid-column:1/-1;">Nenhuma fotografia inserida. Faça upload acima para compor a galeria do relatório.</p>`;
-      return;
-    }
-
-    container.innerHTML = photos.map((p, idx) => `
-      <div class="photo-gallery-card">
-        <img src="${p.blob}" alt="${p.caption}" class="photo-gallery-img">
-        <div class="photo-gallery-body">
-          <input type="text" class="form-control form-control-sm" value="${p.caption}" onchange="app.updatePhotoCaption('${p.id}', this.value)" placeholder="Legenda da figura...">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.25rem;">
-            <span style="font-size:0.75rem; color:var(--text-muted);">Foto #${idx + 1}</span>
-            <button class="btn btn-secondary btn-sm" onclick="app.removeMedia('${p.id}')" title="Excluir Foto">🗑️ Excluir</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
+    this.openConfirmModal({
+      title: 'Remover Fotografia',
+      msg: `Tem certeza que deseja remover a imagem de "${captionText}"?`,
+      btnText: 'Sim, Remover Foto',
+      onConfirm: () => this.executeRemovePhoto(slotId)
+    });
   }
 
-  updatePhotoCaption(photoId, newCaption) {
-    const photo = this.currentTraining.media?.find(m => m.id === photoId);
+  executeRemovePhoto(slotId) {
+    if (!this.currentTraining) return;
+    if (!this.currentTraining.media) this.currentTraining.media = [];
+
+    this.currentTraining.media = this.currentTraining.media.filter(m => m.slotId !== slotId && m.id !== slotId);
+    this.renderPhotosStep();
+    this.saveCurrentStepData();
+    this.showToast('✓ Fotografia removida com sucesso!', 'success');
+  }
+
+  updatePhotoCaption(slotId, newCaption) {
+    if (!this.currentTraining) return;
+    const photo = (this.currentTraining.media || []).find(m => m.slotId === slotId || m.id === slotId);
     if (photo) {
       photo.caption = newCaption;
       this.saveCurrentStepData();
     }
   }
 
+  renderPhotosStep() {
+    const container = document.getElementById('wizard-photos-grid');
+    if (!container || !this.currentTraining) return;
+
+    const slots = this.getStandardPhotoSlots();
+    const photos = (this.currentTraining.media || []).filter(m => m.type === 'photo');
+
+    let html = '';
+
+    slots.forEach(slot => {
+      const photo = photos.find(p => p.slotId === slot.slotId);
+
+      if (photo) {
+        // Card com foto anexada + preview + confirmação de remoção
+        html += `
+          <div class="glass-card" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem; border:1px solid rgba(16, 185, 129, 0.35);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:var(--accent-emerald-text, #10b981); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                ${slot.defaultCaption}
+              </strong>
+              <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemovePhoto('${slot.slotId}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover Foto</button>
+            </div>
+
+            <div style="background:var(--bg-input); border-radius:var(--radius-md); overflow:hidden; max-height:220px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-color);">
+              <img src="${photo.blob}" style="width:100%; max-height:220px; object-fit:cover;" alt="${photo.caption}">
+            </div>
+
+            <div class="form-group" style="margin:0;">
+              <label class="form-label" style="font-size:0.78rem;">Legenda da Figura:</label>
+              <input type="text" class="form-control form-control-sm" value="${photo.caption || slot.defaultCaption}" onchange="app.updatePhotoCaption('${slot.slotId}', this.value)">
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-slot-${slot.slotId}').click()" style="font-size:0.76rem; padding:0.2rem 0.5rem;">📷 Trocar Imagem</button>
+              <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
+            </div>
+          </div>
+        `;
+      } else {
+        // Slot pendente (Dropzone individual para o momento)
+        html += `
+          <div class="glass-card" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:var(--text-primary); font-size:0.88rem;">${slot.defaultCaption}</strong>
+              <span class="nav-badge" style="font-size:0.72rem;">Pendente</span>
+            </div>
+
+            <div class="upload-dropzone" onclick="document.getElementById('input-slot-${slot.slotId}').click()" style="padding:1.25rem 0.75rem;">
+              <div class="upload-dropzone-icon" style="font-size:1.5rem; margin-bottom:0.25rem;">📷</div>
+              <div class="upload-dropzone-text" style="font-size:0.85rem;">Enviar foto da ${slot.defaultTitle}</div>
+              <div class="upload-dropzone-hint" style="font-size:0.74rem;">Formatos aceitos: JPG, PNG, WEBP</div>
+              <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    // Exibir fotos extras não pertencentes aos slots padronizados
+    const extraPhotos = photos.filter(p => !slots.some(s => s.slotId === p.slotId));
+    extraPhotos.forEach((photo, idx) => {
+      html += `
+        <div class="glass-card" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem; border:1px solid rgba(59, 130, 246, 0.3);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:var(--accent-blue-text); font-size:0.88rem;">Foto Extra #${idx + 1}</strong>
+            <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemovePhoto('${photo.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover</button>
+          </div>
+
+          <div style="background:var(--bg-input); border-radius:var(--radius-md); overflow:hidden; max-height:220px; display:flex; align-items:center; justify-content:center;">
+            <img src="${photo.blob}" style="width:100%; max-height:220px; object-fit:cover;" alt="${photo.caption}">
+          </div>
+
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.78rem;">Legenda da Figura Extra:</label>
+            <input type="text" class="form-control form-control-sm" value="${photo.caption || ''}" onchange="app.updatePhotoCaption('${photo.id}', this.value)">
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
   removeMedia(mediaId) {
-    this.currentTraining.media = (this.currentTraining.media || []).filter(m => m.id !== mediaId);
-    this.renderPhotosStep();
-    this.renderAppendicesStep();
-    this.saveCurrentStepData();
-    this.showToast('Item removido com sucesso.');
+    this.executeRemovePhoto(mediaId);
   }
 
   /* ==========================================================================
