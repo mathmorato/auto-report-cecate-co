@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.2
+ * Versão: v.2.3.3
  */
 
 window.icons = {
@@ -5090,8 +5090,114 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     ETAPA 8: REGISTROS FOTOGRÁFICOS
+     ETAPA 8: REGISTROS FOTOGRÁFICOS & DRAG AND DROP
      ========================================================================== */
+  handleDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget && event.currentTarget.classList) {
+      event.currentTarget.classList.add('dragover');
+    }
+  }
+
+  handleDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget && event.currentTarget.classList) {
+      event.currentTarget.classList.remove('dragover');
+    }
+  }
+
+  async handlePhotoDrop(slotId, defaultCaption, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget && event.currentTarget.classList) {
+      event.currentTarget.classList.remove('dragover');
+    }
+
+    const files = event.dataTransfer?.files;
+    if (!files || files.length === 0 || !this.currentTraining) return;
+
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (imageFiles.length === 0) return;
+
+    if (slotId) {
+      // Slot específico
+      const file = imageFiles[0];
+      const dataUrl = await this.fileToDataUrl(file);
+      if (!this.currentTraining.media) this.currentTraining.media = [];
+
+      this.currentTraining.media = this.currentTraining.media.filter(m => m.slotId !== slotId && m.id !== slotId);
+      this.currentTraining.media.push({
+        id: `photo_${Date.now()}_${slotId}`,
+        slotId: slotId,
+        type: 'photo',
+        blob: dataUrl,
+        caption: defaultCaption,
+        fileName: file.name
+      });
+      this.renderPhotosStep();
+      this.saveCurrentStepData();
+      this.showToast(`✓ Imagem enviada com sucesso!`, 'success');
+    } else {
+      // Drop em lote no grid
+      const mockEvent = { target: { files: imageFiles } };
+      await this.handlePhotoUpload(mockEvent);
+    }
+  }
+
+  handlePhotoDragStart(slotId, event) {
+    this.draggedPhotoSlotId = slotId;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', slotId);
+  }
+
+  handlePhotoDragOverCard(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    if (event.currentTarget && event.currentTarget.style) {
+      event.currentTarget.style.transition = 'transform 0.15s ease, border-color 0.15s ease';
+      event.currentTarget.style.transform = 'scale(1.02)';
+      event.currentTarget.style.borderColor = 'var(--accent-blue-text, #3b82f6)';
+    }
+  }
+
+  handlePhotoDragLeaveCard(event) {
+    if (event.currentTarget && event.currentTarget.style) {
+      event.currentTarget.style.transform = '';
+      event.currentTarget.style.borderColor = '';
+    }
+  }
+
+  handlePhotoDropCard(targetSlotId, event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget && event.currentTarget.style) {
+      event.currentTarget.style.transform = '';
+      event.currentTarget.style.borderColor = '';
+    }
+
+    const sourceSlotId = this.draggedPhotoSlotId || event.dataTransfer.getData('text/plain');
+    if (!sourceSlotId || sourceSlotId === targetSlotId) return;
+
+    if (!this.currentTraining || !this.currentTraining.media) return;
+
+    const sourcePhoto = this.currentTraining.media.find(m => m.slotId === sourceSlotId || m.id === sourceSlotId);
+    const targetPhoto = this.currentTraining.media.find(m => m.slotId === targetSlotId || m.id === targetSlotId);
+
+    if (sourcePhoto) {
+      sourcePhoto.slotId = targetSlotId;
+    }
+    if (targetPhoto) {
+      targetPhoto.slotId = sourceSlotId;
+    }
+
+    this.draggedPhotoSlotId = null;
+    this.renderPhotosStep();
+    this.saveCurrentStepData();
+    this.showToast('✓ Posição das figuras reordenada!', 'success');
+  }
+
   getTrainingDaysCount() {
     if (!this.currentTraining) return 2;
     if (this.currentTraining.durationDays && parseInt(this.currentTraining.durationDays) > 0) {
@@ -5232,9 +5338,15 @@ class AutoReportApp {
       const photo = photos.find(p => p.slotId === slot.slotId);
 
       if (photo) {
-        // Card com foto anexada + preview + confirmação de remoção
+        // Card com foto anexada (Draggable para reordenar)
         html += `
-          <div class="glass-card" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem; border:1px solid rgba(16, 185, 129, 0.35);">
+          <div class="glass-card" 
+               draggable="true"
+               ondragstart="app.handlePhotoDragStart('${slot.slotId}', event)"
+               ondragover="app.handlePhotoDragOverCard(event)"
+               ondragleave="app.handlePhotoDragLeaveCard(event)"
+               ondrop="app.handlePhotoDropCard('${slot.slotId}', event)"
+               style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem; border:1px solid rgba(16, 185, 129, 0.35); cursor:grab;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong style="color:var(--accent-emerald-text, #10b981); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
@@ -5252,24 +5364,36 @@ class AutoReportApp {
               <input type="text" class="form-control form-control-sm" value="${photo.caption || slot.defaultCaption}" onchange="app.updatePhotoCaption('${slot.slotId}', this.value)">
             </div>
 
-            <div style="display:flex; justify-content:flex-end;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:0.25rem;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg> Arraste para reordenar
+              </span>
               <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-slot-${slot.slotId}').click()" style="font-size:0.76rem; padding:0.2rem 0.5rem;">📷 Trocar Imagem</button>
               <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
             </div>
           </div>
         `;
       } else {
-        // Slot pendente (Dropzone individual para o momento)
+        // Slot pendente (Dropzone de arquivo individual + receptor de drag & drop)
         html += `
-          <div class="glass-card" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
+          <div class="glass-card" 
+               ondragover="app.handlePhotoDragOverCard(event)"
+               ondragleave="app.handlePhotoDragLeaveCard(event)"
+               ondrop="app.handlePhotoDropCard('${slot.slotId}', event)"
+               style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong style="color:var(--text-primary); font-size:0.88rem;">${slot.defaultCaption}</strong>
               <span class="nav-badge" style="font-size:0.72rem;">Pendente</span>
             </div>
 
-            <div class="upload-dropzone" onclick="document.getElementById('input-slot-${slot.slotId}').click()" style="padding:1.25rem 0.75rem;">
+            <div class="upload-dropzone" 
+                 onclick="document.getElementById('input-slot-${slot.slotId}').click()"
+                 ondragover="app.handleDragOver(event)"
+                 ondragleave="app.handleDragLeave(event)"
+                 ondrop="app.handlePhotoDrop('${slot.slotId}', '${slot.defaultCaption}', event)"
+                 style="padding:1.25rem 0.75rem;">
               <div class="upload-dropzone-icon" style="font-size:1.5rem; margin-bottom:0.25rem;">📷</div>
-              <div class="upload-dropzone-text" style="font-size:0.85rem;">Enviar foto da ${slot.defaultTitle}</div>
+              <div class="upload-dropzone-text" style="font-size:0.85rem;">Clique ou arraste a foto da ${slot.defaultTitle}</div>
               <div class="upload-dropzone-hint" style="font-size:0.74rem;">Formatos aceitos: JPG, PNG, WEBP</div>
               <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
             </div>
@@ -5282,7 +5406,13 @@ class AutoReportApp {
     const extraPhotos = photos.filter(p => !slots.some(s => s.slotId === p.slotId));
     extraPhotos.forEach((photo, idx) => {
       html += `
-        <div class="glass-card" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem; border:1px solid rgba(59, 130, 246, 0.3);">
+        <div class="glass-card" 
+             draggable="true"
+             ondragstart="app.handlePhotoDragStart('${photo.id}', event)"
+             ondragover="app.handlePhotoDragOverCard(event)"
+             ondragleave="app.handlePhotoDragLeaveCard(event)"
+             ondrop="app.handlePhotoDropCard('${photo.id}', event)"
+             style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem; border:1px solid rgba(59, 130, 246, 0.3); cursor:grab;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <strong style="color:var(--accent-blue-text); font-size:0.88rem;">Foto Extra #${idx + 1}</strong>
             <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemovePhoto('${photo.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover</button>

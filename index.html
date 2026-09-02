@@ -1002,7 +1002,11 @@
                   </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap:1.25rem; margin-top:1.5rem;" id="wizard-photos-grid">
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap:1.25rem; margin-top:1.5rem;" 
+                     id="wizard-photos-grid"
+                     ondragover="app.handleDragOver(event)"
+                     ondragleave="app.handleDragLeave(event)"
+                     ondrop="app.handlePhotoDrop('', '', event)">
                   <!-- Fotos e slots padronizados renderizados dinamicamente pelo JS -->
                 </div>
 
@@ -1434,7 +1438,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.3.2</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.3.3</span>
         </div>
       </footer>
     </div>
