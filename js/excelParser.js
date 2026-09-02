@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.1.9.4
+ * Versão: v.2.1.5
  */
 
 class ExcelParser {
@@ -204,6 +204,19 @@ class ExcelParser {
     }
 
     return results;
+  }
+
+  /**
+   * Processa linhas da Planilha de Inscrição (Google Forms / Excel) gerando objetos normalizados
+   */
+  parseRegistrationRows(rows = [], mapping = null, trainingUf = 'MT') {
+    const list = this.parseAttendanceRows(rows, mapping, trainingUf);
+    return list.map(item => ({
+      ...item,
+      id: item.id.replace('att_parsed_', 'reg_parsed_'),
+      isRegistered: true,
+      isPresent: false
+    }));
   }
 
   /**

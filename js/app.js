@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.4
+ * Versão: v.2.1.5
  */
 
 window.icons = {
@@ -1304,6 +1304,9 @@ class AutoReportApp {
     } else {
       this.syncContactCheckboxesFromSavedMethods('Ofícios, E-mails, Telefones e WhatsApp');
     }
+
+    // Etapa 6: Inscrições & Presença
+    this.renderAttendanceStep();
   }
 
   updateContactMethodsFromCheckboxes() {
@@ -4227,8 +4230,37 @@ class AutoReportApp {
   }
 
   /* ==========================================================================
-     ETAPA 6: LISTA DE PRESENÇA (UPLOAD & TABELA 4)
+     ETAPA 6: INSCRIÇÃO & LISTA DE PRESENÇA (UPLOAD & TABELA 4)
      ========================================================================== */
+  async handleRegistrationFileUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file || !window.excelParser) return;
+
+    try {
+      this.showToast('Lendo planilha de inscrições...');
+      const { sheets, sheetNames } = await window.excelParser.readWorkbook(file);
+      const firstSheet = sheets[sheetNames[0]];
+
+      const parsed = window.excelParser.parseRegistrationRows(firstSheet, null, this.currentTraining.uf || 'MT');
+      if (parsed.length === 0) {
+        this.showToast('Nenhum registro de inscrição identificado na planilha.', 'warning');
+        return;
+      }
+
+      this.currentTraining.registrations = parsed;
+
+      // Reconciliar inscritos e presentes na lista de municípios
+      this.reconcileMunicipalitiesFromRegistrationAndAttendance();
+
+      this.renderAttendanceStep();
+      this.saveCurrentStepData();
+      this.showToast(`✓ ${parsed.length} inscrições importadas com sucesso!`, 'success');
+    } catch (err) {
+      console.error('Erro ao importar planilha de inscrições:', err);
+      this.showToast(`Erro na importação de inscrições: ${err.message}`, 'error');
+    }
+  }
+
   async handleAttendanceFileUpload(event) {
     const file = event.target.files?.[0];
     if (!file || !window.excelParser) return;
@@ -4247,78 +4279,169 @@ class AutoReportApp {
       this.currentTraining.attendance = parsed;
 
       // Reconciliar presença com a lista de municípios
-      this.reconcileMunicipalitiesPresence(parsed);
+      this.reconcileMunicipalitiesFromRegistrationAndAttendance();
 
       this.renderAttendanceStep();
       this.saveCurrentStepData();
-      this.showToast(`✓ ${parsed.length} participantes importados com sucesso!`, 'success');
+      this.showToast(`✓ ${parsed.length} participantes presentes importados com sucesso!`, 'success');
     } catch (err) {
       console.error('Erro ao importar lista de presença:', err);
       this.showToast(`Erro na importação: ${err.message}`, 'error');
     }
   }
 
-  reconcileMunicipalitiesPresence(attendanceList = []) {
+  reconcileMunicipalitiesFromRegistrationAndAttendance() {
+    if (!this.currentTraining) return;
     if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
 
-    // Agrupar por município
-    const map = {};
-    attendanceList.forEach(att => {
-      const munName = att.municipality || 'Não Informado';
-      if (!map[munName]) {
-        map[munName] = { cacs: 0, gestores: 0, ibgeCode: att.ibgeCode };
+    const regList = this.currentTraining.registrations || [];
+    const attList = this.currentTraining.attendance || [];
+
+    // Agrupar inscritos por município
+    const regMap = {};
+    regList.forEach(reg => {
+      const munName = reg.municipality || 'Não Informado';
+      if (!regMap[munName]) {
+        regMap[munName] = { cacs: 0, gestores: 0, ibgeCode: reg.ibgeCode };
       }
-      if (att.representation === 'CACS-FUNDEB') map[munName].cacs++;
-      else map[munName].gestores++;
+      if (reg.representation === 'CACS-FUNDEB') regMap[munName].cacs++;
+      else regMap[munName].gestores++;
     });
 
-    // Atualizar registros existentes ou inserir novos
-    Object.keys(map).forEach(munName => {
+    // Agrupar presentes por município
+    const attMap = {};
+    attList.forEach(att => {
+      const munName = att.municipality || 'Não Informado';
+      if (!attMap[munName]) {
+        attMap[munName] = { cacs: 0, gestores: 0, ibgeCode: att.ibgeCode };
+      }
+      if (att.representation === 'CACS-FUNDEB') attMap[munName].cacs++;
+      else attMap[munName].gestores++;
+    });
+
+    // Unir lista de todos os municípios mencionados
+    const allMunNames = new Set([
+      ...Object.keys(regMap),
+      ...Object.keys(attMap)
+    ]);
+
+    allMunNames.forEach(munName => {
       let existing = this.currentTraining.municipalities.find(m => m.name.toLowerCase() === munName.toLowerCase());
+
+      const regData = regMap[munName] || { cacs: 0, gestores: 0, ibgeCode: '' };
+      const attData = attMap[munName] || { cacs: 0, gestores: 0, ibgeCode: '' };
+
+      const inscribedCACS = regList.length > 0 ? regData.cacs : attData.cacs;
+      const inscribedGestores = regList.length > 0 ? regData.gestores : attData.gestores;
+      const inscribedTotal = inscribedCACS + inscribedGestores;
+
+      const presentCACS = attData.cacs;
+      const presentGestores = attData.gestores;
+      const presentTotal = presentCACS + presentGestores;
+
       if (existing) {
-        existing.presentCACS = map[munName].cacs;
-        existing.presentGestores = map[munName].gestores;
-        existing.presentTotal = map[munName].cacs + map[munName].gestores;
-        if (existing.inscribedTotal === 0) {
-          existing.inscribedCACS = existing.presentCACS;
-          existing.inscribedGestores = existing.presentGestores;
-          existing.inscribedTotal = existing.presentTotal;
-        }
+        existing.inscribedCACS = inscribedCACS;
+        existing.inscribedGestores = inscribedGestores;
+        existing.inscribedTotal = inscribedTotal;
+
+        existing.presentCACS = presentCACS;
+        existing.presentGestores = presentGestores;
+        existing.presentTotal = presentTotal;
       } else {
         this.currentTraining.municipalities.push({
           id: `mun_${Date.now()}_${munName}`,
-          ibgeCode: map[munName].ibgeCode || '',
+          ibgeCode: regData.ibgeCode || attData.ibgeCode || '',
           name: munName,
           uf: this.currentTraining.uf || 'MT',
           distanceKm: 0,
           isSummoned: true,
-          inscribedCACS: map[munName].cacs,
-          inscribedGestores: map[munName].gestores,
-          inscribedTotal: map[munName].cacs + map[munName].gestores,
-          presentCACS: map[munName].cacs,
-          presentGestores: map[munName].gestores,
-          presentTotal: map[munName].cacs + map[munName].gestores
+          inscribedCACS,
+          inscribedGestores,
+          inscribedTotal,
+          presentCACS,
+          presentGestores,
+          presentTotal
         });
       }
     });
   }
 
+  switchAttendanceSubTab(tabName) {
+    const regContainer = document.getElementById('wizard-registration-table-container');
+    const attContainer = document.getElementById('wizard-attendance-table-container');
+    const btnReg = document.getElementById('btn-subtab-registration');
+    const btnAtt = document.getElementById('btn-subtab-attendance');
+
+    if (tabName === 'registration') {
+      if (regContainer) regContainer.style.display = 'block';
+      if (attContainer) attContainer.style.display = 'none';
+      if (btnReg) { btnReg.classList.add('btn-primary'); btnReg.classList.remove('btn-secondary'); }
+      if (btnAtt) { btnAtt.classList.add('btn-secondary'); btnAtt.classList.remove('btn-primary'); }
+    } else {
+      if (regContainer) regContainer.style.display = 'none';
+      if (attContainer) attContainer.style.display = 'block';
+      if (btnAtt) { btnAtt.classList.add('btn-primary'); btnAtt.classList.remove('btn-secondary'); }
+      if (btnReg) { btnReg.classList.add('btn-secondary'); btnReg.classList.remove('btn-primary'); }
+    }
+  }
+
   renderAttendanceStep() {
-    const container = document.getElementById('wizard-attendance-table-container');
+    const statusBanner = document.getElementById('wizard-attendance-status-banner');
+    const regContainer = document.getElementById('wizard-registration-table-container');
+    const attContainer = document.getElementById('wizard-attendance-table-container');
     const table4Container = document.getElementById('wizard-table4-preview');
     if (!this.currentTraining) return;
 
-    const list = this.currentTraining.attendance || [];
+    const regList = this.currentTraining.registrations || [];
+    const attList = this.currentTraining.attendance || [];
 
-    // Renderizar tabela de participantes
-    if (container) {
-      if (list.length === 0) {
-        container.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma lista de presença importada. Arraste ou selecione a planilha acima.</p>`;
+    const regCacs = regList.filter(r => r.representation === 'CACS-FUNDEB').length;
+    const regGestores = regList.filter(r => r.representation !== 'CACS-FUNDEB').length;
+
+    const attCacs = attList.filter(a => a.representation === 'CACS-FUNDEB').length;
+    const attGestores = attList.filter(a => a.representation !== 'CACS-FUNDEB').length;
+
+    // Renderizar Banner de Status das Planilhas
+    if (statusBanner) {
+      statusBanner.innerHTML = `
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div style="background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); padding:0.85rem 1.1rem; border-radius:var(--radius-md);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <strong style="color:var(--accent-blue-text); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Planilha 1: Inscrições
+              </strong>
+              <span class="nav-badge badge-blue font-bold" style="font-size:0.8rem;">${regList.length} Inscritos</span>
+            </div>
+            <div style="font-size:0.82rem; color:var(--text-secondary); display:flex; gap:0.75rem;">
+              <span>CACS-FUNDEB: <strong>${regCacs}</strong></span>
+              <span>Gestão Municipal: <strong>${regGestores}</strong></span>
+            </div>
+          </div>
+
+          <div style="background:rgba(16, 185, 129, 0.08); border:1px solid rgba(16, 185, 129, 0.25); padding:0.85rem 1.1rem; border-radius:var(--radius-md);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
+              <strong style="color:var(--accent-emerald-text); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Planilha 2: Presença
+              </strong>
+              <span class="nav-badge badge-emerald font-bold" style="font-size:0.8rem;">${attList.length} Presentes</span>
+            </div>
+            <div style="font-size:0.82rem; color:var(--text-secondary); display:flex; gap:0.75rem;">
+              <span>CACS-FUNDEB: <strong>${attCacs}</strong></span>
+              <span>Gestão Municipal: <strong>${attGestores}</strong></span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Renderizar Tabela de Inscritos
+    if (regContainer) {
+      if (regList.length === 0) {
+        regContainer.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma planilha de inscrições importada ainda.</p>`;
       } else {
-        container.innerHTML = `
-          <div style="margin-bottom:0.75rem; font-size:0.88rem; color:var(--text-secondary); display:flex; justify-content:space-between;">
-            <span>Total de Presentes: <strong>${list.length}</strong></span>
-            <span>CACS: <strong>${list.filter(a => a.representation === 'CACS-FUNDEB').length}</strong> | Gestores: <strong>${list.filter(a => a.representation !== 'CACS-FUNDEB').length}</strong></span>
+        regContainer.innerHTML = `
+          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted);">
+            Exibindo ${regList.length} participantes inscritos (Gestão: ${regGestores} | CACS: ${regCacs}):
           </div>
           <div class="table-responsive-wrapper" style="max-height:350px;">
             <table class="report-data-table">
@@ -4332,12 +4455,49 @@ class AutoReportApp {
                 </tr>
               </thead>
               <tbody>
-                ${list.slice(0, 50).map(a => `
+                ${regList.slice(0, 100).map(r => `
+                  <tr>
+                    <td><strong>${r.name}</strong></td>
+                    <td style="font-family:monospace;">${r.cpf || '-'}</td>
+                    <td>${r.municipality || '-'}</td>
+                    <td><span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:var(--accent-blue-text);">${r.representation}</span></td>
+                    <td>${r.roleGestao || r.roleCACS || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    // Renderizar Tabela de Presentes
+    if (attContainer) {
+      if (attList.length === 0) {
+        attContainer.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma lista de presença importada ainda. Arraste ou selecione a planilha acima.</p>`;
+      } else {
+        attContainer.innerHTML = `
+          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted);">
+            Exibindo ${attList.length} participantes presentes (Gestão: ${attGestores} | CACS: ${attCacs}):
+          </div>
+          <div class="table-responsive-wrapper" style="max-height:350px;">
+            <table class="report-data-table">
+              <thead>
+                <tr>
+                  <th>Nome Completo</th>
+                  <th>CPF</th>
+                  <th>Município</th>
+                  <th>Segmento</th>
+                  <th>Cargo / Função</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${attList.slice(0, 100).map(a => `
                   <tr>
                     <td><strong>${a.name}</strong></td>
                     <td style="font-family:monospace;">${a.cpf || '-'}</td>
                     <td>${a.municipality || '-'}</td>
-                    <td><span class="nav-badge" style="background:rgba(6, 182, 212, 0.15); color:#22d3ee;">${a.representation}</span></td>
+                    <td><span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:var(--accent-emerald-text);">${a.representation}</span></td>
                     <td>${a.roleGestao || a.roleCACS || '-'}</td>
                   </tr>
                 `).join('')}
@@ -4348,7 +4508,7 @@ class AutoReportApp {
       }
     }
 
-    // Renderizar Tabela 4 (Participação por Município)
+    // Renderizar Tabela 4 (Participação por Município - Presentes / Convocados)
     if (table4Container && window.statsEngine) {
       table4Container.innerHTML = window.statsEngine.generateTable4Html(this.currentTraining.municipalities || []);
     }
