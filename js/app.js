@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.1
+ * Versão: v.2.1.2
  */
 
 window.icons = {
@@ -2834,7 +2834,99 @@ class AutoReportApp {
     }
   }
 
+  renderCourseEditorRedirectCard(state = 'warning', errorMsg = '') {
+    const cardEl = document.getElementById('wizard-course-redirect-warning-card');
+    const contentEl = document.getElementById('wizard-course-redirect-warning-content');
+    if (!cardEl || !contentEl) return;
+
+    if (state === 'warning') {
+      cardEl.style.background = 'rgba(245, 158, 11, 0.08)';
+      cardEl.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+      contentEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+          <h4 style="margin:0; color:#fbbf24; display:flex; align-items:center; gap:0.5rem; font-size:1rem; font-weight:700;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>Atenção: Redirecionamento para Gerenciador Geral de Estruturas</span>
+          </h4>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.hideCourseEditorRedirectWarning()" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center; gap:0.25rem;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Fechar
+          </button>
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-primary); line-height:1.5; margin:0 0 1.25rem 0;">
+          Você será redirecionado para a página de <strong>Configurações do Catálogo Geral de Estruturas do Curso</strong>.<br>
+          <span style="color:#fbbf24; font-weight:600;">⚠️ Recomendação Importante:</span> Qualquer alteração realizada neste relatório poderá ser perdida se não for salva. Recomendamos <strong>salvar os dados atuais</strong> antes de continuar.
+        </p>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn btn-primary" onclick="app.saveAndRedirectToCourseSettings()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Salvar e Continuar
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="app.redirectWithoutSavingToCourseSettings()" style="font-weight:600;">
+            Ir sem Salvar
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="app.hideCourseEditorRedirectWarning()" style="font-weight:600;">
+            Cancelar
+          </button>
+        </div>
+      `;
+    } else if (state === 'success') {
+      cardEl.style.background = 'rgba(16, 185, 129, 0.1)';
+      cardEl.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+      contentEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+          <h4 style="margin:0; color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.5rem; font-size:1rem; font-weight:700;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Salvamento Realizado com Sucesso!</span>
+          </h4>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.hideCourseEditorRedirectWarning()" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center; gap:0.25rem;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Fechar
+          </button>
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-primary); line-height:1.5; margin:0 0 1.25rem 0;">
+          Os dados deste relatório foram salvos no sistema. Clique no botão <strong>Continuar</strong> abaixo para prosseguir para o Catálogo Geral de Estruturas do Curso.
+        </p>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn btn-primary" onclick="app.redirectWithoutSavingToCourseSettings()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.4rem; background:var(--accent-emerald); border-color:var(--accent-emerald);">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            Continuar para Configurações
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="app.hideCourseEditorRedirectWarning()" style="font-weight:600;">
+            Permanecer no Relatório
+          </button>
+        </div>
+      `;
+    } else if (state === 'error') {
+      cardEl.style.background = 'rgba(244, 63, 94, 0.1)';
+      cardEl.style.border = '1px solid rgba(244, 63, 94, 0.35)';
+      contentEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+          <h4 style="margin:0; color:var(--accent-rose-text); display:flex; align-items:center; gap:0.5rem; font-size:1rem; font-weight:700;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <span>Erro ao Salvar Dados</span>
+          </h4>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.hideCourseEditorRedirectWarning()" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center; gap:0.25rem;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Retornar
+          </button>
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-primary); line-height:1.5; margin:0 0 1.25rem 0;">
+          Não foi possível salvar os dados do relatório neste momento${errorMsg ? ': ' + errorMsg : '.'}<br>
+          Você pode tentar novamente ou retornar para continuar editando sem sair.
+        </p>
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn btn-primary" onclick="app.saveAndRedirectToCourseSettings()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"></path><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+            Tentar Salvar Novamente
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="app.hideCourseEditorRedirectWarning()" style="font-weight:600;">
+            Retornar ao Relatório
+          </button>
+        </div>
+      `;
+    }
+  }
+
   showCourseEditorRedirectWarning() {
+    this.renderCourseEditorRedirectCard('warning');
     const cardEl = document.getElementById('wizard-course-redirect-warning-card');
     if (cardEl) {
       cardEl.style.display = 'block';
@@ -2850,10 +2942,15 @@ class AutoReportApp {
   }
 
   saveAndRedirectToCourseSettings() {
-    this.saveCurrentStepData();
-    this.showToast('✓ Progresso salvo com sucesso! Redirecionando para as Configurações...', 'success');
-    this.hideCourseEditorRedirectWarning();
-    this.navigateTo('master-course-structure');
+    try {
+      this.saveCurrentStepData();
+      this.showToast('✓ Dados salvos com sucesso!', 'success');
+      this.renderCourseEditorRedirectCard('success');
+    } catch (err) {
+      console.error('Erro ao salvar dados no alerta de redirecionamento:', err);
+      this.showToast('❌ Ocorreu um erro ao salvar os dados.', 'error');
+      this.renderCourseEditorRedirectCard('error', err ? err.message : '');
+    }
   }
 
   redirectWithoutSavingToCourseSettings() {

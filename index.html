@@ -714,31 +714,9 @@
                 </div>
 
                 <!-- Card Integrado In-Page para Alerta de Redirecionamento da Estrutura (Sem Pop-up) -->
-                <div id="wizard-course-redirect-warning-card" class="inpage-editor-card" style="display:none; margin-bottom:1.25rem; background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.3); border-radius:var(--radius-md); padding:1.25rem;">
-                  <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
-                    <h4 style="margin:0; color:#fbbf24; display:flex; align-items:center; gap:0.5rem; font-size:1rem; font-weight:700;">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                      <span>Atenção: Redirecionamento para Gerenciador Geral de Estruturas</span>
-                    </h4>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.hideCourseEditorRedirectWarning()" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center; gap:0.25rem;">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Fechar
-                    </button>
-                  </div>
-                  <p style="font-size:0.88rem; color:var(--text-primary); line-height:1.5; margin:0 0 1.25rem 0;">
-                    Você será redirecionado para a página de <strong>Configurações do Catálogo Geral de Estruturas do Curso</strong>.<br>
-                    <span style="color:#fbbf24; font-weight:600;">⚠️ Recomendação Importante:</span> Qualquer alteração realizada neste relatório poderá ser perdida se não for salva. Recomendamos <strong>salvar os dados atuais</strong> antes de continuar.
-                  </p>
-                  <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
-                    <button type="button" class="btn btn-primary" onclick="app.saveAndRedirectToCourseSettings()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                      Salvar e Continuar
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="app.redirectWithoutSavingToCourseSettings()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.4rem;">
-                      Ir sem Salvar
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="app.hideCourseEditorRedirectWarning()" style="font-weight:600;">
-                      Cancelar
-                    </button>
+                <div id="wizard-course-redirect-warning-card" class="inpage-editor-card" style="display:none; margin-bottom:1.25rem; border-radius:var(--radius-md); padding:1.25rem;">
+                  <div id="wizard-course-redirect-warning-content">
+                    <!-- Conteúdo dinâmico renderizado via app.renderCourseEditorRedirectCard() -->
                   </div>
                 </div>
 
@@ -1395,7 +1373,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.1.1</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.1.2</span>
         </div>
       </footer>
     </div>
