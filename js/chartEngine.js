@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Gráfico de Relatório (Chart Engine)
- * Versão: v.2.2.5
+ * Versão: v.2.2.6
  */
 
 class ChartEngine {
@@ -88,13 +88,12 @@ class ChartEngine {
       'Como você avalia a Formação'
     ];
 
-    // Se a matriz estiver vazia ou com valores não numéricos, fornecer padrão elegante
+    // Utilizar a matriz real calculada dos dados brutos
     const safeMatrix = labels.map((_, i) => {
       if (criterionPercentMatrix && criterionPercentMatrix[i] && criterionPercentMatrix[i].length === 5) {
-        const sum = criterionPercentMatrix[i].reduce((a, b) => a + b, 0);
-        if (sum > 0) return criterionPercentMatrix[i];
+        return criterionPercentMatrix[i];
       }
-      return [0, 0, 10, 15, 75]; // Padrão de exemplo
+      return [0, 0, 0, 0, 0];
     });
 
     const datasetLabels = ['1 - Ruim', '2 - Regular', '3 - Neutro', '4 - Muito Bom', '5 - Excelente'];

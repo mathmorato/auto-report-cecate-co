@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.2.2.5
+ * Versão: v.2.2.6
  */
 
 class ExcelParser {
@@ -229,7 +229,10 @@ class ExcelParser {
   /**
    * Identifica colunas da Planilha de Avaliação
    */
-  mapEvaluationColumns(headerRow = []) {
+  /**
+   * Identifica colunas da Planilha de Avaliação
+   */
+  mapEvaluationColumns(headerRow = [], sampleRows = []) {
     const mapping = {
       timestamp: -1,
       name: -1,
@@ -247,6 +250,8 @@ class ExcelParser {
       comments: -1
     };
 
+    if (!headerRow || headerRow.length === 0) return mapping;
+
     headerRow.forEach((colName, idx) => {
       if (!colName) return;
       const clean = this.normalizeStr(String(colName));
@@ -263,10 +268,8 @@ class ExcelParser {
         mapping.phone = idx;
       } else if (clean.includes('municipio') || clean.includes('cidade')) {
         mapping.municipality = idx;
-      } else if (clean.includes('fazpartedo') || clean.includes('representacao')) {
+      } else if (clean.includes('fazpartedo') || clean.includes('representacao') || clean.includes('vocefazpartedo')) {
         mapping.representation = idx;
-      } else if (clean.includes('avaliarde1a5') || clean.includes('1significagruim') || clean.includes('comovoceavali')) {
-        mapping.ratings.push({ index: idx, label: colName });
       } else if (clean.includes('maisgostou') || clean.includes('aspectospositivos')) {
         mapping.likedAspects = idx;
       } else if (clean.includes('melhorados') || clean.includes('melhorar') || clean.includes('aspectosamelhorar')) {
@@ -275,12 +278,76 @@ class ExcelParser {
         mapping.institution = idx;
       } else if (clean.includes('sugestaodetemas') || clean.includes('temasparafuturas')) {
         mapping.suggestions = idx;
-      } else if (clean.includes('comoficousabendo') || clean.includes('divulgacao')) {
+      } else if (clean.includes('comoficousabendo') || (clean.includes('divulgacao') && !clean.includes('avaliar'))) {
         mapping.howFound = idx;
       } else if (clean.includes('comentarios') || clean.includes('sugestoes')) {
         mapping.comments = idx;
       }
     });
+
+    // Mapeamento das 7 colunas de perguntas de Avaliação (Escala 1 a 5)
+    headerRow.forEach((colName, idx) => {
+      if (!colName) return;
+      const clean = this.normalizeStr(String(colName));
+
+      const isRatingHeader = clean.includes('avaliarde1a5') ||
+                             clean.includes('1significagruim') ||
+                             clean.includes('comovoceavali') ||
+                             clean.includes('avaliacaoda') ||
+                             clean.includes('avaliadoduracao') ||
+                             clean.includes('avaliadolocal') ||
+                             clean.includes('avaliadohorario') ||
+                             clean.includes('avaliadodata');
+
+      if (isRatingHeader) {
+        mapping.ratings.push({ index: idx, label: colName });
+      }
+    });
+
+    // Se o cabeçalho não identificou 7 colunas, inspecionar as linhas de dados de amostra
+    if (mapping.ratings.length < 7 && sampleRows && sampleRows.length > 0) {
+      const candidates = [];
+      const nonRatingIndices = [
+        mapping.timestamp, mapping.name, mapping.cpf, mapping.email, mapping.phone,
+        mapping.municipality, mapping.representation, mapping.likedAspects, mapping.improveAspects,
+        mapping.institution, mapping.suggestions, mapping.howFound, mapping.comments
+      ];
+
+      for (let colIdx = 0; colIdx < headerRow.length; colIdx++) {
+        if (nonRatingIndices.includes(colIdx)) continue;
+
+        let isNumericRatingCol = true;
+        let validCount = 0;
+
+        for (let r = 0; r < Math.min(15, sampleRows.length); r++) {
+          const valStr = String(sampleRows[r]?.[colIdx] || '').trim();
+          if (!valStr) continue;
+
+          const match = valStr.match(/^([1-5])/);
+          if (match) {
+            validCount++;
+          } else {
+            const num = parseFloat(valStr);
+            if (!isNaN(num) && num >= 1 && num <= 5) {
+              validCount++;
+            } else {
+              isNumericRatingCol = false;
+              break;
+            }
+          }
+        }
+
+        if (isNumericRatingCol && validCount > 0) {
+          candidates.push({ index: colIdx, label: headerRow[colIdx] || `Pergunta ${colIdx + 1}` });
+        }
+      }
+
+      if (candidates.length >= 7) {
+        mapping.ratings = candidates.slice(0, 7);
+      } else if (candidates.length > 0 && mapping.ratings.length === 0) {
+        mapping.ratings = candidates;
+      }
+    }
 
     return mapping;
   }
@@ -293,7 +360,8 @@ class ExcelParser {
     if (!this.ibgeLookup.size) this.initIbgeLookup();
 
     const headers = rows[0];
-    const colMap = mapping || this.mapEvaluationColumns(headers);
+    const sampleRows = rows.slice(1, 20);
+    const colMap = mapping || this.mapEvaluationColumns(headers, sampleRows);
     const results = [];
 
     for (let r = 1; r < rows.length; r++) {
@@ -323,19 +391,28 @@ class ExcelParser {
       // Representação
       const rawRep = colMap.representation !== -1 && row[colMap.representation] ? String(row[colMap.representation]).trim() : '';
       let representation = 'Gestão municipal';
-      if (rawRep.toUpperCase().includes('CACS') || rawRep.toUpperCase().includes('FUNDEB')) {
+      if (rawRep.toUpperCase().includes('CACS') || rawRep.toUpperCase().includes('FUNDEB') || rawRep.toUpperCase().includes('CONSELHO')) {
         representation = 'CACS-FUNDEB';
       }
 
-      // Notas 1 a 5 (até 7 perguntas)
+      // Extrair Notas de 1 a 5 (até 7 perguntas)
+      const extractRating = (cellVal) => {
+        if (cellVal === null || cellVal === undefined || cellVal === '') return null;
+        const str = String(cellVal).trim();
+        const match = str.match(/^([1-5])/);
+        if (match) return parseInt(match[1], 10);
+        const num = parseFloat(str);
+        if (!isNaN(num) && num >= 1 && num <= 5) return Math.round(num);
+        return null;
+      };
+
       const ratings = [];
       if (colMap.ratings && colMap.ratings.length > 0) {
         colMap.ratings.forEach(ratingItem => {
-          const val = parseFloat(row[ratingItem.index]);
-          ratings.push(!isNaN(val) && val >= 1 && val <= 5 ? val : 5);
+          const parsed = extractRating(row[ratingItem.index]);
+          ratings.push(parsed !== null ? parsed : 5);
         });
       } else {
-        // Fallback padrão se não mapeado
         for (let i = 0; i < 7; i++) ratings.push(5);
       }
 
