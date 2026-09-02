@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.2
+ * Versão: v.2.1.3
  */
 
 window.icons = {
@@ -1295,11 +1295,61 @@ class AutoReportApp {
     if (t.contactsData) {
       this.setVal('wiz-contact-start-date', t.contactsData.startDate);
       this.setVal('wiz-contact-methods', t.contactsData.methods);
+      this.syncContactCheckboxesFromSavedMethods(t.contactsData.methods);
       this.setVal('wiz-contact-responsible', t.contactsData.responsible);
       this.setVal('wiz-contact-count', t.contactsData.contactedCount);
       this.setVal('wiz-contact-emails', t.contactsData.emailsSent);
       this.setVal('wiz-contact-phones', t.contactsData.phoneCalls);
+      this.setVal('wiz-contact-notes', t.contactsData.notes);
+    } else {
+      this.syncContactCheckboxesFromSavedMethods('Ofícios, E-mails, Telefones e WhatsApp');
     }
+  }
+
+  updateContactMethodsFromCheckboxes() {
+    const checkboxes = document.querySelectorAll('.contact-method-checkbox:checked');
+    const selected = Array.from(checkboxes).map(cb => cb.value);
+
+    let formattedString = '';
+    if (selected.length === 1) {
+      formattedString = selected[0];
+    } else if (selected.length === 2) {
+      formattedString = `${selected[0]} e ${selected[1]}`;
+    } else if (selected.length > 2) {
+      const last = selected.pop();
+      formattedString = `${selected.join(', ')} e ${last}`;
+    }
+
+    const hiddenInput = document.getElementById('wiz-contact-methods');
+    if (hiddenInput) {
+      hiddenInput.value = formattedString;
+    }
+
+    if (this.currentTraining) {
+      if (!this.currentTraining.contactsData) this.currentTraining.contactsData = {};
+      this.currentTraining.contactsData.methods = formattedString;
+      this.saveCurrentStepData();
+    }
+  }
+
+  syncContactCheckboxesFromSavedMethods(methodsString) {
+    const hiddenInput = document.getElementById('wiz-contact-methods');
+    if (hiddenInput && methodsString !== undefined) {
+      hiddenInput.value = methodsString;
+    }
+
+    const str = (methodsString || 'Ofícios, E-mails, Telefones e WhatsApp').toLowerCase();
+    const checkboxes = document.querySelectorAll('.contact-method-checkbox');
+    checkboxes.forEach(cb => {
+      const val = cb.value.toLowerCase();
+      if (val === 'telefones') {
+        cb.checked = str.includes('telefone') || str.includes('ligaç');
+      } else if (val === 'reuniões virtuais') {
+        cb.checked = str.includes('reuniã') || str.includes('virtual') || str.includes('videoconfer');
+      } else {
+        cb.checked = str.includes(val);
+      }
+    });
   }
 
   removeEtapa1ConvocacaoFile() {
