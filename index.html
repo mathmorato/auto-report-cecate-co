@@ -879,19 +879,11 @@
 
                 <div style="margin-top:2rem;">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
-                    <h4 style="font-size:0.95rem; color:var(--text-secondary); margin:0;">Participantes Processados</h4>
-                    <div style="display:flex; gap:0.4rem;">
-                      <button type="button" class="btn btn-secondary btn-sm" id="btn-subtab-registration" onclick="app.switchAttendanceSubTab('registration')" style="padding:0.25rem 0.65rem; font-weight:700; font-size:0.78rem;">Inscritos</button>
-                      <button type="button" class="btn btn-secondary btn-sm" id="btn-subtab-attendance" onclick="app.switchAttendanceSubTab('attendance')" style="padding:0.25rem 0.65rem; font-weight:700; font-size:0.78rem;">Presentes</button>
-                    </div>
-                  </div>
-
-                  <div id="wizard-registration-table-container" style="display:none;">
-                    <!-- Tabela de inscritos renderizada dinamicamente -->
+                    <h4 style="font-size:0.95rem; color:var(--text-secondary); margin:0;">Lista Unificada de Participantes (Inscrição & Presença)</h4>
                   </div>
 
                   <div id="wizard-attendance-table-container">
-                    <!-- Tabela de presentes renderizada dinamicamente -->
+                    <!-- Tabela única consolidada renderizada dinamicamente pelo JS -->
                   </div>
                 </div>
 
@@ -1437,7 +1429,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.1.9</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.2.0</span>
         </div>
       </footer>
     </div>

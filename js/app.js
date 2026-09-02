@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.1.9
+ * Versão: v.2.2.0
  */
 
 window.icons = {
@@ -4553,6 +4553,83 @@ class AutoReportApp {
     }
   }
 
+  getConsolidatedParticipantsList() {
+    if (!this.currentTraining) return [];
+
+    const regList = this.currentTraining.registrations || [];
+    const attList = this.currentTraining.attendance || [];
+
+    const regMapByCpf = new Map();
+    regList.forEach(reg => {
+      if (reg.cpf) {
+        const clean = reg.cpf.replace(/\D/g, '');
+        if (clean && clean.length === 11) regMapByCpf.set(clean, reg);
+      }
+    });
+
+    const consolidated = [];
+    const processedRegIds = new Set();
+
+    // 1. Processar presentes e cruzar com inscritos pelo CPF
+    attList.forEach(att => {
+      const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '') : '';
+      const matchedReg = cleanCpf && cleanCpf.length === 11 ? regMapByCpf.get(cleanCpf) : null;
+
+      if (matchedReg) {
+        processedRegIds.add(matchedReg.id);
+        consolidated.push({
+          id: att.id,
+          regId: matchedReg.id,
+          name: matchedReg.name || att.name,
+          cpf: att.cpf || matchedReg.cpf,
+          municipality: matchedReg.municipality || att.municipality,
+          ibgeCode: matchedReg.ibgeCode || att.ibgeCode,
+          representation: matchedReg.representation || att.representation,
+          roleGestao: matchedReg.roleGestao || att.roleGestao,
+          roleCACS: matchedReg.roleCACS || att.roleCACS,
+          status: 'Inscrito e Presente',
+          matchedByCpf: true,
+          isCpfValidated: true
+        });
+      } else {
+        consolidated.push({
+          id: att.id,
+          name: att.name,
+          cpf: att.cpf,
+          municipality: att.municipality,
+          ibgeCode: att.ibgeCode,
+          representation: att.representation,
+          roleGestao: att.roleGestao,
+          roleCACS: att.roleCACS,
+          status: 'Apenas Presente',
+          matchedByCpf: false,
+          isCpfValidated: false
+        });
+      }
+    });
+
+    // 2. Adicionar inscritos que não foram conciliados na lista de presença
+    regList.forEach(reg => {
+      if (!processedRegIds.has(reg.id)) {
+        consolidated.push({
+          id: reg.id,
+          name: reg.name,
+          cpf: reg.cpf,
+          municipality: reg.municipality,
+          ibgeCode: reg.ibgeCode,
+          representation: reg.representation,
+          roleGestao: reg.roleGestao,
+          roleCACS: reg.roleCACS,
+          status: 'Apenas Inscrito',
+          matchedByCpf: false,
+          isCpfValidated: false
+        });
+      }
+    });
+
+    return consolidated;
+  }
+
   getInvitedMunicipalityOptions() {
     const list = this.currentTraining?.municipalities || [];
     const names = new Set();
@@ -4596,6 +4673,9 @@ class AutoReportApp {
       } else if (col === 'cpf') {
         valA = a.cpf || '';
         valB = b.cpf || '';
+      } else if (col === 'status') {
+        valA = a.status || '';
+        valB = b.status || '';
       } else if (col === 'municipality') {
         valA = a.municipality || 'zzzz';
         valB = b.municipality || 'zzzz';
@@ -4614,17 +4694,15 @@ class AutoReportApp {
     return sorted;
   }
 
-  updateParticipantField(listType, participantId, field, value) {
+  updateParticipantField(participantId, field, value) {
     if (!this.currentTraining) return;
 
-    const list = listType === 'registration'
-      ? (this.currentTraining.registrations || [])
-      : (this.currentTraining.attendance || []);
-
-    const participant = list.find(p => p.id === participantId);
-    if (!participant) return;
-
     const val = (value || '').trim();
+    let participant = (this.currentTraining.attendance || []).find(p => p.id === participantId);
+    if (!participant) {
+      participant = (this.currentTraining.registrations || []).find(p => p.id === participantId);
+    }
+    if (!participant) return;
 
     if (field === 'municipality') {
       participant.municipality = val;
@@ -4643,25 +4721,27 @@ class AutoReportApp {
       }
     }
 
-    // Sincronizar alteração entre inscrição e presença se houver CPF conciliado
+    // Se possui CPF, sincronizar no registro da outra planilha caso exista
     if (participant.cpf) {
       const cleanCpf = participant.cpf.replace(/\D/g, '');
-      const otherList = listType === 'registration'
-        ? (this.currentTraining.attendance || [])
-        : (this.currentTraining.registrations || []);
+      if (cleanCpf && cleanCpf.length === 11) {
+        const regMatch = (this.currentTraining.registrations || []).find(r => r.cpf && r.cpf.replace(/\D/g, '') === cleanCpf);
+        const attMatch = (this.currentTraining.attendance || []).find(a => a.cpf && a.cpf.replace(/\D/g, '') === cleanCpf);
 
-      const matchedOther = otherList.find(o => o.cpf && o.cpf.replace(/\D/g, '') === cleanCpf);
-      if (matchedOther) {
-        if (field === 'municipality') matchedOther.municipality = val;
-        if (field === 'representation') matchedOther.representation = val;
-        if (field === 'role') {
-          if (matchedOther.representation === 'CACS-FUNDEB') matchedOther.roleCACS = val;
-          else matchedOther.roleGestao = val;
-        }
+        [regMatch, attMatch].forEach(item => {
+          if (item && item !== participant) {
+            if (field === 'municipality') item.municipality = val;
+            if (field === 'representation') item.representation = val;
+            if (field === 'role') {
+              if (item.representation === 'CACS-FUNDEB') item.roleCACS = val;
+              else item.roleGestao = val;
+            }
+          }
+        });
       }
     }
 
-    // Recalcular totais e atualizar
+    // Recalcular totais e atualizar visualização
     this.reconcileMunicipalitiesFromRegistrationAndAttendance();
     this.renderAttendanceStep();
     this.saveCurrentStepData();
@@ -4670,7 +4750,6 @@ class AutoReportApp {
 
   renderAttendanceStep() {
     const statusBanner = document.getElementById('wizard-attendance-status-banner');
-    const regContainer = document.getElementById('wizard-registration-table-container');
     const attContainer = document.getElementById('wizard-attendance-table-container');
     const table4Container = document.getElementById('wizard-table4-preview');
     if (!this.currentTraining) return;
@@ -4731,93 +4810,83 @@ class AutoReportApp {
     };
 
     const invitedMunOptions = this.getInvitedMunicipalityOptions();
+    const consolidatedList = this.getConsolidatedParticipantsList();
+    const sortedList = this.sortParticipantsList(consolidatedList, sortCol, sortDir);
 
     // Helper de renderização de linha de participante
-    const renderParticipantRow = (p, listType) => {
+    const renderParticipantRow = (p) => {
+      const isEditable = !p.isCpfValidated;
       const isUnmapped = !p.municipality;
-      const roleVal = p.roleGestao || p.roleCACS || '';
+      const roleVal = p.roleGestao || p.roleCACS || '-';
+
+      let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700;">🔷 Inscrito e Presente</span>`;
+      if (p.status === 'Apenas Inscrito') {
+        statusBadge = `<span class="nav-badge badge-blue" style="font-size:0.75rem; font-weight:700;">🔹 Apenas Inscrito</span>`;
+      } else if (p.status === 'Apenas Presente') {
+        statusBadge = `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.2); color:var(--accent-amber-text); font-size:0.75rem; font-weight:700;">🟢 Apenas Presente</span>`;
+      }
+
+      const munTd = isEditable ? `
+        <select class="form-control form-control-sm" style="font-size:0.82rem; padding:0.25rem 0.45rem; min-width:145px; ${isUnmapped ? 'border-color:var(--accent-amber); background:rgba(245, 158, 11, 0.12); font-weight:700; color:var(--accent-amber-text);' : ''}" onchange="app.updateParticipantField('${p.id}', 'municipality', this.value)">
+          <option value="">-- Selecionar Município --</option>
+          ${invitedMunOptions.map(m => `<option value="${m}" ${p.municipality && p.municipality.toLowerCase() === m.toLowerCase() ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+      ` : `
+        <span style="font-weight:600; color:var(--text-primary);">${p.municipality || '-'}</span>
+        <span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.25rem; padding:0.1rem 0.3rem;">✓ CPF Conciliado</span>
+      `;
+
+      const repTd = isEditable ? `
+        <select class="form-control form-control-sm" style="font-size:0.78rem; padding:0.2rem 0.4rem; min-width:130px;" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
+          <option value="Gestão municipal" ${p.representation === 'Gestão municipal' ? 'selected' : ''}>Gestão municipal</option>
+          <option value="CACS-FUNDEB" ${p.representation === 'CACS-FUNDEB' ? 'selected' : ''}>CACS-FUNDEB</option>
+        </select>
+      ` : `
+        <span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:var(--accent-blue-text); font-size:0.78rem;">${p.representation}</span>
+      `;
+
+      const roleTd = isEditable ? `
+        <input type="text" class="form-control form-control-sm" style="font-size:0.8rem; padding:0.25rem 0.45rem; min-width:150px;" placeholder="Cargo / Função..." value="${(roleVal === '-' ? '' : roleVal).replace(/"/g, '&quot;')}" onchange="app.updateParticipantField('${p.id}', 'role', this.value)">
+      ` : `
+        <span style="color:var(--text-secondary); font-size:0.84rem;">${roleVal}</span>
+      `;
 
       return `
         <tr style="${isUnmapped ? 'background: rgba(245, 158, 11, 0.05);' : ''}">
-          <td style="vertical-align:middle;">
-            <strong>${p.name || 'Não informado'}</strong>
-            ${p.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.35rem; padding:0.1rem 0.35rem;">✓ CPF Conciliado</span>' : ''}
-          </td>
+          <td style="vertical-align:middle;"><strong>${p.name || 'Não informado'}</strong></td>
           <td style="font-family:monospace; vertical-align:middle;">${p.cpf || '-'}</td>
-          <td style="vertical-align:middle;">
-            <select class="form-control form-control-sm" style="font-size:0.82rem; padding:0.25rem 0.45rem; min-width:145px; ${isUnmapped ? 'border-color:var(--accent-amber); background:rgba(245, 158, 11, 0.12); font-weight:700; color:var(--accent-amber-text);' : ''}" onchange="app.updateParticipantField('${listType}', '${p.id}', 'municipality', this.value)">
-              <option value="">-- Selecionar Município --</option>
-              ${invitedMunOptions.map(m => `<option value="${m}" ${p.municipality && p.municipality.toLowerCase() === m.toLowerCase() ? 'selected' : ''}>${m}</option>`).join('')}
-            </select>
-          </td>
-          <td style="vertical-align:middle;">
-            <select class="form-control form-control-sm" style="font-size:0.78rem; padding:0.2rem 0.4rem; min-width:130px;" onchange="app.updateParticipantField('${listType}', '${p.id}', 'representation', this.value)">
-              <option value="Gestão municipal" ${p.representation === 'Gestão municipal' ? 'selected' : ''}>Gestão municipal</option>
-              <option value="CACS-FUNDEB" ${p.representation === 'CACS-FUNDEB' ? 'selected' : ''}>CACS-FUNDEB</option>
-            </select>
-          </td>
-          <td style="vertical-align:middle;">
-            <input type="text" class="form-control form-control-sm" style="font-size:0.8rem; padding:0.25rem 0.45rem; min-width:150px;" placeholder="Cargo / Função..." value="${roleVal.replace(/"/g, '&quot;')}" onchange="app.updateParticipantField('${listType}', '${p.id}', 'role', this.value)">
-          </td>
+          <td style="vertical-align:middle;">${statusBadge}</td>
+          <td style="vertical-align:middle;">${munTd}</td>
+          <td style="vertical-align:middle;">${repTd}</td>
+          <td style="vertical-align:middle;">${roleTd}</td>
         </tr>
       `;
     };
 
-    // Renderizar Tabela de Inscritos
-    if (regContainer) {
-      if (regList.length === 0) {
-        regContainer.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma planilha de inscrições importada ainda.</p>`;
-      } else {
-        const sortedReg = this.sortParticipantsList(regList, sortCol, sortDir);
-        regContainer.innerHTML = `
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-            <span>Exibindo <strong>${regList.length}</strong> inscritos (Gestão: <strong>${regGestores}</strong> | CACS: <strong>${regCacs}</strong>):</span>
-            <span style="font-size:0.78rem; color:var(--text-secondary);">Clique nos cabeçalhos para ordenar. Selecione o município para participantes não identificados.</span>
-          </div>
-          <div class="table-responsive-wrapper" style="max-height:380px;">
-            <table class="report-data-table">
-              <thead>
-                <tr>
-                  <th onclick="app.sortAttendanceTable('name')" style="cursor:pointer; user-select:none;" title="Ordenar por Nome">Nome Completo ${sortIcon('name')}</th>
-                  <th onclick="app.sortAttendanceTable('cpf')" style="cursor:pointer; user-select:none;" title="Ordenar por CPF">CPF ${sortIcon('cpf')}</th>
-                  <th onclick="app.sortAttendanceTable('municipality')" style="cursor:pointer; user-select:none;" title="Ordenar por Município">Município (Seleção Manual) ${sortIcon('municipality')}</th>
-                  <th onclick="app.sortAttendanceTable('representation')" style="cursor:pointer; user-select:none;" title="Ordenar por Segmento">Segmento ${sortIcon('representation')}</th>
-                  <th onclick="app.sortAttendanceTable('role')" style="cursor:pointer; user-select:none;" title="Ordenar por Cargo">Cargo / Função ${sortIcon('role')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${sortedReg.map(r => renderParticipantRow(r, 'registration')).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-      }
-    }
-
-    // Renderizar Tabela de Presentes
+    // Renderizar Tabela Única Consolidada
     if (attContainer) {
-      if (attList.length === 0) {
-        attContainer.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma lista de presença importada ainda. Arraste ou selecione a planilha acima.</p>`;
+      if (consolidatedList.length === 0) {
+        attContainer.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma planilha importada ainda. Arraste ou selecione as planilhas acima.</p>`;
       } else {
-        const sortedAtt = this.sortParticipantsList(attList, sortCol, sortDir);
         attContainer.innerHTML = `
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-            <span>Exibindo <strong>${attList.length}</strong> presentes (Gestão: <strong>${attGestores}</strong> | CACS: <strong>${attCacs}</strong>):</span>
-            <span style="font-size:0.78rem; color:var(--text-secondary);">Clique nos cabeçalhos para ordenar. Selecione o município para participantes não identificados.</span>
+          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <span>Exibindo <strong>${consolidatedList.length}</strong> participantes total (Inscritos: <strong>${regList.length}</strong> | Presentes: <strong>${attList.length}</strong>):</span>
+            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e cargo ativada exclusivamente para CPFs não validados.</span>
           </div>
-          <div class="table-responsive-wrapper" style="max-height:380px;">
+          <div class="table-responsive-wrapper" style="max-height:420px;">
             <table class="report-data-table">
               <thead>
                 <tr>
                   <th onclick="app.sortAttendanceTable('name')" style="cursor:pointer; user-select:none;" title="Ordenar por Nome">Nome Completo ${sortIcon('name')}</th>
                   <th onclick="app.sortAttendanceTable('cpf')" style="cursor:pointer; user-select:none;" title="Ordenar por CPF">CPF ${sortIcon('cpf')}</th>
-                  <th onclick="app.sortAttendanceTable('municipality')" style="cursor:pointer; user-select:none;" title="Ordenar por Município">Município (Seleção Manual) ${sortIcon('municipality')}</th>
+                  <th onclick="app.sortAttendanceTable('status')" style="cursor:pointer; user-select:none;" title="Ordenar por Status">Status de Participação ${sortIcon('status')}</th>
+                  <th onclick="app.sortAttendanceTable('municipality')" style="cursor:pointer; user-select:none;" title="Ordenar por Município">Município ${sortIcon('municipality')}</th>
                   <th onclick="app.sortAttendanceTable('representation')" style="cursor:pointer; user-select:none;" title="Ordenar por Segmento">Segmento ${sortIcon('representation')}</th>
                   <th onclick="app.sortAttendanceTable('role')" style="cursor:pointer; user-select:none;" title="Ordenar por Cargo">Cargo / Função ${sortIcon('role')}</th>
                 </tr>
               </thead>
               <tbody>
-                ${sortedAtt.map(a => renderParticipantRow(a, 'attendance')).join('')}
+                ${sortedList.map(p => renderParticipantRow(p)).join('')}
               </tbody>
             </table>
           </div>
