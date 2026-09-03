@@ -728,25 +728,13 @@
                     <button type="button" class="btn btn-secondary btn-sm" onclick="app.openSelectCourseTemplateModal()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Selecionar modelo de estrutura de curso das Configurações">
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Selecionar Estrutura
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm" id="btn-toggle-course-editor" onclick="app.promptNavigateToCourseStructure()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;" title="Editar estrutura nas Configurações">
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> <span id="btn-toggle-course-editor-text">Editar Estrutura</span>
-                    </button>
                   </div>
                 </div>
 
-                <!-- Card Integrado In-Page para Alerta de Redirecionamento da Estrutura (Sem Pop-up) -->
-                <div id="wizard-course-redirect-warning-card" class="inpage-editor-card" style="display:none; margin-bottom:1.25rem; border-radius:var(--radius-md); padding:1.25rem;">
-                  <div id="wizard-course-redirect-warning-content">
-                    <!-- Conteúdo dinâmico renderizado via app.renderCourseEditorRedirectCard() -->
-                  </div>
-                </div>
-
-                <!-- Banner Informativo de Status da Estrutura -->
+                <!-- Banner Informativo da Estrutura Base -->
                 <div id="step4-structure-status-banner" style="margin-bottom:1.25rem; padding:0.75rem 1rem; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.25); border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
                   <div style="font-size:0.86rem; color:var(--text-primary); display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
                     <span><strong style="color:var(--accent-blue-text);">Estrutura base:</strong> <span id="step4-base-template-name" style="font-weight:700;">Modelo Padrão</span></span>
-                    <span style="color:var(--border-color);">•</span>
-                    <span><strong style="color:var(--accent-emerald-text);">Status:</strong> <span id="step4-structure-status-tag" class="nav-badge badge-emerald" style="font-size:0.78rem;">Cópia independente da capacitação</span></span>
                   </div>
                 </div>
 
@@ -1491,7 +1479,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.5.0</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.5.1</span>
         </div>
       </footer>
     </div>
