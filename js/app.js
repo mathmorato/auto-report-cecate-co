@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.1
+ * Versão: v.2.9.2
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.1';
+    this.version = 'v.2.9.2';
   }
 
   /**
@@ -7689,6 +7689,11 @@ class AutoReportApp {
         }
       }, 200);
     }
+    if (this.activeView === 'dashboard') {
+      this.renderDashboard();
+    } else if (this.activeView === 'trainings') {
+      this.renderTrainingsList();
+    }
   }
 
   /* ==========================================================================
@@ -7788,9 +7793,20 @@ class AutoReportApp {
       setProgress(80, 'Apagando fotografias e apêndices...');
       await new Promise(r => setTimeout(r, 200));
 
-      // Fase 4: Exclusão no banco IndexedDB
-      setProgress(95, 'Finalizando exclusão no banco...');
-      await window.db.delete('trainings', idToDelete);
+      // Fase 4: Exclusão completa no banco IndexedDB e na nuvem (Supabase)
+      setProgress(95, 'Finalizando exclusão no banco e na nuvem...');
+      await window.db.deleteTraining(idToDelete, true);
+
+      // Atualizar lista em memória e re-renderizar a visualização imediatamente
+      this.trainingList = (this.trainingList || []).filter(t => t.id !== idToDelete);
+      if (this.currentTraining && this.currentTraining.id === idToDelete) {
+        this.currentTraining = null;
+      }
+      if (this.activeView === 'dashboard') {
+        await this.renderDashboard();
+      } else if (this.activeView === 'trainings') {
+        await this.renderTrainingsList();
+      }
 
       setProgress(100, 'Capacitação excluída com sucesso!');
       if (progressBar) progressBar.style.background = 'linear-gradient(90deg, #10b981, #059669)';

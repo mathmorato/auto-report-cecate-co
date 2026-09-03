@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerenciador de Banco de Dados Local (IndexedDB) & Sincronização em Nuvem (Supabase)
- * Versão: v.2.9.1
+ * Versão: v.2.9.2
  */
 
 const SUPABASE_CONFIG = {
@@ -196,6 +196,9 @@ class TrainingDB {
       this.updateCloudIndicator(true);
 
       if (cloudTrainings && cloudTrainings.length > 0) {
+        const cloudIds = new Set(cloudTrainings.map(r => r.id));
+
+        // 1. Atualizar ou inserir registros vindos da nuvem
         for (const row of cloudTrainings) {
           if (row.data && row.id) {
             const local = await this.get('trainings', row.id);
@@ -205,6 +208,16 @@ class TrainingDB {
             if (!local || cloudDate >= localDate) {
               await this.saveTrainingFull(row.data, 'Sincronização da Nuvem (Supabase)', false);
             }
+          }
+        }
+
+        // 2. Limpar do IndexedDB local capacitações que foram deletadas da nuvem
+        const allLocal = await this.getAll('trainings');
+        for (const loc of allLocal) {
+          if (loc.isHistorical || (parseInt(loc.number) >= 6 && parseInt(loc.number) <= 14)) continue;
+          if (!cloudIds.has(loc.id)) {
+            console.log(`Capacitação ${loc.id} foi excluída na nuvem. Limpando do banco local...`);
+            await this.deleteTraining(loc.id, false);
           }
         }
       }
