@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.4.8
+ * Versão: v.2.4.9
  */
 
 window.icons = {
@@ -2912,11 +2912,25 @@ class AutoReportApp {
       return;
     }
 
-    // Ordenar municípios: Município Polo/Sede primeiro, seguido dos demais em ordem alfabética
+    // Ordenar municípios: Município Polo/Sede SEMPRE primeiro e fixo no topo
+    this.munSortField = this.munSortField || 'name';
+    this.munSortOrder = this.munSortOrder || 'asc';
+    const sortField = this.munSortField;
+    const sortOrder = this.munSortOrder;
+
     const sorted = [...muns].sort((a, b) => {
       if (a.isSede && !b.isSede) return -1;
       if (!a.isSede && b.isSede) return 1;
-      return (a.name || '').localeCompare(b.name || '');
+      if (a.isSede && b.isSede) return 0;
+
+      if (sortField === 'distance') {
+        const distA = parseFloat(a.distanceKm || 0);
+        const distB = parseFloat(b.distanceKm || 0);
+        return sortOrder === 'asc' ? distA - distB : distB - distA;
+      } else {
+        const comp = (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' });
+        return sortOrder === 'asc' ? comp : -comp;
+      }
     });
 
     let rowsHtml = sorted.map((m, idx) => {
@@ -2934,7 +2948,7 @@ class AutoReportApp {
           <td style="text-align:center;">
             <span class="font-mono" style="font-weight:700; color:var(--accent-blue-text); font-size:0.92rem;">${m.ibgeCode || '-'}</span>
           </td>
-          <td>
+          <td style="text-align:left;">
             <strong style="color:var(--text-primary); font-size:0.92rem;">${m.name || ''}</strong>
           </td>
           <td style="text-align:center;">
@@ -2966,9 +2980,19 @@ class AutoReportApp {
                 <input type="checkbox" id="mun-table-select-all" onchange="app.toggleSelectAllTableMunicipalities(this.checked)" title="Selecionar todos os municípios convocados" style="cursor:pointer; width:16px; height:16px;">
               </th>
               <th style="width: 130px; text-align:center;">Código IBGE</th>
-              <th>Nome do Município</th>
+              <th class="th-sortable" onclick="app.sortMunicipalities('name')" style="text-align:left; cursor:pointer;" title="Clique para classificar por Nome (${sortField === 'name' && sortOrder === 'asc' ? 'Decrescente Z-A' : 'Crescente A-Z'})">
+                <div style="display:inline-flex; align-items:center; gap:0.45rem;">
+                  <span>Nome do Município</span>
+                  <span class="sort-icon-badge">${this.getMunSortIcon('name')}</span>
+                </div>
+              </th>
               <th style="width: 70px; text-align:center;">UF</th>
-              <th style="width: 140px; text-align:right;">Distância (km)</th>
+              <th class="th-sortable" onclick="app.sortMunicipalities('distance')" style="width: 155px; text-align:right; cursor:pointer;" title="Clique para classificar por Distância (${sortField === 'distance' && sortOrder === 'asc' ? 'Decrescente' : 'Crescente'})">
+                <div style="display:inline-flex; align-items:center; justify-content:flex-end; gap:0.45rem; width:100%;">
+                  <span>Distância (km)</span>
+                  <span class="sort-icon-badge">${this.getMunSortIcon('distance')}</span>
+                </div>
+              </th>
               <th style="width: 140px; text-align:center;">Ações</th>
             </tr>
           </thead>
@@ -3243,6 +3267,59 @@ class AutoReportApp {
       await window.db.saveTrainingFull(this.currentTraining, `Exclusão em massa de ${deletedCount} municípios convocados`);
     }
     this.showToast(`${deletedCount} município(s) excluído(s) com sucesso!`, 'success');
+  }
+
+  /* --------------------------------------------------------------------------
+     ORDENAÇÃO DA TABELA DE MUNICÍPIOS (SEDE SEMPRE FIXA NO TOPO)
+     -------------------------------------------------------------------------- */
+  getMunSortIcon(field) {
+    if (this.munSortField !== field) {
+      // Ícone neutro de ordenação (linhas de classificação sutis)
+      return `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4;"><path d="M7 15l5 5 5-5"></path><path d="M7 9l5-5 5 5"></path></svg>`;
+    }
+    if (this.munSortOrder === 'asc') {
+      // Crescente: linhas ordenadas com seta para cima
+      return `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#f59e0b;"><line x1="3" y1="6" x2="11" y2="6"></line><line x1="3" y1="12" x2="9" y2="12"></line><line x1="3" y1="18" x2="7" y2="18"></line><polyline points="15 9 18 6 21 9"></polyline><line x1="18" y1="6" x2="18" y2="18"></line></svg>`;
+    } else {
+      // Decrescente: linhas ordenadas com seta para baixo
+      return `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#f59e0b;"><line x1="3" y1="6" x2="11" y2="6"></line><line x1="3" y1="12" x2="9" y2="12"></line><line x1="3" y1="18" x2="7" y2="18"></line><polyline points="15 15 18 18 21 15"></polyline><line x1="18" y1="6" x2="18" y2="18"></line></svg>`;
+    }
+  }
+
+  sortMunicipalities(field) {
+    if (!this.currentTraining?.municipalities) return;
+    if (this.munSortField === field) {
+      this.munSortOrder = this.munSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.munSortField = field;
+      this.munSortOrder = 'asc';
+    }
+
+    // Ordenar a lista na memória garantindo que a sede NUNCA saia do topo (índice 0)
+    const sortField = this.munSortField;
+    const sortOrder = this.munSortOrder;
+
+    this.currentTraining.municipalities.sort((a, b) => {
+      if (a.isSede && !b.isSede) return -1;
+      if (!a.isSede && b.isSede) return 1;
+      if (a.isSede && b.isSede) return 0;
+
+      if (sortField === 'distance') {
+        const distA = parseFloat(a.distanceKm || 0);
+        const distB = parseFloat(b.distanceKm || 0);
+        return sortOrder === 'asc' ? distA - distB : distB - distA;
+      } else {
+        const comp = (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' });
+        return sortOrder === 'asc' ? comp : -comp;
+      }
+    });
+
+    this.renderMunicipalitiesStep();
+    this.saveCurrentStepData();
+
+    const label = field === 'name' ? 'Nome do Município' : 'Distância (km)';
+    const dir = this.munSortOrder === 'asc' ? 'crescente' : 'decrescente';
+    this.showToast(`Municípios ordenados por ${label} (${dir}). A sede permanece fixa no topo.`);
   }
 
   recalculateAllDistancesToPolo() {

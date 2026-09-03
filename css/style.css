@@ -1781,6 +1781,30 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   vertical-align: middle;
 }
 
+.report-data-table th.th-sortable {
+  cursor: pointer !important;
+  user-select: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.report-data-table th.th-sortable:hover {
+  background: #334155 !important;
+}
+
+.report-data-table th.th-sortable:hover .sort-icon-badge svg {
+  color: #fbbf24 !important;
+  opacity: 1 !important;
+}
+
+body.light-theme .report-data-table th.th-sortable:hover {
+  background: #e2e8f0 !important;
+}
+
+body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
+  color: #d97706 !important;
+  opacity: 1 !important;
+}
+
 .report-data-table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-color);
