@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.2.5.9
+ * Versão: v.2.6.0
  */
 
 class ExcelParser {
@@ -172,11 +172,13 @@ class ExcelParser {
         ibgeCode = '';
       }
 
-      // Representação
+      // Representação (Vínculo)
       const rawRep = colMap.representation !== -1 && row[colMap.representation] ? String(row[colMap.representation]).trim() : '';
-      let representation = 'Gestão municipal';
+      let representation = '';
       if (rawRep.toUpperCase().includes('CACS') || rawRep.toUpperCase().includes('FUNDEB') || rawRep.toUpperCase().includes('CONSELHO')) {
         representation = 'CACS-FUNDEB';
+      } else if (rawRep.toUpperCase().includes('GESTAO') || rawRep.toUpperCase().includes('GESTÃO') || rawRep.toUpperCase().includes('MUNICIPAL')) {
+        representation = 'Gestão municipal';
       }
 
       const roleGestao = colMap.roleGestao !== -1 && row[colMap.roleGestao] ? String(row[colMap.roleGestao]).trim() : '';

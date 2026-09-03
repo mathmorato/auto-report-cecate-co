@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.5.9
+ * Versão: v.2.6.0
  */
 
 window.icons = {
@@ -5937,17 +5937,19 @@ class AutoReportApp {
     const renderParticipantRow = (p) => {
       // PERMITIR EDIÇÃO APENAS PARA PARTICIPANTES NO STATUS 'Apenas Presente'
       const isEditable = p.status === 'Apenas Presente';
-      const isUnmapped = !p.municipality;
+      const isUnmappedMun = !p.municipality;
+      const isUnmappedVinculo = !p.representation;
+      const isRowIncomplete = isEditable && (isUnmappedMun || isUnmappedVinculo);
 
       let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Inscrito e Presente</span>`;
       if (p.status === 'Apenas Inscrito') {
-        statusBadge = `<span class="nav-badge badge-blue" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>Apenas Inscrito</span>`;
+        statusBadge = `<span class="nav-badge badge-blue" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>Apenas Inscrito</span>`;
       } else if (p.status === 'Apenas Presente') {
-        statusBadge = `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.2); color:var(--accent-amber-text); font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>Apenas Presente</span>`;
+        statusBadge = `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.2); color:var(--accent-amber-text); font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>Apenas Presente</span>`;
       }
 
       const munTd = isEditable ? `
-        <select class="form-control form-control-sm" style="font-size:0.82rem; padding:0.25rem 0.45rem; min-width:145px; ${isUnmapped ? 'border-color:var(--accent-amber); background:rgba(245, 158, 11, 0.12); font-weight:700; color:var(--accent-amber-text);' : ''}" onchange="app.updateParticipantField('${p.id}', 'municipality', this.value)">
+        <select class="form-control form-control-sm" style="font-size:0.82rem; padding:0.25rem 0.45rem; min-width:145px; ${isUnmappedMun ? 'border-color:var(--accent-amber); background:rgba(245, 158, 11, 0.12); font-weight:700; color:var(--accent-amber-text);' : ''}" onchange="app.updateParticipantField('${p.id}', 'municipality', this.value)">
           <option value="">-- Selecionar Município --</option>
           ${invitedMunOptions.map(m => `<option value="${m}" ${p.municipality && p.municipality.toLowerCase() === m.toLowerCase() ? 'selected' : ''}>${m}</option>`).join('')}
         </select>
@@ -5957,18 +5959,19 @@ class AutoReportApp {
       `;
 
       const repTd = isEditable ? `
-        <select class="form-control form-control-sm" style="font-size:0.78rem; padding:0.2rem 0.4rem; min-width:145px;" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
-          <option value="Gestão municipal" ${p.representation === 'Gestão municipal' || !p.representation ? 'selected' : ''}>Gestão municipal</option>
+        <select class="form-control form-control-sm" style="font-size:0.82rem; padding:0.25rem 0.45rem; min-width:155px; ${isUnmappedVinculo ? 'border-color:var(--accent-amber); background:rgba(245, 158, 11, 0.12); font-weight:700; color:var(--accent-amber-text);' : ''}" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
+          <option value="" ${!p.representation ? 'selected' : ''}>-- Selecionar Vínculo --</option>
+          <option value="Gestão municipal" ${p.representation === 'Gestão municipal' ? 'selected' : ''}>Gestão municipal</option>
           <option value="CACS-FUNDEB" ${p.representation === 'CACS-FUNDEB' ? 'selected' : ''}>CACS-FUNDEB</option>
         </select>
       ` : `
         <span class="nav-badge ${p.representation === 'CACS-FUNDEB' ? 'badge-emerald' : 'badge-blue'}" style="font-size:0.78rem; font-weight:600; white-space:nowrap;">
-          ${p.representation || 'Gestão municipal'}
+          ${p.representation || 'Não informado'}
         </span>
       `;
 
       return `
-        <tr style="${isUnmapped ? 'background: rgba(245, 158, 11, 0.05);' : ''}">
+        <tr style="${isRowIncomplete ? 'background: rgba(245, 158, 11, 0.05);' : ''}">
           <td style="vertical-align:middle;"><strong>${p.name || 'Não informado'}</strong></td>
           <td style="font-family:monospace; vertical-align:middle;">${p.cpf || '-'}</td>
           <td style="vertical-align:middle;">${statusBadge}</td>
@@ -5988,7 +5991,7 @@ class AutoReportApp {
             <span>Exibindo <strong>${consolidatedList.length}</strong> participantes total (Inscritos: <strong>${regList.length}</strong> | Presentes: <strong>${attList.length}</strong>):</span>
             <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e vínculo ativada exclusivamente para participantes no status "Apenas Presente".</span>
           </div>
-          <div class="table-responsive-wrapper" style="max-height:420px;">
+          <div class="table-responsive-wrapper" style="max-height:480px; overflow-y:auto;">
             <table class="report-data-table">
               <thead>
                 <tr>

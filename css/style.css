@@ -1763,12 +1763,16 @@ body.light-theme .step-tab-btn.active .step-tab-num {
 
 .report-data-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.85rem;
   text-align: center;
 }
 
 .report-data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: #1e293b;
   padding: 0.85rem 1rem;
   font-weight: 700;
