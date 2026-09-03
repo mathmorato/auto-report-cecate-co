@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.6.0
+ * Versão: v.2.6.1
  */
 
 window.icons = {
@@ -42,13 +42,20 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
+    this.version = 'v.2.6.1';
   }
 
   /**
    * Inicialização da aplicação
    */
   async init() {
-    console.log('Inicializando AutoReport CECATE...');
+    console.log(`Inicializando AutoReport CECATE ${this.version}...`);
+
+    // Sincronizar versão em todos os rodapés (principal e lateral)
+    const footerVerEl = document.getElementById('app-footer-version');
+    if (footerVerEl) footerVerEl.textContent = this.version;
+    const sidebarVerEl = document.querySelector('.sidebar-footer div:last-child');
+    if (sidebarVerEl) sidebarVerEl.textContent = this.version;
 
     // 1. Inicializar Banco IndexedDB
     try {
@@ -5555,7 +5562,15 @@ class AutoReportApp {
     // Agrupar presentes por município (após cruzamento de CPF)
     const attMap = {};
     attList.forEach(att => {
-      const munName = att.municipality || 'Não Informado';
+      const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '') : '';
+      const isMatched = cleanCpf && cleanCpf.length === 11 && regMapByCpf.has(cleanCpf);
+
+      // Para participantes "Apenas Presente", só contabilizar município e vínculo se tiverem sido selecionados manualmente
+      const munName = isMatched ? (att.municipality || 'Não Informado') : (att.isManualMunicipality ? att.municipality : '');
+      const rep = isMatched ? att.representation : (att.isManualRepresentation ? att.representation : '');
+
+      if (!munName) return; // Não contabilizar se o município ainda não foi selecionado
+
       const munLower = munName.toLowerCase();
       // Filtrar textos de declaração
       if (munLower.includes('declaro') || munLower.includes('veracidade') || munLower.includes('confirmo') || munLower.includes('prestadas') || munLower.includes('formulario') || munLower.includes('termo') || munName.length > 45) {
@@ -5564,8 +5579,8 @@ class AutoReportApp {
       if (!attMap[munName]) {
         attMap[munName] = { cacs: 0, gestores: 0, ibgeCode: att.ibgeCode };
       }
-      if (att.representation === 'CACS-FUNDEB') attMap[munName].cacs++;
-      else attMap[munName].gestores++;
+      if (rep === 'CACS-FUNDEB') attMap[munName].cacs++;
+      else if (rep === 'Gestão municipal') attMap[munName].gestores++;
     });
 
     // Unir lista de TODOS os municípios (existentes na lista de convocados + mencionados nas planilhas)
@@ -5687,13 +5702,15 @@ class AutoReportApp {
           isCpfValidated: true
         });
       } else {
+        const manualMun = att.isManualMunicipality ? (att.municipality || '') : '';
+        const manualRep = att.isManualRepresentation ? (att.representation || '') : '';
         consolidated.push({
           id: att.id,
           name: att.name,
           cpf: att.cpf,
-          municipality: att.municipality,
+          municipality: manualMun,
           ibgeCode: att.ibgeCode,
-          representation: att.representation,
+          representation: manualRep,
           roleGestao: att.roleGestao,
           roleCACS: att.roleCACS,
           status: 'Apenas Presente',
@@ -5812,11 +5829,14 @@ class AutoReportApp {
     }
     if (!participant) return;
     
-    // RESTRIÇÃO: Permitir atualização apenas se for status "Apenas Presente"
-    if (participant.status !== 'Apenas Presente') return;
+    // RESTRIÇÃO: Permitir atualização apenas se não for participante conciliado na inscrição ("Apenas Presente")
+    const cleanCpf = participant.cpf ? participant.cpf.replace(/\D/g, '') : '';
+    const hasRegMatch = cleanCpf && cleanCpf.length === 11 && (this.currentTraining.registrations || []).some(r => r.cpf && r.cpf.replace(/\D/g, '') === cleanCpf);
+    if (hasRegMatch) return;
 
     if (field === 'municipality') {
       participant.municipality = val;
+      participant.isManualMunicipality = !!val;
       if (val && window.excelParser) {
         const normKey = window.excelParser.normalizeStr(val);
         const ibgeInfo = window.excelParser.ibgeLookup.get(normKey);
@@ -5824,6 +5844,7 @@ class AutoReportApp {
       }
     } else if (field === 'representation') {
       participant.representation = val;
+      participant.isManualRepresentation = !!val;
     }
 
     // Se possui CPF, sincronizar no registro da outra planilha caso exista

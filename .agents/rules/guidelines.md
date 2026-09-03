@@ -171,10 +171,14 @@ Toda alteração que modificar arquivos do projeto deverá gerar uma nova versã
 O agente deverá automaticamente:
 
 1. Identificar a versão atual.
-2. Determinar a próxima versão.
+2. Determinar a próxima versão (`v.X.Y.Z`).
 3. Realizar as alterações.
-4. Atualizar a versão no rodapé.
-5. Atualizar outros arquivos de versionamento necessários.
+4. **Atualizar a versão no rodapé em todos os locais da aplicação (Obrigatório a cada mudança)**:
+   - No rodapé principal oficial da aplicação (`index.html`: `<span id="app-footer-version">v.X.Y.Z</span>` dentro de `<footer class="app-main-footer">`).
+   - No rodapé do menu lateral (`index.html`: `.sidebar-footer`).
+   - No controlador dinâmico em `js/app.js` garantindo sincronia no DOM.
+   - É estritamente obrigatório conferir que ambos os rodapés foram atualizados antes de concluir a tarefa.
+5. Atualizar os cabeçalhos de versionamento em todos os arquivos JavaScript do projeto (`js/*.js`).
 6. Verificar a consistência da versão em todo o projeto.
 
 Não solicitar autorização para incrementar a versão.
