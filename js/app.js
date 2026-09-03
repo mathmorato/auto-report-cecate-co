@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.5.2
+ * Versão: v.2.5.3
  */
 
 window.icons = {
@@ -1301,7 +1301,7 @@ class AutoReportApp {
     if (t.team && t.team.length > 0) completedSteps++;
     if (t.municipalities && t.municipalities.length > 0) completedSteps++;
     if (t.courseModules && t.courseModules.length > 0) completedSteps++;
-    if (t.contactsData?.contactedCount > 0) completedSteps++;
+    if (t.contactsData?.startDate || t.contactsData?.methods) completedSteps++;
     if (t.attendance && t.attendance.length > 0) completedSteps++;
     if (t.evaluations && t.evaluations.length > 0) completedSteps++;
     if (t.media && t.media.filter(m => m.type === 'photo').length > 0) completedSteps++;
@@ -1386,16 +1386,24 @@ class AutoReportApp {
 
     // Etapa 5: Contatos
     if (t.contactsData) {
-      this.setVal('wiz-contact-start-date', this.isoToDmy(t.contactsData.startDate) || t.contactsData.startDate || '');
-      this.setVal('wiz-contact-methods', t.contactsData.methods);
-      this.syncContactCheckboxesFromSavedMethods(t.contactsData.methods);
-      this.setVal('wiz-contact-responsible', t.contactsData.responsible);
-      this.setVal('wiz-contact-count', t.contactsData.contactedCount);
-      this.setVal('wiz-contact-emails', t.contactsData.emailsSent);
-      this.setVal('wiz-contact-phones', t.contactsData.phoneCalls);
-      this.setVal('wiz-contact-notes', t.contactsData.notes);
+      // Limpar datas ou métodos mock para garantir que iniciem sem seleção/sem preenchimento
+      const isMockDate = t.contactsData.startDate === '2026-05-10';
+      const isMockMethods = t.contactsData.methods === 'Ofícios, E-mails, Telefones e WhatsApp';
+
+      const sDate = isMockDate ? '' : (this.isoToDmy(t.contactsData.startDate) || t.contactsData.startDate || '');
+      const sMethods = isMockMethods ? '' : (t.contactsData.methods || '');
+
+      this.setVal('wiz-contact-start-date', sDate);
+      this.setVal('wiz-contact-methods', sMethods);
+      this.syncContactCheckboxesFromSavedMethods(sMethods);
+      this.setVal('wiz-contact-responsible', t.contactsData.responsible || '');
+      this.setVal('wiz-contact-notes', t.contactsData.notes || '');
     } else {
-      this.syncContactCheckboxesFromSavedMethods('Ofícios, E-mails, Telefones e WhatsApp');
+      this.setVal('wiz-contact-start-date', '');
+      this.setVal('wiz-contact-methods', '');
+      this.syncContactCheckboxesFromSavedMethods('');
+      this.setVal('wiz-contact-responsible', '');
+      this.setVal('wiz-contact-notes', '');
     }
 
     // Etapa 6: Inscrições & Presença
@@ -1431,12 +1439,16 @@ class AutoReportApp {
   syncContactCheckboxesFromSavedMethods(methodsString) {
     const hiddenInput = document.getElementById('wiz-contact-methods');
     if (hiddenInput && methodsString !== undefined) {
-      hiddenInput.value = methodsString;
+      hiddenInput.value = methodsString || '';
     }
 
-    const str = (methodsString || 'Ofícios, E-mails, Telefones e WhatsApp').toLowerCase();
+    const str = (methodsString || '').toLowerCase().trim();
     const checkboxes = document.querySelectorAll('.contact-method-checkbox');
     checkboxes.forEach(cb => {
+      if (!str) {
+        cb.checked = false;
+        return;
+      }
       const val = cb.value.toLowerCase();
       if (val === 'telefones') {
         cb.checked = str.includes('telefone') || str.includes('ligaç');
@@ -1499,13 +1511,10 @@ class AutoReportApp {
 
     // Sincronizar dados da Etapa 5
     t.contactsData = {
-      startDate: this.dmyToIso(this.getVal('wiz-contact-start-date')) || this.getVal('wiz-contact-start-date'),
-      methods: this.getVal('wiz-contact-methods'),
-      responsible: this.getVal('wiz-contact-responsible'),
-      contactedCount: parseInt(this.getVal('wiz-contact-count')) || 0,
-      emailsSent: parseInt(this.getVal('wiz-contact-emails')) || 0,
-      phoneCalls: parseInt(this.getVal('wiz-contact-phones')) || 0,
-      notes: this.getVal('wiz-contact-notes')
+      startDate: this.dmyToIso(this.getVal('wiz-contact-start-date')) || this.getVal('wiz-contact-start-date') || '',
+      methods: this.getVal('wiz-contact-methods') || '',
+      responsible: this.getVal('wiz-contact-responsible') || '',
+      notes: this.getVal('wiz-contact-notes') || ''
     };
 
     // Disparar Autosave no IndexedDB

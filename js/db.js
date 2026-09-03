@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Banco de Dados Local (IndexedDB & State Management)
- * Versão: v.2.5.2
+ * Versão: v.2.5.3
  */
 
 class TrainingDB {
@@ -260,14 +260,10 @@ class TrainingDB {
       locationVenue: data.locationVenue || '',
       locationAddress: data.locationAddress || '',
       contactsData: data.contactsData || {
-        startDate: '2026-05-10',
-        methods: 'Ofícios, E-mails, Telefones e WhatsApp',
+        startDate: '',
+        methods: '',
         responsible: 'Equipe de Articulação Institucional CECATE-CO',
-        contactedCount: 14,
-        notContactedCount: 0,
-        emailsSent: 28,
-        phoneCalls: 42,
-        notes: 'Todos os municípios da microrregião foram contatados com antecedência.'
+        notes: ''
       },
       texts: data.texts || {
         intro: '',
@@ -513,12 +509,8 @@ class TrainingDB {
       locationVenue: 'Auditório Municipal',
       contactsData: {
         startDate: '',
-        methods: source.contactsData?.methods || 'Ofícios, E-mails, Telefones e WhatsApp',
+        methods: '',
         responsible: source.contactsData?.responsible || 'Equipe de Articulação Institucional CECATE-CO',
-        contactedCount: 0,
-        notContactedCount: 0,
-        emailsSent: 0,
-        phoneCalls: 0,
         notes: ''
       },
       texts: opts.copyTexts ? { ...source.texts } : {},

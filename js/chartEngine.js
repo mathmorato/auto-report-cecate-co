@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Gráfico de Relatório (Chart Engine)
- * Versão: v.2.5.2
+ * Versão: v.2.5.3
  */
 
 class ChartEngine {

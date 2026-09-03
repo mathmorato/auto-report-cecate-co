@@ -793,19 +793,19 @@
                     <label class="form-label" style="margin-bottom:0.4rem; display:block; font-weight:700;">Formas e Meios de Contato:</label>
                     <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; background:var(--bg-input); padding:0.5rem 0.85rem; border-radius:var(--radius-md); border:1px solid var(--border-color); min-height:38px;">
                       <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.86rem; color:var(--text-primary); cursor:pointer; font-weight:600; margin:0;">
-                        <input type="checkbox" class="contact-method-checkbox" value="Ofícios" onchange="app.updateContactMethodsFromCheckboxes()" checked>
+                        <input type="checkbox" class="contact-method-checkbox" value="Ofícios" onchange="app.updateContactMethodsFromCheckboxes()">
                         <span>Ofícios</span>
                       </label>
                       <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.86rem; color:var(--text-primary); cursor:pointer; font-weight:600; margin:0;">
-                        <input type="checkbox" class="contact-method-checkbox" value="E-mails" onchange="app.updateContactMethodsFromCheckboxes()" checked>
+                        <input type="checkbox" class="contact-method-checkbox" value="E-mails" onchange="app.updateContactMethodsFromCheckboxes()">
                         <span>E-mails</span>
                       </label>
                       <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.86rem; color:var(--text-primary); cursor:pointer; font-weight:600; margin:0;">
-                        <input type="checkbox" class="contact-method-checkbox" value="Telefones" onchange="app.updateContactMethodsFromCheckboxes()" checked>
+                        <input type="checkbox" class="contact-method-checkbox" value="Telefones" onchange="app.updateContactMethodsFromCheckboxes()">
                         <span>Telefones</span>
                       </label>
                       <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.86rem; color:var(--text-primary); cursor:pointer; font-weight:600; margin:0;">
-                        <input type="checkbox" class="contact-method-checkbox" value="WhatsApp" onchange="app.updateContactMethodsFromCheckboxes()" checked>
+                        <input type="checkbox" class="contact-method-checkbox" value="WhatsApp" onchange="app.updateContactMethodsFromCheckboxes()">
                         <span>WhatsApp</span>
                       </label>
                       <label style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.86rem; color:var(--text-primary); cursor:pointer; font-weight:600; margin:0;">
@@ -813,28 +813,13 @@
                         <span>Reuniões Virtuais</span>
                       </label>
                     </div>
-                    <input type="hidden" id="wiz-contact-methods" value="Ofícios, E-mails, Telefones e WhatsApp">
+                    <input type="hidden" id="wiz-contact-methods" value="">
                   </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom:1rem;">
                   <label class="form-label">Responsável pela Articulação:</label>
                   <input type="text" id="wiz-contact-responsible" class="form-control" placeholder="Equipe de Articulação Institucional CECATE-CO">
-                </div>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
-                  <div class="form-group">
-                    <label class="form-label">Municípios Contatados:</label>
-                    <input type="number" id="wiz-contact-count" class="form-control" placeholder="17">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">E-mails Enviados:</label>
-                    <input type="number" id="wiz-contact-emails" class="form-control" placeholder="34">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Telefonemas:</label>
-                    <input type="number" id="wiz-contact-phones" class="form-control" placeholder="50">
-                  </div>
                 </div>
 
                 <div class="form-group">
@@ -1485,7 +1470,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.5.2</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.5.3</span>
         </div>
       </footer>
     </div>
