@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.6
+ * Versão: v.2.3.7
  */
 
 window.icons = {
@@ -1123,6 +1123,55 @@ class AutoReportApp {
 
         return false;
       }
+
+      // Validação estrita das Datas (4 dígitos no ano e Data Final >= Data Inicial)
+      const startInput = document.getElementById('wiz-train-start-date');
+      const endInput = document.getElementById('wiz-train-end-date');
+      const sVal = this.sanitizeDateInput(startInput);
+      const eVal = this.sanitizeDateInput(endInput);
+
+      if (!sVal) {
+        this.showToast('Data Inicial inválida. Informe uma data válida com ano de 4 dígitos.', 'warning');
+        if (startInput) startInput.focus();
+        return false;
+      }
+
+      const sDate = new Date(sVal + 'T12:00:00');
+      if (isNaN(sDate.getTime()) || sDate.getFullYear() < 2000 || sDate.getFullYear() > 2099) {
+        this.showToast('Ano da Data Inicial inválido (deve conter 4 dígitos entre 2000 e 2099).', 'warning');
+        if (startInput) startInput.focus();
+        return false;
+      }
+
+      if (eVal) {
+        const eDate = new Date(eVal + 'T12:00:00');
+        if (isNaN(eDate.getTime()) || eDate.getFullYear() < 2000 || eDate.getFullYear() > 2099) {
+          this.showToast('Ano da Data Final inválido (deve conter 4 dígitos entre 2000 e 2099).', 'warning');
+          if (endInput) endInput.focus();
+          return false;
+        }
+
+        if (eDate.getTime() < sDate.getTime()) {
+          this.showToast('A Data Final deve ser maior ou igual à Data Inicial.', 'warning');
+          if (endInput) {
+            endInput.focus();
+            endInput.style.borderColor = 'var(--accent-rose, #ef4444)';
+          }
+          const errEl = document.getElementById('wiz-date-final-error');
+          if (errEl) {
+            errEl.style.display = 'block';
+            errEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>A Data Final não pode ser anterior à Data Inicial.`;
+          }
+          return false;
+        }
+      }
+
+      const datesFmt = this.getVal('wiz-train-dates-fmt');
+      if (datesFmt && (datesFmt.includes('NaN') || datesFmt.includes('undefined'))) {
+        this.showToast('Texto de datas inconsistente. Por favor, revise as datas informadas.', 'warning');
+        if (startInput) startInput.focus();
+        return false;
+      }
     }
 
     if (stepNumber === 2) {
@@ -1277,6 +1326,17 @@ class AutoReportApp {
     this.setVal('wiz-train-start-date', t.startDate || '');
     this.setVal('wiz-train-end-date', t.endDate || '');
     this.setVal('wiz-train-dates-fmt', t.datesFormatted || '');
+
+    const endInput = document.getElementById('wiz-train-end-date');
+    if (endInput) {
+      if (t.startDate) endInput.min = t.startDate;
+      endInput.style.borderColor = '';
+    }
+    const errEl = document.getElementById('wiz-date-final-error');
+    if (errEl) {
+      errEl.style.display = 'none';
+      errEl.textContent = '';
+    }
     this.setVal('wiz-train-target', t.targetAudience || '');
     this.setVal('wiz-train-expected', t.expectedParticipants || '');
     this.setVal('wiz-train-venue', t.locationVenue || '');
@@ -1592,15 +1652,132 @@ class AutoReportApp {
     }
   }
 
+  sanitizeDateInput(input) {
+    if (!input) return '';
+    let val = (input.value || '').trim();
+    if (!val) return '';
+
+    // Formato padrão de input date é YYYY-MM-DD
+    const parts = val.split('-');
+    if (parts.length === 3) {
+      let year = parts[0];
+      const month = parts[1];
+      const day = parts[2];
+
+      // Se o ano possuir mais de 4 dígitos (ex: digitação excessiva como 202600), trunca para os 4 primeiros dígitos
+      if (year.length > 4) {
+        year = year.slice(0, 4);
+        val = `${year}-${month}-${day}`;
+        input.value = val;
+      }
+
+      const numYear = parseInt(year, 10);
+      if (!isNaN(numYear)) {
+        if (numYear > 2099) {
+          val = `2099-${month}-${day}`;
+          input.value = val;
+        } else if (numYear < 2000 && year.length === 4) {
+          val = `2000-${month}-${day}`;
+          input.value = val;
+        }
+      }
+    }
+    return val;
+  }
+
+  onDatesBlur(field) {
+    const startInput = document.getElementById('wiz-train-start-date');
+    const endInput = document.getElementById('wiz-train-end-date');
+    const startStr = this.sanitizeDateInput(startInput);
+    const endStr = this.sanitizeDateInput(endInput);
+
+    if (startStr && endInput) {
+      endInput.min = startStr;
+    }
+
+    if (startStr && endStr) {
+      const sDate = new Date(startStr + 'T12:00:00');
+      const eDate = new Date(endStr + 'T12:00:00');
+      if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
+        if (eDate.getTime() < sDate.getTime()) {
+          this.showToast('A Data Final deve ser maior ou igual à Data Inicial.', 'warning');
+          // Auto-ajusta para a data inicial
+          endInput.value = startStr;
+          if (endInput.style) endInput.style.borderColor = '';
+          const errEl = document.getElementById('wiz-date-final-error');
+          if (errEl) {
+            errEl.style.display = 'none';
+            errEl.textContent = '';
+          }
+          this.onDatesChanged();
+        }
+      }
+    }
+  }
+
   onDatesChanged() {
-    const startStr = this.getVal('wiz-train-start-date');
-    const endStr = this.getVal('wiz-train-end-date');
-    if (!startStr) return;
+    const startInput = document.getElementById('wiz-train-start-date');
+    const endInput = document.getElementById('wiz-train-end-date');
+    const fmtInput = document.getElementById('wiz-train-dates-fmt');
+    const errorEl = document.getElementById('wiz-date-final-error');
+    if (!startInput) return;
+
+    const startStr = this.sanitizeDateInput(startInput);
+    let endStr = this.sanitizeDateInput(endInput);
+
+    // Ajustar min dinamicamente no input de data final para orientar o calendário
+    if (startStr && endInput) {
+      endInput.min = startStr;
+    }
+
+    if (!startStr) {
+      if (errorEl) {
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
+      }
+      if (endInput) endInput.style.borderColor = '';
+      return;
+    }
 
     const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
 
     const startDate = new Date(startStr + 'T12:00:00');
-    const endDate = endStr ? new Date(endStr + 'T12:00:00') : startDate;
+    if (isNaN(startDate.getTime())) {
+      // Data inválida ou digitação incompleta: não gera NaN
+      return;
+    }
+
+    let endDate = startDate;
+    let isEndInvalid = false;
+
+    if (endStr) {
+      const parsedEnd = new Date(endStr + 'T12:00:00');
+      if (!isNaN(parsedEnd.getTime())) {
+        if (parsedEnd.getTime() < startDate.getTime()) {
+          isEndInvalid = true;
+          if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>A Data Final não pode ser anterior à Data Inicial.`;
+          }
+          if (endInput) endInput.style.borderColor = 'var(--accent-rose, #ef4444)';
+          // Não formata intervalo invertido ("26 a 24..."): mantém como data inicial
+          endDate = startDate;
+        } else {
+          endDate = parsedEnd;
+          if (errorEl) {
+            errorEl.style.display = 'none';
+            errorEl.textContent = '';
+          }
+          if (endInput) endInput.style.borderColor = '';
+        }
+      }
+    } else {
+      if (errorEl) {
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
+      }
+      if (endInput) endInput.style.borderColor = '';
+    }
 
     const dayStart = startDate.getDate();
     const dayEnd = endDate.getDate();
@@ -1609,18 +1786,23 @@ class AutoReportApp {
     const yearStart = startDate.getFullYear();
     const yearEnd = endDate.getFullYear();
 
+    // Verificação estrita contra NaN
+    if (isNaN(dayStart) || isNaN(dayEnd) || isNaN(monthStart) || isNaN(monthEnd) || isNaN(yearStart) || isNaN(yearEnd)) {
+      return;
+    }
+
     // Número de dias
     const diffMs = endDate.getTime() - startDate.getTime();
     const numDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
 
-    // Construir texto formatado
+    // Construir texto formatado para o relatório técnico
     let formatted = '';
-    if (numDays === 1 || !endStr) {
+    if (numDays === 1 || !endStr || isEndInvalid || startStr === endStr) {
       // Dia único
       formatted = `${dayStart} de ${MESES[monthStart]} de ${yearStart}`;
     } else if (monthStart === monthEnd && yearStart === yearEnd) {
       // Mesmo mês
-      if (numDays === 2) {
+      if (numDays === 2 && dayEnd === dayStart + 1) {
         formatted = `${dayStart} e ${dayEnd} de ${MESES[monthStart]} de ${yearStart}`;
       } else {
         formatted = `${dayStart} a ${dayEnd} de ${MESES[monthStart]} de ${yearStart}`;
@@ -1646,6 +1828,8 @@ class AutoReportApp {
     if (hintEl) hintEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Calculado automaticamente: ${numDays} dia${numDays > 1 ? 's' : ''} × 8h = ${autoWorkload}h (editável)`;
 
     if (this.currentTraining) {
+      this.currentTraining.startDate = startStr;
+      this.currentTraining.endDate = isEndInvalid ? startStr : (endStr || startStr);
       this.currentTraining.datesFormatted = formatted;
       this.currentTraining.workload = `${autoWorkload} horas`;
       this.saveCurrentStepData();
