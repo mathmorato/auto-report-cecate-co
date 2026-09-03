@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.8
+ * Versão: v.2.7.9
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.8';
+    this.version = 'v.2.7.9';
   }
 
   /**
@@ -6835,6 +6835,8 @@ class AutoReportApp {
         blob: dataUrl,
         caption: file.name,
         fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
         order: this.currentTraining.media.length
       });
     }
@@ -6842,6 +6844,73 @@ class AutoReportApp {
     this.renderAppendicesStep();
     this.saveCurrentStepData();
     this.showToast(`Documento anexado com sucesso!`, 'success');
+  }
+
+  formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  renderAppendixItem(d) {
+    const ext = (d.fileName && d.fileName.includes('.')) ? d.fileName.split('.').pop().toLowerCase() : 'pdf';
+    let iconTheme = {
+      bg: 'rgba(225, 29, 72, 0.12)',
+      border: 'rgba(225, 29, 72, 0.25)',
+      color: 'var(--accent-rose, #f43f5e)',
+      label: ext.toUpperCase() || 'PDF'
+    };
+
+    if (ext === 'doc' || ext === 'docx') {
+      iconTheme = {
+        bg: 'rgba(59, 130, 246, 0.12)',
+        border: 'rgba(59, 130, 246, 0.25)',
+        color: 'var(--accent-blue-text, #3b82f6)',
+        label: 'DOC'
+      };
+    } else if (['png', 'jpg', 'jpeg'].includes(ext)) {
+      iconTheme = {
+        bg: 'rgba(16, 185, 129, 0.12)',
+        border: 'rgba(16, 185, 129, 0.25)',
+        color: 'var(--accent-emerald-text, #10b981)',
+        label: 'IMG'
+      };
+    }
+
+    const formattedSize = d.fileSize ? this.formatFileSize(d.fileSize) : '';
+    const secondaryText = formattedSize ? `${formattedSize} • Documento anexado` : 'Documento anexado';
+
+    return `
+      <div class="appendix-file-item" style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; background:var(--bg-surface); border:1px solid var(--border-color); padding:0.75rem 1rem; border-radius:var(--radius-md); margin-top:0.6rem; box-shadow:0 1px 3px rgba(0,0,0,0.03); transition:all 0.2s ease;">
+        <div style="display:flex; align-items:center; gap:0.75rem; min-width:0; flex:1;">
+          <div style="width:40px; height:40px; border-radius:var(--radius-sm); background:${iconTheme.bg}; border:1px solid ${iconTheme.border}; color:${iconTheme.color}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <div style="min-width:0; flex:1;">
+            <div style="font-weight:700; font-size:0.88rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.fileName}">
+              ${d.fileName}
+            </div>
+            <div style="display:flex; align-items:center; gap:0.45rem; font-size:0.74rem; color:var(--text-secondary); margin-top:0.25rem;">
+              <span class="nav-badge font-mono font-bold" style="background:${iconTheme.bg}; color:${iconTheme.color}; border:1px solid ${iconTheme.border}; font-size:0.65rem; padding:0.05rem 0.35rem; border-radius:3px;">
+                ${iconTheme.label}
+              </span>
+              <span>${secondaryText}</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.35rem 0.65rem; font-size:0.76rem; font-weight:600; display:inline-flex; align-items:center; gap:0.35rem; flex-shrink:0;" title="Remover documento">
+          ${window.icons.delete} Remover
+        </button>
+      </div>
+    `;
   }
 
   confirmRemoveAppendix(docId) {
@@ -6852,6 +6921,8 @@ class AutoReportApp {
       title: 'Remover Documento de Apêndice',
       msg: `Tem certeza que deseja remover o documento "${fileName}"?`,
       btnText: 'Sim, Remover',
+      successTitle: 'Documento Removido!',
+      successMsg: `O documento "${fileName}" foi removido com sucesso.`,
       onConfirm: () => this.executeRemoveAppendix(docId)
     });
   }
@@ -6898,13 +6969,13 @@ class AutoReportApp {
     if (fndeContainer) {
       fndeContainer.innerHTML = fndeDocs.length === 0
         ? `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhuma convocação do FNDE anexada.</p>`
-        : fndeDocs.map(d => `<div class="audit-item" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.5rem 0.75rem; border-radius:var(--radius-sm); margin-top:0.35rem;"><span style="display:inline-flex; align-items:center; gap:0.35rem;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-secondary);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>${d.fileName}</span><button class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.2rem 0.55rem; font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center;">${window.icons.delete} Remover</button></div>`).join('');
+        : fndeDocs.map(d => this.renderAppendixItem(d)).join('');
     }
 
     if (cecateContainer) {
       cecateContainer.innerHTML = cecateDocs.length === 0
         ? `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhuma convocação do CECATE anexada.</p>`
-        : cecateDocs.map(d => `<div class="audit-item" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.5rem 0.75rem; border-radius:var(--radius-sm); margin-top:0.35rem;"><span style="display:inline-flex; align-items:center; gap:0.35rem;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-secondary);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>${d.fileName}</span><button class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.2rem 0.55rem; font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center;">${window.icons.delete} Remover</button></div>`).join('');
+        : cecateDocs.map(d => this.renderAppendixItem(d)).join('');
     }
   }
 

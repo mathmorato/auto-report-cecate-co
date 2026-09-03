@@ -1865,6 +1865,33 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.25) !important;
 }
 
+/* Card Moderno de Arquivo de Apêndice Anexado */
+.appendix-file-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-top: 0.6rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.appendix-file-item:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .appendix-file-item {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+body.light-theme .appendix-file-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
 .upload-dropzone-icon {
   display: flex;
   align-items: center;
