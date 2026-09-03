@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.4
+ * Versão: v.2.3.5
  */
 
 window.icons = {

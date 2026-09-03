@@ -68,7 +68,7 @@ A aplicação deverá:
   * Cabeçalhos.
   * Rodapés.
   * Estados de interação.
-  * Ícones.
+  * Ícones (obrigatoriamente ícones de linha / line icons).
   * Hierarquia visual.
 
 Evitar alterações visuais que descaracterizem o projeto.
@@ -88,6 +88,14 @@ Antes de criar qualquer novo recurso visual:
 3. Não criar versões alternativas de logos já existentes.
 4. Não substituir logos existentes sem necessidade.
 5. Preservar proporções, qualidade e identidade dos assets existentes.
+
+## 2.4 Padrão de ícones (Ícones de linha / Line Icons)
+
+Todos os ícones do projeto deverão obrigatoriamente ser **ícones de linha (*line icons*)**.
+
+* **Definição e conceito:** Ícones de linha (*line icons*) são gráficos minimalistas formados apenas por contornos e traços, muito usados em design de interfaces (UI/UX) para criar uma aparência limpa e moderna.
+* **Construção visual e técnica:** Os ícones devem ser compostos por contornos com preenchimento transparente ou nulo (`fill="none"`), cor de traço corrente (`stroke="currentColor"`), espessura de traço uniforme (ex.: `stroke-width="2"`) e junções/terminações suaves (`stroke-linecap="round"` e `stroke-linejoin="round"`).
+* **Proibição de ícones sólidos ou preenchidos:** É expressamente vedado o uso de ícones sólidos, com preenchimentos opacos ou blocos pesados (*solid/filled icons*), mantendo a leveza visual, elegância e consistência com a identidade dark moderna da interface.
 
 ---
 
@@ -360,6 +368,7 @@ Uma tarefa somente deverá ser considerada concluída quando:
 * A aplicação estiver funcionando.
 * O padrão visual do projeto de referência tiver sido respeitado.
 * O tema dark tiver sido preservado.
+* O padrão de ícones de linha (line icons) tiver sido respeitado.
 * As logos existentes em `assets` tiverem sido utilizadas corretamente.
 * A versão tiver sido incrementada corretamente.
 * A nova versão estiver visível no rodapé.
