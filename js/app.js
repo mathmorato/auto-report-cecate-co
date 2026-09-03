@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.4.7
+ * Versão: v.2.4.8
  */
 
 window.icons = {
@@ -2935,10 +2935,7 @@ class AutoReportApp {
             <span class="font-mono" style="font-weight:700; color:var(--accent-blue-text); font-size:0.92rem;">${m.ibgeCode || '-'}</span>
           </td>
           <td>
-            <div style="display:flex; gap:0.5rem; align-items:center;">
-              <strong style="color:var(--text-primary); font-size:0.92rem;">${m.name || ''}</strong>
-              ${m.isSede ? '<span class="nav-badge badge-amber" style="font-size:0.7rem; padding:0.1rem 0.45rem; font-weight:700;">Sede / Polo</span>' : ''}
-            </div>
+            <strong style="color:var(--text-primary); font-size:0.92rem;">${m.name || ''}</strong>
           </td>
           <td style="text-align:center;">
             <span class="nav-badge badge-blue font-bold" style="font-size:0.75rem; padding:0.15rem 0.5rem;">${m.uf || poloUf}</span>
@@ -2952,10 +2949,7 @@ class AutoReportApp {
             <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
               ${m.isSede 
                 ? `<span class="btn btn-secondary btn-sm" style="opacity:0.75; cursor:default; font-size:0.75rem; padding:0.25rem 0.65rem; display:inline-flex; align-items:center; font-weight:600;" title="Município Sede / Polo Oficial">${window.icons.sede} Sede</span>`
-                : `
-                  <button type="button" class="btn btn-secondary btn-sm btn-action-edit" onclick="app.openMunicipalityInPageEditor(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar dados do município">${window.icons.edit} Editar</button>
-                  <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMunicipality(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir município">${window.icons.delete} Excluir</button>
-                `
+                : `<button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMunicipality(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir município">${window.icons.delete} Excluir</button>`
               }
             </div>
           </td>
