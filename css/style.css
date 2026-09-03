@@ -1998,12 +1998,13 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 1.35rem;
-  line-height: 1;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0.35rem;
   border-radius: var(--radius-sm);
   transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-close-btn:hover {

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.5
+ * Versão: v.2.3.6
  */
 
 window.icons = {
@@ -18,7 +18,13 @@ window.icons = {
   filter: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`,
   stepForward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-left:5px;"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>`,
   sede: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 10v2"></path><path d="M15 10v2"></path><path d="M9 14v2"></path><path d="M15 14v2"></path></svg>`,
-  rename: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg>`
+  rename: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg>`,
+  pin: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
+  calendar: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
+  clock: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
+  file: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`,
+  camera: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>`,
+  folder: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`
 };
 
 class AutoReportApp {
@@ -249,7 +255,9 @@ class AutoReportApp {
       if (filtered.length === 0) {
         container.innerHTML = `
           <div style="text-align:center; padding:2.5rem; color:var(--text-muted);">
-            <div style="font-size:2.5rem; margin-bottom:0.5rem;">📁</div>
+            <div style="display:flex; justify-content:center; margin-bottom:0.75rem; color:var(--text-muted);">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            </div>
             <p>Nenhuma capacitação encontrada para este filtro.</p>
           </div>
         `;
@@ -365,7 +373,7 @@ class AutoReportApp {
 
       this.closeCloneModal();
       await this.refreshTrainingsList();
-      this.showToast('✓ Nova capacitação criada com sucesso! Dados anteriores preservados.', 'success');
+      this.showToast('Nova capacitação criada com sucesso! Dados anteriores preservados.', 'success');
       this.openWizard(newId, 1);
     } catch (err) {
       console.error('Erro ao duplicar capacitação:', err);
@@ -745,7 +753,7 @@ class AutoReportApp {
       }
 
       this.closeImportMunicipalitiesModal();
-      this.showToast(`✓ Importação concluída com sucesso! ${insertedCount} cadastrado(s), ${updatedCount} atualizado(s).`, 'success');
+      this.showToast(`Importação concluída com sucesso! ${insertedCount} cadastrado(s), ${updatedCount} atualizado(s).`, 'success');
 
     } catch (err) {
       console.error('Erro ao salvar municípios importados:', err);
@@ -845,7 +853,7 @@ class AutoReportApp {
       const applyBtn = document.getElementById('convocacao-apply-btn');
       if (applyBtn) applyBtn.style.display = 'inline-flex';
 
-      this.showToast('✨ Convocação analisada com sucesso!');
+      this.showToast('Convocação analisada com sucesso!');
 
     } catch (err) {
       console.error('Erro na leitura da convocação:', err);
@@ -872,7 +880,7 @@ class AutoReportApp {
     if (uploadStep) uploadStep.style.display = 'block';
 
     this.extractedConvocacaoData = null;
-    this.showToast('🗑️ Arquivo de convocação removido. Você pode enviar outro PDF.');
+    this.showToast('Arquivo de convocação removido. Você pode enviar outro PDF.');
   }
 
   updateConvocacaoExtractedField(field, value) {
@@ -914,14 +922,19 @@ class AutoReportApp {
 
           return `
             <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:0.4rem 0.6rem; font-size:0.78rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.25rem;">
-              <span style="font-weight:700; color:var(--text-primary);">📍 ${m.name} (${m.uf || poloUf})</span>
+              <span style="font-weight:700; color:var(--text-primary); display:inline-flex; align-items:center;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                ${m.name} (${m.uf || poloUf})
+              </span>
               <span style="font-family:monospace; color:var(--accent-secondary); font-size:0.72rem;">IBGE: ${m.code || 'N/A'}</span>
               <div style="display:flex; align-items:center; gap:0.2rem;">
                 <span style="font-size:0.72rem; color:var(--text-muted);">Distância:</span>
                 <input type="number" step="0.1" min="0" value="${parseFloat(distVal).toFixed(1)}" style="width:65px; font-size:0.75rem; padding:0.1rem 0.3rem; text-align:right; font-family:monospace;" class="form-control form-control-sm" onchange="app.updateConvocacaoMunicipalityDistance(${idx}, this.value)">
                 <span style="font-size:0.72rem; color:var(--text-muted);">km</span>
               </div>
-              <button type="button" onclick="app.removeConvocacaoMunicipality(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.85rem; padding:0 0.2rem;" title="Remover município">✕</button>
+              <button type="button" onclick="app.removeConvocacaoMunicipality(${idx})" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:0.85rem; padding:0 0.2rem; display:inline-flex; align-items:center; justify-content:center;" title="Remover município">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
             </div>
           `;
         }).join('');
@@ -1043,7 +1056,7 @@ class AutoReportApp {
       this.currentTraining = training;
       await this.refreshTrainingsList();
 
-      this.showToast('✨ Relatório preenchido automaticamente com sucesso!', 'success');
+      this.showToast('Relatório preenchido automaticamente com sucesso!', 'success');
       this.openWizard(training.id, 1);
 
     } catch (err) {
@@ -1373,7 +1386,7 @@ class AutoReportApp {
     this.populateAllWizardForms();
     if (this.currentStep === 3) this.renderMunicipalitiesStep();
     this.saveCurrentStepData();
-    this.showToast('🗑️ Convocação desanexada e dados redefinidos.');
+    this.showToast('Convocação desanexada e dados redefinidos.');
   }
 
   saveCurrentStepData() {
@@ -1427,7 +1440,7 @@ class AutoReportApp {
 
     // Proteção de históricos
     if (this.currentTraining.isHistorical) {
-      this.showToast('🛡️ Registros históricos protegidos não podem ser editados.', 'warning');
+      this.showToast('Registros históricos protegidos não podem ser editados.', 'warning');
       return;
     }
 
@@ -1437,7 +1450,7 @@ class AutoReportApp {
     // Feedback visual no botão
     if (saveBtn) {
       saveBtn.disabled = true;
-      saveBtn.innerHTML = '⏳ Salvando...';
+      saveBtn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Salvando...';
     }
 
     try {
@@ -1446,12 +1459,12 @@ class AutoReportApp {
       await new Promise(r => setTimeout(r, 300));
 
       if (saveBtn) {
-        saveBtn.innerHTML = '✓ Salvo!';
+        saveBtn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Salvo!';
         saveBtn.style.color = 'var(--accent-success)';
         saveBtn.style.borderColor = 'rgba(16, 185, 129, 0.4)';
       }
 
-      this.showToast('💾 Relatório salvo com sucesso!', 'success');
+      this.showToast('Relatório salvo com sucesso!', 'success');
 
       setTimeout(() => {
         if (saveBtn) {
@@ -1504,7 +1517,7 @@ class AutoReportApp {
           m.distanceKm = window.convocacaoParser.calculateDistanceToPolo(m.name, m.uf || ufVal, city, ufVal);
         });
         if (this.currentStep === 3) this.renderMunicipalitiesStep();
-        this.showToast(`📍 Polo alterado para ${city}! Distâncias da Tabela 1 recalculadas em linha reta.`);
+        this.showToast(`Polo alterado para ${city}! Distâncias da Tabela 1 recalculadas em linha reta.`);
       }
 
       this.updateWizardHeader();
@@ -1630,7 +1643,7 @@ class AutoReportApp {
 
     if (numInput) numInput.value = autoWorkload;
     if (hiddenInput) hiddenInput.value = `${autoWorkload} horas`;
-    if (hintEl) hintEl.textContent = `✓ Calculado automaticamente: ${numDays} dia${numDays > 1 ? 's' : ''} × 8h = ${autoWorkload}h (editável)`;
+    if (hintEl) hintEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Calculado automaticamente: ${numDays} dia${numDays > 1 ? 's' : ''} × 8h = ${autoWorkload}h (editável)`;
 
     if (this.currentTraining) {
       this.currentTraining.datesFormatted = formatted;
@@ -1656,7 +1669,7 @@ class AutoReportApp {
       this.currentTraining.team = (window.getMasterTeam ? window.getMasterTeam() : window.DEFAULT_OFFICIAL_TEAM).map(m => ({ ...m }));
       this.renderTeamList();
       this.saveCurrentStepData();
-      this.showToast('🔄 Equipe padrão oficial CECATE (UFG) e FNDE restaurada com sucesso!', 'success');
+      this.showToast('Equipe padrão oficial CECATE (UFG) e FNDE restaurada com sucesso!', 'success');
     }
   }
 
@@ -1873,7 +1886,7 @@ class AutoReportApp {
     }
 
     window.saveMasterTeam(masterTeam);
-    this.showToast('✓ Cadastro da Equipe Técnica atualizado com sucesso!', 'success');
+    this.showToast('Cadastro da Equipe Técnica atualizado com sucesso!', 'success');
   }
 
   addMasterTeamMemberPrompt() {
@@ -2096,12 +2109,12 @@ class AutoReportApp {
           ...this.currentTraining.team[index],
           ...memberData
         };
-        this.showToast(`✓ Integrante ${memberData.fullName} atualizado com sucesso!`, 'success');
+        this.showToast(`Integrante ${memberData.fullName} atualizado com sucesso!`, 'success');
       } else {
         memberData.id = `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
         memberData.order = this.currentTraining.team.length;
         this.currentTraining.team.push(memberData);
-        this.showToast(`👤 ${memberData.fullName} adicionado à equipe da capacitação!`, 'success');
+        this.showToast(`${memberData.fullName} adicionado à equipe da capacitação!`, 'success');
       }
 
       this.renderTeamList();
@@ -2114,12 +2127,12 @@ class AutoReportApp {
           ...masterTeam[index],
           ...memberData
         };
-        this.showToast(`✓ Integrante ${memberData.fullName} atualizado no catálogo geral!`, 'success');
+        this.showToast(`Integrante ${memberData.fullName} atualizado no catálogo geral!`, 'success');
       } else {
         memberData.id = `team_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
         memberData.order = masterTeam.length;
         masterTeam.push(memberData);
-        this.showToast(`👤 ${memberData.fullName} adicionado ao catálogo geral de equipe!`, 'success');
+        this.showToast(`${memberData.fullName} adicionado ao catálogo geral de equipe!`, 'success');
       }
 
       window.saveMasterTeam(masterTeam);
@@ -2454,14 +2467,14 @@ class AutoReportApp {
         presentTotal: 0
       });
 
-      this.showToast(`📍 ${cityName} (${uf}) adicionado à Tabela 1! Distância: ${distanceKm.toFixed(1).replace('.', ',')} km`, 'success');
+      this.showToast(`${cityName} (${uf}) adicionado à Tabela 1! Distância: ${distanceKm.toFixed(1).replace('.', ',')} km`, 'success');
     } else {
       if (muns[editIndex]) {
         muns[editIndex].uf = uf;
         muns[editIndex].name = cityName;
         muns[editIndex].ibgeCode = String(ibgeCode);
         muns[editIndex].distanceKm = distanceKm;
-        this.showToast(`✏️ Município ${cityName} (${uf}) atualizado com sucesso!`, 'success');
+        this.showToast(`Município ${cityName} (${uf}) atualizado com sucesso!`, 'success');
       }
     }
 
@@ -2513,7 +2526,7 @@ class AutoReportApp {
 
     this.renderMunicipalitiesStep();
     this.saveCurrentStepData();
-    this.showToast(`🔄 Distâncias de ${count} municípios recalculadas em relação ao polo ${poloName}!`, 'success');
+    this.showToast(`Distâncias de ${count} municípios recalculadas em relação ao polo ${poloName}!`, 'success');
   }
 
   addMunicipalityPrompt() {
@@ -2628,7 +2641,7 @@ class AutoReportApp {
           distanceKm: calcDist
         });
         this.renderConvocacaoExtractedMunicipalities();
-        this.showToast(`📍 ${cityName} (${uf}) adicionado à Convocação! Distância: ${calcDist} km`, 'success');
+        this.showToast(`${cityName} (${uf}) adicionado à Convocação! Distância: ${calcDist} km`, 'success');
       } else {
         this.showToast(`O município ${cityName} (${uf}) já está na lista.`, 'warning');
       }
@@ -2653,7 +2666,7 @@ class AutoReportApp {
 
       this.renderMunicipalitiesStep();
       this.saveCurrentStepData();
-      this.showToast(`📍 ${cityName} (${uf}) adicionado à Tabela 1! Distância: ${calcDist} km`, 'success');
+      this.showToast(`${cityName} (${uf}) adicionado à Tabela 1! Distância: ${calcDist} km`, 'success');
     }
 
     this.closeAddMunicipalityModal();
@@ -2908,7 +2921,7 @@ class AutoReportApp {
         </div>
         <p style="font-size:0.88rem; color:var(--text-primary); line-height:1.5; margin:0 0 1.25rem 0;">
           Você será redirecionado para a página de <strong>Configurações do Catálogo Geral de Estruturas do Curso</strong>.<br>
-          <span style="color:#fbbf24; font-weight:600;">⚠️ Recomendação Importante:</span> Qualquer alteração realizada neste relatório poderá ser perdida se não for salva. Recomendamos <strong>salvar os dados atuais</strong> antes de continuar.
+          <span style="color:#fbbf24; font-weight:600; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Recomendação Importante:</span> Qualquer alteração realizada neste relatório poderá ser perdida se não for salva. Recomendamos <strong>salvar os dados atuais</strong> antes de continuar.
         </p>
         <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
           <button type="button" class="btn btn-primary" onclick="app.saveAndRedirectToCourseSettings()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
@@ -2998,11 +3011,11 @@ class AutoReportApp {
   saveAndRedirectToCourseSettings() {
     try {
       this.saveCurrentStepData();
-      this.showToast('✓ Dados salvos com sucesso!', 'success');
+      this.showToast('Dados salvos com sucesso!', 'success');
       this.renderCourseEditorRedirectCard('success');
     } catch (err) {
       console.error('Erro ao salvar dados no alerta de redirecionamento:', err);
-      this.showToast('❌ Ocorreu um erro ao salvar os dados.', 'error');
+      this.showToast('Ocorreu um erro ao salvar os dados.', 'error');
       this.renderCourseEditorRedirectCard('error', err ? err.message : '');
     }
   }
@@ -3056,7 +3069,7 @@ class AutoReportApp {
 
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
-    this.showToast(`✓ Módulo ${numStr} adicionado com sucesso!`, 'success');
+    this.showToast(`Módulo ${numStr} adicionado com sucesso!`, 'success');
   }
 
   duplicateCourseModule(modIdx) {
@@ -3065,7 +3078,7 @@ class AutoReportApp {
     this.currentTraining.courseModules = window.courseStructureHelper.duplicateModule(this.currentTraining.courseModules, modIdx);
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
-    this.showToast('✓ Módulo duplicado com sucesso nesta capacitação!', 'success');
+    this.showToast('Módulo duplicado com sucesso nesta capacitação!', 'success');
   }
 
   deleteCourseModule(modIdx) {
@@ -3248,7 +3261,7 @@ class AutoReportApp {
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
     this.closeRestoreDefaultCourseModal();
-    this.showToast('✓ Modelo padrão oficial restaurado nesta capacitação!', 'success');
+    this.showToast('Modelo padrão oficial restaurado nesta capacitação!', 'success');
   }
 
   async openCopyCourseStructureModal() {
@@ -3330,7 +3343,7 @@ class AutoReportApp {
     this.renderCourseStructureStep();
     await window.db.saveTrainingFull(this.currentTraining, `Cópia independente da estrutura do curso de "${sourceTraining.title || sourceTraining.id}"`);
     this.closeCopyCourseStructureModal();
-    this.showToast(`✓ Estrutura copiada com sucesso de "${sourceTraining.title || 'outra capacitação'}"!`, 'success');
+    this.showToast(`Estrutura copiada com sucesso de "${sourceTraining.title || 'outra capacitação'}"!`, 'success');
   }
 
   pullFromGlobalMasterCourseStructure() {
@@ -3338,7 +3351,7 @@ class AutoReportApp {
     this.currentTraining.courseModules = window.courseStructureHelper.getMasterCopy();
     this.renderCourseStructureStep();
     this.saveCurrentStepData();
-    this.showToast('✓ Estrutura do curso atualizada a partir do Catálogo Geral Mestre!', 'success');
+    this.showToast('Estrutura do curso atualizada a partir do Catálogo Geral Mestre!', 'success');
   }
 
   /* ==========================================================================
@@ -3522,7 +3535,7 @@ class AutoReportApp {
     this.closeCreateCourseTemplateModal();
     this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
-    this.showToast(`✓ Estrutura "${newTpl.name}" criada com sucesso!`, 'success');
+    this.showToast(`Estrutura "${newTpl.name}" criada com sucesso!`, 'success');
   }
 
   openRenameCourseTemplateModal(templateId) {
@@ -3576,7 +3589,7 @@ class AutoReportApp {
       this.closeRenameCourseTemplateModal();
       this.renderCourseTemplatesCatalog();
       this.renderGlobalMasterCourseStructure();
-      this.showToast(`✓ Estrutura renomeada para "${updated.name}" com sucesso!`, 'success');
+      this.showToast(`Estrutura renomeada para "${updated.name}" com sucesso!`, 'success');
     }
   }
 
@@ -3587,7 +3600,7 @@ class AutoReportApp {
       this.activeTemplateId = newTpl.id;
       this.renderCourseTemplatesCatalog();
       this.renderGlobalMasterCourseStructure();
-      this.showToast(`✓ Estrutura duplicada como "${newTpl.name}"!`, 'success');
+      this.showToast(`Estrutura duplicada como "${newTpl.name}"!`, 'success');
     }
   }
 
@@ -3638,7 +3651,7 @@ class AutoReportApp {
     window.courseStructureHelper.setDefaultTemplate(templateId);
     this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
-    this.showToast(`✓ "${tpl ? tpl.name : 'Estrutura'}" definido como Modelo Padrão Ativo!`, 'success');
+    this.showToast(`"${tpl ? tpl.name : 'Estrutura'}" definido como Modelo Padrão Ativo!`, 'success');
     this.closeConfirmSetDefaultCourseTemplateModal();
   }
 
@@ -3722,7 +3735,7 @@ class AutoReportApp {
         <input type="radio" name="select-training-template-radio" value="${t.id}" ${t.isDefault || idx === 0 ? 'checked' : ''} style="margin-top:0.25rem;">
         <div style="flex:1;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.2rem;">
-            <strong style="color:var(--text-primary); font-size:0.92rem;">${t.isProtected ? '🔒 ' : ''}${t.name}</strong>
+            <strong style="color:var(--text-primary); font-size:0.92rem; display:inline-flex; align-items:center;">${t.isProtected ? window.icons.lock : ''}${t.name}</strong>
             ${t.isDefault ? '<span class="nav-badge badge-emerald font-bold" style="font-size:0.72rem;">Modelo Padrão Ativo</span>' : ''}
           </div>
           <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.35;">${t.description || 'Estrutura com ' + (t.modules || []).length + ' módulos'}</div>
@@ -3768,7 +3781,7 @@ class AutoReportApp {
       await window.db.saveTrainingFull(this.currentTraining, `Cópia independente da estrutura "${tpl.name}"`);
     }
     this.closeSelectCourseTemplateModal();
-    this.showToast(`✓ Cópia da estrutura "${tpl.name}" aplicada a esta capacitação!`, 'success');
+    this.showToast(`Cópia da estrutura "${tpl.name}" aplicada a esta capacitação!`, 'success');
   }
 
   renderGlobalMasterCourseStructure() {
@@ -3921,7 +3934,9 @@ class AutoReportApp {
                           <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx}, 'hours', this.value)">
                           <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'shared', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text); display:inline-flex; align-items:center; justify-content:center;" title="Remover Temática">
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
                       </div>
                     `).join('')}
                   </div>
@@ -3952,7 +3967,9 @@ class AutoReportApp {
                             <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx}, 'hours', this.value)">
                             <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                           </div>
-                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'gestor', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text); display:inline-flex; align-items:center; justify-content:center;" title="Remover Temática">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </button>
                         </div>
                       `).join('')}
                     </div>
@@ -3981,7 +3998,9 @@ class AutoReportApp {
                             <input type="number" step="0.5" min="0" class="form-control form-control-sm" style="text-align:center; font-weight:700;" value="${parseFloat(t.hours) || 0}" onchange="app.updateGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx}, 'hours', this.value)">
                             <span style="font-size:0.75rem; color:var(--text-muted);">h</span>
                           </div>
-                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text);" title="Remover Temática">✕</button>
+                          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeGlobalMasterCourseTopic(${modIdx}, 'cacs', ${tIdx})" style="padding:0.2rem 0.4rem; color:var(--accent-rose-text); display:inline-flex; align-items:center; justify-content:center;" title="Remover Temática">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </button>
                         </div>
                       `).join('')}
                     </div>
@@ -4038,7 +4057,7 @@ class AutoReportApp {
     window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
     this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
-    this.showToast(`✓ Módulo ${numStr} adicionado à estrutura "${activeTpl.name}"!`, 'success');
+    this.showToast(`Módulo ${numStr} adicionado à estrutura "${activeTpl.name}"!`, 'success');
   }
 
   duplicateGlobalMasterCourseModule(modIdx) {
@@ -4052,7 +4071,7 @@ class AutoReportApp {
     window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
     this.renderCourseTemplatesCatalog();
     this.renderGlobalMasterCourseStructure();
-    this.showToast('✓ Módulo duplicado com sucesso!', 'success');
+    this.showToast('Módulo duplicado com sucesso!', 'success');
   }
 
   deleteGlobalMasterCourseModule(modIdx) {
@@ -4226,7 +4245,7 @@ class AutoReportApp {
       const defaultCopy = window.courseStructureHelper.getDefaultCopy();
       window.courseStructureHelper.saveMasterStructure(defaultCopy);
       this.renderGlobalMasterCourseStructure();
-      this.showToast('✓ Modelo Padrão Global restaurado com sucesso!', 'success');
+      this.showToast('Modelo Padrão Global restaurado com sucesso!', 'success');
     }
   }
 
@@ -4253,7 +4272,7 @@ class AutoReportApp {
     this.renderAttendanceStep();
     this.saveCurrentStepData();
 
-    this.showToast(`✓ Reprocessamento concluído! (${regList.length} inscritos | ${attList.length} presentes recalculados)`, 'success');
+    this.showToast(`Reprocessamento concluído! (${regList.length} inscritos | ${attList.length} presentes recalculados)`, 'success');
   }
 
   initDragAndDropHandlers() {
@@ -4337,7 +4356,7 @@ class AutoReportApp {
 
       this.renderAttendanceStep();
       this.saveCurrentStepData();
-      this.showToast(`✓ ${parsed.length} inscrições importadas com sucesso!`, 'success');
+      this.showToast(`${parsed.length} inscrições importadas com sucesso!`, 'success');
     } catch (err) {
       console.error('Erro ao importar planilha de inscrições:', err);
       this.showToast(`Erro na importação de inscrições: ${err.message}`, 'error');
@@ -4366,7 +4385,7 @@ class AutoReportApp {
 
       this.renderAttendanceStep();
       this.saveCurrentStepData();
-      this.showToast(`✓ ${parsed.length} participantes presentes importados com sucesso!`, 'success');
+      this.showToast(`${parsed.length} participantes presentes importados com sucesso!`, 'success');
     } catch (err) {
       console.error('Erro ao importar lista de presença:', err);
       this.showToast(`Erro na importação: ${err.message}`, 'error');
@@ -4443,7 +4462,7 @@ class AutoReportApp {
 
     this.renderAttendanceStep();
     this.saveCurrentStepData();
-    this.showToast('✓ Arquivos e listas limpos com sucesso!', 'success');
+    this.showToast('Arquivos e listas limpos com sucesso!', 'success');
   }
 
   reconcileMunicipalitiesFromRegistrationAndAttendance() {
@@ -4799,7 +4818,7 @@ class AutoReportApp {
     this.reconcileMunicipalitiesFromRegistrationAndAttendance();
     this.renderAttendanceStep();
     this.saveCurrentStepData();
-    this.showToast(`✓ Participante "${participant.name}" atualizado com sucesso!`, 'success');
+    this.showToast(`Participante "${participant.name}" atualizado com sucesso!`, 'success');
   }
 
   renderAttendanceStep() {
@@ -4828,7 +4847,7 @@ class AutoReportApp {
               </strong>
               <div style="display:flex; align-items:center; gap:0.35rem;">
                 <span class="nav-badge badge-blue font-bold" style="font-size:0.8rem;">${regList.length} Inscritos</span>
-                ${regList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('registration')" style="padding:0.1rem 0.35rem; font-size:0.72rem; font-weight:700;" title="Remover planilha de inscrições">✕ Limpar</button>` : ''}
+                ${regList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('registration')" style="padding:0.1rem 0.35rem; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center;" title="Remover planilha de inscrições"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Limpar</button>` : ''}
               </div>
             </div>
             <div style="font-size:0.82rem; color:var(--text-secondary); display:flex; gap:0.75rem;">
@@ -4844,7 +4863,7 @@ class AutoReportApp {
               </strong>
               <div style="display:flex; align-items:center; gap:0.35rem;">
                 <span class="nav-badge badge-emerald font-bold" style="font-size:0.8rem;">${attList.length} Presentes</span>
-                ${attList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('attendance')" style="padding:0.1rem 0.35rem; font-size:0.72rem; font-weight:700;" title="Remover planilha de presença">✕ Limpar</button>` : ''}
+                ${attList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('attendance')" style="padding:0.1rem 0.35rem; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center;" title="Remover planilha de presença"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Limpar</button>` : ''}
               </div>
             </div>
             <div style="font-size:0.82rem; color:var(--text-secondary); display:flex; gap:0.75rem;">
@@ -4873,11 +4892,11 @@ class AutoReportApp {
       const isEditable = p.status === 'Apenas Presente';
       const isUnmapped = !p.municipality;
 
-      let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700;">🔷 Inscrito e Presente</span>`;
+      let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Inscrito e Presente</span>`;
       if (p.status === 'Apenas Inscrito') {
-        statusBadge = `<span class="nav-badge badge-blue" style="font-size:0.75rem; font-weight:700;">🔹 Apenas Inscrito</span>`;
+        statusBadge = `<span class="nav-badge badge-blue" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>Apenas Inscrito</span>`;
       } else if (p.status === 'Apenas Presente') {
-        statusBadge = `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.2); color:var(--accent-amber-text); font-size:0.75rem; font-weight:700;">🟢 Apenas Presente</span>`;
+        statusBadge = `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.2); color:var(--accent-amber-text); font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>Apenas Presente</span>`;
       }
 
       const munTd = isEditable ? `
@@ -4887,7 +4906,7 @@ class AutoReportApp {
         </select>
       ` : `
         <span style="font-weight:600; color:var(--text-primary);">${p.municipality || '-'}</span>
-        ${p.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.25rem; padding:0.1rem 0.3rem;">✓ CPF Conciliado</span>' : ''}
+        ${p.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.25rem; padding:0.1rem 0.3rem; display:inline-flex; align-items:center; gap:0.2rem;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>CPF Conciliado</span>' : ''}
       `;
 
       const repTd = isEditable ? `
@@ -4969,7 +4988,7 @@ class AutoReportApp {
       this.renderEvaluationCharts();
       this.renderWordClouds();
       this.saveCurrentStepData();
-      this.showToast(`✓ ${parsed.length} avaliações processadas com sucesso!`, 'success');
+      this.showToast(`${parsed.length} avaliações processadas com sucesso!`, 'success');
     } catch (err) {
       console.error('Erro ao processar avaliações:', err);
       this.showToast(`Erro na avaliação: ${err.message}`, 'error');
@@ -4998,7 +5017,7 @@ class AutoReportApp {
     this.renderEvaluationCharts();
     this.renderWordClouds();
     this.saveCurrentStepData();
-    this.showToast('✓ Planilha de avaliações limpa com sucesso!', 'success');
+    this.showToast('Planilha de avaliações limpa com sucesso!', 'success');
   }
 
   renderEvaluationStep() {
@@ -5029,7 +5048,9 @@ class AutoReportApp {
                 Total: <strong>${evals.length}</strong> respostas (CACS-FUNDEB: <strong>${cacsCount}</strong> | Gestão Municipal: <strong>${gestCount}</strong>)
               </div>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearEvaluationData()" style="padding:0.25rem 0.55rem; font-size:0.78rem; font-weight:700;">✕ Limpar Planilha</button>
+            <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearEvaluationData()" style="padding:0.25rem 0.55rem; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center;" title="Remover planilha de avaliação">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Limpar Planilha
+            </button>
           </div>
         `;
       }
@@ -5138,7 +5159,7 @@ class AutoReportApp {
       });
       this.renderPhotosStep();
       this.saveCurrentStepData();
-      this.showToast(`✓ Imagem enviada com sucesso!`, 'success');
+      this.showToast(`Imagem enviada com sucesso!`, 'success');
     } else {
       // Drop em lote no grid
       const mockEvent = { target: { files: imageFiles } };
@@ -5195,7 +5216,7 @@ class AutoReportApp {
     this.draggedPhotoSlotId = null;
     this.renderPhotosStep();
     this.saveCurrentStepData();
-    this.showToast('✓ Posição das figuras reordenada!', 'success');
+    this.showToast('Posição das figuras reordenada!', 'success');
   }
 
   getTrainingDaysCount() {
@@ -5257,7 +5278,7 @@ class AutoReportApp {
 
     this.renderPhotosStep();
     this.saveCurrentStepData();
-    this.showToast(`✓ Imagem enviada com sucesso!`, 'success');
+    this.showToast(`Imagem enviada com sucesso!`, 'success');
   }
 
   async handlePhotoUpload(event) {
@@ -5289,7 +5310,7 @@ class AutoReportApp {
 
     this.renderPhotosStep();
     this.saveCurrentStepData();
-    this.showToast(`✓ ${files.length} fotos adicionadas à galeria!`, 'success');
+    this.showToast(`${files.length} fotos adicionadas à galeria!`, 'success');
   }
 
   confirmRemovePhoto(slotId) {
@@ -5313,7 +5334,7 @@ class AutoReportApp {
     this.currentTraining.media = this.currentTraining.media.filter(m => m.slotId !== slotId && m.id !== slotId);
     this.renderPhotosStep();
     this.saveCurrentStepData();
-    this.showToast('✓ Fotografia removida com sucesso!', 'success');
+    this.showToast('Fotografia removida com sucesso!', 'success');
   }
 
   updatePhotoCaption(slotId, newCaption) {
@@ -5352,7 +5373,9 @@ class AutoReportApp {
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 ${slot.defaultCaption}
               </strong>
-              <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemovePhoto('${slot.slotId}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover Foto</button>
+              <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemovePhoto('${slot.slotId}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700; display:inline-flex; align-items:center;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Remover Foto
+              </button>
             </div>
 
             <div style="background:var(--bg-input); border-radius:var(--radius-md); overflow:hidden; max-height:220px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-color);">
@@ -5368,7 +5391,9 @@ class AutoReportApp {
               <span style="font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:0.25rem;">
                 <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg> Arraste para reordenar
               </span>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-slot-${slot.slotId}').click()" style="font-size:0.76rem; padding:0.2rem 0.5rem;">📷 Trocar Imagem</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-slot-${slot.slotId}').click()" style="font-size:0.76rem; padding:0.2rem 0.5rem; display:inline-flex; align-items:center;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>Trocar Imagem
+              </button>
               <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
             </div>
           </div>
@@ -5392,7 +5417,9 @@ class AutoReportApp {
                  ondragleave="app.handleDragLeave(event)"
                  ondrop="app.handlePhotoDrop('${slot.slotId}', '${slot.defaultCaption}', event)"
                  style="padding:1.25rem 0.75rem;">
-              <div class="upload-dropzone-icon" style="font-size:1.5rem; margin-bottom:0.25rem;">📷</div>
+              <div class="upload-dropzone-icon" style="display:flex; justify-content:center; margin-bottom:0.35rem; color:var(--text-muted);">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              </div>
               <div class="upload-dropzone-text" style="font-size:0.85rem;">Clique ou arraste a foto da ${slot.defaultTitle}</div>
               <div class="upload-dropzone-hint" style="font-size:0.74rem;">Formatos aceitos: JPG, PNG, WEBP</div>
               <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
@@ -5415,7 +5442,9 @@ class AutoReportApp {
              style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem; border:1px solid rgba(59, 130, 246, 0.3); cursor:grab;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <strong style="color:var(--accent-blue-text); font-size:0.88rem;">Foto Extra #${idx + 1}</strong>
-            <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemovePhoto('${photo.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover</button>
+            <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemovePhoto('${photo.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700; display:inline-flex; align-items:center;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Remover
+            </button>
           </div>
 
           <div style="background:var(--bg-input); border-radius:var(--radius-md); overflow:hidden; max-height:220px; display:flex; align-items:center; justify-content:center;">
@@ -5476,7 +5505,7 @@ class AutoReportApp {
 
     this.renderAppendicesStep();
     this.saveCurrentStepData();
-    this.showToast(`✓ Documento anexado com sucesso!`, 'success');
+    this.showToast(`Documento anexado com sucesso!`, 'success');
   }
 
   confirmRemoveAppendix(docId) {
@@ -5498,7 +5527,7 @@ class AutoReportApp {
     this.currentTraining.media = this.currentTraining.media.filter(m => m.id !== docId);
     this.renderAppendicesStep();
     this.saveCurrentStepData();
-    this.showToast('✓ Documento removido com sucesso!', 'success');
+    this.showToast('Documento removido com sucesso!', 'success');
   }
 
   renderAppendicesStep() {
@@ -5512,13 +5541,13 @@ class AutoReportApp {
     if (fndeContainer) {
       fndeContainer.innerHTML = fndeDocs.length === 0
         ? `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhuma convocação do FNDE anexada.</p>`
-        : fndeDocs.map(d => `<div class="audit-item" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.5rem 0.75rem; border-radius:var(--radius-sm); margin-top:0.35rem;"><span>📄 ${d.fileName}</span><button class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover</button></div>`).join('');
+        : fndeDocs.map(d => `<div class="audit-item" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.5rem 0.75rem; border-radius:var(--radius-sm); margin-top:0.35rem;"><span style="display:inline-flex; align-items:center; gap:0.35rem;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-secondary);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>${d.fileName}</span><button class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700; display:inline-flex; align-items:center;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Remover</button></div>`).join('');
     }
 
     if (cecateContainer) {
       cecateContainer.innerHTML = cecateDocs.length === 0
         ? `<p style="color:var(--text-muted); font-size:0.85rem;">Nenhuma convocação do CECATE anexada.</p>`
-        : cecateDocs.map(d => `<div class="audit-item" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.5rem 0.75rem; border-radius:var(--radius-sm); margin-top:0.35rem;"><span>📄 ${d.fileName}</span><button class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700;">✕ Remover</button></div>`).join('');
+        : cecateDocs.map(d => `<div class="audit-item" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:0.5rem 0.75rem; border-radius:var(--radius-sm); margin-top:0.35rem;"><span style="display:inline-flex; align-items:center; gap:0.35rem;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-secondary);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>${d.fileName}</span><button class="btn btn-secondary btn-sm text-accent-rose" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.15rem 0.45rem; font-size:0.74rem; font-weight:700; display:inline-flex; align-items:center;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>Remover</button></div>`).join('');
     }
   }
 
@@ -5535,7 +5564,9 @@ class AutoReportApp {
     container.innerHTML = `
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
         <div class="metric-card">
-          <div class="metric-icon">👥</div>
+          <div class="metric-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
           <div class="metric-info">
             <h4>Taxa de Participação</h4>
             <div class="metric-value" style="color:var(--accent-secondary);">${metrics.participationRateGeneral}%</div>
@@ -5567,24 +5598,30 @@ class AutoReportApp {
       </div>
 
       <div class="wizard-card">
-        <h4 class="wizard-card-title">🔍 Checklist de Auditoria & Validação Cruzada</h4>
+        <h4 class="wizard-card-title" style="display:flex; align-items:center; gap:0.4rem;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-secondary);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Checklist de Auditoria & Validação Cruzada</span>
+        </h4>
         <div style="margin-top:1rem;">
           <div class="audit-item valid">
             <div><strong>Identificação e Metadados:</strong> Polo, UF e datas devidamente informados.</div>
-            <span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981;">✓ Validado</span>
+            <span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981; display:inline-flex; align-items:center; gap:0.25rem;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Validado</span>
+            </span>
           </div>
 
           <div class="audit-item ${metrics.totalPresent > 0 ? 'valid' : 'critical'}">
             <div><strong>Lista de Presença:</strong> ${metrics.totalPresent} participantes identificados e categorizados.</div>
-            <span class="nav-badge" style="${metrics.totalPresent > 0 ? 'background:rgba(16, 185, 129, 0.15); color:#10b981;' : 'background:rgba(239, 68, 68, 0.15); color:#ef4444;'}">
-              ${metrics.totalPresent > 0 ? '✓ Validado' : '⚠ Pendência Crítica'}
+            <span class="nav-badge" style="${metrics.totalPresent > 0 ? 'background:rgba(16, 185, 129, 0.15); color:#10b981;' : 'background:rgba(239, 68, 68, 0.15); color:#ef4444;'} display:inline-flex; align-items:center; gap:0.25rem;">
+              ${metrics.totalPresent > 0 ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Validado</span>' : '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>Pendência Crítica</span>'}
             </span>
           </div>
 
           <div class="audit-item ${metrics.evalStatsGeneral.totalResponses > 0 ? 'valid' : 'warning'}">
             <div><strong>Pesquisa Avaliativa:</strong> ${metrics.evalStatsGeneral.totalResponses} respostas com médias calculadas.</div>
-            <span class="nav-badge" style="${metrics.evalStatsGeneral.totalResponses > 0 ? 'background:rgba(16, 185, 129, 0.15); color:#10b981;' : 'background:rgba(245, 158, 11, 0.15); color:#f59e0b;'}">
-              ${metrics.evalStatsGeneral.totalResponses > 0 ? '✓ Validado' : '⚠ Pendência'}
+            <span class="nav-badge" style="${metrics.evalStatsGeneral.totalResponses > 0 ? 'background:rgba(16, 185, 129, 0.15); color:#10b981;' : 'background:rgba(245, 158, 11, 0.15); color:#f59e0b;'} display:inline-flex; align-items:center; gap:0.25rem;">
+              ${metrics.evalStatsGeneral.totalResponses > 0 ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Validado</span>' : '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>Pendência</span>'}
             </span>
           </div>
 
@@ -5653,7 +5690,7 @@ class AutoReportApp {
 
   async downloadDocxReport() {
     if (!this.currentTraining || !window.reportDocxGenerator) return;
-    this.showToast('⚡ Gerando arquivo Word (.docx)...');
+    this.showToast('Gerando arquivo Word (.docx)...');
     if (!this.metrics) {
       this.metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
     }
@@ -5664,7 +5701,7 @@ class AutoReportApp {
     const full = await window.db.getTrainingFull(trainingId);
     if (full && window.reportDocxGenerator && window.statsEngine) {
       const metrics = window.statsEngine.calculateAllMetrics(full);
-      this.showToast('⚡ Gerando arquivo Word (.docx)...');
+      this.showToast('Gerando arquivo Word (.docx)...');
       await window.reportDocxGenerator.generateAndDownload(full, metrics);
     }
   }
@@ -5682,7 +5719,7 @@ class AutoReportApp {
 
     // Regra estrita: impedir exclusão de registros do Histórico Protegido (Nº 6 a 14)
     if ((training.isHistorical || training.status === 'historico') && (parseInt(training.number) >= 6 && parseInt(training.number) <= 14)) {
-      this.showToast('🛡️ Registros do Histórico Protegido (Nº 6 a 14) são permanentes e não podem ser excluídos.', 'warning');
+      this.showToast('Registros do Histórico Protegido (Nº 6 a 14) são permanentes e não podem ser excluídos.', 'warning');
       return;
     }
 
@@ -5696,9 +5733,9 @@ class AutoReportApp {
     }
     if (detailsEl) {
       detailsEl.innerHTML = `
-        <span>📍 Local: <strong>${training.locationVenue || 'Auditório Municipal'}</strong></span>
-        <span>📅 Datas: <strong>${training.datesFormatted || training.startDate || 'Data a definir'}</strong></span>
-        <span>⏱️ Carga: <strong>${training.workload || '16h'}</strong></span>
+        <span style="display:inline-flex; align-items:center;">${window.icons.pin} Local:&nbsp;<strong>${training.locationVenue || 'Auditório Municipal'}</strong></span>
+        <span style="display:inline-flex; align-items:center;">${window.icons.calendar} Datas:&nbsp;<strong>${training.datesFormatted || training.startDate || 'Data a definir'}</strong></span>
+        <span style="display:inline-flex; align-items:center;">${window.icons.clock} Carga:&nbsp;<strong>${training.workload || '16h'}</strong></span>
       `;
     }
 
@@ -5812,7 +5849,7 @@ class AutoReportApp {
         masterTeam.splice(index, 1);
         window.saveMasterTeam(masterTeam);
         this.renderMasterTeamManagement();
-        this.showToast(`🗑️ Integrante ${removedName} removido do catálogo geral.`);
+        this.showToast(`Integrante ${removedName} removido do catálogo geral.`);
       }
     } else if (type === 'wizard') {
       if (this.currentTraining?.team?.[index]) {
@@ -5820,7 +5857,7 @@ class AutoReportApp {
         this.currentTraining.team.splice(index, 1);
         this.renderTeamList();
         this.saveCurrentStepData();
-        this.showToast(`🗑️ Integrante ${removedName} removido da equipe.`);
+        this.showToast(`Integrante ${removedName} removido da equipe.`);
       }
     }
 
@@ -5845,7 +5882,7 @@ class AutoReportApp {
     // Desabilitar botões e exibir barra
     if (confirmBtn) {
       confirmBtn.disabled = true;
-      confirmBtn.innerHTML = '⏳ Excluindo...';
+      confirmBtn.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Excluindo...';
     }
     if (cancelBtn) cancelBtn.disabled = true;
     if (closeBtn) closeBtn.disabled = true;
@@ -5871,25 +5908,21 @@ class AutoReportApp {
       await new Promise(r => setTimeout(r, 200));
 
       // Fase 4: Exclusão no banco IndexedDB
-      setProgress(95, 'Limpando dados mestres no banco local...');
-      await window.db.deleteTraining(idToDelete);
-      await new Promise(r => setTimeout(r, 150));
+      setProgress(95, 'Finalizando exclusão no banco...');
+      await window.db.delete('trainings', idToDelete);
 
-      // Fase 5: Concluído
-      setProgress(100, '✓ Relatório excluído com sucesso!');
+      setProgress(100, 'Capacitação excluída com sucesso!');
       await new Promise(r => setTimeout(r, 300));
 
       this.closeConfirmDeleteModal();
-      this.showToast(`✓ Capacitação Nº ${num} excluída com sucesso!`, 'success');
-      await this.refreshTrainingsList();
+      this.showToast(`Capacitação Nº ${num} excluída com sucesso.`);
 
-      if (this.currentTraining?.id === idToDelete) {
+      // Se estava no wizard e excluiu o que estava aberto, voltar para o banco
+      if (this.currentTraining && this.currentTraining.id === idToDelete) {
         this.currentTraining = null;
-        this.navigateTo('dashboard');
-      } else if (this.activeView === 'trainings') {
-        this.renderTrainingsList();
+        this.navigateTo('all-trainings');
       } else {
-        this.renderDashboard();
+        await this.renderTrainingsList();
       }
     } catch (err) {
       console.error('Erro ao excluir capacitação:', err);
@@ -5920,7 +5953,9 @@ class AutoReportApp {
     if (this.trainingList.length === 0) {
       container.innerHTML = `
         <div style="text-align:center; padding:3rem; color:var(--text-muted);">
-          <div style="font-size:3rem; margin-bottom:1rem;">📁</div>
+          <div style="display:flex; justify-content:center; margin-bottom:1rem; color:var(--text-muted);">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          </div>
           <p>Nenhuma capacitação cadastrada.</p>
         </div>
       `;
@@ -6089,7 +6124,7 @@ class AutoReportApp {
     this.lockGlobalSettingsInputs(false);
     const firstInput = document.getElementById('setting-org-name');
     if (firstInput) firstInput.focus();
-    this.showToast('✏️ Edição das Configurações Globais habilitada.', 'info');
+    this.showToast('Edição das Configurações Globais habilitada.', 'info');
   }
 
   cancelEditGlobalSettings() {
@@ -6117,7 +6152,7 @@ class AutoReportApp {
     }
 
     this.lockGlobalSettingsInputs(true);
-    this.showToast('✓ Configurações Globais salvas com sucesso!', 'success');
+    this.showToast('Configurações Globais salvas com sucesso!', 'success');
   }
 
   fileToDataUrl(file) {

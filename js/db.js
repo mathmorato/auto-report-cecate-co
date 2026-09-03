@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Banco de Dados Local (IndexedDB & State Management)
- * Versão: v.1.9.4
+ * Versão: v.2.3.6
  */
 
 class TrainingDB {
@@ -442,7 +442,7 @@ class TrainingDB {
 
     const saveStatusBadge = document.getElementById('autosave-status-badge');
     if (saveStatusBadge) {
-      saveStatusBadge.innerHTML = '⏳ Salvando alterações...';
+      saveStatusBadge.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Salvando alterações...';
       saveStatusBadge.style.color = 'var(--accent-warning)';
     }
 
@@ -453,7 +453,7 @@ class TrainingDB {
           await this.saveTrainingFull(data, 'Autosave automático');
           const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
           if (saveStatusBadge) {
-            saveStatusBadge.innerHTML = `✓ Salvo às ${timeStr}`;
+            saveStatusBadge.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>Salvo às ${timeStr}`;
             saveStatusBadge.style.color = 'var(--accent-success)';
           }
           if (typeof onSavedCallback === 'function') onSavedCallback(data);
@@ -461,7 +461,7 @@ class TrainingDB {
       } catch (err) {
         console.error('Erro no autosave:', err);
         if (saveStatusBadge) {
-          saveStatusBadge.innerHTML = '⚠️ Erro ao salvar';
+          saveStatusBadge.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Erro ao salvar';
           saveStatusBadge.style.color = 'var(--accent-danger)';
         }
       }

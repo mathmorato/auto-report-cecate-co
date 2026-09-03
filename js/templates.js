@@ -1,5 +1,6 @@
 /**
  * AutoReport CECATE - Modelos e Templates Modulares Padrão
+ * Versão: v.2.3.6
  */
 
 const REPORT_TEMPLATES = [
@@ -7,7 +8,7 @@ const REPORT_TEMPLATES = [
     id: "audit_compliance",
     title: "Auditoria & Conformidade CECATE",
     category: "Auditoria",
-    icon: "🛡️",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
     badge: "Oficial",
     description: "Avaliação rigorosa de conformidade regulatória, mapeamento de não-conformidades, riscos e plano de ação corretivo.",
     defaultMeta: {
@@ -82,7 +83,7 @@ const REPORT_TEMPLATES = [
     id: "monthly_performance",
     title: "Performance & Métricas Mensais",
     category: "Operacional",
-    icon: "📈",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`,
     badge: "Popular",
     description: "Análise quantitativa de desempenho, metas alcançadas, faturamento, eficiência e gargalos operacionais.",
     defaultMeta: {
@@ -157,64 +158,74 @@ const REPORT_TEMPLATES = [
     id: "incident_rca",
     title: "Incidente Técnico & Causa Raiz (RCA)",
     category: "Engenharia",
-    icon: "⚠️",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
     badge: "Técnico",
     description: "Documentação pós-incidente (Post-Mortem), linha do tempo cronológica, causa raiz e plano de prevenção definitiva.",
     defaultMeta: {
       orgName: "CECATE Cloud Engineering",
       reportTitle: "Relatório de Análise de Causa Raiz (RCA)",
-      responsible: "Eng. Rafael Toledo",
-      department: "Engenharia de Confiabilidade (SRE)",
+      responsible: "Eng. Rafael Barreto",
+      department: "Infraestrutura Crítica e SRE",
       date: new Date().toISOString().split('T')[0],
-      referenceCode: "INC-2026-4412"
+      referenceCode: "RCA-2026-INC404"
     },
     defaultKpis: [
-      { label: "Tempo de Indisponibilidade (MTTR)", value: "24 min", status: "warning" },
-      { label: "Severidade", value: "Sev-1", status: "danger" },
-      { label: "Usuários Afetados", value: "3.2%", status: "neutral" }
+      { label: "Tempo de Indisponibilidade", value: "24 min", status: "warning" },
+      { label: "Clientes Impactados", value: "1.2%", status: "neutral" },
+      { label: "Severidade", value: "P1 Crítico", status: "danger" }
     ],
     blocks: [
       {
         id: "b_exec_summary",
         type: "executive_summary",
-        title: "1. Resumo do Incidente",
-        content: "Em **{data}**, foi detectada instabilidade no cluster principal de banco de dados durante a execução de rotinas programadas na **{empresa}**. O restabelecimento completo ocorreu em 24 minutos após a atuação da equipe de resposta sob liderança de **{responsavel}**."
+        title: "1. Síntese do Incidente",
+        content: "Em **{data}**, às 14h22, observou-se degradação de conectividade no cluster principal da **{empresa}**. O protocolo de contingência foi acionado pelo time de **{departamento}**, restabelecendo a normalidade dos serviços em 24 minutos."
+      },
+      {
+        id: "b_kpis",
+        type: "kpi_metrics",
+        title: "2. Métricas de Impacto e Resolução",
+        kpis: [
+          { label: "MTTR (Tempo de Reparo)", value: "24 min", change: "Meta < 30 min" },
+          { label: "MTTD (Detecção)", value: "2 min", change: "Alerta automático" },
+          { label: "Perda de Dados", value: "Zero", change: "RPO = 0" }
+        ]
       },
       {
         id: "b_diagnostic",
         type: "ai_diagnostic",
-        title: "2. Análise da Causa Raiz (Os 5 Porquês)",
-        content: "A causa primária foi atribuída a um deadlock transacional decorrente de migração de schema concorrente. O balanceador de carga manteve as conexões presas, provocando esgotamento do pool de threads. Mecanismos de failover automatizado foram acionados com sucesso."
+        title: "3. Investigação Técnica da Causa Raiz",
+        content: "A análise dos dumps de memória e logs distribuídos revelou exaustão de conexões no pool de réplicas de leitura, ocasionada por consulta analítica não indexada executada em paralelo a pico de tráfego. Não houve comprometimento de integridade nem violação de segurança."
       },
       {
         id: "b_findings_table",
         type: "data_table",
-        title: "3. Linha do Tempo dos Eventos (Timeline)",
-        headers: ["Horário", "Evento / Detecção", "Ação Tomada", "Responsável"],
+        title: "4. Linha do Tempo dos Fatos",
+        headers: ["Horário", "Fato / Ação", "Ator / Sistema", "Impacto"],
         rows: [
-          ["14:02", "Alarme de latência disparado pelo Prometheus", "Notificação aos plantonistas", "Bot Alertas"],
-          ["14:08", "Identificação de saturação de conexões", "Bloqueio preventivo do tráfego não crítico", "Rafael Toledo"],
-          ["14:19", "Reinicialização controlada das instâncias réplica", "Drenagem do pool de conexões", "Time SRE"],
-          ["14:26", "Retomada integral dos serviços e normalização", "Validação de integridade", "Rafael Toledo"]
+          ["14:22", "Disparo do alarme de latência do banco", "Monitoramento SRE", "Alerta Amarelo"],
+          ["14:25", "Isolamento da rota instável e início do failover", "Engenharia de Plantão", "Mitigação"],
+          ["14:38", "Sincronização do nó reserva e restabelecimento", "Equipe de Banco", "Normalização"],
+          ["14:46", "Testes de integridade validados e incidente encerrado", "Supervisão Técnica", "Operação Normal"]
         ]
       },
       {
         id: "b_recommendations",
         type: "recommendations",
-        title: "4. Ações Preventivas e Mitigações Permanentes",
+        title: "5. Ações Corretivas e Preventivas (CAPA)",
         items: [
-          "Inserir trava rígida de bloqueio para execuções DDL durante janelas de pico.",
-          "Reduzir o timeout padrão de conexões ociosas de 60s para 15s.",
-          "Ampliar os testes de carga automatizados na esteira de CI/CD."
+          "Impor limite estrito de timeout (15s) para queries de relatórios na réplica secundária.",
+          "Dimensionar autoescala preditiva com antecedência mínima de 10 minutos em janelas de fechamento.",
+          "Atualizar o playbook de resposta rápida da equipe de operações."
         ]
       },
       {
         id: "b_signatures",
         type: "signatures",
-        title: "5. Aprovação Técnica",
+        title: "6. Aprovação Técnica do Relatório",
         signers: [
-          { name: "{responsavel}", role: "Engenheiro SRE Responsável" },
-          { name: "Tech Lead & Arquiteto", role: "Coordenação de Infraestrutura" }
+          { name: "{responsavel}", role: "Líder Técnico de SRE" },
+          { name: "Diretoria de Tecnologia e Operações", role: "CTO" }
         ]
       }
     ]
@@ -223,7 +234,7 @@ const REPORT_TEMPLATES = [
     id: "executive_status",
     title: "Status Executivo de Projeto",
     category: "Gestão",
-    icon: "📊",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
     badge: "Estratégico",
     description: "Visão consolidada para diretores e patrocinadores: cronograma, entregas, orçamento e riscos mapeados.",
     defaultMeta: {
@@ -297,7 +308,7 @@ const REPORT_TEMPLATES = [
     id: "training_capacity",
     title: "Capacitação & Treinamento CECATE",
     category: "Capacitação",
-    icon: "🎓",
+    icon: `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>`,
     badge: "Oficial",
     description: "Relatório consolidado de execução de curso ou capacitação técnica: ementa, frequência, taxa de conclusão e avaliação.",
     defaultMeta: {
@@ -375,10 +386,10 @@ const REPORT_TEMPLATES = [
 
 // Tipos de blocos modulares que podem ser adicionados dinamicamente
 const AVAILABLE_BLOCK_TYPES = [
-  { type: "executive_summary", name: "Sumário Executivo", icon: "📝", desc: "Texto introdutório com escopo e resumo dos pontos centrais" },
-  { type: "kpi_metrics", name: "Grid de Indicadores (KPIs)", icon: "📊", desc: "Painel com 3 a 4 cartões numéricos e tendências" },
-  { type: "ai_diagnostic", name: "Diagnóstico e Parecer Técnico", icon: "⚡", desc: "Análise profunda com parágrafos gerados e refinados" },
-  { type: "data_table", name: "Tabela de Dados e Evidências", icon: "📋", desc: "Estrutura tabular com colunas e linhas editáveis" },
-  { type: "recommendations", name: "Recomendações e Próximos Passos", icon: "🎯", desc: "Lista de itens acionáveis e diretrizes futuras" },
-  { type: "signatures", name: "Bloco de Assinaturas e Validação", icon: "✍️", desc: "Linhas para validação de autoridade e homologação" }
+  { type: "executive_summary", name: "Sumário Executivo", icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`, desc: "Texto introdutório com escopo e resumo dos pontos centrais" },
+  { type: "kpi_metrics", name: "Grid de Indicadores (KPIs)", icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`, desc: "Painel com 3 a 4 cartões numéricos e tendências" },
+  { type: "ai_diagnostic", name: "Diagnóstico e Parecer Técnico", icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`, desc: "Análise profunda com parágrafos gerados e refinados" },
+  { type: "data_table", name: "Tabela de Dados e Evidências", icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>`, desc: "Estrutura tabular com colunas e linhas editáveis" },
+  { type: "recommendations", name: "Recomendações e Próximos Passos", icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>`, desc: "Lista de itens acionáveis e diretrizes futuras" },
+  { type: "signatures", name: "Bloco de Assinaturas e Validação", icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`, desc: "Linhas para validação de autoridade e homologação" }
 ];
