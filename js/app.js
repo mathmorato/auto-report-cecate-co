@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.9
+ * Versão: v.2.4.0
  */
 
 window.icons = {
@@ -1104,7 +1104,7 @@ class AutoReportApp {
       if (!title) missing.push('Título da Capacitação');
       if (!uf) missing.push('Estado (UF)');
       if (!polo) missing.push('Município Polo');
-      if (!venue) missing.push('Local / Auditório');
+      if (!venue) missing.push('Local');
       if (!address) missing.push('Endereço Completo');
       if (!startDate) missing.push('Data Inicial');
       if (!workload) missing.push('Carga Horária');
