@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.6.3
+ * Versão: v.2.6.4
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.6.3';
+    this.version = 'v.2.6.4';
   }
 
   /**
@@ -6111,6 +6111,9 @@ class AutoReportApp {
     const inputEval = document.getElementById('file-input-evaluation');
     if (inputEval) inputEval.value = '';
 
+    const dropzoneEval = document.getElementById('dropzone-evaluation');
+    if (dropzoneEval) dropzoneEval.style.display = 'flex';
+
     this.renderEvaluationStep();
     this.renderEvaluationCharts();
     this.renderWordClouds();
@@ -6121,7 +6124,14 @@ class AutoReportApp {
   renderEvaluationStep() {
     if (!this.currentTraining || !window.statsEngine) return;
     const evals = this.currentTraining.evaluations || [];
+    const hasEvals = evals.length > 0;
     const stats = window.statsEngine.calculateEvaluationStats(evals);
+
+    // Ocultar janela de inserção se houver planilha importada
+    const dropzoneEval = document.getElementById('dropzone-evaluation');
+    if (dropzoneEval) {
+      dropzoneEval.style.display = hasEvals ? 'none' : 'flex';
+    }
 
     const countEl = document.getElementById('wiz-eval-total-count');
     if (countEl) countEl.textContent = `${evals.length} Avaliações Registradas`;
@@ -6131,13 +6141,13 @@ class AutoReportApp {
 
     const statusBanner = document.getElementById('wizard-evaluation-status-banner');
     if (statusBanner) {
-      if (evals.length === 0) {
+      if (!hasEvals) {
         statusBanner.innerHTML = '';
       } else {
         const cacsCount = evals.filter(e => e.representation === 'CACS-FUNDEB').length;
         const gestCount = evals.length - cacsCount;
         statusBanner.innerHTML = `
-          <div style="background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); padding:0.85rem 1.1rem; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-top:1rem;">
+          <div style="background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); padding:0.85rem 1.1rem; border-radius:var(--radius-md); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-top:0.5rem;">
             <div>
               <strong style="color:var(--accent-blue-text); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Planilha de Avaliação Importada
