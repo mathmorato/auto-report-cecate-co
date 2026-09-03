@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.3
+ * Versão: v.2.7.4
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.3';
+    this.version = 'v.2.7.4';
   }
 
   /**
@@ -6433,12 +6433,11 @@ class AutoReportApp {
     const slots = [
       { slotId: 'fig_9', defaultTitle: 'Acomodação dos participantes.', defaultCaption: 'Figura 9. Acomodação dos participantes.' },
       { slotId: 'fig_10', defaultTitle: 'Apresentação inicial do curso.', defaultCaption: 'Figura 10. Apresentação inicial do curso.' },
-      { slotId: 'fig_11', defaultTitle: 'Apresentação dos módulos teóricos.', defaultCaption: 'Figura 11. Apresentação dos módulos teóricos.' },
-      { slotId: 'fig_12', defaultTitle: 'Apresentação do primeiro dia.', defaultCaption: 'Figura 12. Apresentação do primeiro dia.' }
+      { slotId: 'fig_11', defaultTitle: 'Apresentação dos módulos teóricos.', defaultCaption: 'Figura 11. Apresentação dos módulos teóricos.' }
     ];
 
     for (let day = 1; day <= daysCount; day++) {
-      const figNum = 12 + day;
+      const figNum = 11 + day;
       slots.push({
         slotId: `fig_${figNum}_day_${day}`,
         defaultTitle: `Final da capacitação do ${day}º dia.`,
@@ -6549,7 +6548,15 @@ class AutoReportApp {
     let html = '';
 
     slots.forEach(slot => {
-      const photo = photos.find(p => p.slotId === slot.slotId);
+      let photo = photos.find(p => p.slotId === slot.slotId);
+      if (!photo && slot.slotId.includes('_day_')) {
+        const dayPart = slot.slotId.split('_day_')[1];
+        photo = photos.find(p => p.slotId && p.slotId.endsWith(`_day_${dayPart}`));
+        if (photo) {
+          photo.slotId = slot.slotId;
+          photo.caption = slot.defaultCaption;
+        }
+      }
 
       if (photo) {
         // Card com foto anexada (Draggable para reordenar)

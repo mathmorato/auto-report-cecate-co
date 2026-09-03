@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Gráfico (QuickChart & Chart.js Local Canvas)
- * Versão: v.2.7.3
+ * Versão: v.2.7.4
  */
 
 class ChartEngine {
