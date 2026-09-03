@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.8.1
+ * Versão: v.2.8.2
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.8.1';
+    this.version = 'v.2.8.2';
   }
 
   /**
@@ -6781,7 +6781,7 @@ class AutoReportApp {
             </div>
 
             <div class="upload-dropzone" 
-                 onclick="document.getElementById('file-slot-${slot.slotId}').click()" 
+                 onclick="const inp = document.getElementById('file-slot-${slot.slotId}'); if(inp) inp.click();" 
                  style="padding:1.75rem 1rem; border-radius:var(--radius-sm); border:2px dashed #f59e0b; cursor:pointer; background:rgba(245, 158, 11, 0.03); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:140px;">
               <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-primary); margin-bottom:0.6rem;">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
@@ -6791,7 +6791,7 @@ class AutoReportApp {
                 Clique ou arraste a foto da ${slot.defaultTitle}
               </div>
               <div class="upload-dropzone-hint" style="font-size:0.74rem;">Formatos aceitos: JPG, PNG, WEBP</div>
-              <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
+              <input type="file" id="file-slot-${slot.slotId}" accept="image/*" style="display:none;" onclick="event.stopPropagation()" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
             </div>
           </div>
         `;
