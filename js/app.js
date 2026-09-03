@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.4.5
+ * Versão: v.2.4.6
  */
 
 window.icons = {
@@ -1185,6 +1185,29 @@ class AutoReportApp {
       }
     }
 
+    if (stepNumber === 4) {
+      const mods = t.courseModules || [];
+      let totalHours = 0;
+      let hasValidTopics = false;
+
+      mods.forEach(m => {
+        (m.gestorTopics || []).forEach(top => {
+          if (top.topic && top.topic.trim() && top.topic !== '-') hasValidTopics = true;
+          totalHours += parseFloat(top.hours) || 0;
+        });
+        (m.cacsTopics || []).forEach(top => {
+          if (top.topic && top.topic.trim() && top.topic !== '-') hasValidTopics = true;
+          totalHours += parseFloat(top.hours) || 0;
+        });
+      });
+
+      if (!mods || mods.length === 0 || !hasValidTopics || totalHours <= 0) {
+        this.showToast('Por favor, selecione ou configure uma Estrutura do Curso válida antes de avançar.', 'warning');
+        this.openSelectCourseTemplateModal();
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -2175,6 +2198,132 @@ class AutoReportApp {
   proceedExitToDashboard() {
     this.closeExitWizardModal();
     this.navigateTo('dashboard');
+  }
+
+  /* --------------------------------------------------------------------------
+     ALERTA DE SEGURANÇA E SALVAMENTO AO NAVEGAR PARA ESTRUTURA DO CURSO
+     -------------------------------------------------------------------------- */
+  promptNavigateToCourseStructure() {
+    const modal = document.getElementById('modal-confirm-navigate-structure');
+    if (!modal) {
+      this.navigateTo('master-course-structure');
+      return;
+    }
+    const statusEl = document.getElementById('modal-nav-structure-status');
+    const saveBtn = document.getElementById('modal-nav-structure-btn-save');
+    const continueBtn = document.getElementById('modal-nav-structure-btn-continue');
+    const cancelBtn = document.getElementById('modal-nav-structure-btn-cancel');
+
+    if (statusEl) {
+      statusEl.style.display = 'none';
+      statusEl.innerHTML = '';
+    }
+    if (saveBtn) {
+      saveBtn.style.display = 'inline-flex';
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <span id="modal-nav-structure-btn-save-text">Salvar Alterações</span>
+      `;
+    }
+    if (continueBtn) {
+      continueBtn.style.display = 'none';
+    }
+    if (cancelBtn) {
+      cancelBtn.style.display = 'inline-block';
+    }
+
+    modal.style.display = 'flex';
+  }
+
+  closeNavigateStructureModal() {
+    const modal = document.getElementById('modal-confirm-navigate-structure');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  async saveAndPrepareNavigateToStructure() {
+    const statusEl = document.getElementById('modal-nav-structure-status');
+    const saveBtn = document.getElementById('modal-nav-structure-btn-save');
+    const continueBtn = document.getElementById('modal-nav-structure-btn-continue');
+
+    // 1. Ativar spinner
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+        <span>Salvando Dados...</span>
+      `;
+    }
+
+    if (statusEl) {
+      statusEl.style.display = 'flex';
+      statusEl.style.alignItems = 'center';
+      statusEl.style.justifyContent = 'center';
+      statusEl.style.gap = '0.5rem';
+      statusEl.style.background = 'rgba(59, 130, 246, 0.15)';
+      statusEl.style.border = '1px solid rgba(59, 130, 246, 0.35)';
+      statusEl.style.color = '#60a5fa';
+      statusEl.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+        <span>Gravando dados da capacitação com segurança...</span>
+      `;
+    }
+
+    try {
+      // 2. Salvar dados atuais do formulário e persistir no IndexedDB
+      this.saveCurrentStepData();
+
+      if (this.currentTraining && window.db) {
+        await window.db.saveTrainingFull(this.currentTraining, 'Salvamento prévio antes de navegar para Estrutura do Curso');
+      }
+
+      await new Promise(res => setTimeout(res, 600));
+
+      // 3. Exibir confirmação e liberar botão de continuar
+      if (statusEl) {
+        statusEl.style.background = 'rgba(16, 185, 129, 0.18)';
+        statusEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+        statusEl.style.color = '#34d399';
+        statusEl.innerHTML = `
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Dados salvos com sucesso! Você pode prosseguir com segurança.</span>
+        `;
+      }
+
+      if (saveBtn) {
+        saveBtn.style.display = 'none';
+      }
+
+      // SOMENTE DEPOIS APARECER O BOTÃO DE CONTINUAR
+      if (continueBtn) {
+        continueBtn.style.display = 'inline-flex';
+      }
+
+      this.showToast('Dados salvos com segurança!', 'success');
+    } catch (err) {
+      console.error('Erro ao salvar dados antes de navegar para estrutura:', err);
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span>Tentar Salvar Novamente</span>
+        `;
+      }
+      if (statusEl) {
+        statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+        statusEl.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+        statusEl.style.color = '#f87171';
+        statusEl.innerHTML = 'Ocorreu um erro ao salvar os dados. Tente novamente.';
+      }
+      this.showToast('Erro ao salvar alterações.', 'error');
+    }
+  }
+
+  proceedNavigateToCourseStructure() {
+    this.closeNavigateStructureModal();
+    this.navigateTo('master-course-structure');
   }
 
   renderTeamList() {

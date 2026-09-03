@@ -720,7 +720,7 @@
                     <button type="button" class="btn btn-secondary btn-sm" onclick="app.openSelectCourseTemplateModal()" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Selecionar modelo de estrutura de curso das Configurações">
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Selecionar Estrutura
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm" id="btn-toggle-course-editor" onclick="app.showCourseEditorRedirectWarning()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;" title="Editar estrutura nas Configurações">
+                    <button type="button" class="btn btn-primary btn-sm" id="btn-toggle-course-editor" onclick="app.promptNavigateToCourseStructure()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;" title="Editar estrutura nas Configurações">
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> <span id="btn-toggle-course-editor-text">Editar Estrutura</span>
                     </button>
                   </div>
@@ -1483,7 +1483,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.4.5</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.4.6</span>
         </div>
       </footer>
     </div>
@@ -2482,6 +2482,38 @@
         <!-- Botão Continuar: Aparece SOMENTE DEPOIS do salvamento concluído -->
         <button type="button" class="btn btn-safety-continue" id="modal-exit-wiz-btn-continue" onclick="app.proceedExitToDashboard()" style="display:none;">
           <span>Continuar para Dashboard</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Alerta de Saída para Estrutura do Curso -->
+  <div id="modal-confirm-navigate-structure" class="modal-backdrop" style="display:none; align-items:center; justify-content:center;">
+    <div class="modal-dialog modal-safety-dialog">
+      <div class="modal-safety-icon-box">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <h3 class="modal-safety-title">Atenção: Mudança de Tela</h3>
+      <p class="modal-safety-desc">
+        Você está prestes a sair do preenchimento desta capacitação para gerenciar as Estruturas do Curso nas Configurações. Para evitar que alterações não salvas sejam perdidas, salve os dados antes de prosseguir.
+      </p>
+
+      <!-- Status de Salvamento Dinâmico -->
+      <div id="modal-nav-structure-status" style="display:none; margin-bottom:1.5rem; padding:0.85rem 1rem; border-radius:var(--radius-md); font-size:0.92rem; font-weight:700;"></div>
+
+      <div style="display:flex; justify-content:center; gap:0.85rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-safety-cancel" id="modal-nav-structure-btn-cancel" onclick="app.closeNavigateStructureModal()">Cancelar</button>
+        
+        <!-- Botão Salvar com Rodela de Carregamento -->
+        <button type="button" class="btn btn-safety-save" id="modal-nav-structure-btn-save" onclick="app.saveAndPrepareNavigateToStructure()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span id="modal-nav-structure-btn-save-text">Salvar Alterações</span>
+        </button>
+
+        <!-- Botão Continuar: Aparece SOMENTE DEPOIS do salvamento concluído -->
+        <button type="button" class="btn btn-safety-continue" id="modal-nav-structure-btn-continue" onclick="app.proceedNavigateToCourseStructure()" style="display:none;">
+          <span>Continuar para Estrutura</span>
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </div>
