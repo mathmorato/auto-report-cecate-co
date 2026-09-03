@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Gráfico (QuickChart & Chart.js Local Canvas)
- * Versão: v.2.7.1
+ * Versão: v.2.7.2
  */
 
 class ChartEngine {
@@ -24,20 +24,38 @@ class ChartEngine {
   renderFig3Participation(canvasId, presentCACS = 0, presentGestores = 0, isDark = true) {
     this.destroyIfExists(canvasId);
     const canvas = document.getElementById(canvasId);
-    if (!canvas || !window.Chart) return null;
+    if (!canvas) return null;
 
-    const ctx = canvas.getContext('2d');
     const total = presentCACS + presentGestores;
     const hasData = total > 0;
 
-    const percCACS = hasData ? ((presentCACS / total) * 100).toFixed(1) : '0.0';
-    const percGest = hasData ? ((presentGestores / total) * 100).toFixed(1) : '0.0';
+    if (!hasData) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
+        ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctx.fillText('Nenhuma avaliação importada no momento', canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+      }
+      return null;
+    }
 
-    const chartData = hasData ? [presentCACS, presentGestores] : [1];
-    const bgColors = hasData ? ['#06b6d4', '#6366f1'] : [isDark ? 'rgba(148, 163, 184, 0.2)' : 'rgba(203, 213, 225, 0.5)'];
-    const labels = hasData
-      ? [`Conselheiros CACS-FUNDEB (${presentCACS} - ${percCACS}%)`, `Gestores Municipais (${presentGestores} - ${percGest}%)`]
-      : [`Sem participantes importados (0 - 0.0%)`];
+    if (!window.Chart) return null;
+    const ctx = canvas.getContext('2d');
+
+    const percCACS = ((presentCACS / total) * 100).toFixed(1);
+    const percGest = ((presentGestores / total) * 100).toFixed(1);
+
+    const chartData = [presentCACS, presentGestores];
+    const bgColors = ['#06b6d4', '#6366f1'];
+    const labels = [
+      `Conselheiros CACS-FUNDEB (${presentCACS} - ${percCACS}%)`,
+      `Gestores Municipais (${presentGestores} - ${percGest}%)`
+    ];
 
     this.chartInstances[canvasId] = new Chart(ctx, {
       type: 'doughnut',
@@ -46,9 +64,9 @@ class ChartEngine {
         datasets: [{
           data: chartData,
           backgroundColor: bgColors,
-          borderWidth: hasData ? 2 : 1,
+          borderWidth: 2,
           borderColor: isDark ? '#111827' : '#ffffff',
-          hoverOffset: hasData ? 6 : 0
+          hoverOffset: 6
         }]
       },
       options: {
@@ -64,7 +82,7 @@ class ChartEngine {
             }
           },
           tooltip: {
-            enabled: hasData,
+            enabled: true,
             callbacks: {
               label: (context) => ` ${context.label}: ${context.raw} participantes`
             }
@@ -84,8 +102,26 @@ class ChartEngine {
   renderEvaluationStackedBarChart(canvasId, criterionPercentMatrix = [], title = 'Avaliação da Capacitação', isDark = true) {
     this.destroyIfExists(canvasId);
     const canvas = document.getElementById(canvasId);
-    if (!canvas || !window.Chart) return null;
+    if (!canvas) return null;
 
+    const hasAnyData = Array.isArray(criterionPercentMatrix) && criterionPercentMatrix.some(row => Array.isArray(row) && row.some(val => val > 0));
+
+    if (!hasAnyData) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
+        ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
+        ctx.fillText('Nenhuma avaliação importada no momento', canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+      }
+      return null;
+    }
+
+    if (!window.Chart) return null;
     const ctx = canvas.getContext('2d');
     const labels = [
       'Inscrição',

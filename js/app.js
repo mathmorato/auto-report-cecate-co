@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.1
+ * Versão: v.2.7.2
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.1';
+    this.version = 'v.2.7.2';
   }
 
   /**
@@ -6197,13 +6197,12 @@ class AutoReportApp {
     if (!window.chartEngine || !this.currentTraining) return;
     const isDark = this.theme === 'dark';
     const evals = this.currentTraining.evaluations || [];
-    const attendance = this.currentTraining.attendance || [];
 
-    // Figura 3: Participação CACS vs Gestor (Prioriza lista de presença, fallback inteligente para avaliações)
-    let cacsPresent = attendance.filter(a => a.representation === 'CACS-FUNDEB').length;
-    let gestPresent = attendance.filter(a => a.representation !== 'CACS-FUNDEB').length;
+    // Figura 3: Participação CACS vs Gestor (calculado estritamente a partir das avaliações importadas)
+    let cacsPresent = 0;
+    let gestPresent = 0;
 
-    if (cacsPresent === 0 && gestPresent === 0 && evals.length > 0) {
+    if (evals.length > 0) {
       cacsPresent = evals.filter(e => e.representation === 'CACS-FUNDEB').length;
       gestPresent = evals.length - cacsPresent;
     }
@@ -6227,6 +6226,38 @@ class AutoReportApp {
     if (!window.wordCloudEngine || !this.currentTraining) return;
     const evals = this.currentTraining.evaluations || [];
     const isDark = this.theme === 'dark';
+
+    if (evals.length === 0) {
+      const canvas7 = document.getElementById('wordcloud-fig7-canvas');
+      if (canvas7) {
+        const ctx7 = canvas7.getContext('2d');
+        if (ctx7) {
+          ctx7.clearRect(0, 0, canvas7.width, canvas7.height);
+          ctx7.save();
+          ctx7.textAlign = 'center';
+          ctx7.textBaseline = 'middle';
+          ctx7.font = '600 13px "Plus Jakarta Sans", sans-serif';
+          ctx7.fillStyle = isDark ? '#64748b' : '#94a3b8';
+          ctx7.fillText('Nenhuma avaliação importada no momento', canvas7.width / 2, canvas7.height / 2);
+          ctx7.restore();
+        }
+      }
+      const canvas8 = document.getElementById('wordcloud-fig8-canvas');
+      if (canvas8) {
+        const ctx8 = canvas8.getContext('2d');
+        if (ctx8) {
+          ctx8.clearRect(0, 0, canvas8.width, canvas8.height);
+          ctx8.save();
+          ctx8.textAlign = 'center';
+          ctx8.textBaseline = 'middle';
+          ctx8.font = '600 13px "Plus Jakarta Sans", sans-serif';
+          ctx8.fillStyle = isDark ? '#64748b' : '#94a3b8';
+          ctx8.fillText('Nenhuma avaliação importada no momento', canvas8.width / 2, canvas8.height / 2);
+          ctx8.restore();
+        }
+      }
+      return;
+    }
 
     const likedTexts = evals.map(e => e.likedAspects).filter(Boolean);
     const improveTexts = evals.map(e => e.improveAspects).filter(Boolean);
