@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.8.0
+ * Versão: v.2.8.1
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.8.0';
+    this.version = 'v.2.8.1';
   }
 
   /**
@@ -6888,58 +6888,18 @@ class AutoReportApp {
   }
 
   renderAppendixItem(d) {
-    const ext = (d.fileName && d.fileName.includes('.')) ? d.fileName.split('.').pop().toLowerCase() : 'pdf';
-    let iconTheme = {
-      bg: 'rgba(225, 29, 72, 0.12)',
-      border: 'rgba(225, 29, 72, 0.25)',
-      color: 'var(--accent-rose, #f43f5e)',
-      label: ext.toUpperCase() || 'PDF'
-    };
-
-    if (ext === 'doc' || ext === 'docx') {
-      iconTheme = {
-        bg: 'rgba(59, 130, 246, 0.12)',
-        border: 'rgba(59, 130, 246, 0.25)',
-        color: 'var(--accent-blue-text, #3b82f6)',
-        label: 'DOC'
-      };
-    } else if (['png', 'jpg', 'jpeg'].includes(ext)) {
-      iconTheme = {
-        bg: 'rgba(16, 185, 129, 0.12)',
-        border: 'rgba(16, 185, 129, 0.25)',
-        color: 'var(--accent-emerald-text, #10b981)',
-        label: 'IMG'
-      };
-    }
-
-    const formattedSize = d.fileSize ? this.formatFileSize(d.fileSize) : '';
-    const secondaryText = formattedSize ? `${formattedSize} • Documento anexado` : 'Documento anexado';
-
     return `
-      <div class="appendix-file-item" style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; background:var(--bg-surface); border:1px solid var(--border-color); padding:0.75rem 1rem; border-radius:var(--radius-md); margin-top:0.6rem; box-shadow:0 1px 3px rgba(0,0,0,0.03); transition:all 0.2s ease;">
-        <div style="display:flex; align-items:center; gap:0.75rem; min-width:0; flex:1;">
-          <div style="width:40px; height:40px; border-radius:var(--radius-sm); background:${iconTheme.bg}; border:1px solid ${iconTheme.border}; color:${iconTheme.color}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-          </div>
-          <div style="min-width:0; flex:1;">
-            <div style="font-weight:700; font-size:0.88rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.fileName}">
-              ${d.fileName}
-            </div>
-            <div style="display:flex; align-items:center; gap:0.45rem; font-size:0.74rem; color:var(--text-secondary); margin-top:0.25rem;">
-              <span class="nav-badge font-mono font-bold" style="background:${iconTheme.bg}; color:${iconTheme.color}; border:1px solid ${iconTheme.border}; font-size:0.65rem; padding:0.05rem 0.35rem; border-radius:3px;">
-                ${iconTheme.label}
-              </span>
-              <span>${secondaryText}</span>
-            </div>
-          </div>
+      <div class="appendix-file-item" style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; background:var(--bg-surface); border:1px solid var(--border-color); padding:0.55rem 0.85rem; border-radius:var(--radius-sm); margin-top:0.4rem;">
+        <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0; flex:1;">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${d.fileName}">
+            ${d.fileName}
+          </span>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.35rem 0.65rem; font-size:0.76rem; font-weight:600; display:inline-flex; align-items:center; gap:0.35rem; flex-shrink:0;" title="Remover documento">
+        <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.25rem 0.6rem; font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem; flex-shrink:0;" title="Remover documento">
           ${window.icons.delete} Remover
         </button>
       </div>
@@ -7108,45 +7068,252 @@ class AutoReportApp {
     const metrics = window.statsEngine.calculateAllMetrics(t);
     this.metrics = metrics;
 
+    // 1. Figuras fotográficas em ordem oficial
+    const photos = (t.media || []).filter(m => m.type === 'photo');
+    const slots = this.getStandardPhotoSlots();
+
+    let photosHtml = '';
+    slots.forEach(slot => {
+      let p = photos.find(ph => ph.slotId === slot.slotId);
+      if (!p && slot.slotId.includes('_day_')) {
+        const dayPart = slot.slotId.split('_day_')[1];
+        p = photos.find(ph => ph.slotId && ph.slotId.endsWith(`_day_${dayPart}`));
+      }
+      if (!p) {
+        p = photos.find(ph => ph.caption && ph.caption.toLowerCase().includes(slot.defaultTitle.toLowerCase().slice(0, 15)));
+      }
+
+      if (p && p.blob) {
+        photosHtml += `
+          <div style="margin: 2rem 0; text-align: center; page-break-inside: avoid;">
+            <img src="${p.blob}" alt="${p.caption || slot.defaultCaption}" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-top: 0.6rem; text-align: center;">
+              <em>${p.caption || slot.defaultCaption}</em>
+            </p>
+          </div>
+        `;
+      }
+    });
+
+    const extraPhotos = photos.filter(ph => !slots.some(s => s.slotId === ph.slotId));
+    extraPhotos.forEach((ph, idx) => {
+      if (ph.blob) {
+        photosHtml += `
+          <div style="margin: 2rem 0; text-align: center; page-break-inside: avoid;">
+            <img src="${ph.blob}" alt="${ph.caption || 'Foto Extra'}" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-top: 0.6rem; text-align: center;">
+              <em>${ph.caption || `Figura Extra ${idx + 1}. Registro fotográfico complementar.`}</em>
+            </p>
+          </div>
+        `;
+      }
+    });
+
+    if (!photosHtml) {
+      photosHtml = `<p style="color:var(--text-muted); font-style:italic;">Nenhum registro fotográfico anexado no momento.</p>`;
+    }
+
+    // 2. Apêndices (FNDE e CECATE)
+    const fndeDocs = (t.media || []).filter(m => m.type === 'doc_fnde');
+    const cecateDocs = (t.media || []).filter(m => m.type === 'doc_cecate');
+
+    const fndeHtml = fndeDocs.length === 0
+      ? `<p style="color:var(--text-muted); font-style:italic;">Nenhum documento de convocação do FNDE anexado.</p>`
+      : fndeDocs.map(d => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.4rem;">
+          <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary);">${d.fileName}</span>
+          </div>
+          ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Visualizar / Baixar</a>` : ''}
+        </div>
+      `).join('');
+
+    const cecateHtml = cecateDocs.length === 0
+      ? `<p style="color:var(--text-muted); font-style:italic;">Nenhuma convocação ou comunicado do CECATE anexado.</p>`
+      : cecateDocs.map(d => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.4rem;">
+          <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary);">${d.fileName}</span>
+          </div>
+          ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Visualizar / Baixar</a>` : ''}
+        </div>
+      `).join('');
+
     container.innerHTML = `
       <div class="report-doc-page">
-        <div style="text-align:center; border-bottom: 2px solid #1e3a8a; padding-bottom: 1rem; margin-bottom: 2rem;">
-          <h2 style="font-size:16pt; margin:0;">UNIVERSIDADE FEDERAL DE GOIÁS - UFG</h2>
-          <h3 style="font-size:13pt; margin:4px 0; color:#0284c7;">CENTRO COLABORADOR DE APOIO AO TRANSPORTE ESCOLAR - CECATE CENTRO-OESTE</h3>
-          <p style="font-size:10pt; color:#475569; margin:0;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE</p>
+        <!-- CABEÇALHO OFICIAL -->
+        <div style="text-align:center; border-bottom: 2px solid #1e3a8a; padding-bottom: 1.25rem; margin-bottom: 2rem;">
+          <h2 style="font-size:16pt; margin:0; font-weight:800; color:#1e293b;">UNIVERSIDADE FEDERAL DE GOIÁS - UFG</h2>
+          <h3 style="font-size:13pt; margin:4px 0; color:#0284c7; font-weight:700;">CENTRO COLABORADOR DE APOIO AO TRANSPORTE ESCOLAR - CECATE CENTRO-OESTE</h3>
+          <p style="font-size:10pt; color:#475569; margin:0; font-weight:600;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE</p>
         </div>
 
-        <div style="text-align:center; margin: 3rem 0;">
-          <h1 style="font-size:22pt; margin-bottom:0.5rem;">RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}</h1>
-          <h2 style="font-size:16pt; color:#2563eb; margin:0;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
-          <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem;">${t.polo || 'Polo Regional'} - ${t.uf || 'GO'}, ${t.datesFormatted || '2026'}</h3>
+        <!-- TÍTULO DO RELATÓRIO -->
+        <div style="text-align:center; margin: 2.5rem 0;">
+          <h1 style="font-size:22pt; margin-bottom:0.5rem; font-weight:800; color:#0f172a;">RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}</h1>
+          <h2 style="font-size:16pt; color:#2563eb; margin:0; font-weight:700;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
+          <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem; font-weight:600;">${t.polo || 'Polo Regional'} - ${t.uf || 'GO'}, ${t.datesFormatted || '2026'}</h3>
         </div>
 
-        <h3>1. INTRODUÇÃO</h3>
-        <p>O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${t.number || ''}, executada no município polo de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, nas datas de ${t.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${t.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <!-- 1. INTRODUÇÃO -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">1. INTRODUÇÃO</h3>
+        <p style="text-align:justify; line-height:1.6;">O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${t.number || ''}, executada no município polo de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, nas datas de ${t.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${t.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
 
-        <h3>2. DADOS BÁSICOS DO CURSO</h3>
-        <p>Foram convocados ${metrics.totalSummonedMunicipalities} municípios para participarem das atividades formativas no polo de ${t.polo}. A distância média percorrida pelas delegações foi de ${metrics.avgDistance} km.</p>
+        <!-- 2. DADOS BÁSICOS DO CURSO & TABELAS 1 E 2 -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">2. DADOS BÁSICOS DO CURSO</h3>
+        <p style="text-align:justify; line-height:1.6;">Foram convocados ${metrics.totalSummonedMunicipalities} municípios para participarem das atividades formativas no polo de ${t.polo}. A distância média percorrida pelas delegações foi de ${metrics.avgDistance} km. A relação completa dos entes federativos convocados é detalhada na Tabela 1 a seguir:</p>
         
-        <p><em>Tabela 1. Municípios convocados.</em></p>
+        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 1. Municípios convocados.</em></p>
         ${window.statsEngine.generateTable1Html(t.municipalities || [])}
 
-        <p><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem;">A matriz curricular e a distribuição de carga horária programada para os módulos teóricos e práticos são apresentadas na Tabela 2:</p>
+        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
         ${window.statsEngine.generateTable2Html(t.courseModules || [])}
 
-        <h3>4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO</h3>
-        <p>O evento registrou ${metrics.totalInscribed} inscritos e ${metrics.totalPresent} presentes efetivos, com taxa global de participação de ${metrics.participationRateGeneral}%.</p>
+        <!-- 3. ARTICULAÇÃO INSTITUCIONAL & TABELA 3 -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. ARTICULAÇÃO INSTITUCIONAL</h3>
+        <p style="text-align:justify; line-height:1.6;">Para assegurar a ampla participação dos municípios convocados, a equipe do CECATE-CO realizou ações contínuas de articulação e contato direto com as secretarias municipais de educação e conselhos sociais, conforme discriminado na Tabela 3:</p>
 
-        <p><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
+        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 3. Articulação institucional para mobilização dos municípios.</em></p>
+        ${window.statsEngine.generateTable3Html(t.municipalities || [])}
+
+        <!-- 4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO & TABELA 4 & FIGURA 3 -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO</h3>
+        <p style="text-align:justify; line-height:1.6;">O evento registrou ${metrics.totalInscribed} inscritos e ${metrics.totalPresent} presentes efetivos, com taxa global de comparecimento de ${metrics.participationRateGeneral}%. A discriminação detalhada da presença entre Gestores Municipais e Conselheiros CACS-FUNDEB por município é apresentada na Tabela 4:</p>
+
+        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
         ${window.statsEngine.generateTable4Html(t.municipalities || [])}
 
-        <h3>5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
-        <p>Registrou-se ${metrics.evalStatsGeneral.totalResponses} questionários de avaliação preenchidos, com média global de satisfação de ${metrics.evalStatsGeneral.overallMean} / 5.0.</p>
+        <!-- FIGURA 3 -->
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+          <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 3. Participação de Gestores e Conselheiros CACS.</em></p>
+          <div style="max-width:520px; margin:auto; background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <canvas id="report-preview-fig3-canvas" width="480" height="260" style="max-width:100%; height:auto;"></canvas>
+          </div>
+        </div>
 
-        <h3>7. CONSIDERAÇÕES FINAIS</h3>
-        <p>A realização da Capacitação nº ${t.number} no polo de ${t.polo} cumpriu integralmente as metas e diretrizes estabelecidas pelo CECATE-CO e pelo FNDE.</p>
+        <!-- 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8 -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
+        <p style="text-align:justify; line-height:1.6;">Registrou-se ${metrics.evalStatsGeneral.totalResponses} questionários de avaliação preenchidos, com média geral de satisfação de ${metrics.evalStatsGeneral.overallMean} / 5.0. A distribuição percentual de notas atribuídas pelos participantes nos sete critérios pedagógicos e estruturais avaliados é sintetizada a seguir:</p>
+
+        <!-- FIGURA 4 -->
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+          <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 4. Avaliação da capacitação de todos os participantes.</em></p>
+          <div style="max-width:720px; margin:auto; background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <canvas id="report-preview-fig4-canvas" width="700" height="340" style="max-width:100%; height:auto;"></canvas>
+          </div>
+        </div>
+
+        <!-- FIGURA 5 -->
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+          <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 5. Avaliação da capacitação dos conselheiros CACS.</em></p>
+          <div style="max-width:720px; margin:auto; background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <canvas id="report-preview-fig5-canvas" width="700" height="340" style="max-width:100%; height:auto;"></canvas>
+          </div>
+        </div>
+
+        <!-- FIGURA 6 -->
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+          <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 6. Avaliação da capacitação dos gestores municipais.</em></p>
+          <div style="max-width:720px; margin:auto; background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <canvas id="report-preview-fig6-canvas" width="700" height="340" style="max-width:100%; height:auto;"></canvas>
+          </div>
+        </div>
+
+        <!-- FIGURAS 7 E 8 (NUVENS DE PALAVRAS) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; page-break-inside:avoid;">
+          <div style="text-align:center;">
+            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos positivos destacados.</em></p>
+            <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+              <canvas id="report-preview-fig7-canvas" width="360" height="240" style="max-width:100%; height:auto;"></canvas>
+            </div>
+          </div>
+          <div style="text-align:center;">
+            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos a serem aprimorados.</em></p>
+            <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+              <canvas id="report-preview-fig8-canvas" width="360" height="240" style="max-width:100%; height:auto;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. REGISTROS FOTOGRÁFICOS -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">6. REGISTROS FOTOGRÁFICOS</h3>
+        <p style="text-align:justify; line-height:1.6;">A seguir são apresentados os registros fotográficos oficiais realizados durante os momentos de acolhimento, exposição temática e encerramento da capacitação:</p>
+        ${photosHtml}
+
+        <!-- 7. CONSIDERAÇÕES FINAIS -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">7. CONSIDERAÇÕES FINAIS</h3>
+        <p style="text-align:justify; line-height:1.6;">A realização da Capacitação nº ${t.number} no polo de ${t.polo} cumpriu integralmente as metas e diretrizes estabelecidas pelo CECATE-CO e pelo FNDE. O estreitamento do diálogo técnico entre a gestão municipal e o controle social do CACS-FUNDEB fortalece as diretrizes de governança, segurança e eficiência no transporte escolar dos estudantes da Educação Básica.</p>
+
+        <!-- APÊNDICE I: CONVOCAÇÕES DO FNDE -->
+        <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:3rem;">APÊNDICE I: CONVOCAÇÕES DO FNDE</h3>
+        <p style="text-align:justify; line-height:1.6;">Relação dos ofícios e convocações oficiais emitidos pelo FNDE referentes a esta capacitação:</p>
+        ${fndeHtml}
+
+        <!-- APÊNDICE II: CONVOCAÇÕES DO CECATE -->
+        <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE II: CONVOCAÇÕES DO CECATE</h3>
+        <p style="text-align:justify; line-height:1.6;">Relação dos comunicados e e-mails de convocação emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação:</p>
+        ${cecateHtml}
       </div>
     `;
+
+    setTimeout(() => {
+      this.renderReportPreviewCharts();
+    }, 100);
+  }
+
+  renderReportPreviewCharts() {
+    if (!window.chartEngine || !this.currentTraining) return;
+    const isDark = this.theme === 'dark';
+    const evals = this.currentTraining.evaluations || [];
+
+    // Figura 3: Participação CACS vs Gestor
+    let cacsPresent = 0;
+    let gestPresent = 0;
+    if (evals.length > 0) {
+      cacsPresent = evals.filter(e => e.representation === 'CACS-FUNDEB').length;
+      gestPresent = evals.length - cacsPresent;
+    } else if (this.currentTraining.municipalities) {
+      this.currentTraining.municipalities.forEach(m => {
+        cacsPresent += (parseInt(m.presentCACS) || 0);
+        gestPresent += (parseInt(m.presentGestores) || 0);
+      });
+    }
+
+    if (document.getElementById('report-preview-fig3-canvas')) {
+      window.chartEngine.renderFig3Participation('report-preview-fig3-canvas', cacsPresent, gestPresent, isDark);
+    }
+
+    // Figura 4, 5, 6: Avaliação
+    const statsGen = window.statsEngine.calculateEvaluationStats(evals);
+    if (document.getElementById('report-preview-fig4-canvas')) {
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig4-canvas', statsGen.criterionDistributionPercent, 'Figura 4. Avaliação da capacitação de todos os participantes.', isDark);
+    }
+
+    const statsCACS = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation === 'CACS-FUNDEB'));
+    if (document.getElementById('report-preview-fig5-canvas')) {
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig5-canvas', statsCACS.criterionDistributionPercent, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', isDark);
+    }
+
+    const statsGest = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation !== 'CACS-FUNDEB'));
+    if (document.getElementById('report-preview-fig6-canvas')) {
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig6-canvas', statsGest.criterionDistributionPercent, 'Figura 6. Avaliação da capacitação dos gestores municipais.', isDark);
+    }
+
+    // Figura 7 e 8: Nuvem de palavras
+    if (window.wordCloudEngine) {
+      const positiveTexts = evals.map(e => e.likedAspects).filter(Boolean);
+      const improveTexts = evals.map(e => e.improveAspects).filter(Boolean);
+
+      if (document.getElementById('report-preview-fig7-canvas')) {
+        window.wordCloudEngine.renderCloud('report-preview-fig7-canvas', positiveTexts, { isDark, maxWords: 35, fontScale: 1.1 });
+      }
+      if (document.getElementById('report-preview-fig8-canvas')) {
+        window.wordCloudEngine.renderCloud('report-preview-fig8-canvas', improveTexts, { isDark, maxWords: 35, fontScale: 1.1 });
+      }
+    }
   }
 
   async downloadDocxReport() {

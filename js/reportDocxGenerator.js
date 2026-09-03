@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Final em Formato DOCX (Word)
- * Versão: v.2.8.0
+ * Versão: v.2.8.1
  */
 
 class ReportDocxGenerator {
@@ -348,6 +348,43 @@ class ReportDocxGenerator {
           children: [
             new TextRun({
               text: `A realização da Capacitação nº ${training.number || ''} no polo de ${training.polo || 'Município Polo'} cumpriu integralmente os objetivos institucionais fixados pelo CECATE-CO e pelo FNDE. O estreitamento do diálogo técnico entre a gestão municipal e o controle social do CACS-FUNDEB fortalece as diretrizes de governança, segurança e eficiência no transporte escolar dos estudantes da Educação Básica.`
+            })
+          ]
+        })
+      );
+
+      // APÊNDICES I E II
+      const fndeDocs = (training.media || []).filter(m => m.type === 'doc_fnde');
+      const cecateDocs = (training.media || []).filter(m => m.type === 'doc_cecate');
+
+      docChildren.push(
+        new Paragraph({
+          spacing: { before: 500, after: 200 },
+          heading: HeadingLevel.HEADING_1,
+          children: [new TextRun({ text: 'APÊNDICE I: CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })]
+        }),
+        new Paragraph({
+          spacing: { after: 200 },
+          children: [
+            new TextRun({
+              text: fndeDocs.length > 0
+                ? `Relação de ofícios e documentos de convocação emitidos pelo FNDE referentes a esta capacitação: ${fndeDocs.map(d => d.fileName).join(', ')}.`
+                : 'Nenhum documento de convocação do FNDE anexado.'
+            })
+          ]
+        }),
+        new Paragraph({
+          spacing: { before: 400, after: 200 },
+          heading: HeadingLevel.HEADING_1,
+          children: [new TextRun({ text: 'APÊNDICE II: CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })]
+        }),
+        new Paragraph({
+          spacing: { after: 200 },
+          children: [
+            new TextRun({
+              text: cecateDocs.length > 0
+                ? `Relação de convocações e comunicados emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação: ${cecateDocs.map(d => d.fileName).join(', ')}.`
+                : 'Nenhuma convocação do CECATE anexada.'
             })
           ]
         })

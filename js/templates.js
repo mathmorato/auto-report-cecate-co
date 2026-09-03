@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Modelos de Estrutura de Curso & Módulos
- * Versão: v.2.8.0
+ * Versão: v.2.8.1
  */
 
 const REPORT_TEMPLATES = [

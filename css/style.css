@@ -1865,13 +1865,13 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.25) !important;
 }
 
-/* Card Moderno de Arquivo de Apêndice Anexado */
+/* Card Limpo e Minimalista de Arquivo de Apêndice Anexado */
 .appendix-file-item {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
-  margin-top: 0.6rem;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.85rem;
+  margin-top: 0.4rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
 }
@@ -1882,14 +1882,14 @@ body.light-theme .step-tab-btn.active .step-tab-num {
 }
 
 body.light-theme .appendix-file-item {
-  background: #ffffff;
+  background: #f8fafc;
   border-color: #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 body.light-theme .appendix-file-item:hover {
   border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  background: #f1f5f9;
 }
 
 .upload-dropzone-icon {
