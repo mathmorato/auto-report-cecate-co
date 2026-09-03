@@ -546,14 +546,35 @@ body.light-theme .btn-secondary:hover {
 }
 
 .btn-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: #e11d48;
+  color: #ffffff !important;
   border-color: rgba(239, 68, 68, 0.3);
 }
 
 .btn-danger:hover {
-  background: var(--accent-danger);
-  color: #ffffff;
+  background: #be123c;
+  color: #ffffff !important;
+}
+
+/* Botões de Confirmação de Remoção / Exclusão (Sempre com texto branco) */
+#app-confirm-modal-btn-action,
+.modal-footer .btn-danger,
+#modal-delete-confirm-btn,
+#modal-delete-member-confirm-btn,
+#modal-delete-course-template-confirm-btn,
+.text-white,
+button.text-white {
+  color: #ffffff !important;
+}
+
+body.light-theme #app-confirm-modal-btn-action,
+body.light-theme .modal-footer .btn-danger,
+body.light-theme #modal-delete-confirm-btn,
+body.light-theme #modal-delete-member-confirm-btn,
+body.light-theme #modal-delete-course-template-confirm-btn,
+body.light-theme .text-white,
+body.light-theme button.text-white {
+  color: #ffffff !important;
 }
 
 .btn-icon-only {

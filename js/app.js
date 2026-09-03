@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.0
+ * Versão: v.2.7.1
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.0';
+    this.version = 'v.2.7.1';
   }
 
   /**
@@ -5434,7 +5434,10 @@ class AutoReportApp {
 
     if (titleEl) titleEl.textContent = title;
     if (msgEl) msgEl.textContent = msg;
-    if (btnAction) btnAction.textContent = btnText;
+    if (btnAction) {
+      btnAction.textContent = btnText;
+      btnAction.style.setProperty('color', '#ffffff', 'important');
+    }
 
     this.onConfirmCallback = onConfirm;
 
