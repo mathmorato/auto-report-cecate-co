@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.8.6
+ * Versão: v.2.8.7
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.8.6';
+    this.version = 'v.2.8.7';
   }
 
   /**
@@ -1279,6 +1279,46 @@ class AutoReportApp {
     if (this.currentStep === 9) this.renderAppendicesStep();
     if (this.currentStep === 10) this.renderConferenceStep();
     if (this.currentStep === 11) this.renderReportPreviewStep();
+
+    // Sempre rolar para o topo absoluto da página ao alternar etapas
+    this.scrollToTop();
+    setTimeout(() => this.scrollToTop(), 60);
+  }
+
+  scrollToTop() {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    if (document.body) document.body.scrollTop = 0;
+
+    const scrollContainers = [
+      '.content-area',
+      '.main-content',
+      '.app-container',
+      '.app-layout',
+      '.wizard-container',
+      '.wizard-body-layout',
+      '.wizard-main-content',
+      '.wizard-step-panel',
+      '#view-wizard',
+      'main'
+    ];
+
+    scrollContainers.forEach(selector => {
+      document.querySelectorAll(selector).forEach(el => {
+        if (el && el.scrollTop > 0) {
+          el.scrollTop = 0;
+        }
+      });
+    });
+
+    const topTarget = document.getElementById('wizard-header-title') || document.querySelector('.wizard-header') || document.querySelector('.content-area');
+    if (topTarget && typeof topTarget.scrollIntoView === 'function') {
+      try {
+        topTarget.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'instant' });
+      } catch (e) {
+        topTarget.scrollIntoView(true);
+      }
+    }
   }
 
   wizardNext() {
@@ -1288,6 +1328,7 @@ class AutoReportApp {
     }
     if (this.currentStep < this.totalSteps) {
       this.setWizardStep(this.currentStep + 1);
+      this.scrollToTop();
     }
   }
 
@@ -1295,6 +1336,7 @@ class AutoReportApp {
     this.saveCurrentStepData();
     if (this.currentStep > 1) {
       this.setWizardStep(this.currentStep - 1);
+      this.scrollToTop();
     }
   }
 
