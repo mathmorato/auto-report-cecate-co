@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.6.7
+ * Versão: v.2.6.8
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.6.7';
+    this.version = 'v.2.6.8';
   }
 
   /**
@@ -5887,16 +5887,33 @@ class AutoReportApp {
     const dropzoneReg = document.getElementById('dropzone-registration');
     const dropzoneAtt = document.getElementById('dropzone-attendance');
 
-    if (dropzoneReg) dropzoneReg.style.display = hasReg ? 'none' : 'block';
-    if (dropzoneAtt) dropzoneAtt.style.display = hasAtt ? 'none' : 'block';
+    if (dropzoneReg) {
+      if (hasReg) {
+        dropzoneReg.style.setProperty('display', 'none', 'important');
+      } else {
+        dropzoneReg.style.removeProperty('display');
+        dropzoneReg.style.display = 'flex';
+      }
+    }
+
+    if (dropzoneAtt) {
+      if (hasAtt) {
+        dropzoneAtt.style.setProperty('display', 'none', 'important');
+      } else {
+        dropzoneAtt.style.removeProperty('display');
+        dropzoneAtt.style.display = 'flex';
+      }
+    }
 
     if (dropzoneContainer) {
       if (hasReg && hasAtt) {
-        dropzoneContainer.style.display = 'none';
+        dropzoneContainer.style.setProperty('display', 'none', 'important');
       } else if (hasReg || hasAtt) {
+        dropzoneContainer.style.removeProperty('display');
         dropzoneContainer.style.display = 'grid';
         dropzoneContainer.style.gridTemplateColumns = '1fr';
       } else {
+        dropzoneContainer.style.removeProperty('display');
         dropzoneContainer.style.display = 'grid';
         dropzoneContainer.style.gridTemplateColumns = '1fr 1fr';
       }
@@ -6112,7 +6129,10 @@ class AutoReportApp {
     if (inputEval) inputEval.value = '';
 
     const dropzoneEval = document.getElementById('dropzone-evaluation');
-    if (dropzoneEval) dropzoneEval.style.display = 'flex';
+    if (dropzoneEval) {
+      dropzoneEval.style.removeProperty('display');
+      dropzoneEval.style.display = 'flex';
+    }
 
     this.renderEvaluationStep();
     this.renderEvaluationCharts();
@@ -6130,7 +6150,12 @@ class AutoReportApp {
     // Ocultar janela de inserção se houver planilha importada
     const dropzoneEval = document.getElementById('dropzone-evaluation');
     if (dropzoneEval) {
-      dropzoneEval.style.display = hasEvals ? 'none' : 'flex';
+      if (hasEvals) {
+        dropzoneEval.style.setProperty('display', 'none', 'important');
+      } else {
+        dropzoneEval.style.removeProperty('display');
+        dropzoneEval.style.display = 'flex';
+      }
     }
 
     const countEl = document.getElementById('wiz-eval-total-count');
@@ -6649,12 +6674,22 @@ class AutoReportApp {
     // Ocultar janelas de inserção quando já houver documentos anexados
     const dropzoneFnde = document.getElementById('dropzone-appendix-fnde');
     if (dropzoneFnde) {
-      dropzoneFnde.style.display = fndeDocs.length > 0 ? 'none' : 'block';
+      if (fndeDocs.length > 0) {
+        dropzoneFnde.style.setProperty('display', 'none', 'important');
+      } else {
+        dropzoneFnde.style.removeProperty('display');
+        dropzoneFnde.style.display = 'flex';
+      }
     }
 
     const dropzoneCecate = document.getElementById('dropzone-appendix-cecate');
     if (dropzoneCecate) {
-      dropzoneCecate.style.display = cecateDocs.length > 0 ? 'none' : 'block';
+      if (cecateDocs.length > 0) {
+        dropzoneCecate.style.setProperty('display', 'none', 'important');
+      } else {
+        dropzoneCecate.style.removeProperty('display');
+        dropzoneCecate.style.display = 'flex';
+      }
     }
 
     if (fndeContainer) {

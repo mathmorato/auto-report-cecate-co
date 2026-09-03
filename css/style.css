@@ -1816,11 +1816,24 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   text-align: center;
   cursor: pointer;
   transition: all var(--transition-normal);
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   box-sizing: border-box;
+}
+
+/* Garantia estrita de que dropzones com display:none desaparecem sem conflito de especificidade */
+.upload-dropzone[style*="display: none"],
+.mun-import-dropzone[style*="display: none"],
+.drop-zone[style*="display: none"],
+#wizard-step6-dropzones-container[style*="display: none"],
+#dropzone-registration[style*="display: none"],
+#dropzone-attendance[style*="display: none"],
+#dropzone-evaluation[style*="display: none"],
+#dropzone-appendix-fnde[style*="display: none"],
+#dropzone-appendix-cecate[style*="display: none"] {
+  display: none !important;
 }
 
 .upload-dropzone:hover, .upload-dropzone.dragover,
@@ -2499,10 +2512,10 @@ body.light-theme .nav-badge {
   background: rgba(245, 158, 11, 0.04) !important;
   cursor: pointer;
   transition: all var(--transition-normal);
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .mun-import-dropzone:hover, .mun-import-dropzone.dragover {
