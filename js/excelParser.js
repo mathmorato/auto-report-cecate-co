@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.2.5.8
+ * Versão: v.2.5.9
  */
 
 class ExcelParser {
@@ -108,8 +108,8 @@ class ExcelParser {
         mapping.birthDate = idx;
       } else if (clean.includes('municipioquerepresenta') || clean.includes('municipio') || clean.includes('cidade') || clean.includes('polo')) {
         if (mapping.municipality === -1 || clean.includes('municipioquerepresenta')) mapping.municipality = idx;
-      } else if (clean.includes('vocefazpartedo') || clean.includes('fazpartedo') || clean.includes('representacao') || clean.includes('segmento') || clean.includes('publicoalvo')) {
-        if (mapping.representation === -1 || clean.includes('vocefazpartedo') || clean.includes('fazpartedo')) mapping.representation = idx;
+      } else if (clean.includes('vocefazpartedo') || clean.includes('fazpartedo') || clean.includes('vocefazparte') || clean.includes('vinculo') || clean.includes('representacao') || clean.includes('segmento') || clean.includes('publicoalvo')) {
+        if (mapping.representation === -1 || clean.includes('vocefazpartedo') || clean.includes('fazpartedo') || clean.includes('vocefazparte')) mapping.representation = idx;
       } else if (clean.includes('cargona') && clean.includes('gestao') || clean.includes('gestaomunicipal')) {
         mapping.roleGestao = idx;
       } else if (clean.includes('cargono') && clean.includes('cacs') || clean.includes('cacsfundeb')) {

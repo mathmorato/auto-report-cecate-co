@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.5.8
+ * Versão: v.2.5.9
  */
 
 window.icons = {
@@ -5790,9 +5790,9 @@ class AutoReportApp {
       } else if (col === 'municipality') {
         valA = a.municipality || 'zzzz';
         valB = b.municipality || 'zzzz';
-      } else if (col === 'role' || col === 'representation') {
-        valA = a.role || a.roleGestao || a.roleCACS || a.representation || '';
-        valB = b.role || b.roleGestao || b.roleCACS || b.representation || '';
+      } else if (col === 'representation' || col === 'vinculo' || col === 'role') {
+        valA = a.representation || '';
+        valB = b.representation || '';
       }
 
       return valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' });
@@ -5824,17 +5824,6 @@ class AutoReportApp {
       }
     } else if (field === 'representation') {
       participant.representation = val;
-    } else if (field === 'role') {
-      const isCacs = val.toUpperCase().includes('CACS') || val.toUpperCase().includes('CONSELH');
-      participant.representation = isCacs ? 'CACS-FUNDEB' : 'Gestão municipal';
-      if (isCacs) {
-        participant.roleCACS = val;
-        participant.roleGestao = '';
-      } else {
-        participant.roleGestao = val;
-        participant.roleCACS = '';
-      }
-      participant.role = val;
     }
 
     // Se possui CPF, sincronizar no registro da outra planilha caso exista
@@ -5848,18 +5837,6 @@ class AutoReportApp {
           if (item && item !== participant) {
             if (field === 'municipality') item.municipality = val;
             if (field === 'representation') item.representation = val;
-            if (field === 'role') {
-              const isCacs = val.toUpperCase().includes('CACS') || val.toUpperCase().includes('CONSELH');
-              item.representation = isCacs ? 'CACS-FUNDEB' : 'Gestão municipal';
-              if (isCacs) {
-                item.roleCACS = val;
-                item.roleGestao = '';
-              } else {
-                item.roleGestao = val;
-                item.roleCACS = '';
-              }
-              item.role = val;
-            }
           }
         });
       }
@@ -5961,7 +5938,6 @@ class AutoReportApp {
       // PERMITIR EDIÇÃO APENAS PARA PARTICIPANTES NO STATUS 'Apenas Presente'
       const isEditable = p.status === 'Apenas Presente';
       const isUnmapped = !p.municipality;
-      const currentRole = p.role || p.roleGestao || p.roleCACS || (p.representation === 'CACS-FUNDEB' ? 'Conselheiro(a) CACS-FUNDEB' : 'Gestor(a) Municipal');
 
       let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Inscrito e Presente</span>`;
       if (p.status === 'Apenas Inscrito') {
@@ -5980,28 +5956,14 @@ class AutoReportApp {
         ${p.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.25rem; padding:0.1rem 0.3rem; display:inline-flex; align-items:center; gap:0.2rem;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>CPF Conciliado</span>' : ''}
       `;
 
-      const roleTd = isEditable ? `
-        <select class="form-control form-control-sm" style="font-size:0.78rem; padding:0.2rem 0.4rem; min-width:175px;" onchange="app.updateParticipantField('${p.id}', 'role', this.value)">
-          <optgroup label="Gestão Municipal">
-            <option value="Gestor(a) Municipal" ${currentRole === 'Gestor(a) Municipal' || currentRole === 'Gestão municipal' ? 'selected' : ''}>Gestor(a) Municipal</option>
-            <option value="Secretário(a) de Educação" ${currentRole === 'Secretário(a) de Educação' ? 'selected' : ''}>Secretário(a) de Educação</option>
-            <option value="Dirigente Municipal" ${currentRole === 'Dirigente Municipal' ? 'selected' : ''}>Dirigente Municipal</option>
-            <option value="Técnico(a) de Transporte Escolar" ${currentRole === 'Técnico(a) de Transporte Escolar' ? 'selected' : ''}>Técnico(a) de Transporte Escolar</option>
-            <option value="Operador(a) do SETE" ${currentRole === 'Operador(a) do SETE' ? 'selected' : ''}>Operador(a) do SETE</option>
-            <option value="Motorista" ${currentRole === 'Motorista' ? 'selected' : ''}>Motorista</option>
-            <option value="Outro cargo (Gestão)" ${currentRole === 'Outro cargo (Gestão)' ? 'selected' : ''}>Outro cargo (Gestão)</option>
-          </optgroup>
-          <optgroup label="CACS-FUNDEB">
-            <option value="Conselheiro(a) CACS-FUNDEB" ${currentRole === 'Conselheiro(a) CACS-FUNDEB' || currentRole === 'CACS-FUNDEB' ? 'selected' : ''}>Conselheiro(a) CACS-FUNDEB</option>
-            <option value="Presidente do CACS-FUNDEB" ${currentRole === 'Presidente do CACS-FUNDEB' ? 'selected' : ''}>Presidente do CACS-FUNDEB</option>
-            <option value="Vice-Presidente do CACS-FUNDEB" ${currentRole === 'Vice-Presidente do CACS-FUNDEB' ? 'selected' : ''}>Vice-Presidente do CACS-FUNDEB</option>
-            <option value="Conselheiro(a) Suplente CACS" ${currentRole === 'Conselheiro(a) Suplente CACS' ? 'selected' : ''}>Conselheiro(a) Suplente CACS</option>
-            <option value="Outro cargo (CACS)" ${currentRole === 'Outro cargo (CACS)' ? 'selected' : ''}>Outro cargo (CACS)</option>
-          </optgroup>
+      const repTd = isEditable ? `
+        <select class="form-control form-control-sm" style="font-size:0.78rem; padding:0.2rem 0.4rem; min-width:145px;" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
+          <option value="Gestão municipal" ${p.representation === 'Gestão municipal' || !p.representation ? 'selected' : ''}>Gestão municipal</option>
+          <option value="CACS-FUNDEB" ${p.representation === 'CACS-FUNDEB' ? 'selected' : ''}>CACS-FUNDEB</option>
         </select>
       ` : `
-        <span class="nav-badge ${p.representation === 'CACS-FUNDEB' ? 'badge-emerald' : 'badge-blue'}" style="font-size:0.78rem; font-weight:600; white-space:nowrap;" title="${p.representation}">
-          ${currentRole}
+        <span class="nav-badge ${p.representation === 'CACS-FUNDEB' ? 'badge-emerald' : 'badge-blue'}" style="font-size:0.78rem; font-weight:600; white-space:nowrap;">
+          ${p.representation || 'Gestão municipal'}
         </span>
       `;
 
@@ -6011,7 +5973,7 @@ class AutoReportApp {
           <td style="font-family:monospace; vertical-align:middle;">${p.cpf || '-'}</td>
           <td style="vertical-align:middle;">${statusBadge}</td>
           <td style="vertical-align:middle;">${munTd}</td>
-          <td style="vertical-align:middle;">${roleTd}</td>
+          <td style="vertical-align:middle;">${repTd}</td>
         </tr>
       `;
     };
@@ -6024,7 +5986,7 @@ class AutoReportApp {
         attContainer.innerHTML = `
           <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
             <span>Exibindo <strong>${consolidatedList.length}</strong> participantes total (Inscritos: <strong>${regList.length}</strong> | Presentes: <strong>${attList.length}</strong>):</span>
-            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e cargo ativada exclusivamente para participantes no status "Apenas Presente".</span>
+            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e vínculo ativada exclusivamente para participantes no status "Apenas Presente".</span>
           </div>
           <div class="table-responsive-wrapper" style="max-height:420px;">
             <table class="report-data-table">
@@ -6054,10 +6016,10 @@ class AutoReportApp {
                       <span class="sort-icon-badge">${this.getAttendanceSortIcon('municipality')}</span>
                     </div>
                   </th>
-                  <th class="th-sortable" onclick="app.sortAttendanceTable('role')" style="cursor:pointer; user-select:none; width:220px;" title="Clique para classificar por Cargo">
+                  <th class="th-sortable" onclick="app.sortAttendanceTable('representation')" style="cursor:pointer; user-select:none; width:180px;" title="Clique para classificar por Vínculo">
                     <div style="display:inline-flex; align-items:center; gap:0.45rem;">
-                      <span>Cargo</span>
-                      <span class="sort-icon-badge">${this.getAttendanceSortIcon('role')}</span>
+                      <span>Vínculo</span>
+                      <span class="sort-icon-badge">${this.getAttendanceSortIcon('representation')}</span>
                     </div>
                   </th>
                 </tr>
