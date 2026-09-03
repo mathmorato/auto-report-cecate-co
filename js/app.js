@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.8.4
+ * Versão: v.2.8.5
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.8.4';
+    this.version = 'v.2.8.5';
   }
 
   /**
@@ -7229,13 +7229,13 @@ class AutoReportApp {
           <div style="text-align:center;">
             <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos positivos destacados.</em></p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-              <canvas id="report-preview-fig7-canvas" width="360" height="240" style="max-width:100%; height:auto;"></canvas>
+              <canvas id="report-preview-fig7-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
           </div>
           <div style="text-align:center;">
             <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos a serem aprimorados.</em></p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-              <canvas id="report-preview-fig8-canvas" width="360" height="240" style="max-width:100%; height:auto;"></canvas>
+              <canvas id="report-preview-fig8-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
           </div>
         </div>
@@ -7306,14 +7306,29 @@ class AutoReportApp {
 
     // Figura 7 e 8: Nuvem de palavras
     if (window.wordCloudEngine) {
-      const positiveTexts = evals.map(e => e.likedAspects).filter(Boolean);
-      const improveTexts = evals.map(e => e.improveAspects).filter(Boolean);
+      const positiveTexts = evals.map(e => e.likedAspects || e.liked || '').filter(Boolean);
+      const improveTexts = evals.map(e => e.improveAspects || e.improve || '').filter(Boolean);
 
-      if (document.getElementById('report-preview-fig7-canvas')) {
-        window.wordCloudEngine.renderCloud('report-preview-fig7-canvas', positiveTexts, { isDark, maxWords: 35, fontScale: 1.1 });
+      const canvas7 = document.getElementById('report-preview-fig7-canvas');
+      if (canvas7) {
+        window.wordCloudEngine.renderCloud(canvas7, positiveTexts, { 
+          palette: 'positive', 
+          isDark, 
+          width: 550, 
+          height: 320, 
+          maxWords: 35 
+        });
       }
-      if (document.getElementById('report-preview-fig8-canvas')) {
-        window.wordCloudEngine.renderCloud('report-preview-fig8-canvas', improveTexts, { isDark, maxWords: 35, fontScale: 1.1 });
+
+      const canvas8 = document.getElementById('report-preview-fig8-canvas');
+      if (canvas8) {
+        window.wordCloudEngine.renderCloud(canvas8, improveTexts, { 
+          palette: 'improve', 
+          isDark, 
+          width: 550, 
+          height: 320, 
+          maxWords: 35 
+        });
       }
     }
   }

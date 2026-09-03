@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Equipe Técnica Oficial CECATE/UFG e FNDE
- * Versão: v.2.8.4
+ * Versão: v.2.8.5
  */
 
 window.OFFICIAL_PRONOUNS = [

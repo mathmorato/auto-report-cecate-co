@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Nativo de Nuvem de Palavras (Word Cloud Engine)
- * Versão: v.1.0.2
+ * Versão: v.2.8.5
  */
 
 class WordCloudEngine {
@@ -61,8 +61,14 @@ class WordCloudEngine {
     };
 
     this.colorPalettes = {
-      positive: ['#6366f1', '#06b6d4', '#10b981', '#3b82f6', '#8b5cf6', '#22c55e', '#14b8a6'],
-      improve: ['#f59e0b', '#ec4899', '#f97316', '#8b5cf6', '#06b6d4', '#eab308', '#6366f1']
+      positive: {
+        dark: ['#818cf8', '#22d3ee', '#34d399', '#60a5fa', '#a78bfa', '#4ade80', '#2dd4bf'],
+        light: ['#4338ca', '#0891b2', '#059669', '#2563eb', '#7c3aed', '#16a34a', '#0d9488']
+      },
+      improve: {
+        dark: ['#fbbf24', '#f472b6', '#fb923c', '#c084fc', '#38bdf8', '#facc15', '#a5b4fc'],
+        light: ['#d97706', '#db2777', '#ea580c', '#7c3aed', '#0284c7', '#ca8a04', '#4f46e5']
+      }
     };
   }
 
@@ -113,28 +119,48 @@ class WordCloudEngine {
   }
 
   /**
+   * Renderiza nuvem de palavras diretamente a partir de lista de textos ou palavras ponderadas
+   */
+  renderCloud(canvasOrId, textsOrWords = [], options = {}) {
+    const canvas = typeof canvasOrId === 'string' ? document.getElementById(canvasOrId) : canvasOrId;
+    if (!canvas) return null;
+
+    let words = textsOrWords;
+    if (Array.isArray(textsOrWords) && textsOrWords.length > 0 && typeof textsOrWords[0] === 'string') {
+      words = this.processTextList(textsOrWords);
+    } else if (!Array.isArray(textsOrWords)) {
+      words = [];
+    }
+
+    return this.renderToCanvas(canvas, words, options);
+  }
+
+  /**
    * Renderiza uma nuvem de palavras em um elemento HTML Canvas
    */
   renderToCanvas(canvas, words = [], options = {}) {
     if (!canvas) return null;
     const ctx = canvas.getContext('2d');
-    const width = options.width || canvas.width || 600;
-    const height = options.height || canvas.height || 350;
-    const palette = this.colorPalettes[options.palette || 'positive'];
+    const width = options.width || canvas.width || 550;
+    const height = options.height || canvas.height || 320;
+    const isDark = options.isDark === true;
+    const paletteType = options.palette || 'positive';
+    const paletteObj = this.colorPalettes[paletteType] || this.colorPalettes.positive;
+    const palette = isDark ? paletteObj.dark : paletteObj.light;
     const maxWords = options.maxWords || 35;
-    const isDark = options.isDark !== false;
 
     canvas.width = width;
     canvas.height = height;
 
     // Fundo
-    ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
+    ctx.fillStyle = isDark ? '#0f172a' : (options.bgColor || '#ffffff');
     ctx.fillRect(0, 0, width, height);
 
     if (!words || words.length === 0) {
       ctx.fillStyle = isDark ? '#64748b' : '#94a3b8';
-      ctx.font = '14px Inter, sans-serif';
+      ctx.font = '600 13px "Plus Jakarta Sans", sans-serif';
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillText('Nenhuma resposta registrada para gerar a nuvem.', width / 2, height / 2);
       return canvas;
     }
@@ -144,8 +170,8 @@ class WordCloudEngine {
     const minCount = slicedWords[slicedWords.length - 1]?.count || 1;
 
     // Escala de fontes
-    const minFontSize = options.minFontSize || 14;
-    const maxFontSize = options.maxFontSize || 42;
+    const minFontSize = options.minFontSize || 13;
+    const maxFontSize = options.maxFontSize || 34;
 
     const placedBoxes = [];
 
@@ -159,7 +185,7 @@ class WordCloudEngine {
         fontSize = (minFontSize + maxFontSize) / 2;
       }
 
-      ctx.font = `bold ${Math.round(fontSize)}px 'Plus Jakarta Sans', Inter, sans-serif`;
+      ctx.font = `bold ${Math.round(fontSize)}px "Plus Jakarta Sans", Inter, sans-serif`;
       const metrics = ctx.measureText(item.text);
       const textWidth = metrics.width;
       const textHeight = fontSize;
@@ -180,7 +206,7 @@ class WordCloudEngine {
 
         // Testar colisão com palavras já posicionadas
         let collision = false;
-        if (box.x < 10 || box.x + box.w > width - 10 || box.y < 10 || box.y + box.h > height - 10) {
+        if (box.x < 8 || box.x + box.w > width - 8 || box.y < 8 || box.y + box.h > height - 8) {
           collision = true;
         } else {
           for (const p of placedBoxes) {
