@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Estrutura dos Cursos e Módulos Formativos (Gestores e CACS)
- * Versão: v.2.7.5
+ * AutoReport CECATE - Modelos e Matriz Curricular Global Padrão
+ * Versão: v.2.7.6
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [

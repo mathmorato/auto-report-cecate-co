@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.5
+ * Versão: v.2.7.6
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.5';
+    this.version = 'v.2.7.6';
   }
 
   /**
@@ -2522,10 +2522,10 @@ class AutoReportApp {
 
   confirmClearCourseStructure() {
     this.openConfirmModal({
-      title: 'Limpar Seleção da Estrutura',
+      title: 'Remover Estrutura',
       msg: 'Deseja realmente remover a estrutura de curso escolhida para esta capacitação? A Tabela 2 ficará sem estrutura até que você selecione um novo modelo.',
-      btnText: 'Sim, Limpar Estrutura',
-      successTitle: 'Estrutura Limpa!',
+      btnText: 'Sim, Remover Estrutura',
+      successTitle: 'Estrutura Removida!',
       successMsg: 'A seleção da estrutura de curso foi removida com sucesso.',
       onConfirm: async () => {
         if (!this.currentTraining) return;
@@ -4831,35 +4831,9 @@ class AutoReportApp {
       descEl.textContent = activeTpl.description || 'Estrutura de curso cadastrada no sistema';
     }
 
-    if (bannerEl && activeTpl) {
-      if (activeTpl.isProtected) {
-        bannerEl.style.background = 'rgba(59, 130, 246, 0.1)';
-        bannerEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
-        bannerEl.innerHTML = `
-          <div style="color:var(--accent-blue-text); display:flex; align-items:center; gap:0.5rem;">
-            <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><strong>Modelo Padrão Protegido:</strong> Este é o modelo institucional do CECATE-CO e não pode ter seus módulos alterados diretamente. Clique em "Duplicar" para criar uma cópia editável.</span>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" onclick="app.duplicateCourseTemplate('${activeTpl.id}')" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar e Criar Cópia Editável
-          </button>
-        `;
-      } else {
-        bannerEl.style.background = 'rgba(16, 185, 129, 0.1)';
-        bannerEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
-        bannerEl.innerHTML = `
-          <div style="color:var(--accent-emerald-text); display:flex; align-items:center; gap:0.5rem;">
-            <span><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:-2px; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg><strong>Estrutura Personalizada Editável:</strong> Você pode alterar os módulos, temáticas e cargas horárias desta estrutura livremente.</span>
-          </div>
-          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="app.openRenameCourseTemplateModal('${activeTpl.id}')" style="font-weight:600; display:inline-flex; align-items:center; gap:0.35rem;" title="Renomear nome e descrição da estrutura">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg> Renomear
-            </button>
-            <button type="button" class="btn btn-primary btn-sm" onclick="app.toggleMasterCourseEditor()" style="font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;">
-              ${this.isMasterCourseEditorOpen ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Concluir Edição' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar Módulos e Temáticas'}
-            </button>
-          </div>
-        `;
-      }
+    if (bannerEl) {
+      bannerEl.style.display = 'none';
+      bannerEl.innerHTML = '';
     }
 
     if (actionsEl && activeTpl) {
@@ -6072,7 +6046,7 @@ class AutoReportApp {
               </strong>
               <div style="display:flex; align-items:center; gap:0.35rem;">
                 <span class="nav-badge badge-blue font-bold" style="font-size:0.8rem;">${regList.length} Inscritos</span>
-                ${regList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('registration')" style="padding:0.1rem 0.35rem; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center;" title="Remover planilha de inscrições"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Limpar</button>` : ''}
+                ${regList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('registration')" style="padding:0.15rem 0.45rem; font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;" title="Remover planilha de inscrições">${window.icons.delete} Remover</button>` : ''}
               </div>
             </div>
             <div style="font-size:0.82rem; color:var(--text-secondary); display:flex; gap:0.75rem;">
@@ -6088,7 +6062,7 @@ class AutoReportApp {
               </strong>
               <div style="display:flex; align-items:center; gap:0.35rem;">
                 <span class="nav-badge badge-emerald font-bold" style="font-size:0.8rem;">${attList.length} Presentes</span>
-                ${attList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('attendance')" style="padding:0.1rem 0.35rem; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center;" title="Remover planilha de presença"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Limpar</button>` : ''}
+                ${attList.length > 0 ? `<button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearStep6Data('attendance')" style="padding:0.15rem 0.45rem; font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;" title="Remover planilha de presença">${window.icons.delete} Remover</button>` : ''}
               </div>
             </div>
             <div style="font-size:0.82rem; color:var(--text-secondary); display:flex; gap:0.75rem;">
@@ -6322,8 +6296,8 @@ class AutoReportApp {
                 Total: <strong>${evals.length}</strong> respostas (CACS-FUNDEB: <strong>${cacsCount}</strong> | Gestão Municipal: <strong>${gestCount}</strong>)
               </div>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearEvaluationData()" style="padding:0.25rem 0.55rem; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center;" title="Remover planilha de avaliação">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Limpar Planilha
+            <button type="button" class="btn btn-secondary btn-sm text-accent-rose" onclick="app.clearEvaluationData()" style="padding:0.25rem 0.6rem; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center; gap:0.35rem;" title="Remover planilha de avaliação">
+              ${window.icons.delete} Remover Planilha
             </button>
           </div>
         `;
