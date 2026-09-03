@@ -2374,7 +2374,62 @@ body.light-theme .report-data-table th {
 
 body.light-theme .report-data-table td {
   border-bottom-color: #e2e8f0 !important;
-  color: #1e293b !important;
+  color: #1e293b;
+}
+
+/* Indicadores de Participação de Municípios (Tabela 4) */
+.attendance-status-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 0.18rem 0.55rem;
+  border-radius: var(--radius-sm, 6px);
+  font-family: inherit;
+  font-weight: 700 !important;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  transition: all var(--transition-fast);
+}
+
+/* 0 Presentes: Vermelho */
+.attendance-status-count.status-count-zero {
+  color: #f87171 !important;
+  background-color: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+/* 1 Presente: Amarelo */
+.attendance-status-count.status-count-one {
+  color: #fbbf24 !important;
+  background-color: rgba(245, 158, 11, 0.16) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+/* 2 ou Mais Presentes: Verde */
+.attendance-status-count.status-count-many {
+  color: #34d399 !important;
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* Modo Claro (Light Theme) com Alto Contraste Garantido */
+body.light-theme .attendance-status-count.status-count-zero {
+  color: #b91c1c !important;
+  background-color: #fee2e2 !important;
+  border: 1px solid #fca5a5 !important;
+}
+
+body.light-theme .attendance-status-count.status-count-one {
+  color: #b45309 !important;
+  background-color: #fef3c7 !important;
+  border: 1px solid #fcd34d !important;
+}
+
+body.light-theme .attendance-status-count.status-count-many {
+  color: #047857 !important;
+  background-color: #d1fae5 !important;
+  border: 1px solid #6ee7b7 !important;
 }
 
 body.light-theme .nav-badge {

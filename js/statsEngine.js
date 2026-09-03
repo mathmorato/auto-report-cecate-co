@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Tabelas Consolidadas
- * Versão: v.2.6.2
+ * Versão: v.2.6.3
  */
 
 class StatsEngine {
@@ -471,13 +471,20 @@ class StatsEngine {
       sumInscGestor += insG;
       sumPresGestor += preG;
 
+      let statusClass = 'status-count-zero';
+      if (preTot >= 2) {
+        statusClass = 'status-count-many';
+      } else if (preTot === 1) {
+        statusClass = 'status-count-one';
+      }
+
       rowsHtml += `
         <tr>
           <td style="text-align:center; font-family:monospace;">${m.ibgeCode || '-'}</td>
           <td><strong>${m.name}</strong> (${m.uf || 'MT'})</td>
           <td style="text-align:center;">${preC}/${insC}</td>
           <td style="text-align:center;">${preG}/${insG}</td>
-          <td style="text-align:center; font-weight:700; color:${preTot >= insTot && insTot > 0 ? 'var(--accent-success)' : 'inherit'};">${preTot}/${insTot}</td>
+          <td style="text-align:center;"><span class="attendance-status-count ${statusClass}">${preTot}/${insTot}</span></td>
         </tr>
       `;
     });
@@ -508,7 +515,7 @@ class StatsEngine {
               <td colspan="2" style="text-align:right;">Totais Consolidados:</td>
               <td style="text-align:center;">${sumPresCACS}/${sumInscCACS}</td>
               <td style="text-align:center;">${sumPresGestor}/${sumInscGestor}</td>
-              <td style="text-align:center; color:var(--accent-secondary);">${totalPres}/${totalInsc}</td>
+              <td style="text-align:center;"><span class="attendance-status-count ${totalPres >= 2 ? 'status-count-many' : (totalPres === 1 ? 'status-count-one' : 'status-count-zero')}">${totalPres}/${totalInsc}</span></td>
             </tr>
           </tfoot>
         </table>
