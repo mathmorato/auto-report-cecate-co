@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.8.5
+ * Versão: v.2.8.6
  */
 
 window.icons = {
@@ -17,7 +17,7 @@ window.icons = {
   logout: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 5 12 10 7"></polyline><line x1="15" y1="12" x2="5" y2="12"></line></svg>`,
   filter: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`,
   stepForward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-left:5px;"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>`,
-  stepBackward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:5px;"><line x1="5" y1="5" x2="5" y2="19"></line><line x1="19" y1="12" x2="9" y2="12"></line><polyline points="14 7 9 12 14 17"></polyline></svg>`,
+  stepBackward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-2px; margin-right:5px;"><line x1="5" y1="5" x2="5" y2="19"></line><line x1="19" y1="12" x2="9" y2="12"></line><polyline points="14 7 9 12 14 17"></polyline></svg>`,
   sede: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 10v2"></path><path d="M15 10v2"></path><path d="M9 14v2"></path><path d="M15 14v2"></path></svg>`,
   rename: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg>`,
   pin: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.8.5';
+    this.version = 'v.2.8.6';
   }
 
   /**
@@ -1266,7 +1266,7 @@ class AutoReportApp {
     // Ações ao entrar em etapas específicas
     if (this.currentStep === 3) this.renderMunicipalitiesStep();
     if (this.currentStep === 4) this.renderCourseStructureStep();
-    if (this.currentStep === 5) this.updateContactDateHint();
+    if (this.currentStep === 5) this.renderContactsStep();
     if (this.currentStep === 6) this.renderAttendanceStep();
     if (this.currentStep === 7) {
       this.renderEvaluationStep();
@@ -1402,34 +1402,29 @@ class AutoReportApp {
     this.renderTeamList();
 
     // Etapa 5: Contatos
-    if (t.contactsData) {
-      // Limpar datas ou métodos mock para garantir que iniciem sem seleção/sem preenchimento
-      const isMockDate = t.contactsData.startDate === '2026-05-10';
-      const isMockMethods = t.contactsData.methods === 'Ofícios, E-mails, Telefones e WhatsApp';
-
-      const sDate = isMockDate ? '' : (this.isoToDmy(t.contactsData.startDate) || t.contactsData.startDate || '');
-      const sMethods = isMockMethods ? '' : (t.contactsData.methods || '');
-
-      this.setVal('wiz-contact-start-date', sDate);
-      this.setVal('wiz-contact-methods', sMethods);
-      this.syncContactCheckboxesFromSavedMethods(sMethods);
-      this.setVal('wiz-contact-responsible', t.contactsData.responsible || '');
-      this.setVal('wiz-contact-notes', t.contactsData.notes || '');
-      this.updateContactDateHint();
-      if (sDate) {
-        this.validateContactStartDate(sDate, false);
-      }
-    } else {
-      this.setVal('wiz-contact-start-date', '');
-      this.setVal('wiz-contact-methods', '');
-      this.syncContactCheckboxesFromSavedMethods('');
-      this.setVal('wiz-contact-responsible', '');
-      this.setVal('wiz-contact-notes', '');
-      this.updateContactDateHint();
-    }
+    this.renderContactsStep();
 
     // Etapa 6: Inscrições & Presença
     this.renderAttendanceStep();
+  }
+
+  renderContactsStep() {
+    if (!this.currentTraining) return;
+    const t = this.currentTraining;
+    const cd = t.contactsData || {};
+
+    const sDate = this.isoToDmy(cd.startDate) || cd.startDate || '';
+    const sMethods = cd.methods || '';
+
+    this.setVal('wiz-contact-start-date', sDate);
+    this.setVal('wiz-contact-methods', sMethods);
+    this.syncContactCheckboxesFromSavedMethods(sMethods);
+    this.setVal('wiz-contact-responsible', cd.responsible || 'Equipe de Articulação Institucional CECATE-CO');
+    this.setVal('wiz-contact-notes', cd.notes || '');
+    this.updateContactDateHint();
+    if (sDate) {
+      this.validateContactStartDate(sDate, false);
+    }
   }
 
   updateContactMethodsFromCheckboxes() {
@@ -1442,8 +1437,9 @@ class AutoReportApp {
     } else if (selected.length === 2) {
       formattedString = `${selected[0]} e ${selected[1]}`;
     } else if (selected.length > 2) {
-      const last = selected.pop();
-      formattedString = `${selected.join(', ')} e ${last}`;
+      const last = selected[selected.length - 1];
+      const initial = selected.slice(0, selected.length - 1);
+      formattedString = `${initial.join(', ')} e ${last}`;
     }
 
     const hiddenInput = document.getElementById('wiz-contact-methods');
@@ -1454,6 +1450,7 @@ class AutoReportApp {
     if (this.currentTraining) {
       if (!this.currentTraining.contactsData) this.currentTraining.contactsData = {};
       this.currentTraining.contactsData.methods = formattedString;
+      this.currentTraining.contactsData.selectedChannels = selected;
       this.saveCurrentStepData();
     }
   }
@@ -1464,16 +1461,29 @@ class AutoReportApp {
       hiddenInput.value = methodsString || '';
     }
 
+    const t = this.currentTraining;
+    const savedChannels = t?.contactsData?.selectedChannels;
     const str = (methodsString || '').toLowerCase().trim();
     const checkboxes = document.querySelectorAll('.contact-method-checkbox');
+
     checkboxes.forEach(cb => {
+      if (Array.isArray(savedChannels) && savedChannels.length > 0) {
+        cb.checked = savedChannels.includes(cb.value);
+        return;
+      }
       if (!str) {
         cb.checked = false;
         return;
       }
       const val = cb.value.toLowerCase();
-      if (val === 'telefones') {
+      if (val === 'ofícios') {
+        cb.checked = str.includes('ofício') || str.includes('oficio');
+      } else if (val === 'e-mails') {
+        cb.checked = str.includes('e-mail') || str.includes('email');
+      } else if (val === 'telefones') {
         cb.checked = str.includes('telefone') || str.includes('ligaç');
+      } else if (val === 'whatsapp') {
+        cb.checked = str.includes('whatsapp') || str.includes('zap') || str.includes('wpp');
       } else if (val === 'reuniões virtuais') {
         cb.checked = str.includes('reuniã') || str.includes('virtual') || str.includes('videoconfer');
       } else {
@@ -1532,9 +1542,12 @@ class AutoReportApp {
     t.partnerOrgs = this.getVal('wiz-train-partners');
 
     // Sincronizar dados da Etapa 5
+    const checkedBoxes = document.querySelectorAll('.contact-method-checkbox:checked');
+    const selectedChannels = Array.from(checkedBoxes).map(cb => cb.value);
     t.contactsData = {
       startDate: this.dmyToIso(this.getVal('wiz-contact-start-date')) || this.getVal('wiz-contact-start-date') || '',
       methods: this.getVal('wiz-contact-methods') || '',
+      selectedChannels: selectedChannels.length > 0 ? selectedChannels : (t.contactsData?.selectedChannels || []),
       responsible: this.getVal('wiz-contact-responsible') || '',
       notes: this.getVal('wiz-contact-notes') || ''
     };
@@ -7340,6 +7353,30 @@ class AutoReportApp {
       this.metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
     }
     await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics);
+  }
+
+  printReportPDF() {
+    if (!this.currentTraining) {
+      this.showToast('Nenhuma capacitação selecionada.', 'warning');
+      return;
+    }
+
+    const t = this.currentTraining;
+    const originalTitle = document.title;
+    const cleanPolo = (t.polo || 'Polo').replace(/[^a-zA-Z0-9_-]/g, '_');
+    document.title = `Relatorio_Capacitacao_${t.number || 'Final'}_${cleanPolo}`;
+
+    this.showToast('Preparando geração do PDF do relatório...', 'info');
+
+    // Garantir renderização prévia dos gráficos e nuvens antes de imprimir
+    this.renderReportPreviewCharts();
+
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 1500);
+    }, 300);
   }
 
   async directDownloadDocx(trainingId) {

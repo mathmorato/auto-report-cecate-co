@@ -85,7 +85,7 @@
           <span>Motor de Relatórios Ativo</span>
         </div>
         <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem; font-family:monospace; text-align:center;">
-          v.2.8.5
+          v.2.8.6
         </div>
       </div>
     </aside>
@@ -1114,18 +1114,13 @@
             <!-- ETAPA 11: GERAÇÃO DO RELATÓRIO OFICIAL -->
             <div class="wizard-step-panel" id="wizard-step-11">
               <div class="wizard-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                <div style="margin-bottom:1.5rem;">
                   <div>
                     <h3 class="wizard-card-title" style="display:flex; align-items:center; gap:0.5rem;">
                       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                       <span>Etapa 11: Geração & Download do Relatório</span>
                     </h3>
-                    <p class="wizard-card-desc">Pré-visualize o documento institucional e baixe o arquivo editável em Word (.docx) estruturado conforme o padrão de referência.</p>
-                  </div>
-                  <div style="display:flex; gap:0.5rem;">
-                    <button class="btn btn-secondary" onclick="window.print()" style="display:inline-flex; align-items:center; gap:0.35rem;">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Imprimir / Salvar PDF
-                    </button>
+                    <p class="wizard-card-desc">Pré-visualize o documento institucional e gere o arquivo PDF oficial ou baixe o arquivo editável em Word (.docx) estruturado conforme o padrão de referência.</p>
                   </div>
                 </div>
 
@@ -1135,8 +1130,18 @@
                   </div>
                 </div>
 
-                <div class="wizard-actions-footer">
-                  <button class="btn btn-secondary" onclick="app.wizardPrev()" style="display:inline-flex; align-items:center; gap:0.35rem;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="5" y2="19"></line><line x1="19" y1="12" x2="9" y2="12"></line><polyline points="14 7 9 12 14 17"></polyline></svg>Voltar para Conferência</button>
+                <div class="wizard-actions-footer" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-top:2rem;">
+                  <button class="btn btn-secondary" onclick="app.wizardPrev()" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="5" y2="19"></line><line x1="19" y1="12" x2="9" y2="12"></line><polyline points="14 7 9 12 14 17"></polyline></svg> Voltar para Conferência
+                  </button>
+                  <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="app.printReportPDF()" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.6rem 1.15rem; font-weight:600;" title="Gera o PDF apenas do relatório oficial, sem elementos da página">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg> Imprimir / Salvar PDF
+                    </button>
+                    <button class="btn btn-primary" onclick="app.downloadDocxReport()" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.6rem 1.25rem; font-weight:600;">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Baixar Relatório em Word (.docx)
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1465,7 +1470,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.8.5</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.8.6</span>
         </div>
       </footer>
     </div>

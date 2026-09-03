@@ -2929,6 +2929,121 @@ body.light-theme .team-member-editor-card .team-preview-name {
   color: #b45309 !important;
 }
 
+/* ==========================================================================
+   IMPRESSÃO E GERAÇÃO DE PDF EXCLUSIVA DO RELATÓRIO OFICIAL (SEM A PÁGINA)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm 15mm 15mm;
+  }
+
+  /* 1. Ocultar todos os elementos da página por padrão */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* 2. Exibir única e exclusivamente o documento do relatório oficial */
+  #wizard-report-preview-document,
+  #wizard-report-preview-document * {
+    visibility: visible !important;
+  }
+
+  /* 3. Posicionar o documento no topo absoluto da página impressa */
+  #wizard-report-preview-document {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    border: none !important;
+    display: block !important;
+    z-index: 99999 !important;
+  }
+
+  /* 4. Resetar o fundo e as dimensões do documento para impressão limpa */
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 5. Ocultar explicitamente todos os componentes de UI da aplicação */
+  .app-sidebar,
+  .main-header,
+  .app-main-footer,
+  .wizard-nav-tracker,
+  .wizard-header,
+  .wizard-actions,
+  .wizard-actions-footer,
+  .sidebar-footer,
+  .btn,
+  button,
+  .toast-container,
+  .modal,
+  .modal-backdrop,
+  .theme-toggle,
+  aside,
+  nav,
+  header {
+    display: none !important;
+  }
+
+  /* 6. Desativar restrições de scroll e dimensões do wrapper */
+  .report-doc-preview-wrapper {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    max-height: none !important;
+    display: block !important;
+  }
+
+  .report-doc-page {
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+  }
+
+  /* 7. Preservar gráficos canvas e imagens */
+  canvas, img {
+    max-width: 100% !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 8. Evitar quebras desordenadas em tabelas, figuras e títulos */
+  table, tr, td, th, figure, .report-figure-box {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  h1, h2, h3, h4 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    color: #1e3a8a !important;
+  }
+}
+
 
 
 
