@@ -379,11 +379,11 @@
                 <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap:1rem;">
                   <div class="form-group">
                     <label class="form-label">Data Inicial *:</label>
-                    <input type="date" id="wiz-train-start-date" class="form-control" min="2000-01-01" max="2099-12-31" oninput="app.onDatesChanged()" onchange="app.onDatesChanged()" onblur="app.onDatesBlur('start')">
+                    <input type="date" id="wiz-train-start-date" class="form-control" max="2099-12-31" onchange="app.onDatesChanged()" onblur="app.onDatesBlur('start')">
                   </div>
                   <div class="form-group">
                     <label class="form-label">Data Final:</label>
-                    <input type="date" id="wiz-train-end-date" class="form-control" min="2000-01-01" max="2099-12-31" oninput="app.onDatesChanged()" onchange="app.onDatesChanged()" onblur="app.onDatesBlur('end')">
+                    <input type="date" id="wiz-train-end-date" class="form-control" max="2099-12-31" onchange="app.onDatesChanged()" onblur="app.onDatesBlur('end')">
                     <div id="wiz-date-final-error" style="display:none; color:var(--accent-rose, #ef4444); font-size:0.75rem; margin-top:0.35rem; font-weight:600;"></div>
                   </div>
                   <div class="form-group">
@@ -1465,7 +1465,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.3.7</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.3.8</span>
         </div>
       </footer>
     </div>

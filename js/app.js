@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.3.7
+ * Versão: v.2.3.8
  */
 
 window.icons = {
@@ -1664,25 +1664,14 @@ class AutoReportApp {
       const month = parts[1];
       const day = parts[2];
 
-      // Se o ano possuir mais de 4 dígitos (ex: digitação excessiva como 202600), trunca para os 4 primeiros dígitos
+      // Se o ano possuir mais de 4 dígitos (ex: digitação excessiva como 202600 ou 202020), trunca para exatamente os 4 primeiros dígitos
       if (year.length > 4) {
         year = year.slice(0, 4);
         val = `${year}-${month}-${day}`;
         input.value = val;
       }
-
-      const numYear = parseInt(year, 10);
-      if (!isNaN(numYear)) {
-        if (numYear > 2099) {
-          val = `2099-${month}-${day}`;
-          input.value = val;
-        } else if (numYear < 2000 && year.length === 4) {
-          val = `2000-${month}-${day}`;
-          input.value = val;
-        }
-      }
     }
-    return val;
+    return input.value;
   }
 
   onDatesBlur(field) {
@@ -1701,15 +1690,23 @@ class AutoReportApp {
       if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime())) {
         if (eDate.getTime() < sDate.getTime()) {
           this.showToast('A Data Final deve ser maior ou igual à Data Inicial.', 'warning');
-          // Auto-ajusta para a data inicial
-          endInput.value = startStr;
-          if (endInput.style) endInput.style.borderColor = '';
+          const errEl = document.getElementById('wiz-date-final-error');
+          if (errEl) {
+            errEl.style.display = 'block';
+            errEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>A Data Final não pode ser anterior à Data Inicial.`;
+          }
+          if (endInput) {
+            endInput.style.borderColor = 'var(--accent-rose, #ef4444)';
+          }
+        } else {
           const errEl = document.getElementById('wiz-date-final-error');
           if (errEl) {
             errEl.style.display = 'none';
             errEl.textContent = '';
           }
-          this.onDatesChanged();
+          if (endInput) {
+            endInput.style.borderColor = '';
+          }
         }
       }
     }
@@ -1760,6 +1757,7 @@ class AutoReportApp {
             errorEl.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:3px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>A Data Final não pode ser anterior à Data Inicial.`;
           }
           if (endInput) endInput.style.borderColor = 'var(--accent-rose, #ef4444)';
+          this.showToast('A Data Final deve ser maior ou igual à Data Inicial.', 'warning');
           // Não formata intervalo invertido ("26 a 24..."): mantém como data inicial
           endDate = startDate;
         } else {
@@ -1829,7 +1827,7 @@ class AutoReportApp {
 
     if (this.currentTraining) {
       this.currentTraining.startDate = startStr;
-      this.currentTraining.endDate = isEndInvalid ? startStr : (endStr || startStr);
+      this.currentTraining.endDate = isEndInvalid ? '' : (endStr || startStr);
       this.currentTraining.datesFormatted = formatted;
       this.currentTraining.workload = `${autoWorkload} horas`;
       this.saveCurrentStepData();
