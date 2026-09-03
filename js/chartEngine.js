@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Renderização de Gráficos Nativos (Canvas Chart Engine)
- * Versão: v.2.8.8
+ * Versão: v.2.8.9
  */
 
 class ChartEngine {
@@ -9,11 +9,19 @@ class ChartEngine {
   }
 
   /**
-   * Destrói instância anterior de um canvas para evitar vazamentos
+   * Destrói instância anterior de um canvas para evitar vazamentos e conflitos
    */
   destroyIfExists(canvasId) {
+    if (window.Chart) {
+      try {
+        const existing = window.Chart.getChart(canvasId);
+        if (existing) existing.destroy();
+      } catch (e) {}
+    }
     if (this.chartInstances[canvasId]) {
-      this.chartInstances[canvasId].destroy();
+      try {
+        this.chartInstances[canvasId].destroy();
+      } catch (e) {}
       delete this.chartInstances[canvasId];
     }
   }
@@ -70,6 +78,7 @@ class ChartEngine {
         }]
       },
       options: {
+        animation: false,
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -197,6 +206,7 @@ class ChartEngine {
       },
       plugins: [stackedPercentagePlugin],
       options: {
+        animation: false,
         responsive: true,
         maintainAspectRatio: false,
         indexAxis: 'y',

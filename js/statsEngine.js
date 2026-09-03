@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Estatístico & Cruzamento de Indicadores
- * Versão: v.2.8.8
+ * Versão: v.2.8.9
  */
 
 class StatsEngine {

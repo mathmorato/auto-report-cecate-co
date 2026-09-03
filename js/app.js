@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.8.8
+ * Versão: v.2.8.9
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.8.8';
+    this.version = 'v.2.8.9';
   }
 
   /**
@@ -7246,8 +7246,8 @@ class AutoReportApp {
         <!-- FIGURA 3 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 3. Participação de Gestores e Conselheiros CACS.</em></p>
-          <div style="max-width:520px; margin:auto; background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-            <canvas id="report-preview-fig3-canvas" width="480" height="260" style="max-width:100%; height:auto;"></canvas>
+          <div style="max-width:520px; height:280px; position:relative; margin:auto;">
+            <canvas id="report-preview-fig3-canvas"></canvas>
           </div>
         </div>
 
@@ -7258,24 +7258,24 @@ class AutoReportApp {
         <!-- FIGURA 4 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 4. Avaliação da capacitação de todos os participantes.</em></p>
-          <div style="max-width:720px; margin:auto; background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-            <canvas id="report-preview-fig4-canvas" width="700" height="340" style="max-width:100%; height:auto;"></canvas>
+          <div style="max-width:720px; height:340px; position:relative; margin:auto;">
+            <canvas id="report-preview-fig4-canvas"></canvas>
           </div>
         </div>
 
         <!-- FIGURA 5 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 5. Avaliação da capacitação dos conselheiros CACS.</em></p>
-          <div style="max-width:720px; margin:auto; background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-            <canvas id="report-preview-fig5-canvas" width="700" height="340" style="max-width:100%; height:auto;"></canvas>
+          <div style="max-width:720px; height:340px; position:relative; margin:auto;">
+            <canvas id="report-preview-fig5-canvas"></canvas>
           </div>
         </div>
 
         <!-- FIGURA 6 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 6. Avaliação da capacitação dos gestores municipais.</em></p>
-          <div style="max-width:720px; margin:auto; background:var(--bg-input); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-            <canvas id="report-preview-fig6-canvas" width="700" height="340" style="max-width:100%; height:auto;"></canvas>
+          <div style="max-width:720px; height:340px; position:relative; margin:auto;">
+            <canvas id="report-preview-fig6-canvas"></canvas>
           </div>
         </div>
 
@@ -7323,7 +7323,8 @@ class AutoReportApp {
 
   renderReportPreviewCharts() {
     if (!window.chartEngine || !this.currentTraining) return;
-    const isDark = this.theme === 'dark';
+    // O relatório é um documento impresso formal A4 de fundo branco; tema dos gráficos deve ser sempre claro
+    const isDark = false;
     const evals = this.currentTraining.evaluations || [];
 
     // Figura 3: Participação CACS vs Gestor
@@ -7460,7 +7461,12 @@ class AutoReportApp {
           imgEl.style.display = 'block';
           imgEl.style.margin = '0 auto';
           imgEl.style.borderRadius = '4px';
-          cloneCanvas.parentNode.replaceChild(imgEl, cloneCanvas);
+          const parent = cloneCanvas.parentNode;
+          if (parent) {
+            parent.replaceChild(imgEl, cloneCanvas);
+            parent.style.height = 'auto';
+            parent.style.maxHeight = 'none';
+          }
         } catch (e) {
           console.warn('Erro ao converter canvas para img:', e);
         }
