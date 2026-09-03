@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.4
+ * Versão: v.2.7.5
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.4';
+    this.version = 'v.2.7.5';
   }
 
   /**
@@ -2525,6 +2525,8 @@ class AutoReportApp {
       title: 'Limpar Seleção da Estrutura',
       msg: 'Deseja realmente remover a estrutura de curso escolhida para esta capacitação? A Tabela 2 ficará sem estrutura até que você selecione um novo modelo.',
       btnText: 'Sim, Limpar Estrutura',
+      successTitle: 'Estrutura Limpa!',
+      successMsg: 'A seleção da estrutura de curso foi removida com sucesso.',
       onConfirm: async () => {
         if (!this.currentTraining) return;
         this.currentTraining.courseModules = [];
@@ -4117,15 +4119,25 @@ class AutoReportApp {
   deleteCourseModule(modIdx) {
     if (!this.currentTraining || !this.currentTraining.courseModules) return;
     this.isCourseEditorOpen = true;
-    if (confirm('Deseja realmente remover este módulo da capacitação?')) {
-      this.currentTraining.courseModules.splice(modIdx, 1);
-      if (window.courseStructureHelper) {
-        this.currentTraining.courseModules = window.courseStructureHelper.autoRenumber(this.currentTraining.courseModules);
+    const mod = this.currentTraining.courseModules[modIdx];
+    const modName = mod ? `Módulo ${mod.number || modIdx + 1}` : 'este módulo';
+
+    this.openConfirmModal({
+      title: 'Remover Módulo',
+      msg: `Deseja realmente remover ${modName} da capacitação?`,
+      btnText: 'Sim, Remover Módulo',
+      successTitle: 'Módulo Removido!',
+      successMsg: 'O módulo foi removido da estrutura do curso com sucesso.',
+      onConfirm: () => {
+        this.currentTraining.courseModules.splice(modIdx, 1);
+        if (window.courseStructureHelper) {
+          this.currentTraining.courseModules = window.courseStructureHelper.autoRenumber(this.currentTraining.courseModules);
+        }
+        this.renderCourseStructureStep();
+        this.saveCurrentStepData();
+        this.showToast('Módulo removido da capacitação.', 'info');
       }
-      this.renderCourseStructureStep();
-      this.saveCurrentStepData();
-      this.showToast('Módulo removido da capacitação.', 'info');
-    }
+    });
   }
 
   moveCourseModule(modIdx, direction) {
@@ -4701,56 +4713,34 @@ class AutoReportApp {
       return;
     }
 
-    this.templateToDeleteId = templateId;
+    const tplName = tpl.name || 'Estrutura do Curso';
 
-    const nameEl = document.getElementById('modal-delete-tpl-name');
-    const infoEl = document.getElementById('modal-delete-tpl-info');
-
-    if (nameEl) nameEl.textContent = tpl.name || 'Estrutura do Curso';
-    if (infoEl) {
-      let totalH = 0;
-      (tpl.modules || []).forEach(m => {
-        (m.gestorTopics || []).forEach(gt => { totalH += parseFloat(gt.hours) || 0; });
-      });
-      infoEl.textContent = `${tpl.modules ? tpl.modules.length : 0} Módulos • ${totalH.toFixed(1).replace('.', ',')} h Total`;
-    }
-
-    const modal = document.getElementById('modal-confirm-delete-course-template');
-    if (modal) {
-      modal.style.display = 'flex';
-      modal.classList.add('active');
-    }
+    this.openConfirmModal({
+      title: 'Excluir Estrutura do Curso',
+      msg: `Tem certeza que deseja excluir permanentemente a estrutura "${tplName}"?`,
+      btnText: 'Sim, Excluir Estrutura',
+      successTitle: 'Estrutura Excluída!',
+      successMsg: `A estrutura "${tplName}" foi excluída com sucesso.`,
+      onConfirm: () => {
+        const ok = window.courseStructureHelper.deleteTemplate(templateId);
+        if (ok) {
+          this.activeTemplateId = 'template_default_official';
+          this.renderCourseTemplatesCatalog();
+          this.renderGlobalMasterCourseStructure();
+          this.showToast(`Estrutura "${tplName}" excluída.`, 'info');
+        } else {
+          this.showToast('Não é possível excluir a estrutura.', 'error');
+        }
+      }
+    });
   }
 
   closeConfirmDeleteCourseTemplateModal() {
-    this.templateToDeleteId = null;
-    const modal = document.getElementById('modal-confirm-delete-course-template');
-    if (modal) {
-      modal.classList.remove('active');
-      setTimeout(() => {
-        if (!modal.classList.contains('active')) {
-          modal.style.display = 'none';
-        }
-      }, 200);
-    }
+    this.closeConfirmModal();
   }
 
   executeDeleteCourseTemplateConfirmed() {
-    if (!this.templateToDeleteId || !window.courseStructureHelper) return;
-    const templateId = this.templateToDeleteId;
-    const tpl = window.courseStructureHelper.getTemplateById(templateId);
-    const tplName = tpl ? tpl.name : 'Estrutura';
-
-    const ok = window.courseStructureHelper.deleteTemplate(templateId);
-    if (ok) {
-      this.activeTemplateId = 'template_default_official';
-      this.renderCourseTemplatesCatalog();
-      this.renderGlobalMasterCourseStructure();
-      this.showToast(`Estrutura "${tplName}" excluída.`, 'info');
-    } else {
-      this.showToast('Não é possível excluir a estrutura.', 'error');
-    }
-    this.closeConfirmDeleteCourseTemplateModal();
+    this.executeConfirmModalAction();
   }
 
   deleteCourseTemplate(templateId) {
@@ -5114,14 +5104,24 @@ class AutoReportApp {
     if (!activeTpl) return;
 
     let masterMods = window.courseStructureHelper.normalize(activeTpl.modules || []);
-    if (confirm(`Deseja realmente remover este módulo da estrutura "${activeTpl.name}"?`)) {
-      masterMods.splice(modIdx, 1);
-      masterMods = window.courseStructureHelper.autoRenumber(masterMods);
-      window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
-      this.renderCourseTemplatesCatalog();
-      this.renderGlobalMasterCourseStructure();
-      this.showToast('Módulo removido da estrutura.', 'info');
-    }
+    const mod = masterMods[modIdx];
+    const modName = mod ? `Módulo ${mod.number || modIdx + 1}` : 'este módulo';
+
+    this.openConfirmModal({
+      title: 'Remover Módulo da Matriz',
+      msg: `Deseja realmente remover ${modName} da estrutura "${activeTpl.name}"?`,
+      btnText: 'Sim, Remover Módulo',
+      successTitle: 'Módulo Removido!',
+      successMsg: 'O módulo foi removido da matriz com sucesso.',
+      onConfirm: () => {
+        masterMods.splice(modIdx, 1);
+        masterMods = window.courseStructureHelper.autoRenumber(masterMods);
+        window.courseStructureHelper.updateTemplateModules(activeTpl.id, masterMods);
+        this.renderCourseTemplatesCatalog();
+        this.renderGlobalMasterCourseStructure();
+        this.showToast('Módulo removido da estrutura.', 'info');
+      }
+    });
   }
 
   moveGlobalMasterCourseModule(modIdx, direction) {
@@ -5426,12 +5426,27 @@ class AutoReportApp {
     }
   }
 
-  openConfirmModal({ title, msg, btnText = 'Sim, Remover', onConfirm }) {
+  openConfirmModal({ title, msg, btnText = 'Sim, Remover', successTitle = 'Exclusão Concluída!', successMsg = 'O item foi removido com sucesso.', onConfirm }) {
     const overlay = document.getElementById('app-confirm-modal-overlay');
+    const card = document.getElementById('app-confirm-modal-card');
     const titleEl = document.getElementById('app-confirm-modal-title');
     const msgEl = document.getElementById('app-confirm-modal-msg');
     const btnAction = document.getElementById('app-confirm-modal-btn-action');
 
+    const iconContainer = document.getElementById('app-confirm-modal-icon-container');
+    const iconAlert = document.getElementById('app-confirm-modal-icon-alert');
+    const iconLoading = document.getElementById('app-confirm-modal-icon-loading');
+    const iconSuccess = document.getElementById('app-confirm-modal-icon-success');
+
+    const progressContainer = document.getElementById('app-confirm-modal-progress-container');
+    const progressBar = document.getElementById('app-confirm-modal-progress-bar');
+    const progressText = document.getElementById('app-confirm-modal-progress-text');
+
+    const actionsInitial = document.getElementById('app-confirm-modal-actions-initial');
+    const actionsSuccess = document.getElementById('app-confirm-modal-actions-success');
+
+    // Resetar para Fase 1 (Pergunta inicial de confirmação)
+    if (card) card.style.borderColor = 'rgba(244, 63, 94, 0.35)';
     if (titleEl) titleEl.textContent = title;
     if (msgEl) msgEl.textContent = msg;
     if (btnAction) {
@@ -5439,22 +5454,109 @@ class AutoReportApp {
       btnAction.style.setProperty('color', '#ffffff', 'important');
     }
 
+    if (iconContainer) {
+      iconContainer.style.background = 'rgba(244, 63, 94, 0.15)';
+      iconContainer.style.color = '#f43f5e';
+    }
+    if (iconAlert) iconAlert.style.display = 'flex';
+    if (iconLoading) iconLoading.style.display = 'none';
+    if (iconSuccess) iconSuccess.style.display = 'none';
+
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressText) progressText.textContent = 'Removendo...';
+
+    if (actionsInitial) actionsInitial.style.display = 'flex';
+    if (actionsSuccess) actionsSuccess.style.display = 'none';
+
     this.onConfirmCallback = onConfirm;
+    this.confirmSuccessTitle = successTitle;
+    this.confirmSuccessMsg = successMsg;
+    this.isConfirmModalProcessing = false;
 
     if (overlay) overlay.style.display = 'flex';
   }
 
   closeConfirmModal() {
+    if (this.isConfirmModalProcessing) return; // Não fechar enquanto a barra de carregamento roda
     const overlay = document.getElementById('app-confirm-modal-overlay');
     if (overlay) overlay.style.display = 'none';
     this.onConfirmCallback = null;
+    this.isConfirmModalProcessing = false;
   }
 
   executeConfirmModalAction() {
-    if (typeof this.onConfirmCallback === 'function') {
-      this.onConfirmCallback();
+    if (this.isConfirmModalProcessing) return;
+    this.isConfirmModalProcessing = true;
+
+    const card = document.getElementById('app-confirm-modal-card');
+    const titleEl = document.getElementById('app-confirm-modal-title');
+    const msgEl = document.getElementById('app-confirm-modal-msg');
+    const iconContainer = document.getElementById('app-confirm-modal-icon-container');
+    const iconAlert = document.getElementById('app-confirm-modal-icon-alert');
+    const iconLoading = document.getElementById('app-confirm-modal-icon-loading');
+    const iconSuccess = document.getElementById('app-confirm-modal-icon-success');
+
+    const progressContainer = document.getElementById('app-confirm-modal-progress-container');
+    const progressBar = document.getElementById('app-confirm-modal-progress-bar');
+    const progressText = document.getElementById('app-confirm-modal-progress-text');
+
+    const actionsInitial = document.getElementById('app-confirm-modal-actions-initial');
+    const actionsSuccess = document.getElementById('app-confirm-modal-actions-success');
+
+    // FASE 2: BARRA DE CARREGAMENTO
+    if (actionsInitial) actionsInitial.style.display = 'none';
+    if (titleEl) titleEl.textContent = 'Removendo...';
+    if (msgEl) msgEl.textContent = 'Aguarde enquanto a exclusão é processada com segurança.';
+
+    if (card) card.style.borderColor = 'rgba(99, 102, 241, 0.35)';
+    if (iconContainer) {
+      iconContainer.style.background = 'rgba(99, 102, 241, 0.15)';
+      iconContainer.style.color = '#6366f1';
     }
-    this.closeConfirmModal();
+    if (iconAlert) iconAlert.style.display = 'none';
+    if (iconLoading) iconLoading.style.display = 'flex';
+
+    if (progressContainer) progressContainer.style.display = 'block';
+    if (progressBar) {
+      progressBar.style.width = '0%';
+      setTimeout(() => {
+        if (progressBar) progressBar.style.width = '100%';
+      }, 50);
+    }
+
+    // Executar a exclusão efetiva dos dados
+    if (typeof this.onConfirmCallback === 'function') {
+      try {
+        this.onConfirmCallback();
+      } catch (err) {
+        console.error('Erro ao executar exclusão:', err);
+      }
+    }
+
+    // FASE 3: CONFIRMAÇÃO DE SUCESSO COM BOTÃO OK
+    setTimeout(() => {
+      this.isConfirmModalProcessing = false;
+
+      if (progressContainer) progressContainer.style.display = 'none';
+
+      if (card) card.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+      if (iconContainer) {
+        iconContainer.style.background = 'rgba(16, 185, 129, 0.15)';
+        iconContainer.style.color = '#10b981';
+      }
+      if (iconLoading) iconLoading.style.display = 'none';
+      if (iconSuccess) iconSuccess.style.display = 'flex';
+
+      if (titleEl) titleEl.textContent = this.confirmSuccessTitle || 'Exclusão Concluída!';
+      if (msgEl) msgEl.textContent = this.confirmSuccessMsg || 'O item foi removido com sucesso.';
+
+      if (actionsSuccess) {
+        actionsSuccess.style.display = 'flex';
+        const okBtn = document.getElementById('app-confirm-modal-btn-ok');
+        if (okBtn) okBtn.focus();
+      }
+    }, 750);
   }
 
   clearStep6Data(type = 'all') {
@@ -5462,19 +5564,27 @@ class AutoReportApp {
 
     let title = 'Remover Arquivos e Listas';
     let msg = 'Tem certeza que deseja remover todas as planilhas importadas (Inscrição e Presença) e limpar as listas de participantes e estatísticas?';
+    let successTitle = 'Planilhas Removidas!';
+    let successMsg = 'As planilhas e a lista de participantes foram excluídas com sucesso.';
 
     if (type === 'registration') {
       title = 'Remover Planilha de Inscrições';
       msg = 'Tem certeza que deseja remover a Planilha de Inscrições e limpar a lista de inscritos?';
+      successTitle = 'Inscrições Removidas!';
+      successMsg = 'A planilha de inscrições foi excluída com sucesso.';
     } else if (type === 'attendance') {
       title = 'Remover Planilha de Presença';
       msg = 'Tem certeza que deseja remover a Planilha de Presença e limpar a lista de presentes?';
+      successTitle = 'Presença Removida!';
+      successMsg = 'A planilha de presença foi excluída com sucesso.';
     }
 
     this.openConfirmModal({
       title,
       msg,
       btnText: 'Sim, Remover',
+      successTitle,
+      successMsg,
       onConfirm: () => this.executeClearStep6Data(type)
     });
   }
@@ -6146,6 +6256,8 @@ class AutoReportApp {
       title: 'Remover Planilha de Avaliação',
       msg: 'Tem certeza que deseja remover a Planilha de Avaliação e limpar todos os dados de gráficos, médias e nuvens de palavras?',
       btnText: 'Sim, Remover',
+      successTitle: 'Avaliações Removidas!',
+      successMsg: 'A planilha de avaliações e todos os gráficos e médias foram excluídos com sucesso.',
       onConfirm: () => this.executeClearEvaluationData()
     });
   }
@@ -6515,6 +6627,8 @@ class AutoReportApp {
       title: 'Remover Fotografia',
       msg: `Tem certeza que deseja remover a imagem de "${captionText}"?`,
       btnText: 'Sim, Remover Foto',
+      successTitle: 'Fotografia Removida!',
+      successMsg: 'A imagem foi removida da galeria com sucesso.',
       onConfirm: () => this.executeRemovePhoto(slotId)
     });
   }
@@ -6571,56 +6685,56 @@ class AutoReportApp {
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong style="color:var(--accent-emerald-text, #10b981); font-size:0.88rem; display:flex; align-items:center; gap:0.35rem;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                ${slot.defaultCaption}
+                <span>${slot.defaultCaption}</span>
               </strong>
-              <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemovePhoto('${slot.slotId}')" style="padding:0.2rem 0.55rem; font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center;">
+              <span class="nav-badge badge-emerald" style="font-size:0.72rem;">Anexada</span>
+            </div>
+
+            <div style="position:relative; width:100%; height:180px; border-radius:var(--radius-sm); overflow:hidden; background:var(--bg-input); border:1px solid var(--border-color);">
+              <img src="${photo.blob}" alt="${photo.caption || ''}" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:0.35rem;">
+              <label style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">Legenda da Figura:</label>
+              <input type="text" class="form-control" value="${photo.caption || slot.defaultCaption}" 
+                     style="font-size:0.82rem; padding:0.4rem 0.6rem;"
+                     onchange="app.updatePhotoCaption('${slot.slotId}', this.value)">
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.25rem;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('file-slot-${slot.slotId}').click()" style="padding:0.3rem 0.6rem; font-size:0.78rem;">
+                Trocar Foto
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemovePhoto('${slot.slotId}')" style="padding:0.3rem 0.6rem; font-size:0.78rem;">
                 ${window.icons.delete} Remover Foto
               </button>
             </div>
-
-            <div style="background:var(--bg-input); border-radius:var(--radius-md); overflow:hidden; max-height:220px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-color);">
-              <img src="${photo.blob}" style="width:100%; max-height:220px; object-fit:cover;" alt="${photo.caption}">
-            </div>
-
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="font-size:0.78rem;">Legenda da Figura:</label>
-              <input type="text" class="form-control form-control-sm" value="${photo.caption || slot.defaultCaption}" onchange="app.updatePhotoCaption('${slot.slotId}', this.value)">
-            </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:0.72rem; color:var(--text-muted); display:flex; align-items:center; gap:0.25rem;">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg> Arraste para reordenar
-              </span>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-slot-${slot.slotId}').click()" style="font-size:0.76rem; padding:0.2rem 0.5rem; display:inline-flex; align-items:center;">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>Trocar Imagem
-              </button>
-              <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
-            </div>
+            <input type="file" id="file-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
           </div>
         `;
       } else {
-        // Slot pendente (Dropzone de arquivo individual + receptor de drag & drop)
+        // Card vazio (Dropzone padronizada amarela)
         html += `
           <div class="glass-card" 
-               ondragover="app.handlePhotoDragOverCard(event)"
-               ondragleave="app.handlePhotoDragLeaveCard(event)"
-               ondrop="app.handlePhotoDropCard('${slot.slotId}', event)"
+               ondragover="app.handleDragOver(event)"
+               ondragleave="app.handleDragLeave(event)"
+               ondrop="app.handlePhotoDrop('${slot.slotId}', '${slot.defaultCaption}', event)"
                style="padding:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <strong style="color:var(--text-primary); font-size:0.88rem;">${slot.defaultCaption}</strong>
-              <span class="nav-badge" style="font-size:0.72rem;">Pendente</span>
+              <span class="nav-badge" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b; font-size:0.72rem;">Pendente</span>
             </div>
 
             <div class="upload-dropzone" 
-                 onclick="document.getElementById('input-slot-${slot.slotId}').click()"
-                 ondragover="app.handleDragOver(event)"
-                 ondragleave="app.handleDragLeave(event)"
-                 ondrop="app.handlePhotoDrop('${slot.slotId}', '${slot.defaultCaption}', event)"
-                 style="padding:1.25rem 0.75rem;">
-              <div class="upload-dropzone-icon" style="display:flex; justify-content:center; margin-bottom:0.35rem; color:var(--text-muted);">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                 onclick="document.getElementById('file-slot-${slot.slotId}').click()" 
+                 style="padding:1.75rem 1rem; border-radius:var(--radius-sm); border:2px dashed #f59e0b; cursor:pointer; background:rgba(245, 158, 11, 0.03); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:140px;">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-primary); margin-bottom:0.6rem;">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <div style="font-size:0.85rem; font-weight:600; color:var(--text-primary); margin-bottom:0.25rem;">
+                Clique ou arraste a foto da ${slot.defaultTitle}
               </div>
-              <div class="upload-dropzone-text" style="font-size:0.85rem;">Clique ou arraste a foto da ${slot.defaultTitle}</div>
               <div class="upload-dropzone-hint" style="font-size:0.74rem;">Formatos aceitos: JPG, PNG, WEBP</div>
               <input type="file" id="input-slot-${slot.slotId}" accept="image/*" style="display:none;" onchange="app.handleSinglePhotoUpload('${slot.slotId}', '${slot.defaultCaption}', event)">
             </div>
@@ -6960,7 +7074,6 @@ class AutoReportApp {
       `;
     }
 
-    // Resetar barra de progresso e reabilitar botões
     const progressContainer = document.getElementById('modal-delete-progress-container');
     const progressBar = document.getElementById('modal-delete-progress-bar');
     const progressPercent = document.getElementById('modal-delete-progress-percent');
@@ -6969,9 +7082,20 @@ class AutoReportApp {
     const cancelBtn = document.getElementById('modal-delete-cancel-btn');
     const closeBtn = document.getElementById('modal-delete-close-btn');
 
+    const footerInit = document.getElementById('modal-delete-footer-initial');
+    const footerSucc = document.getElementById('modal-delete-footer-success');
+    if (footerInit) footerInit.style.display = 'flex';
+    if (footerSucc) footerSucc.style.display = 'none';
+
     if (progressContainer) progressContainer.style.display = 'none';
-    if (progressBar) progressBar.style.width = '0%';
-    if (progressPercent) progressPercent.textContent = '0%';
+    if (progressBar) {
+      progressBar.style.width = '0%';
+      progressBar.style.background = '';
+    }
+    if (progressPercent) {
+      progressPercent.textContent = '0%';
+      progressPercent.style.color = '#ef4444';
+    }
     if (progressStatus) progressStatus.innerHTML = '<span class="status-dot" style="background:#ef4444;"></span> Limpando registros...';
     if (confirmBtn) {
       confirmBtn.disabled = false;
@@ -7014,75 +7138,44 @@ class AutoReportApp {
 
     if (!member) return;
 
-    this.memberToDelete = { type, index };
+    const name = window.formatTeamMemberFullName ? window.formatTeamMemberFullName(member) : (member.name || 'Integrante');
+    const role = member.role || 'Equipe Técnica';
 
-    const msgEl = document.getElementById('modal-delete-member-message');
-    const nameEl = document.getElementById('modal-delete-member-name');
-    const instEl = document.getElementById('modal-delete-member-institution');
-    const roleEl = document.getElementById('modal-delete-member-role');
-
-    if (msgEl) {
-      msgEl.textContent = type === 'master'
-        ? 'Deseja realmente remover este integrante do catálogo geral de equipe?'
-        : 'Deseja realmente remover este integrante da equipe desta capacitação?';
-    }
-
-    if (nameEl) {
-      nameEl.textContent = window.formatTeamMemberFullName ? window.formatTeamMemberFullName(member) : (member.name || 'Integrante');
-    }
-
-    if (instEl) {
-      instEl.textContent = member.institution || member.institutionGroup || 'UFG';
-    }
-
-    if (roleEl) {
-      roleEl.textContent = member.role || 'Equipe Técnica';
-    }
-
-    const modal = document.getElementById('modal-confirm-delete-member');
-    if (modal) {
-      modal.style.display = 'flex';
-      modal.classList.add('active');
-    }
+    this.openConfirmModal({
+      title: 'Remover Integrante',
+      msg: `Tem certeza que deseja remover "${name}" (${role}) da equipe?`,
+      btnText: 'Sim, Remover',
+      successTitle: 'Integrante Removido!',
+      successMsg: `O integrante "${name}" foi removido com sucesso.`,
+      onConfirm: () => {
+        if (type === 'master') {
+          const masterTeam = window.getMasterTeam();
+          if (masterTeam[index]) {
+            const removedName = masterTeam[index].name;
+            masterTeam.splice(index, 1);
+            window.saveMasterTeam(masterTeam);
+            this.renderMasterTeamManagement();
+            this.showToast(`Integrante ${removedName} removido do catálogo geral.`);
+          }
+        } else if (type === 'wizard') {
+          if (this.currentTraining?.team?.[index]) {
+            const removedName = this.currentTraining.team[index].name;
+            this.currentTraining.team.splice(index, 1);
+            this.renderTeamList();
+            this.saveCurrentStepData();
+            this.showToast(`Integrante ${removedName} removido da equipe.`);
+          }
+        }
+      }
+    });
   }
 
   closeConfirmDeleteMemberModal() {
-    this.memberToDelete = null;
-    const modal = document.getElementById('modal-confirm-delete-member');
-    if (modal) {
-      modal.classList.remove('active');
-      setTimeout(() => {
-        if (!modal.classList.contains('active')) {
-          modal.style.display = 'none';
-        }
-      }, 200);
-    }
+    this.closeConfirmModal();
   }
 
   executeDeleteMemberConfirmed() {
-    if (!this.memberToDelete) return;
-    const { type, index } = this.memberToDelete;
-
-    if (type === 'master') {
-      const masterTeam = window.getMasterTeam();
-      if (masterTeam[index]) {
-        const removedName = masterTeam[index].name;
-        masterTeam.splice(index, 1);
-        window.saveMasterTeam(masterTeam);
-        this.renderMasterTeamManagement();
-        this.showToast(`Integrante ${removedName} removido do catálogo geral.`);
-      }
-    } else if (type === 'wizard') {
-      if (this.currentTraining?.team?.[index]) {
-        const removedName = this.currentTraining.team[index].name;
-        this.currentTraining.team.splice(index, 1);
-        this.renderTeamList();
-        this.saveCurrentStepData();
-        this.showToast(`Integrante ${removedName} removido da equipe.`);
-      }
-    }
-
-    this.closeConfirmDeleteMemberModal();
+    this.executeConfirmModalAction();
   }
 
   async executeDeleteTrainingConfirmed() {
@@ -7133,18 +7226,20 @@ class AutoReportApp {
       await window.db.delete('trainings', idToDelete);
 
       setProgress(100, 'Capacitação excluída com sucesso!');
-      await new Promise(r => setTimeout(r, 300));
+      if (progressBar) progressBar.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+      if (progressPercent) progressPercent.style.color = '#10b981';
+      if (progressStatus) progressStatus.innerHTML = '<span class="status-dot" style="background:#10b981;"></span> Capacitação excluída com sucesso!';
 
-      this.closeConfirmDeleteModal();
-      this.showToast(`Capacitação Nº ${num} excluída com sucesso.`);
-
-      // Se estava no wizard e excluiu o que estava aberto, voltar para o banco
-      if (this.currentTraining && this.currentTraining.id === idToDelete) {
-        this.currentTraining = null;
-        this.navigateTo('all-trainings');
-      } else {
-        await this.renderTrainingsList();
+      const footerInit = document.getElementById('modal-delete-footer-initial');
+      const footerSucc = document.getElementById('modal-delete-footer-success');
+      if (footerInit) footerInit.style.display = 'none';
+      if (footerSucc) {
+        footerSucc.style.display = 'flex';
+        const okBtn = document.getElementById('modal-delete-ok-btn');
+        if (okBtn) okBtn.focus();
       }
+      if (closeBtn) closeBtn.disabled = false;
+      this.showToast(`Capacitação Nº ${num} excluída com sucesso.`);
     } catch (err) {
       console.error('Erro ao excluir capacitação:', err);
       this.showToast(`Erro ao excluir: ${err.message}`, 'error');

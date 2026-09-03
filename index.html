@@ -85,7 +85,7 @@
           <span>Motor de Relatórios Ativo</span>
         </div>
         <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem; font-family:monospace; text-align:center;">
-          v.2.7.4
+          v.2.7.5
         </div>
       </div>
     </aside>
@@ -1470,7 +1470,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.7.4</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.7.5</span>
         </div>
       </footer>
     </div>
@@ -1675,11 +1675,14 @@
         </div>
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" id="modal-delete-footer-initial">
         <button class="btn btn-secondary" id="modal-delete-cancel-btn" onclick="app.closeConfirmDeleteModal()">Cancelar</button>
         <button class="btn btn-danger" id="modal-delete-confirm-btn" onclick="app.executeDeleteTrainingConfirmed()">
           Sim, Excluir Relatório
         </button>
+      </div>
+      <div class="modal-footer" id="modal-delete-footer-success" style="display:none; justify-content:center;">
+        <button class="btn btn-primary" id="modal-delete-ok-btn" onclick="app.closeConfirmDeleteModal()" style="padding:0.55rem 2.5rem; font-weight:700;">OK</button>
       </div>
     </div>
   </div>
@@ -2513,18 +2516,46 @@
   <!-- ==========================================
        SCRIPTS DA APLICAÇÃO
        ========================================== -->
-  <!-- Modal de Confirmação In-Page (Sem Pop-up Nativo) -->
+  <!-- Modal de Confirmação In-Page com Barra de Carregamento e Confirmação de Sucesso -->
   <div id="app-confirm-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:99999; backdrop-filter:blur(4px); align-items:center; justify-content:center; animation:fadeIn 0.2s ease;">
-    <div style="background:var(--bg-card, #1e293b); border:1px solid rgba(244, 63, 94, 0.35); border-radius:14px; padding:1.75rem; max-width:440px; width:92%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.7); text-align:center;">
-      <div style="width:48px; height:48px; border-radius:50%; background:rgba(244, 63, 94, 0.15); color:var(--accent-rose-text, #f43f5e); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    <div id="app-confirm-modal-card" style="background:var(--bg-card, #1e293b); border:1px solid rgba(244, 63, 94, 0.35); border-radius:14px; padding:1.75rem; max-width:440px; width:92%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.7); text-align:center; transition:all 0.3s ease;">
+      
+      <!-- Ícone Dinâmico (Alerta / Carregando / Sucesso) -->
+      <div id="app-confirm-modal-icon-container" style="width:52px; height:52px; border-radius:50%; background:rgba(244, 63, 94, 0.15); color:var(--accent-rose-text, #f43f5e); display:flex; align-items:center; justify-content:center; margin:0 auto 1.15rem; transition:all 0.3s ease;">
+        <div id="app-confirm-modal-icon-alert" style="display:flex; align-items:center; justify-content:center;">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        <div id="app-confirm-modal-icon-loading" style="display:none; align-items:center; justify-content:center;">
+          <svg style="animation:spin 1s linear infinite;" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>
+        </div>
+        <div id="app-confirm-modal-icon-success" style="display:none; align-items:center; justify-content:center; color:#10b981;">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
       </div>
-      <h3 id="app-confirm-modal-title" style="margin:0 0 0.5rem 0; font-size:1.15rem; color:var(--text-primary);">Confirmar Remoção</h3>
-      <p id="app-confirm-modal-msg" style="margin:0 0 1.5rem 0; font-size:0.9rem; color:var(--text-secondary); line-height:1.5;">Tem certeza que deseja remover este arquivo e limpar os dados?</p>
-      <div style="display:flex; justify-content:center; gap:0.75rem;">
-        <button type="button" class="btn btn-secondary" onclick="app.closeConfirmModal()" style="padding:0.5rem 1.25rem; font-weight:600;">Cancelar</button>
-        <button type="button" class="btn text-white" id="app-confirm-modal-btn-action" onclick="app.executeConfirmModalAction()" style="background:#e11d48; color:#ffffff !important; padding:0.5rem 1.25rem; font-weight:700; border:none; border-radius:var(--radius-md);">Sim, Remover</button>
+
+      <!-- Título e Mensagem -->
+      <h3 id="app-confirm-modal-title" style="margin:0 0 0.5rem 0; font-size:1.15rem; color:var(--text-primary); font-weight:700;">Confirmar Remoção</h3>
+      <p id="app-confirm-modal-msg" style="margin:0 0 1.5rem 0; font-size:0.9rem; color:var(--text-secondary); line-height:1.5;">Tem certeza que deseja remover este item?</p>
+
+      <!-- Barra de Carregamento (Exibida durante a exclusão) -->
+      <div id="app-confirm-modal-progress-container" style="display:none; margin:0 auto 1.5rem auto; width:100%; max-width:320px;">
+        <div style="height:8px; width:100%; background:rgba(148, 163, 184, 0.2); border-radius:999px; overflow:hidden; position:relative;">
+          <div id="app-confirm-modal-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #e11d48, #f43f5e, #10b981); border-radius:999px; transition:width 0.65s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+        </div>
+        <div id="app-confirm-modal-progress-text" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; font-weight:600;">Removendo...</div>
       </div>
+
+      <!-- Botões de Ação Inicial (Cancelar e Sim, Remover) -->
+      <div id="app-confirm-modal-actions-initial" style="display:flex; justify-content:center; gap:0.75rem;">
+        <button type="button" class="btn btn-secondary" onclick="app.closeConfirmModal()" style="padding:0.55rem 1.25rem; font-weight:600;">Cancelar</button>
+        <button type="button" class="btn text-white" id="app-confirm-modal-btn-action" onclick="app.executeConfirmModalAction()" style="background:#e11d48; color:#ffffff !important; padding:0.55rem 1.35rem; font-weight:700; border:none; border-radius:var(--radius-md); box-shadow:0 4px 12px rgba(225, 29, 72, 0.35);">Sim, Remover</button>
+      </div>
+
+      <!-- Botão de Sucesso Final (OK para sair da janela) -->
+      <div id="app-confirm-modal-actions-success" style="display:none; justify-content:center;">
+        <button type="button" class="btn btn-primary" id="app-confirm-modal-btn-ok" onclick="app.closeConfirmModal()" style="padding:0.55rem 2.5rem; font-weight:700; font-size:0.95rem; border-radius:var(--radius-md); box-shadow:0 4px 14px rgba(99, 102, 241, 0.35);">OK</button>
+      </div>
+
     </div>
   </div>
 

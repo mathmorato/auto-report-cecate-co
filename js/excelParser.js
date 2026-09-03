@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.2.7.4
+ * AutoReport CECATE - Parser Especializado de Planilhas Excel (.xlsx/.xls)
+ * Versão: v.2.7.5
  */
 
 class ExcelParser {

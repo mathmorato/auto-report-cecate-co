@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Modelos e Templates Modulares Padrão
- * Versão: v.2.7.4
+ * AutoReport CECATE - Modelos de Estrutura de Curso & Módulos
+ * Versão: v.2.7.5
  */
 
 const REPORT_TEMPLATES = [

@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Modelo Padrão Oficial e Estrutura do Curso
- * Versão: v.2.7.4
+ * AutoReport CECATE - Estrutura dos Cursos e Módulos Formativos (Gestores e CACS)
+ * Versão: v.2.7.5
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
