@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.5.5
+ * Versão: v.2.5.6
  */
 
 window.icons = {
@@ -2346,11 +2346,41 @@ class AutoReportApp {
      ALERTA DE SEGURANÇA E SALVAMENTO AO NAVEGAR PARA ESTRUTURA DO CURSO
      -------------------------------------------------------------------------- */
   promptNavigateToCourseStructure() {
-    const modal = document.getElementById('modal-confirm-navigate-structure');
-    if (!modal) {
-      this.navigateTo('course-structure');
+    if (!this.currentTraining || !Array.isArray(this.currentTraining.courseModules) || this.currentTraining.courseModules.length === 0) {
+      this.showToast('Nenhuma estrutura de curso selecionada no momento. Por favor, clique em "Selecionar Estrutura" para escolher uma.', 'warning');
+      this.openSelectCourseTemplateModal();
       return;
     }
+
+    // Identificar a estrutura de curso atualmente selecionada para esta capacitação
+    let selectedTpl = null;
+    if (window.courseStructureHelper) {
+      const list = window.courseStructureHelper.getTemplatesList();
+      if (this.currentTraining.baseTemplateId) {
+        selectedTpl = list.find(t => t.id === this.currentTraining.baseTemplateId);
+      }
+      if (!selectedTpl && this.currentTraining.baseTemplateName && this.currentTraining.baseTemplateName !== 'Nenhuma selecionada') {
+        selectedTpl = list.find(t => t.name.toLowerCase() === this.currentTraining.baseTemplateName.toLowerCase());
+      }
+      if (!selectedTpl) {
+        selectedTpl = window.courseStructureHelper.getDefaultTemplate();
+      }
+    }
+
+    const tplName = selectedTpl ? selectedTpl.name : (this.currentTraining.baseTemplateName || 'Modelo Padrão');
+    this.targetTemplateIdForEdit = selectedTpl ? selectedTpl.id : 'template_default_official';
+
+    const modal = document.getElementById('modal-confirm-navigate-structure');
+    if (!modal) {
+      this.proceedNavigateToCourseStructure();
+      return;
+    }
+
+    const descEl = document.getElementById('modal-nav-structure-desc');
+    if (descEl) {
+      descEl.innerHTML = `Você está prestes a sair do preenchimento desta capacitação para editar a estrutura <strong style="color:var(--accent-blue-text);">${tplName}</strong> na seção de Estrutura do Curso. Para evitar perda de dados, as informações desta capacitação serão salvas com segurança antes de prosseguir.`;
+    }
+
     const statusEl = document.getElementById('modal-nav-structure-status');
     const saveBtn = document.getElementById('modal-nav-structure-btn-save');
     const continueBtn = document.getElementById('modal-nav-structure-btn-continue');
@@ -2365,7 +2395,7 @@ class AutoReportApp {
       saveBtn.disabled = false;
       saveBtn.innerHTML = `
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-        <span id="modal-nav-structure-btn-save-text">Salvar Alterações</span>
+        <span id="modal-nav-structure-btn-save-text">Salvar e Prosseguir para Edição</span>
       `;
     }
     if (continueBtn) {
@@ -2421,16 +2451,16 @@ class AutoReportApp {
         await window.db.saveTrainingFull(this.currentTraining, 'Salvamento prévio antes de navegar para Estrutura do Curso');
       }
 
-      await new Promise(res => setTimeout(res, 600));
+      await new Promise(res => setTimeout(res, 500));
 
-      // 3. Exibir confirmação e liberar botão de continuar
+      // 3. Exibir confirmação e redirecionar
       if (statusEl) {
         statusEl.style.background = 'rgba(16, 185, 129, 0.18)';
         statusEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
         statusEl.style.color = '#34d399';
         statusEl.innerHTML = `
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <span>Dados salvos com sucesso! Você pode prosseguir com segurança.</span>
+          <span>Dados salvos! Redirecionando para a edição da estrutura selecionada...</span>
         `;
       }
 
@@ -2438,12 +2468,16 @@ class AutoReportApp {
         saveBtn.style.display = 'none';
       }
 
-      // SOMENTE DEPOIS APARECER O BOTÃO DE CONTINUAR
       if (continueBtn) {
         continueBtn.style.display = 'inline-flex';
       }
 
-      this.showToast('Dados salvos com segurança!', 'success');
+      this.showToast('Dados salvos com segurança! Abrindo edição...', 'success');
+
+      // Redirecionamento suave automático para a estrutura selecionada
+      setTimeout(() => {
+        this.proceedNavigateToCourseStructure();
+      }, 650);
     } catch (err) {
       console.error('Erro ao salvar dados antes de navegar para estrutura:', err);
       if (saveBtn) {
@@ -2465,10 +2499,18 @@ class AutoReportApp {
 
   proceedNavigateToCourseStructure() {
     this.closeNavigateStructureModal();
+    const targetId = this.targetTemplateIdForEdit || this.currentTraining?.baseTemplateId || 'template_default_official';
+    this.activeTemplateId = targetId;
     this.navigateTo('course-structure');
-    if (this.renderCourseTemplatesCatalog) this.renderCourseTemplatesCatalog();
-    if (this.renderGlobalMasterCourseStructure) this.renderGlobalMasterCourseStructure();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (this.selectCourseTemplateForEdit) {
+      this.selectCourseTemplateForEdit(targetId);
+    }
+    setTimeout(() => {
+      const editorWrapper = document.getElementById('course-template-editor-wrapper') || document.getElementById('active-template-editor-title');
+      if (editorWrapper) {
+        editorWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 150);
   }
 
   confirmClearCourseStructure() {
@@ -4757,6 +4799,7 @@ class AutoReportApp {
 
     // Gerar cópia profunda independente da estrutura selecionada
     this.currentTraining.courseModules = window.courseStructureHelper.makeDeepCopy(tpl.modules);
+    this.currentTraining.baseTemplateId = tpl.id;
     this.currentTraining.baseTemplateName = tpl.name;
     this.currentTraining.isCustomized = false;
 
