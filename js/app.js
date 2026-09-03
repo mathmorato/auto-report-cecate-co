@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.6.4
+ * Versão: v.2.6.5
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.6.4';
+    this.version = 'v.2.6.5';
   }
 
   /**
@@ -6645,6 +6645,17 @@ class AutoReportApp {
 
     const fndeDocs = (this.currentTraining.media || []).filter(m => m.type === 'doc_fnde');
     const cecateDocs = (this.currentTraining.media || []).filter(m => m.type === 'doc_cecate');
+
+    // Ocultar janelas de inserção quando já houver documentos anexados
+    const dropzoneFnde = document.getElementById('dropzone-appendix-fnde');
+    if (dropzoneFnde) {
+      dropzoneFnde.style.display = fndeDocs.length > 0 ? 'none' : 'block';
+    }
+
+    const dropzoneCecate = document.getElementById('dropzone-appendix-cecate');
+    if (dropzoneCecate) {
+      dropzoneCecate.style.display = cecateDocs.length > 0 ? 'none' : 'block';
+    }
 
     if (fndeContainer) {
       fndeContainer.innerHTML = fndeDocs.length === 0
