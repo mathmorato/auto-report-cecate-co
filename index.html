@@ -464,7 +464,7 @@
                     <p class="wizard-card-desc">Informações sincronizadas da Equipe Técnica oficial do CECATE/UFG e FNDE.</p>
                   </div>
                   <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.navigateTo('team')" title="Gerenciar cadastros centrais da Equipe Técnica">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="app.promptNavigateToTeam()" title="Gerenciar cadastros centrais da Equipe Técnica">
                       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar em Equipe Técnica
                     </button>
                   </div>
@@ -1483,7 +1483,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.4.1</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.4.2</span>
         </div>
       </footer>
     </div>
@@ -2419,6 +2419,38 @@
         <button type="button" class="btn btn-secondary btn-sm" onclick="app.closeCopyCourseStructureModal()">Cancelar</button>
         <button type="button" class="btn btn-primary btn-sm" onclick="app.confirmCopyCourseStructure()" style="font-weight:700;">
           Copiar Estrutura
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Alerta de Saída para Equipe Técnica -->
+  <div id="modal-confirm-navigate-team" class="modal-backdrop" style="display:none; align-items:center; justify-content:center; animation:fadeIn 0.2s ease;">
+    <div class="modal-card" style="max-width:500px; width:92%; text-align:center; padding:1.75rem;">
+      <div style="width:52px; height:52px; border-radius:50%; background:rgba(245, 158, 11, 0.15); color:var(--accent-amber, #f59e0b); display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem;">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <h3 style="margin:0 0 0.5rem 0; font-size:1.2rem; color:var(--text-primary); font-weight:700;">Atenção: Mudança de Tela</h3>
+      <p style="margin:0 0 1.25rem 0; font-size:0.92rem; color:var(--text-secondary); line-height:1.5;">
+        Você está prestes a sair do preenchimento desta capacitação para gerenciar a Equipe Técnica geral. Para evitar que alterações não salvas sejam perdidas, salve os dados antes de prosseguir.
+      </p>
+
+      <!-- Status de Salvamento Dinâmico -->
+      <div id="modal-nav-team-status" style="display:none; margin-bottom:1.25rem; padding:0.75rem 1rem; border-radius:var(--radius-md); font-size:0.88rem; font-weight:600;"></div>
+
+      <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" id="modal-nav-team-btn-cancel" onclick="app.closeNavigateTeamModal()">Cancelar</button>
+        
+        <!-- Botão Salvar com Rodela de Carregamento -->
+        <button type="button" class="btn btn-primary" id="modal-nav-team-btn-save" onclick="app.saveAndPrepareNavigateToTeam()" style="display:inline-flex; align-items:center; gap:0.5rem; font-weight:700;">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span id="modal-nav-team-btn-save-text">Salvar Alterações</span>
+        </button>
+
+        <!-- Botão Continuar: Aparece SOMENTE DEPOIS do salvamento concluído -->
+        <button type="button" class="btn" id="modal-nav-team-btn-continue" onclick="app.proceedNavigateToTeam()" style="display:none; align-items:center; gap:0.4rem; font-weight:700; background:var(--accent-success, #10b981); color:#fff; border:none; padding:0.5rem 1.25rem; border-radius:var(--radius-md);">
+          <span>Continuar para Equipe Técnica</span>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </div>
     </div>
