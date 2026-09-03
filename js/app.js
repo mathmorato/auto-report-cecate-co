@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.8.2
+ * Versão: v.2.8.3
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.8.2';
+    this.version = 'v.2.8.3';
   }
 
   /**
@@ -6889,9 +6889,9 @@ class AutoReportApp {
 
   renderAppendixItem(d) {
     return `
-      <div class="appendix-file-item" style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; background:var(--bg-surface); border:1px solid var(--border-color); padding:0.55rem 0.85rem; border-radius:var(--radius-sm); margin-top:0.4rem;">
-        <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0; flex:1;">
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;">
+      <div class="appendix-file-item" style="display:flex; flex-direction:column; gap:0.6rem; background:var(--bg-surface); border:1px solid var(--border-color); padding:0.75rem 0.9rem; border-radius:var(--radius-sm); margin-top:0.4rem;">
+        <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0; width:100%;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
           </svg>
@@ -6899,9 +6899,11 @@ class AutoReportApp {
             ${d.fileName}
           </span>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.25rem 0.6rem; font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem; flex-shrink:0;" title="Remover documento">
-          ${window.icons.delete} Remover
-        </button>
+        <div style="display:flex; justify-content:flex-end; width:100%; border-top:1px solid var(--border-color); padding-top:0.45rem;">
+          <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.confirmRemoveAppendix('${d.id}')" style="padding:0.25rem 0.65rem; font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem;" title="Remover documento">
+            ${window.icons.delete} Remover
+          </button>
+        </div>
       </div>
     `;
   }
