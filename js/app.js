@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.9
+ * Versão: v.2.8.0
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.9';
+    this.version = 'v.2.8.0';
   }
 
   /**
@@ -1565,7 +1565,7 @@ class AutoReportApp {
 
     try {
       this.saveCurrentStepData();
-      await window.db.put('trainings', this.currentTraining);
+      await window.db.saveTrainingFull(this.currentTraining, 'Salvamento manual do usuário');
       await new Promise(r => setTimeout(r, 300));
 
       if (saveBtn) {
@@ -3712,6 +3712,21 @@ class AutoReportApp {
     if (Array.isArray(this.currentTraining.courseModules) && this.currentTraining.courseModules.length > 0) {
       if (window.courseStructureHelper) {
         this.currentTraining.courseModules = window.courseStructureHelper.normalize(this.currentTraining.courseModules);
+      }
+
+      // Autocorreção preventiva: se os módulos foram carregados com tópicos e horas zerados devido à falha anterior de persistência
+      const isCorruptedEmpty = this.currentTraining.courseModules.every(m => {
+        const gEmpty = !m.topicGestor && (!m.gestorTopics || m.gestorTopics.every(t => !t.topic || (parseFloat(t.hours) || 0) === 0));
+        const cEmpty = !m.topicCACS && (!m.cacsTopics || m.cacsTopics.every(t => !t.topic || (parseFloat(t.hours) || 0) === 0));
+        return gEmpty && cEmpty;
+      });
+
+      if (isCorruptedEmpty && window.courseStructureHelper) {
+        const tpl = (this.currentTraining.baseTemplateId ? window.courseStructureHelper.getTemplateById(this.currentTraining.baseTemplateId) : null) || window.courseStructureHelper.getDefaultTemplate();
+        if (tpl && tpl.modules && tpl.modules.length > 0) {
+          this.currentTraining.courseModules = window.courseStructureHelper.makeDeepCopy(tpl.modules);
+          this.currentTraining.baseTemplateName = tpl.name;
+        }
       }
     } else {
       this.currentTraining.courseModules = [];
@@ -6685,13 +6700,31 @@ class AutoReportApp {
 
     slots.forEach(slot => {
       let photo = photos.find(p => p.slotId === slot.slotId);
+
+      // Fallback 1: se slotId tiver sufixo de dia
       if (!photo && slot.slotId.includes('_day_')) {
         const dayPart = slot.slotId.split('_day_')[1];
         photo = photos.find(p => p.slotId && p.slotId.endsWith(`_day_${dayPart}`));
-        if (photo) {
-          photo.slotId = slot.slotId;
-          photo.caption = slot.defaultCaption;
-        }
+      }
+
+      // Fallback 2: se photo não tem slotId correspondente, tenta recuperar por caption
+      if (!photo) {
+        photo = photos.find(p => {
+          if (!p.caption) return false;
+          const cap = p.caption.toLowerCase();
+          if (slot.slotId === 'fig_9' && (cap.includes('figura 9') || cap.includes('acomodação') || cap.includes('acomodacao'))) return true;
+          if (slot.slotId === 'fig_10' && (cap.includes('figura 10') || cap.includes('apresentação inicial') || cap.includes('apresentacao inicial'))) return true;
+          if (slot.slotId === 'fig_11' && (cap.includes('figura 11') || cap.includes('módulos teóricos') || cap.includes('modulos teoricos'))) return true;
+          if (slot.slotId.includes('_day_1') && (cap.includes('1º dia') || cap.includes('1° dia') || cap.includes('1 dia') || cap.includes('figura 12'))) return true;
+          if (slot.slotId.includes('_day_2') && (cap.includes('2º dia') || cap.includes('2° dia') || cap.includes('2 dia') || cap.includes('figura 13'))) return true;
+          if (slot.slotId.includes('_day_3') && (cap.includes('3º dia') || cap.includes('3° dia') || cap.includes('3 dia') || cap.includes('figura 14'))) return true;
+          return false;
+        });
+      }
+
+      if (photo) {
+        photo.slotId = slot.slotId;
+        if (!photo.caption) photo.caption = slot.defaultCaption;
       }
 
       if (photo) {

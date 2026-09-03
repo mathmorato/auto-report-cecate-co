@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerenciador de Banco de Dados Local (IndexedDB)
- * Versão: v.2.7.9
+ * Versão: v.2.8.0
  */
 
 class TrainingDB {
@@ -224,6 +224,10 @@ class TrainingDB {
 
     return {
       ...training,
+      registrations: Array.isArray(training.registrations) ? training.registrations : [],
+      baseTemplateId: training.baseTemplateId || null,
+      baseTemplateName: training.baseTemplateName || '',
+      isCustomized: training.isCustomized === true,
       team: team.sort((a, b) => (a.order || 0) - (b.order || 0)),
       municipalities: municipalities.sort((a, b) => (a.name || '').localeCompare(b.name || '')),
       courseModules: courseModules.sort((a, b) => (a.order || 0) - (b.order || 0)),
@@ -259,6 +263,13 @@ class TrainingDB {
       partnerOrgs: data.partnerOrgs || '',
       locationVenue: data.locationVenue || '',
       locationAddress: data.locationAddress || '',
+      attachedFileName: data.attachedFileName || '',
+      baseTemplateId: data.baseTemplateId || null,
+      baseTemplateName: data.baseTemplateName || '',
+      isCustomized: data.isCustomized === true,
+      durationDays: data.durationDays || null,
+      isHistorical: data.isHistorical === true,
+      registrations: Array.isArray(data.registrations) ? data.registrations : [],
       contactsData: data.contactsData || {
         startDate: '',
         methods: '',
@@ -323,10 +334,13 @@ class TrainingDB {
           id: mod.id || `mod_${trainingId}_${idx}`,
           trainingId,
           moduleNumber: mod.moduleNumber || `0${idx + 1}`,
-          topicGestor: mod.topicGestor || '',
-          topicCACS: mod.topicCACS || '',
-          hoursGestor: parseFloat(mod.hoursGestor) || 0,
-          hoursCACS: parseFloat(mod.hoursCACS) || 0,
+          isShared: mod.isShared !== undefined ? mod.isShared : true,
+          topicGestor: mod.topicGestor || (Array.isArray(mod.gestorTopics) && mod.gestorTopics[0] ? mod.gestorTopics[0].topic : ''),
+          topicCACS: mod.topicCACS || (Array.isArray(mod.cacsTopics) && mod.cacsTopics[0] ? mod.cacsTopics[0].topic : ''),
+          hoursGestor: parseFloat(mod.hoursGestor) || (Array.isArray(mod.gestorTopics) ? mod.gestorTopics.reduce((acc, t) => acc + (parseFloat(t.hours) || 0), 0) : 0),
+          hoursCACS: parseFloat(mod.hoursCACS) || (Array.isArray(mod.cacsTopics) ? mod.cacsTopics.reduce((acc, t) => acc + (parseFloat(t.hours) || 0), 0) : 0),
+          gestorTopics: Array.isArray(mod.gestorTopics) && mod.gestorTopics.length > 0 ? mod.gestorTopics : (mod.topicGestor ? [{ id: `top_g_${Date.now()}_${idx}_0`, topic: mod.topicGestor, hours: parseFloat(mod.hoursGestor) || 0 }] : []),
+          cacsTopics: Array.isArray(mod.cacsTopics) && mod.cacsTopics.length > 0 ? mod.cacsTopics : (mod.topicCACS ? [{ id: `top_c_${Date.now()}_${idx}_0`, topic: mod.topicCACS, hours: parseFloat(mod.hoursCACS) || 0 }] : []),
           description: mod.description || '',
           order: mod.order !== undefined ? mod.order : idx
         });
@@ -369,6 +383,10 @@ class TrainingDB {
           successCase: att.successCase || '',
           isEnrolled: att.isEnrolled !== false,
           isPresent: att.isPresent !== false,
+          isManualMunicipality: att.isManualMunicipality === true,
+          isManualRepresentation: att.isManualRepresentation === true,
+          matchedByCpf: att.matchedByCpf === true,
+          isCpfValidated: att.isCpfValidated === true,
           source: att.source || 'excel'
         });
       }
@@ -405,6 +423,7 @@ class TrainingDB {
         await this.put('media', {
           id: med.id || `med_${trainingId}_${idx}`,
           trainingId,
+          slotId: med.slotId || '',
           type: med.type || 'photo',
           blob: med.blob || med.dataUrl || '',
           caption: med.caption || `Figura ${idx + 1}`,
@@ -412,7 +431,9 @@ class TrainingDB {
           section: med.section || '6. REGISTROS FOTOGRÁFICOS',
           description: med.description || '',
           source: med.source || 'Arquivo CECATE Centro-Oeste',
-          fileName: med.fileName || `foto_${idx + 1}.jpg`
+          fileName: med.fileName || `foto_${idx + 1}.jpg`,
+          fileSize: med.fileSize || 0,
+          fileType: med.fileType || ''
         });
       }
     }
