@@ -50,7 +50,7 @@ O objetivo é reproduzir e preservar o padrão visual e estrutural estabelecido 
 
 Antes de realizar alterações visuais, analisar a implementação existente no projeto de referência e utilizar seus padrões como base.
 
-## 2.2 Tema visual
+## 2.2 Tema visual e validação obrigatória (Modo Escuro e Claro)
 
 A aplicação deverá:
 
@@ -74,6 +74,15 @@ A aplicação deverá:
 Evitar alterações visuais que descaracterizem o projeto.
 
 Não criar uma nova identidade visual quando já existir uma solução equivalente no projeto de referência.
+
+### Validação Obrigatória em Modo Escuro e Modo Claro (Dark & Light Mode)
+
+Sempre que for realizada qualquer alteração de design, layout, componente visual, modal, botão, texto, tabela ou formulário:
+
+* **É obrigatório validar a visualização e legibilidade tanto no modo escuro (*dark mode*) quanto no modo claro (*light mode*)**.
+* Garantir alto contraste e perfeita legibilidade dos textos, botões e elementos interativos em ambos os modos.
+* Evitar fundos transparentes acidentais que comprometam a legibilidade de textos sobre o plano de fundo em qualquer um dos temas.
+* Assegurar que botões secundários, primários e de destaque mantenham nitidez e distinção visual imediata tanto no tema claro quanto no escuro.
 
 ## 2.3 Logos e assets
 
@@ -212,14 +221,15 @@ Executar automaticamente:
 1. Verificar se a aplicação continua funcionando.
 2. Executar os testes disponíveis.
 3. Executar validações técnicas apropriadas.
-4. Verificar os componentes modificados.
-5. Verificar a versão exibida no rodapé.
-6. Verificar se os assets estão sendo utilizados corretamente.
-7. Verificar se não foram introduzidas alterações desnecessárias.
-8. Corrigir automaticamente problemas encontrados.
-9. Verificar o estado do Git.
-10. Criar o commit.
-11. Enviar o commit para o GitHub.
+4. Validar a visualização e o contraste da interface tanto no **modo escuro** quanto no **modo claro** sempre que houver qualquer alteração de design, layout ou elementos de UI.
+5. Verificar os componentes modificados.
+6. Verificar a versão exibida no rodapé.
+7. Verificar se os assets estão sendo utilizados corretamente.
+8. Verificar se não foram introduzidas alterações desnecessárias.
+9. Corrigir automaticamente problemas encontrados.
+10. Verificar o estado do Git.
+11. Criar o commit.
+12. Enviar o commit para o GitHub.
 
 Não solicitar autorização para nenhuma dessas etapas.
 
@@ -367,7 +377,8 @@ Uma tarefa somente deverá ser considerada concluída quando:
 * A solicitação estiver implementada.
 * A aplicação estiver funcionando.
 * O padrão visual do projeto de referência tiver sido respeitado.
-* O tema dark tiver sido preservado.
+* A visualização e contraste tiverem sido validados tanto no **modo escuro** quanto no **modo claro** (para qualquer alteração de design, layout ou UI).
+* O tema dark tiver sido preservado como padrão.
 * O padrão de ícones de linha (line icons) tiver sido respeitado.
 * As logos existentes em `assets` tiverem sido utilizadas corretamente.
 * A versão tiver sido incrementada corretamente.
