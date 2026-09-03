@@ -622,6 +622,94 @@ body.light-theme .btn-secondary:hover {
   outline: none;
 }
 
+select.form-control,
+select {
+  cursor: pointer;
+}
+
+/* Garantia de alto contraste para options de selects em dark e light mode */
+select option {
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 6px 10px;
+}
+
+body.light-theme select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+/* Controles de seleção da tabela de participantes */
+.participant-table-select {
+  width: auto;
+  max-width: 100%;
+  font-size: 0.82rem;
+  padding: 0.28rem 0.5rem;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border-color, #334155);
+  background-color: var(--bg-card, #1e293b);
+  color: var(--text-primary, #f8fafc);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.participant-table-select option {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  font-weight: 500;
+  padding: 6px 10px;
+}
+
+/* Destaque âmbar elegante para campos não selecionados */
+.participant-table-select.unmapped {
+  border: 1.5px solid #f59e0b !important;
+  background-color: rgba(245, 158, 11, 0.14) !important;
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+}
+
+.participant-table-select.unmapped option {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+}
+
+.participant-table-select.unmapped option[value=""] {
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+  background-color: #0f172a !important;
+}
+
+/* Suporte completo ao Light Theme */
+body.light-theme .participant-table-select {
+  border-color: #cbd5e1;
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+body.light-theme .participant-table-select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+body.light-theme .participant-table-select.unmapped {
+  border: 1.5px solid #d97706 !important;
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+}
+
+body.light-theme .participant-table-select.unmapped option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+body.light-theme .participant-table-select.unmapped option[value=""] {
+  color: #b45309 !important;
+  font-weight: 700 !important;
+  background-color: #fef3c7 !important;
+}
+
 .form-control:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);

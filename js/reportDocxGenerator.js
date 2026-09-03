@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatórios Técnicos DOCX
- * Versão: v.2.6.1
+ * Versão: v.2.6.2
  */
 
 class ReportDocxGenerator {

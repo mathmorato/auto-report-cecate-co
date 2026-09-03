@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.6.1
+ * Versão: v.2.6.2
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.6.1';
+    this.version = 'v.2.6.2';
   }
 
   /**
@@ -5970,7 +5970,7 @@ class AutoReportApp {
       }
 
       const munTd = isEditable ? `
-        <select class="form-control form-control-sm" style="font-size:0.82rem; padding:0.25rem 0.45rem; min-width:145px; ${isUnmappedMun ? 'border-color:var(--accent-amber); background:rgba(245, 158, 11, 0.12); font-weight:700; color:var(--accent-amber-text);' : ''}" onchange="app.updateParticipantField('${p.id}', 'municipality', this.value)">
+        <select class="participant-table-select ${isUnmappedMun ? 'unmapped' : ''}" style="min-width:150px;" onchange="app.updateParticipantField('${p.id}', 'municipality', this.value)">
           <option value="">-- Selecionar Município --</option>
           ${invitedMunOptions.map(m => `<option value="${m}" ${p.municipality && p.municipality.toLowerCase() === m.toLowerCase() ? 'selected' : ''}>${m}</option>`).join('')}
         </select>
@@ -5980,7 +5980,7 @@ class AutoReportApp {
       `;
 
       const repTd = isEditable ? `
-        <select class="form-control form-control-sm" style="font-size:0.82rem; padding:0.25rem 0.45rem; min-width:155px; ${isUnmappedVinculo ? 'border-color:var(--accent-amber); background:rgba(245, 158, 11, 0.12); font-weight:700; color:var(--accent-amber-text);' : ''}" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
+        <select class="participant-table-select ${isUnmappedVinculo ? 'unmapped' : ''}" style="min-width:160px;" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
           <option value="" ${!p.representation ? 'selected' : ''}>-- Selecionar Vínculo --</option>
           <option value="Gestão municipal" ${p.representation === 'Gestão municipal' ? 'selected' : ''}>Gestão municipal</option>
           <option value="CACS-FUNDEB" ${p.representation === 'CACS-FUNDEB' ? 'selected' : ''}>CACS-FUNDEB</option>
