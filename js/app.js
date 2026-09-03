@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.5.7
+ * Versão: v.2.5.8
  */
 
 window.icons = {
@@ -5749,6 +5749,20 @@ class AutoReportApp {
     return Array.from(names).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }
 
+  getAttendanceSortIcon(field) {
+    if (this.attendanceSortCol !== field) {
+      // Ícone neutro de ordenação (linhas de classificação sutis)
+      return `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4;"><path d="M7 15l5 5 5-5"></path><path d="M7 9l5-5 5 5"></path></svg>`;
+    }
+    if (this.attendanceSortDir === 'asc') {
+      // Crescente: linhas ordenadas com seta para cima
+      return `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#f59e0b;"><line x1="3" y1="6" x2="11" y2="6"></line><line x1="3" y1="12" x2="9" y2="12"></line><line x1="3" y1="18" x2="7" y2="18"></line><polyline points="15 9 18 6 21 9"></polyline><line x1="18" y1="6" x2="18" y2="18"></line></svg>`;
+    } else {
+      // Decrescente: linhas ordenadas com seta para baixo
+      return `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#f59e0b;"><line x1="3" y1="6" x2="11" y2="6"></line><line x1="3" y1="12" x2="9" y2="12"></line><line x1="3" y1="18" x2="7" y2="18"></line><polyline points="15 15 18 18 21 15"></polyline><line x1="18" y1="6" x2="18" y2="18"></line></svg>`;
+    }
+  }
+
   sortAttendanceTable(colName) {
     if (this.attendanceSortCol === colName) {
       this.attendanceSortDir = this.attendanceSortDir === 'asc' ? 'desc' : 'asc';
@@ -5776,12 +5790,9 @@ class AutoReportApp {
       } else if (col === 'municipality') {
         valA = a.municipality || 'zzzz';
         valB = b.municipality || 'zzzz';
-      } else if (col === 'representation') {
-        valA = a.representation || '';
-        valB = b.representation || '';
-      } else if (col === 'role') {
-        valA = a.roleGestao || a.roleCACS || '';
-        valB = b.roleGestao || b.roleCACS || '';
+      } else if (col === 'role' || col === 'representation') {
+        valA = a.role || a.roleGestao || a.roleCACS || a.representation || '';
+        valB = b.role || b.roleGestao || b.roleCACS || b.representation || '';
       }
 
       return valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' });
@@ -5814,11 +5825,16 @@ class AutoReportApp {
     } else if (field === 'representation') {
       participant.representation = val;
     } else if (field === 'role') {
-      if (participant.representation === 'CACS-FUNDEB') {
+      const isCacs = val.toUpperCase().includes('CACS') || val.toUpperCase().includes('CONSELH');
+      participant.representation = isCacs ? 'CACS-FUNDEB' : 'Gestão municipal';
+      if (isCacs) {
         participant.roleCACS = val;
+        participant.roleGestao = '';
       } else {
         participant.roleGestao = val;
+        participant.roleCACS = '';
       }
+      participant.role = val;
     }
 
     // Se possui CPF, sincronizar no registro da outra planilha caso exista
@@ -5833,8 +5849,16 @@ class AutoReportApp {
             if (field === 'municipality') item.municipality = val;
             if (field === 'representation') item.representation = val;
             if (field === 'role') {
-              if (item.representation === 'CACS-FUNDEB') item.roleCACS = val;
-              else item.roleGestao = val;
+              const isCacs = val.toUpperCase().includes('CACS') || val.toUpperCase().includes('CONSELH');
+              item.representation = isCacs ? 'CACS-FUNDEB' : 'Gestão municipal';
+              if (isCacs) {
+                item.roleCACS = val;
+                item.roleGestao = '';
+              } else {
+                item.roleGestao = val;
+                item.roleCACS = '';
+              }
+              item.role = val;
             }
           }
         });
@@ -5856,6 +5880,29 @@ class AutoReportApp {
 
     const regList = this.currentTraining.registrations || [];
     const attList = this.currentTraining.attendance || [];
+
+    const hasReg = regList.length > 0;
+    const hasAtt = attList.length > 0;
+
+    // Controlar visibilidade das dropzones de upload (desaparecem ao fazer upload e só voltam se limpar)
+    const dropzoneContainer = document.getElementById('wizard-step6-dropzones-container');
+    const dropzoneReg = document.getElementById('dropzone-registration');
+    const dropzoneAtt = document.getElementById('dropzone-attendance');
+
+    if (dropzoneReg) dropzoneReg.style.display = hasReg ? 'none' : 'block';
+    if (dropzoneAtt) dropzoneAtt.style.display = hasAtt ? 'none' : 'block';
+
+    if (dropzoneContainer) {
+      if (hasReg && hasAtt) {
+        dropzoneContainer.style.display = 'none';
+      } else if (hasReg || hasAtt) {
+        dropzoneContainer.style.display = 'grid';
+        dropzoneContainer.style.gridTemplateColumns = '1fr';
+      } else {
+        dropzoneContainer.style.display = 'grid';
+        dropzoneContainer.style.gridTemplateColumns = '1fr 1fr';
+      }
+    }
 
     const regCacs = regList.filter(r => r.representation === 'CACS-FUNDEB').length;
     const regGestores = regList.filter(r => r.representation !== 'CACS-FUNDEB').length;
@@ -5904,10 +5951,6 @@ class AutoReportApp {
 
     const sortCol = this.attendanceSortCol || 'name';
     const sortDir = this.attendanceSortDir || 'asc';
-    const sortIcon = (col) => {
-      if (sortCol === col) return sortDir === 'asc' ? ' ▲' : ' ▼';
-      return ' ↕';
-    };
 
     const invitedMunOptions = this.getInvitedMunicipalityOptions();
     const consolidatedList = this.getConsolidatedParticipantsList();
@@ -5918,6 +5961,7 @@ class AutoReportApp {
       // PERMITIR EDIÇÃO APENAS PARA PARTICIPANTES NO STATUS 'Apenas Presente'
       const isEditable = p.status === 'Apenas Presente';
       const isUnmapped = !p.municipality;
+      const currentRole = p.role || p.roleGestao || p.roleCACS || (p.representation === 'CACS-FUNDEB' ? 'Conselheiro(a) CACS-FUNDEB' : 'Gestor(a) Municipal');
 
       let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Inscrito e Presente</span>`;
       if (p.status === 'Apenas Inscrito') {
@@ -5936,13 +5980,29 @@ class AutoReportApp {
         ${p.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.25rem; padding:0.1rem 0.3rem; display:inline-flex; align-items:center; gap:0.2rem;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>CPF Conciliado</span>' : ''}
       `;
 
-      const repTd = isEditable ? `
-        <select class="form-control form-control-sm" style="font-size:0.78rem; padding:0.2rem 0.4rem; min-width:130px;" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
-          <option value="Gestão municipal" ${p.representation === 'Gestão municipal' ? 'selected' : ''}>Gestão municipal</option>
-          <option value="CACS-FUNDEB" ${p.representation === 'CACS-FUNDEB' ? 'selected' : ''}>CACS-FUNDEB</option>
+      const roleTd = isEditable ? `
+        <select class="form-control form-control-sm" style="font-size:0.78rem; padding:0.2rem 0.4rem; min-width:175px;" onchange="app.updateParticipantField('${p.id}', 'role', this.value)">
+          <optgroup label="Gestão Municipal">
+            <option value="Gestor(a) Municipal" ${currentRole === 'Gestor(a) Municipal' || currentRole === 'Gestão municipal' ? 'selected' : ''}>Gestor(a) Municipal</option>
+            <option value="Secretário(a) de Educação" ${currentRole === 'Secretário(a) de Educação' ? 'selected' : ''}>Secretário(a) de Educação</option>
+            <option value="Dirigente Municipal" ${currentRole === 'Dirigente Municipal' ? 'selected' : ''}>Dirigente Municipal</option>
+            <option value="Técnico(a) de Transporte Escolar" ${currentRole === 'Técnico(a) de Transporte Escolar' ? 'selected' : ''}>Técnico(a) de Transporte Escolar</option>
+            <option value="Operador(a) do SETE" ${currentRole === 'Operador(a) do SETE' ? 'selected' : ''}>Operador(a) do SETE</option>
+            <option value="Motorista" ${currentRole === 'Motorista' ? 'selected' : ''}>Motorista</option>
+            <option value="Outro cargo (Gestão)" ${currentRole === 'Outro cargo (Gestão)' ? 'selected' : ''}>Outro cargo (Gestão)</option>
+          </optgroup>
+          <optgroup label="CACS-FUNDEB">
+            <option value="Conselheiro(a) CACS-FUNDEB" ${currentRole === 'Conselheiro(a) CACS-FUNDEB' || currentRole === 'CACS-FUNDEB' ? 'selected' : ''}>Conselheiro(a) CACS-FUNDEB</option>
+            <option value="Presidente do CACS-FUNDEB" ${currentRole === 'Presidente do CACS-FUNDEB' ? 'selected' : ''}>Presidente do CACS-FUNDEB</option>
+            <option value="Vice-Presidente do CACS-FUNDEB" ${currentRole === 'Vice-Presidente do CACS-FUNDEB' ? 'selected' : ''}>Vice-Presidente do CACS-FUNDEB</option>
+            <option value="Conselheiro(a) Suplente CACS" ${currentRole === 'Conselheiro(a) Suplente CACS' ? 'selected' : ''}>Conselheiro(a) Suplente CACS</option>
+            <option value="Outro cargo (CACS)" ${currentRole === 'Outro cargo (CACS)' ? 'selected' : ''}>Outro cargo (CACS)</option>
+          </optgroup>
         </select>
       ` : `
-        <span class="nav-badge" style="background:rgba(59, 130, 246, 0.15); color:var(--accent-blue-text); font-size:0.78rem;">${p.representation}</span>
+        <span class="nav-badge ${p.representation === 'CACS-FUNDEB' ? 'badge-emerald' : 'badge-blue'}" style="font-size:0.78rem; font-weight:600; white-space:nowrap;" title="${p.representation}">
+          ${currentRole}
+        </span>
       `;
 
       return `
@@ -5951,7 +6011,7 @@ class AutoReportApp {
           <td style="font-family:monospace; vertical-align:middle;">${p.cpf || '-'}</td>
           <td style="vertical-align:middle;">${statusBadge}</td>
           <td style="vertical-align:middle;">${munTd}</td>
-          <td style="vertical-align:middle;">${repTd}</td>
+          <td style="vertical-align:middle;">${roleTd}</td>
         </tr>
       `;
     };
@@ -5964,17 +6024,42 @@ class AutoReportApp {
         attContainer.innerHTML = `
           <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
             <span>Exibindo <strong>${consolidatedList.length}</strong> participantes total (Inscritos: <strong>${regList.length}</strong> | Presentes: <strong>${attList.length}</strong>):</span>
-            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e segmento ativada exclusivamente para participantes no status "Apenas Presente".</span>
+            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e cargo ativada exclusivamente para participantes no status "Apenas Presente".</span>
           </div>
           <div class="table-responsive-wrapper" style="max-height:420px;">
             <table class="report-data-table">
               <thead>
                 <tr>
-                  <th onclick="app.sortAttendanceTable('name')" style="cursor:pointer; user-select:none;" title="Ordenar por Nome">Nome Completo ${sortIcon('name')}</th>
-                  <th onclick="app.sortAttendanceTable('cpf')" style="cursor:pointer; user-select:none;" title="Ordenar por CPF">CPF ${sortIcon('cpf')}</th>
-                  <th onclick="app.sortAttendanceTable('status')" style="cursor:pointer; user-select:none;" title="Ordenar por Status">Status de Participação ${sortIcon('status')}</th>
-                  <th onclick="app.sortAttendanceTable('municipality')" style="cursor:pointer; user-select:none;" title="Ordenar por Município">Município ${sortIcon('municipality')}</th>
-                  <th onclick="app.sortAttendanceTable('representation')" style="cursor:pointer; user-select:none;" title="Ordenar por Segmento">Segmento ${sortIcon('representation')}</th>
+                  <th class="th-sortable" onclick="app.sortAttendanceTable('name')" style="cursor:pointer; user-select:none;" title="Clique para classificar por Nome">
+                    <div style="display:inline-flex; align-items:center; gap:0.45rem;">
+                      <span>Nome Completo</span>
+                      <span class="sort-icon-badge">${this.getAttendanceSortIcon('name')}</span>
+                    </div>
+                  </th>
+                  <th class="th-sortable" onclick="app.sortAttendanceTable('cpf')" style="cursor:pointer; user-select:none; width:150px;" title="Clique para classificar por CPF">
+                    <div style="display:inline-flex; align-items:center; gap:0.45rem;">
+                      <span>CPF</span>
+                      <span class="sort-icon-badge">${this.getAttendanceSortIcon('cpf')}</span>
+                    </div>
+                  </th>
+                  <th class="th-sortable" onclick="app.sortAttendanceTable('status')" style="cursor:pointer; user-select:none; width:180px;" title="Clique para classificar por Status">
+                    <div style="display:inline-flex; align-items:center; gap:0.45rem;">
+                      <span>Status de Participação</span>
+                      <span class="sort-icon-badge">${this.getAttendanceSortIcon('status')}</span>
+                    </div>
+                  </th>
+                  <th class="th-sortable" onclick="app.sortAttendanceTable('municipality')" style="cursor:pointer; user-select:none;" title="Clique para classificar por Município">
+                    <div style="display:inline-flex; align-items:center; gap:0.45rem;">
+                      <span>Município</span>
+                      <span class="sort-icon-badge">${this.getAttendanceSortIcon('municipality')}</span>
+                    </div>
+                  </th>
+                  <th class="th-sortable" onclick="app.sortAttendanceTable('role')" style="cursor:pointer; user-select:none; width:220px;" title="Clique para classificar por Cargo">
+                    <div style="display:inline-flex; align-items:center; gap:0.45rem;">
+                      <span>Cargo</span>
+                      <span class="sort-icon-badge">${this.getAttendanceSortIcon('role')}</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
