@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.8.7
+ * Versão: v.2.8.8
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.8.7';
+    this.version = 'v.2.8.8';
   }
 
   /**
@@ -7390,11 +7390,38 @@ class AutoReportApp {
 
   async downloadDocxReport() {
     if (!this.currentTraining || !window.reportDocxGenerator) return;
-    this.showToast('Gerando arquivo Word (.docx)...');
+    this.showToast('Preparando dados e gráficos para o documento Word (.docx)...', 'info');
     if (!this.metrics) {
       this.metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
     }
-    await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics);
+
+    // Renderizar gráficos prévios para garantir canvases populados
+    this.renderReportPreviewCharts();
+
+    // Capturar imagens dos gráficos e nuvens a partir dos canvases
+    const imagesData = {};
+    const canvasMap = [
+      { key: 'fig3', id: 'report-preview-fig3-canvas' },
+      { key: 'fig4', id: 'report-preview-fig4-canvas' },
+      { key: 'fig5', id: 'report-preview-fig5-canvas' },
+      { key: 'fig6', id: 'report-preview-fig6-canvas' },
+      { key: 'fig7', id: 'report-preview-fig7-canvas' },
+      { key: 'fig8', id: 'report-preview-fig8-canvas' }
+    ];
+
+    canvasMap.forEach(item => {
+      const cv = document.getElementById(item.id);
+      if (cv) {
+        try {
+          imagesData[item.key] = cv.toDataURL('image/png');
+        } catch (e) {
+          console.warn('Erro ao extrair imagem do canvas:', item.id, e);
+        }
+      }
+    });
+
+    await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics, imagesData);
+    this.showToast('Documento Word (.docx) baixado com sucesso!', 'success');
   }
 
   printReportPDF() {
@@ -7404,21 +7431,163 @@ class AutoReportApp {
     }
 
     const t = this.currentTraining;
-    const originalTitle = document.title;
-    const cleanPolo = (t.polo || 'Polo').replace(/[^a-zA-Z0-9_-]/g, '_');
-    document.title = `Relatorio_Capacitacao_${t.number || 'Final'}_${cleanPolo}`;
+    this.showToast('Preparando PDF do relatório oficial...', 'info');
 
-    this.showToast('Preparando geração do PDF do relatório...', 'info');
-
-    // Garantir renderização prévia dos gráficos e nuvens antes de imprimir
+    // Garantir renderização dos gráficos e nuvens de palavras
     this.renderReportPreviewCharts();
 
+    const previewEl = document.getElementById('wizard-report-preview-document');
+    if (!previewEl) {
+      this.showToast('Documento do relatório não encontrado.', 'error');
+      return;
+    }
+
+    // Clonar para isolamento estrito da página
+    const clone = previewEl.cloneNode(true);
+
+    // Converter todos os <canvas> no clone para elementos <img> contendo PNG em alta resolução
+    const origCanvases = previewEl.querySelectorAll('canvas');
+    const cloneCanvases = clone.querySelectorAll('canvas');
+    origCanvases.forEach((origCanvas, idx) => {
+      const cloneCanvas = cloneCanvases[idx];
+      if (origCanvas && cloneCanvas) {
+        try {
+          const imgData = origCanvas.toDataURL('image/png');
+          const imgEl = document.createElement('img');
+          imgEl.src = imgData;
+          imgEl.style.maxWidth = '100%';
+          imgEl.style.height = 'auto';
+          imgEl.style.display = 'block';
+          imgEl.style.margin = '0 auto';
+          imgEl.style.borderRadius = '4px';
+          cloneCanvas.parentNode.replaceChild(imgEl, cloneCanvas);
+        } catch (e) {
+          console.warn('Erro ao converter canvas para img:', e);
+        }
+      }
+    });
+
+    // Remover fundos ou bordas escuras de formulário
+    clone.querySelectorAll('[style*="var(--bg-input)"]').forEach(el => {
+      el.style.background = '#ffffff';
+      el.style.border = 'none';
+      el.style.padding = '0';
+      el.style.boxShadow = 'none';
+    });
+
+    // Iframe isolado para impressão exclusiva do relatório
+    let printIframe = document.getElementById('report-pdf-print-iframe');
+    if (printIframe) printIframe.remove();
+
+    printIframe = document.createElement('iframe');
+    printIframe.id = 'report-pdf-print-iframe';
+    printIframe.style.position = 'fixed';
+    printIframe.style.right = '0';
+    printIframe.style.bottom = '0';
+    printIframe.style.width = '0';
+    printIframe.style.height = '0';
+    printIframe.style.border = '0';
+    document.body.appendChild(printIframe);
+
+    const cleanPolo = (t.polo || 'Polo').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const docTitle = `Relatorio_Capacitacao_${t.number || 'Final'}_${cleanPolo}`;
+
+    const iframeDoc = printIframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>${docTitle}</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 15mm 15mm 15mm 15mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff !important;
+      color: #0f172a !important;
+      font-family: 'Times New Roman', serif;
+      font-size: 11pt;
+      line-height: 1.6;
+    }
+    .report-doc-page {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+    h1, h2, h3, h4 {
+      font-family: 'Times New Roman', serif;
+      page-break-after: avoid;
+      break-after: avoid;
+      color: #1e3a8a;
+    }
+    p {
+      margin: 0.75rem 0;
+      text-align: justify;
+      line-height: 1.6;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 10pt;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid #475569;
+      padding: 6px 8px;
+      color: #0f172a;
+    }
+    th {
+      background-color: #f1f5f9 !important;
+      font-weight: bold;
+    }
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    div[style*="page-break-inside: avoid"],
+    div[style*="page-break-inside:avoid"] {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    a {
+      color: #1e3a8a;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  ${clone.innerHTML}
+</body>
+</html>`);
+    iframeDoc.close();
+
     setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        document.title = originalTitle;
-      }, 1500);
-    }, 300);
+      try {
+        printIframe.contentWindow.focus();
+        printIframe.contentWindow.print();
+      } catch (err) {
+        console.error('Falha ao acionar impressão via iframe:', err);
+        window.print();
+      }
+    }, 450);
   }
 
   async directDownloadDocx(trainingId) {

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Nativo de Nuvem de Palavras (Word Cloud Engine)
- * Versão: v.2.8.7
+ * Versão: v.2.8.8
  */
 
 class WordCloudEngine {

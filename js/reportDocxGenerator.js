@@ -1,11 +1,61 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Final em Formato DOCX (Word)
- * Versão: v.2.8.7
+ * Versão: v.2.8.8
  */
 
 class ReportDocxGenerator {
   constructor() {
     this.docxLib = window.docx || null;
+  }
+
+  base64ToUint8Array(dataUrl) {
+    if (!dataUrl) return null;
+    try {
+      const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+      const binaryString = atob(base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      return bytes;
+    } catch (e) {
+      console.warn('Erro ao decodificar imagem para Uint8Array:', e);
+      return null;
+    }
+  }
+
+  createImageParagraph(dataUrl, width, height, captionText, docxDeps) {
+    const bytes = this.base64ToUint8Array(dataUrl);
+    if (!bytes) return null;
+
+    const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps;
+
+    const nodes = [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 200, after: 80 },
+        children: [
+          new ImageRun({
+            data: bytes,
+            transformation: { width, height }
+          })
+        ]
+      })
+    ];
+
+    if (captionText) {
+      nodes.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 180 },
+          children: [
+            new TextRun({ text: captionText, bold: true, italics: true, size: 20, color: '334155' })
+          ]
+        })
+      );
+    }
+    return nodes;
   }
 
   /**
@@ -268,7 +318,51 @@ class ReportDocxGenerator {
 
       docChildren.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: modRows }));
 
-      // 5. SEÇÃO 4: DESENVOLVIMENTO DO CURSO & TABELA 4
+      // 4. SEÇÃO 3: ARTICULAÇÃO INSTITUCIONAL & TABELA 3
+      docChildren.push(
+        new Paragraph({
+          spacing: { before: 400, after: 200 },
+          heading: HeadingLevel.HEADING_1,
+          children: [new TextRun({ text: '3. ARTICULAÇÃO INSTITUCIONAL', bold: true, size: 28, color: '1E3A8A' })]
+        }),
+        new Paragraph({
+          spacing: { after: 150 },
+          children: [
+            new TextRun({
+              text: 'Para assegurar a ampla participação dos municípios convocados, a equipe do CECATE-CO realizou ações contínuas de articulação e contato direto com as secretarias municipais de educação e conselhos sociais, conforme discriminado na Tabela 3:'
+            })
+          ]
+        }),
+        new Paragraph({
+          spacing: { before: 200, after: 100 },
+          children: [new TextRun({ text: 'Tabela 3. Articulação institucional para mobilização dos municípios.', bold: true, italics: true })]
+        })
+      );
+
+      const tab3Rows = [
+        new TableRow({
+          tableHeader: true,
+          children: [
+            new TableCell({ width: { size: 35, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Município', bold: true })] })] }),
+            new TableCell({ width: { size: 65, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Forma e Meios de Contato', bold: true })] })] })
+          ]
+        })
+      ];
+
+      const contactMethods = training.contactsData?.methods || 'Ofícios, E-mails, Telefones e WhatsApp';
+      (training.municipalities || []).forEach(m => {
+        tab3Rows.push(
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${m.name} (${m.uf || training.uf || 'GO'})`, bold: true })] })] }),
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: contactMethods })] })] })
+            ]
+          })
+        );
+      });
+      docChildren.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: tab3Rows }));
+
+      // 5. SEÇÃO 4: DESENVOLVIMENTO DO CURSO & TABELA 4 & FIGURA 3
       docChildren.push(
         new Paragraph({
           spacing: { before: 400, after: 200 },
@@ -319,7 +413,14 @@ class ReportDocxGenerator {
 
       docChildren.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: tab4Rows }));
 
-      // 6. SEÇÃO 5: AVALIAÇÃO DA CAPACITAÇÃO
+      // Figura 3: Gráfico de Participação
+      const docxDeps = { Paragraph, ImageRun, TextRun, AlignmentType };
+      if (chartsData.fig3) {
+        const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação de Gestores e Conselheiros CACS.', docxDeps);
+        if (fig3Nodes) docChildren.push(...fig3Nodes);
+      }
+
+      // 6. SEÇÃO 5: AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8
       docChildren.push(
         new Paragraph({
           spacing: { before: 400, after: 200 },
@@ -336,7 +437,61 @@ class ReportDocxGenerator {
         })
       );
 
-      // 7. SEÇÃO 7: CONSIDERAÇÕES FINAIS
+      if (chartsData.fig4) {
+        const fig4Nodes = this.createImageParagraph(chartsData.fig4, 520, 250, 'Figura 4. Avaliação da capacitação de todos os participantes.', docxDeps);
+        if (fig4Nodes) docChildren.push(...fig4Nodes);
+      }
+      if (chartsData.fig5) {
+        const fig5Nodes = this.createImageParagraph(chartsData.fig5, 520, 250, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', docxDeps);
+        if (fig5Nodes) docChildren.push(...fig5Nodes);
+      }
+      if (chartsData.fig6) {
+        const fig6Nodes = this.createImageParagraph(chartsData.fig6, 520, 250, 'Figura 6. Avaliação da capacitação dos gestores municipais.', docxDeps);
+        if (fig6Nodes) docChildren.push(...fig6Nodes);
+      }
+      if (chartsData.fig7) {
+        const fig7Nodes = this.createImageParagraph(chartsData.fig7, 480, 260, 'Figura 7. Aspectos positivos destacados.', docxDeps);
+        if (fig7Nodes) docChildren.push(...fig7Nodes);
+      }
+      if (chartsData.fig8) {
+        const fig8Nodes = this.createImageParagraph(chartsData.fig8, 480, 260, 'Figura 8. Aspectos a serem aprimorados.', docxDeps);
+        if (fig8Nodes) docChildren.push(...fig8Nodes);
+      }
+
+      // 7. SEÇÃO 6: REGISTROS FOTOGRÁFICOS
+      docChildren.push(
+        new Paragraph({
+          spacing: { before: 400, after: 200 },
+          heading: HeadingLevel.HEADING_1,
+          children: [new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS', bold: true, size: 28, color: '1E3A8A' })]
+        }),
+        new Paragraph({
+          spacing: { after: 150 },
+          children: [
+            new TextRun({
+              text: 'A seguir são apresentados os registros fotográficos oficiais realizados durante os momentos de acolhimento, exposição temática e encerramento da capacitação:'
+            })
+          ]
+        })
+      );
+
+      const photos = (training.media || []).filter(m => m.type === 'photo' && m.blob);
+      if (photos.length === 0) {
+        docChildren.push(
+          new Paragraph({
+            spacing: { after: 150 },
+            children: [new TextRun({ text: 'Nenhum registro fotográfico anexado no momento.', italics: true, color: '64748B' })]
+          })
+        );
+      } else {
+        photos.forEach((ph, idx) => {
+          const caption = ph.caption || `Figura ${idx + 9}. Registro fotográfico oficial da capacitação.`;
+          const photoNodes = this.createImageParagraph(ph.blob, 500, 300, caption, docxDeps);
+          if (photoNodes) docChildren.push(...photoNodes);
+        });
+      }
+
+      // 8. SEÇÃO 7: CONSIDERAÇÕES FINAIS
       docChildren.push(
         new Paragraph({
           spacing: { before: 400, after: 200 },
