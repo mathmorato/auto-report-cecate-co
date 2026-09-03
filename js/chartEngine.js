@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Motor de Renderização de Gráficos Nativos (Canvas Chart Engine)
- * Versão: v.2.8.9
+ * AutoReport CECATE - Motor de Gráficos e Visualizações Estatísticas
+ * Versão: v.2.9.0
  */
 
 class ChartEngine {

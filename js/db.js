@@ -1,7 +1,12 @@
 /**
- * AutoReport CECATE - Gerenciador de Banco de Dados Local (IndexedDB)
- * Versão: v.2.8.9
+ * AutoReport CECATE - Gerenciador de Banco de Dados Local (IndexedDB) & Sincronização em Nuvem (Supabase)
+ * Versão: v.2.9.0
  */
+
+const SUPABASE_CONFIG = {
+  url: 'https://dcsrcyemyvufevuskciz.supabase.co',
+  anonKey: 'sb_publishable_81j3KojA3AaV8Hqn24EGmQ_PekAy7hQ'
+};
 
 class TrainingDB {
   constructor() {
@@ -10,6 +15,8 @@ class TrainingDB {
     this.db = null;
     this.isReady = false;
     this.autoSaveTimers = {};
+    this.supabase = null;
+    this.isCloudConnected = false;
   }
 
   /**
@@ -97,7 +104,12 @@ class TrainingDB {
       request.onsuccess = async (event) => {
         this.db = event.target.result;
         this.isReady = true;
+
+        // Inicializar conexão com Supabase e sincronizar
+        this.initSupabase();
         await this.seedInitialData();
+        await this.syncFromCloud();
+
         resolve(this);
       };
 
@@ -106,6 +118,136 @@ class TrainingDB {
         reject(event.target.error);
       };
     });
+  }
+
+  /**
+   * Inicializa a conexão com o Supabase Cloud
+   */
+  initSupabase() {
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      try {
+        this.supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        this.isCloudConnected = true;
+        this.updateCloudIndicator(true);
+        console.log('Supabase Cloud conectado com sucesso!');
+      } catch (err) {
+        console.warn('Falha ao inicializar Supabase:', err);
+        this.supabase = null;
+        this.isCloudConnected = false;
+        this.updateCloudIndicator(false);
+      }
+    } else {
+      this.isCloudConnected = false;
+      this.updateCloudIndicator(false);
+    }
+  }
+
+  /**
+   * Atualiza o indicador visual de nuvem na barra superior
+   */
+  updateCloudIndicator(isConnected) {
+    const el = document.getElementById('cloud-sync-status');
+    if (!el) return;
+    if (isConnected) {
+      el.style.background = 'rgba(16, 185, 129, 0.12)';
+      el.style.color = '#10b981';
+      el.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+      el.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+        <span>Nuvem Ativa</span>
+      `;
+      el.title = 'Conectado ao Supabase: Dados sincronizados em nuvem para todos os usuários';
+    } else {
+      el.style.background = 'rgba(245, 158, 11, 0.12)';
+      el.style.color = '#f59e0b';
+      el.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+      el.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path><path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+        <span>Modo Local (Offline)</span>
+      `;
+      el.title = 'Operando localmente no navegador';
+    }
+  }
+
+  /**
+   * Sincroniza dados da nuvem para o IndexedDB local
+   */
+  async syncFromCloud() {
+    if (!this.supabase) return;
+    try {
+      // 1. Sincronizar Capacitações
+      const { data: cloudTrainings, error } = await this.supabase.from('trainings').select('*');
+      if (error) {
+        console.warn('Aviso ao consultar trainings no Supabase:', error);
+        this.updateCloudIndicator(false);
+        return;
+      }
+
+      this.updateCloudIndicator(true);
+
+      if (cloudTrainings && cloudTrainings.length > 0) {
+        for (const row of cloudTrainings) {
+          if (row.data && row.id) {
+            const local = await this.get('trainings', row.id);
+            const cloudDate = new Date(row.updated_at || row.created_at || 0).getTime();
+            const localDate = new Date(local?.updatedAt || local?.createdAt || 0).getTime();
+
+            if (!local || cloudDate >= localDate) {
+              await this.saveTrainingFull(row.data, 'Sincronização da Nuvem (Supabase)', false);
+            }
+          }
+        }
+      }
+
+      // 2. Sincronizar Catálogo de Equipe Mestre
+      const { data: cloudTeam } = await this.supabase.from('master_team').select('*');
+      if (cloudTeam && cloudTeam.length > 0) {
+        for (const row of cloudTeam) {
+          if (row.data && row.id) {
+            await this.put('globalTeamCatalog', row.data);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Falha na sincronização com a nuvem:', e);
+      this.updateCloudIndicator(false);
+    }
+  }
+
+  /**
+   * Envia uma capacitação para o Supabase
+   */
+  async uploadTrainingToCloud(fullData) {
+    if (!this.supabase || !fullData || !fullData.id) return;
+    try {
+      await this.supabase.from('trainings').upsert({
+        id: fullData.id,
+        number: (fullData.number !== undefined && fullData.number !== null && fullData.number !== '') ? parseInt(fullData.number) : null,
+        polo: fullData.polo || '',
+        uf: fullData.uf || '',
+        status: fullData.status || 'in_progress',
+        is_historical: !!fullData.isHistorical,
+        data: fullData,
+        updated_at: new Date().toISOString()
+      });
+      this.updateCloudIndicator(true);
+      console.log(`Capacitação sincronizada na nuvem: ${fullData.polo || fullData.id}`);
+    } catch (err) {
+      console.warn('Erro ao subir dados para a nuvem:', err);
+    }
+  }
+
+  /**
+   * Remove uma capacitação do Supabase
+   */
+  async deleteTrainingFromCloud(trainingId) {
+    if (!this.supabase || !trainingId) return;
+    try {
+      await this.supabase.from('trainings').delete().eq('id', trainingId);
+      console.log(`Capacitação excluída da nuvem: ${trainingId}`);
+    } catch (err) {
+      console.warn('Erro ao deletar na nuvem:', err);
+    }
   }
 
   /* ==========================================================================
@@ -175,7 +317,7 @@ class TrainingDB {
   /**
    * Exclui uma capacitação criada pelo usuário (com trava estrita de proteção para registros históricos)
    */
-  async deleteTraining(trainingId) {
+  async deleteTraining(trainingId, syncCloud = true) {
     const training = await this.get('trainings', trainingId);
     if (!training) {
       throw new Error('Capacitação não encontrada no banco de dados.');
@@ -186,7 +328,7 @@ class TrainingDB {
       throw new Error('Capacitações do Histórico Protegido (Nº 6 a 14) não podem ser excluídas.');
     }
 
-    // Exclusão em cascata de todos os registros filhos e mestre
+    // Exclusão em cascata de todos os registros filhos e mestre no IndexedDB
     await Promise.all([
       this.clearStoreByIndex('team', 'trainingId', trainingId),
       this.clearStoreByIndex('municipalities', 'trainingId', trainingId),
@@ -198,6 +340,11 @@ class TrainingDB {
       this.clearStoreByIndex('auditLog', 'trainingId', trainingId),
       this.delete('trainings', trainingId)
     ]);
+
+    // Exclusão na nuvem (Supabase)
+    if (syncCloud) {
+      await this.deleteTrainingFromCloud(trainingId);
+    }
 
     return true;
   }
@@ -239,7 +386,7 @@ class TrainingDB {
     };
   }
 
-  async saveTrainingFull(data, changeSummary = 'Atualização geral dos dados') {
+  async saveTrainingFull(data, changeSummary = 'Atualização geral dos dados', syncCloud = true) {
     const trainingId = data.id || `cap_${Date.now()}`;
     const now = new Date().toISOString();
 
@@ -445,6 +592,13 @@ class TrainingDB {
       timestamp: now,
       summary: changeSummary
     });
+
+    // Sincronização em segundo plano na nuvem (Supabase)
+    if (syncCloud && this.supabase) {
+      this.getTrainingFull(trainingId).then(fullData => {
+        if (fullData) this.uploadTrainingToCloud(fullData);
+      }).catch(err => console.warn('Aviso de sincronização em nuvem:', err));
+    }
 
     return trainingId;
   }

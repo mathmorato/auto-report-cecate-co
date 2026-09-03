@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Modelos e Matriz Curricular Global Padrão
- * Versão: v.2.8.9
+ * AutoReport CECATE - Estrutura Padrão do Curso e Módulos
+ * Versão: v.2.9.0
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
