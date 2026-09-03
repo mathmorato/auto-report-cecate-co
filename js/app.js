@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.2
+ * Versão: v.2.7.3
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.2';
+    this.version = 'v.2.7.3';
   }
 
   /**
@@ -5519,7 +5519,7 @@ class AutoReportApp {
     const regMapByCpf = new Map();
     regList.forEach(reg => {
       if (reg.cpf) {
-        const cleanCpf = reg.cpf.replace(/\D/g, '');
+        const cleanCpf = reg.cpf.replace(/\D/g, '').padStart(11, '0');
         if (cleanCpf && cleanCpf.length === 11) {
           regMapByCpf.set(cleanCpf, reg);
         }
@@ -5529,8 +5529,8 @@ class AutoReportApp {
     // Cruzar dados da lista de presença com a planilha de inscrição pelo CPF
     attList.forEach(att => {
       if (att.cpf) {
-        const cleanCpf = att.cpf.replace(/\D/g, '');
-        if (cleanCpf && regMapByCpf.has(cleanCpf)) {
+        const cleanCpf = att.cpf.replace(/\D/g, '').padStart(11, '0');
+        if (cleanCpf && cleanCpf.length === 11 && regMapByCpf.has(cleanCpf)) {
           const reg = regMapByCpf.get(cleanCpf);
           // Priorizar Nome Completo, Município que representa e Vínculo/Segmento (Gestor vs CACS) do formulário de inscrição
           if (reg.name) att.name = reg.name;
@@ -5541,7 +5541,11 @@ class AutoReportApp {
           if (reg.representation) att.representation = reg.representation;
           if (reg.roleGestao) att.roleGestao = reg.roleGestao;
           if (reg.roleCACS) att.roleCACS = reg.roleCACS;
+          if (window.excelParser) att.cpf = window.excelParser.formatCpf(att.cpf || reg.cpf);
           att.matchedByCpf = true;
+          att.isCpfValidated = true;
+        } else if (window.excelParser && att.cpf) {
+          att.cpf = window.excelParser.formatCpf(att.cpf);
         }
       }
     });
@@ -5675,7 +5679,7 @@ class AutoReportApp {
     const regMapByCpf = new Map();
     regList.forEach(reg => {
       if (reg.cpf) {
-        const clean = reg.cpf.replace(/\D/g, '');
+        const clean = reg.cpf.replace(/\D/g, '').padStart(11, '0');
         if (clean && clean.length === 11) regMapByCpf.set(clean, reg);
       }
     });
@@ -5685,8 +5689,9 @@ class AutoReportApp {
 
     // 1. Processar presentes e cruzar com inscritos pelo CPF
     attList.forEach(att => {
-      const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '') : '';
+      const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '').padStart(11, '0') : '';
       const matchedReg = cleanCpf && cleanCpf.length === 11 ? regMapByCpf.get(cleanCpf) : null;
+      const formattedCpf = window.excelParser ? window.excelParser.formatCpf(att.cpf || (matchedReg ? matchedReg.cpf : '')) : (att.cpf || '');
 
       if (matchedReg) {
         processedRegIds.add(matchedReg.id);
@@ -5694,26 +5699,27 @@ class AutoReportApp {
           id: att.id,
           regId: matchedReg.id,
           name: matchedReg.name || att.name,
-          cpf: att.cpf || matchedReg.cpf,
-          municipality: matchedReg.municipality || att.municipality,
-          ibgeCode: matchedReg.ibgeCode || att.ibgeCode,
-          representation: matchedReg.representation || att.representation,
-          roleGestao: matchedReg.roleGestao || att.roleGestao,
-          roleCACS: matchedReg.roleCACS || att.roleCACS,
+          cpf: formattedCpf,
+          municipality: matchedReg.municipality || att.municipality || '',
+          ibgeCode: matchedReg.ibgeCode || att.ibgeCode || '',
+          representation: matchedReg.representation || att.representation || '',
+          roleGestao: matchedReg.roleGestao || att.roleGestao || '',
+          roleCACS: matchedReg.roleCACS || att.roleCACS || '',
           status: 'Inscrito e Presente',
           matchedByCpf: true,
           isCpfValidated: true
         });
       } else {
-        const manualMun = att.isManualMunicipality ? (att.municipality || '') : '';
-        const manualRep = att.isManualRepresentation ? (att.representation || '') : '';
+        // Se não foi encontrado na inscrição, preserva o município e vínculo da própria lista de presença (ou manual se já editado)
+        const mun = att.municipality || (att.isManualMunicipality ? att.municipality : '') || '';
+        const rep = att.representation || (att.isManualRepresentation ? att.representation : '') || '';
         consolidated.push({
           id: att.id,
           name: att.name,
-          cpf: att.cpf,
-          municipality: manualMun,
-          ibgeCode: att.ibgeCode,
-          representation: manualRep,
+          cpf: formattedCpf,
+          municipality: mun,
+          ibgeCode: att.ibgeCode || '',
+          representation: rep,
           roleGestao: att.roleGestao,
           roleCACS: att.roleCACS,
           status: 'Apenas Presente',
@@ -5795,6 +5801,23 @@ class AutoReportApp {
 
   sortParticipantsList(list = [], col = 'name', dir = 'asc') {
     const sorted = [...list].sort((a, b) => {
+      // 1. Prioridade máxima: qualquer participante 'Apenas Presente' fica no topo da lista
+      const isApenasPresenteA = a.status === 'Apenas Presente' ? 1 : 0;
+      const isApenasPresenteB = b.status === 'Apenas Presente' ? 1 : 0;
+
+      if (isApenasPresenteA !== isApenasPresenteB) {
+        return isApenasPresenteB - isApenasPresenteA; // 'Apenas Presente' fica no topo
+      }
+
+      // 2. Se ambos forem 'Apenas Presente', priorizar no topo os que estão sem validação (sem município ou sem vínculo)
+      if (isApenasPresenteA && isApenasPresenteB) {
+        const isIncompleteA = (!a.municipality || !a.representation) ? 1 : 0;
+        const isIncompleteB = (!b.municipality || !b.representation) ? 1 : 0;
+        if (isIncompleteA !== isIncompleteB) {
+          return isIncompleteB - isIncompleteA; // Sem validação fica ainda mais acima
+        }
+      }
+
       let valA = '';
       let valB = '';
 
@@ -5815,10 +5838,10 @@ class AutoReportApp {
         valB = b.representation || '';
       }
 
-      return valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' });
+      const cmp = valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base' });
+      return dir === 'desc' ? -cmp : cmp;
     });
 
-    if (dir === 'desc') sorted.reverse();
     return sorted;
   }
 
@@ -6014,7 +6037,10 @@ class AutoReportApp {
       return `
         <tr style="${isRowIncomplete ? 'background: rgba(245, 158, 11, 0.05);' : ''}">
           <td style="vertical-align:middle;"><strong>${p.name || 'Não informado'}</strong></td>
-          <td style="font-family:monospace; vertical-align:middle;">${p.cpf || '-'}</td>
+          <td style="font-family:monospace; vertical-align:middle; white-space:nowrap;">
+            ${p.cpf || '-'}
+            ${p.isCpfValidated ? '<span class="nav-badge badge-emerald" style="font-size:0.68rem; margin-left:0.35rem; padding:0.1rem 0.35rem; display:inline-flex; align-items:center; gap:0.2rem;" title="CPF validado na coluna CPF: XXX.XXX.XXX-XX"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Validado</span>' : ''}
+          </td>
           <td style="vertical-align:middle;">${statusBadge}</td>
           <td style="vertical-align:middle;">${munTd}</td>
           <td style="vertical-align:middle;">${repTd}</td>

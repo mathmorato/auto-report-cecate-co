@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor Inteligente de Importação & Parser Excel
- * Versão: v.2.7.2
+ * Versão: v.2.7.3
  */
 
 class ExcelParser {
@@ -37,7 +37,10 @@ class ExcelParser {
 
   formatCpf(cpf) {
     if (!cpf) return '';
-    const digits = String(cpf).replace(/\D/g, '');
+    let digits = String(cpf).replace(/\D/g, '');
+    if (digits.length > 0 && digits.length < 11) {
+      digits = digits.padStart(11, '0');
+    }
     if (digits.length === 11) {
       return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
     }
