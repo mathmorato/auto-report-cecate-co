@@ -1805,39 +1805,91 @@ body.light-theme .step-tab-btn.active .step-tab-num {
   margin-top: 1.5rem;
 }
 
-/* Dropzone de Upload */
-.upload-dropzone {
-  border: 2px dashed rgba(99, 102, 241, 0.35);
-  background: rgba(17, 24, 39, 0.5);
+/* Dropzone de Upload (Geral, Municípios, Apêndices, Avaliação e Fotos) */
+.upload-dropzone,
+.mun-import-dropzone,
+.drop-zone {
+  border: 2px dashed #f59e0b !important;
+  background: rgba(245, 158, 11, 0.04) !important;
   border-radius: var(--radius-lg);
-  padding: 2.5rem 1.5rem;
+  padding: 2.25rem 1.5rem;
   text-align: center;
   cursor: pointer;
   transition: all var(--transition-normal);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box;
 }
 
-.upload-dropzone:hover, .upload-dropzone.dragover {
-  border-color: var(--accent-primary);
-  background: rgba(99, 102, 241, 0.08);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+.upload-dropzone:hover, .upload-dropzone.dragover,
+.mun-import-dropzone:hover, .mun-import-dropzone.dragover,
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25) !important;
 }
 
 .upload-dropzone-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.75rem;
-  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.65rem;
+  color: #f59e0b !important;
 }
 
 .upload-dropzone-text {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 0.25rem;
 }
 
 .upload-dropzone-hint {
   font-size: 0.8rem;
   color: var(--text-muted);
-  margin-top: 0.35rem;
+  text-align: center;
+  margin-top: 0.15rem;
+}
+
+/* Modo Claro (Light Theme) para Todos os Dropzones de Anexo */
+body.light-theme .upload-dropzone,
+body.light-theme .mun-import-dropzone,
+body.light-theme .drop-zone {
+  border: 2px dashed #f59e0b !important;
+  background: #fffdf5 !important;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.1) !important;
+}
+
+body.light-theme .upload-dropzone:hover,
+body.light-theme .upload-dropzone.dragover,
+body.light-theme .mun-import-dropzone:hover,
+body.light-theme .mun-import-dropzone.dragover,
+body.light-theme .drop-zone:hover,
+body.light-theme .drop-zone.dragover {
+  border-color: #d97706 !important;
+  background: #fef3c7 !important;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.25) !important;
+}
+
+body.light-theme .upload-dropzone .upload-dropzone-icon,
+body.light-theme .mun-import-dropzone .mun-import-dropzone-icon,
+body.light-theme .drop-zone .upload-dropzone-icon {
+  color: #d97706 !important;
+}
+
+body.light-theme .upload-dropzone .upload-dropzone-text,
+body.light-theme .mun-import-dropzone .mun-import-dropzone-title,
+body.light-theme .drop-zone .upload-dropzone-text {
+  color: #0f172a !important;
+}
+
+body.light-theme .upload-dropzone .upload-dropzone-hint,
+body.light-theme .mun-import-dropzone .mun-import-dropzone-desc,
+body.light-theme .drop-zone .upload-dropzone-hint {
+  color: #475569 !important;
 }
 
 /* Tabelas Oficiais de Relatório */
@@ -2440,29 +2492,34 @@ body.light-theme .nav-badge {
    Importador de Municípios por Planilha (.xlsx, .csv)
    ========================================================================== */
 .mun-import-dropzone {
-  border: 2px dashed rgba(59, 130, 246, 0.4);
+  border: 2px dashed #f59e0b !important;
   border-radius: var(--radius-lg);
-  padding: 2.5rem 1.5rem;
+  padding: 2.25rem 1.5rem;
   text-align: center;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(245, 158, 11, 0.04) !important;
   cursor: pointer;
   transition: all var(--transition-normal);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .mun-import-dropzone:hover, .mun-import-dropzone.dragover {
-  border-color: var(--accent-blue);
-  background: rgba(59, 130, 246, 0.08);
+  border-color: #fbbf24 !important;
+  background: rgba(245, 158, 11, 0.12) !important;
   transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25) !important;
 }
 
 body.light-theme .mun-import-dropzone {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #fffdf5 !important;
+  border: 2px dashed #f59e0b !important;
 }
 
 body.light-theme .mun-import-dropzone:hover {
-  background: #eff6ff;
-  border-color: #2563eb;
+  background: #fef3c7 !important;
+  border-color: #d97706 !important;
 }
 
 .mun-import-stats-grid {

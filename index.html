@@ -85,7 +85,7 @@
           <span>Motor de Relatórios Ativo</span>
         </div>
         <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.35rem; font-family:monospace; text-align:center;">
-          v.2.6.6
+          v.2.6.7
         </div>
       </div>
     </aside>
@@ -929,7 +929,22 @@
                 <!-- Dropzone Upload Avaliação -->
                 <div class="upload-dropzone" id="dropzone-evaluation" onclick="document.getElementById('file-input-evaluation').click()">
                   <div class="upload-dropzone-icon">
-                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                    <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <!-- Top Clip -->
+                      <path d="M9 3H15C15.55 3 16 3.45 16 4V5C16 5.55 15.55 6 15 6H9C8.45 6 8 5.55 8 5V4C8 3.45 8.45 3 9 3Z"></path>
+                      <!-- Clipboard body -->
+                      <path d="M8 4.5H5.5A1.5 1.5 0 0 0 4 6v14.5A1.5 1.5 0 0 0 5.5 22h11a1.5 1.5 0 0 0 1.5-1.5V16"></path>
+                      <!-- Checklist row 1 -->
+                      <rect x="7" y="9" width="3" height="3" rx="0.5"></rect>
+                      <path d="M7.5 10.5l1 1 1.5-1.5"></path>
+                      <line x1="12" y1="10.5" x2="16" y2="10.5"></line>
+                      <!-- Checklist row 2 -->
+                      <rect x="7" y="14" width="3" height="3" rx="0.5"></rect>
+                      <path d="M7.5 15.5l1 1 1.5-1.5"></path>
+                      <line x1="12" y1="15.5" x2="14" y2="15.5"></line>
+                      <!-- Pencil pointing to clipboard -->
+                      <path d="M19.8 8.2l-6.3 6.3L13 17.5l3-0.5 6.3-6.3a1.5 1.5 0 0 0-2.5-2.5z"></path>
+                    </svg>
                   </div>
                   <div class="upload-dropzone-text">Clique ou arraste a Planilha de Avaliação (.xlsx)</div>
                   <div class="upload-dropzone-hint">Ex: 16CTE - Avaliação (respostas).xlsx</div>
@@ -1048,8 +1063,8 @@
                          ondragleave="app.handleDragLeave(event)"
                          ondrop="app.handleAppendixDrop('doc_fnde', event)"
                          style="padding:1.25rem 0.75rem;">
-                      <div class="upload-dropzone-icon" style="display:flex; justify-content:center; margin-bottom:0.35rem; color:var(--accent-secondary);">
-                        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                      <div class="upload-dropzone-icon" style="display:flex; justify-content:center; margin-bottom:0.35rem; color:#f59e0b;">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                       </div>
                       <div class="upload-dropzone-text" style="font-size:0.85rem;">Clique ou arraste as convocações do FNDE (PDF, DOCX, Imagens)</div>
                     </div>
@@ -1071,7 +1086,7 @@
                          ondragleave="app.handleDragLeave(event)"
                          ondrop="app.handleAppendixDrop('doc_cecate', event)"
                          style="padding:1.25rem 0.75rem;">
-                      <div class="upload-dropzone-icon" style="display:flex; justify-content:center; margin-bottom:0.35rem; color:var(--accent-secondary);">
+                      <div class="upload-dropzone-icon" style="display:flex; justify-content:center; margin-bottom:0.35rem; color:#f59e0b;">
                         <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg>
                       </div>
                       <div class="upload-dropzone-text" style="font-size:0.85rem;">Clique ou arraste os e-mails/convocações do CECATE (PDF, DOCX, Imagens)</div>
@@ -1470,7 +1485,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.6.6</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.6.7</span>
         </div>
       </footer>
     </div>
@@ -1970,8 +1985,8 @@
             Envie o arquivo PDF da Convocação Oficial do CECATE. O sistema fará a leitura inteligente do documento e extrairá automaticamente o Polo Regional, UF, Datas, Carga Horária, Local/Endereço e todos os Municípios Convocados.
           </p>
 
-          <div class="drop-zone" id="convocacao-drop-zone" onclick="document.getElementById('convocacao-file-input').click()" style="border:2px dashed var(--accent-secondary); border-radius:var(--radius-lg); padding:2.5rem 1.5rem; text-align:center; cursor:pointer; background:rgba(99, 102, 241, 0.03); transition:all 0.2s;">
-            <div style="display:flex; justify-content:center; margin-bottom:0.75rem; color:var(--accent-secondary);">
+          <div class="drop-zone" id="convocacao-drop-zone" onclick="document.getElementById('convocacao-file-input').click()" style="border:2px dashed #f59e0b; border-radius:var(--radius-lg); padding:2.5rem 1.5rem; text-align:center; cursor:pointer; background:rgba(245, 158, 11, 0.04); transition:all 0.2s;">
+            <div style="display:flex; justify-content:center; margin-bottom:0.75rem; color:#f59e0b;">
               <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             </div>
             <div style="font-weight:700; font-size:1.05rem; color:var(--text-primary); margin-bottom:0.35rem;">
