@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.3
+ * Versão: v.2.9.4
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.3';
+    this.version = 'v.2.9.4';
   }
 
   /**
@@ -131,6 +131,14 @@ class AutoReportApp {
         item.classList.remove('active');
       }
     });
+
+    // Fechar gaveta móvel ao navegar
+    const sidebar = document.querySelector('.sidebar');
+    const mobileBackdrop = document.getElementById('sidebar-mobile-backdrop');
+    if (sidebar && sidebar.classList.contains('mobile-open')) {
+      sidebar.classList.remove('mobile-open');
+      if (mobileBackdrop) mobileBackdrop.classList.remove('active');
+    }
 
     // Alternar visibilidade das seções
     document.querySelectorAll('.view-section').forEach(section => {
@@ -8122,6 +8130,35 @@ class AutoReportApp {
     if (themeBtn) {
       themeBtn.addEventListener('click', () => this.toggleTheme());
     }
+
+    // Toggle do Menu Lateral Mobile (Drawer)
+    const mobileMenuBtn = document.getElementById('mobile-menu-toggle-btn');
+    const mobileBackdrop = document.getElementById('sidebar-mobile-backdrop');
+    const sidebar = document.querySelector('.sidebar');
+
+    if (mobileMenuBtn && sidebar) {
+      mobileMenuBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+        if (mobileBackdrop) mobileBackdrop.classList.toggle('active');
+      });
+    }
+
+    if (mobileBackdrop && sidebar) {
+      mobileBackdrop.addEventListener('click', () => {
+        sidebar.classList.remove('mobile-open');
+        mobileBackdrop.classList.remove('active');
+      });
+    }
+
+    // Fechar gaveta móvel ao clicar em qualquer item do menu lateral
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        if (sidebar && sidebar.classList.contains('mobile-open')) {
+          sidebar.classList.remove('mobile-open');
+          if (mobileBackdrop) mobileBackdrop.classList.remove('active');
+        }
+      });
+    });
 
     // Modal close buttons
     document.querySelectorAll('.modal-close').forEach(btn => {
