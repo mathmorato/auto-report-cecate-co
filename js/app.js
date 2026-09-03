@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.7
+ * Versão: v.2.7.8
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.7';
+    this.version = 'v.2.7.8';
   }
 
   /**
@@ -5797,6 +5797,7 @@ class AutoReportApp {
         // Se não foi encontrado na inscrição, preserva o município e vínculo da própria lista de presença (ou manual se já editado)
         const mun = att.municipality || (att.isManualMunicipality ? att.municipality : '') || '';
         const rep = att.representation || (att.isManualRepresentation ? att.representation : '') || '';
+        const isApValidated = !!(mun && rep && formattedCpf && formattedCpf !== '-');
         consolidated.push({
           id: att.id,
           name: att.name,
@@ -5808,7 +5809,7 @@ class AutoReportApp {
           roleCACS: att.roleCACS,
           status: 'Apenas Presente',
           matchedByCpf: false,
-          isCpfValidated: false
+          isCpfValidated: isApValidated
         });
       }
     });
@@ -6146,12 +6147,15 @@ class AutoReportApp {
         </div>
       `;
 
+      const isApWithMunAndVinculo = (p.status === 'Apenas Presente' && !!p.municipality && !!p.representation);
+      const showCpfCheck = (!!p.cpf && p.cpf !== '-') && (p.isCpfValidated || isApWithMunAndVinculo);
+
       return `
         <tr style="${isRowIncomplete ? 'background: rgba(245, 158, 11, 0.05);' : ''}">
           <td style="vertical-align:middle;"><strong>${p.name || 'Não informado'}</strong></td>
           <td style="font-family:monospace; vertical-align:middle; white-space:nowrap;">
             ${p.cpf || '-'}
-            ${p.isCpfValidated ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.35rem; padding:0.15rem 0.3rem; display:inline-flex; align-items:center;" title="CPF validado na coluna CPF: XXX.XXX.XXX-XX"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' : ''}
+            ${showCpfCheck ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.35rem; padding:0.15rem 0.3rem; display:inline-flex; align-items:center;" title="CPF validado com município e vínculo confirmados"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' : ''}
           </td>
           <td style="vertical-align:middle; text-align:center;">${statusBadge}</td>
           <td style="vertical-align:middle;">${munTd}</td>
