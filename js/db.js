@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerenciador de Banco de Dados Local (IndexedDB) & Sincronização em Nuvem (Supabase)
- * Versão: v.2.9.0
+ * Versão: v.2.9.1
  */
 
 const SUPABASE_CONFIG = {
@@ -105,10 +105,15 @@ class TrainingDB {
         this.db = event.target.result;
         this.isReady = true;
 
-        // Inicializar conexão com Supabase e sincronizar
+        // Inicializar conexão com Supabase e dados locais
         this.initSupabase();
         await this.seedInitialData();
-        await this.syncFromCloud();
+
+        // Sincronização em segundo plano não-bloqueante (permite abrir localmente de imediato sem travar)
+        this.syncFromCloud().catch(err => {
+          console.warn('Operando em modo local offline:', err);
+          this.updateCloudIndicator(false);
+        });
 
         resolve(this);
       };
@@ -173,13 +178,18 @@ class TrainingDB {
    * Sincroniza dados da nuvem para o IndexedDB local
    */
   async syncFromCloud() {
-    if (!this.supabase) return;
+    if (!this.supabase || this.isSyncing) return;
+    this.isSyncing = true;
     try {
-      // 1. Sincronizar Capacitações
-      const { data: cloudTrainings, error } = await this.supabase.from('trainings').select('*');
+      // 1. Sincronizar Capacitações com timeout de 3.5s para nunca travar em modo offline ou rede lenta
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3500));
+      const fetchTrainingsPromise = this.supabase.from('trainings').select('*');
+
+      const { data: cloudTrainings, error } = await Promise.race([fetchTrainingsPromise, timeoutPromise]);
       if (error) {
         console.warn('Aviso ao consultar trainings no Supabase:', error);
         this.updateCloudIndicator(false);
+        this.isSyncing = false;
         return;
       }
 
@@ -209,8 +219,10 @@ class TrainingDB {
         }
       }
     } catch (e) {
-      console.warn('Falha na sincronização com a nuvem:', e);
+      console.warn('Operando com dados locais (modo offline/local):', e.message || e);
       this.updateCloudIndicator(false);
+    } finally {
+      this.isSyncing = false;
     }
   }
 

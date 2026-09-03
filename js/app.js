@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.0
+ * Versão: v.2.9.1
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.0';
+    this.version = 'v.2.9.1';
   }
 
   /**
@@ -200,7 +200,7 @@ class AutoReportApp {
 
   async renderDashboard() {
     if (window.db && window.db.supabase) {
-      await window.db.syncFromCloud().catch(() => {});
+      window.db.syncFromCloud().catch(() => {});
     }
     await this.refreshTrainingsList();
 
