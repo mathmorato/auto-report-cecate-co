@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Tabelas Consolidadas
- * Versão: v.2.5.1
+ * Versão: v.2.5.2
  */
 
 class StatsEngine {
@@ -242,6 +242,16 @@ class StatsEngine {
     let rowsHtml = '';
     let totalHoursGestor = 0;
     let totalHoursCACS = 0;
+
+    if (sorted.length === 0) {
+      rowsHtml = `
+        <tr>
+          <td colspan="5" style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-style:italic;">
+            Nenhuma estrutura de curso selecionada no momento. Clique no botão "Selecionar Estrutura" acima para escolher um modelo.
+          </td>
+        </tr>
+      `;
+    }
 
     sorted.forEach(m => {
       const gTopics = Array.isArray(m.gestorTopics) ? m.gestorTopics : [];

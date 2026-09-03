@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.5.1
+ * Versão: v.2.5.2
  */
 
 window.icons = {
@@ -2324,6 +2324,24 @@ class AutoReportApp {
   proceedNavigateToCourseStructure() {
     this.closeNavigateStructureModal();
     this.navigateTo('master-course-structure');
+  }
+
+  confirmClearCourseStructure() {
+    this.openConfirmModal({
+      title: 'Limpar Seleção da Estrutura',
+      msg: 'Tem certeza de que deseja limpar a estrutura de curso desta capacitação? A Tabela 2 ficará vazia até que você selecione uma nova estrutura.',
+      btnText: 'Sim, Limpar Estrutura',
+      onConfirm: async () => {
+        if (!this.currentTraining) return;
+        this.currentTraining.courseModules = [];
+        this.currentTraining.baseTemplateId = null;
+        this.currentTraining.baseTemplateName = 'Nenhuma selecionada';
+        this.currentTraining.isCustomized = false;
+        await this.db.saveTraining(this.currentTraining);
+        this.renderCourseStructureStep();
+        this.showToast('Seleção de estrutura removida com sucesso.', 'info');
+      }
+    });
   }
 
   renderTeamList() {
