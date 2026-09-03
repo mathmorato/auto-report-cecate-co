@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.7.6
+ * Versão: v.2.7.7
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.7.6';
+    this.version = 'v.2.7.7';
   }
 
   /**
@@ -5980,6 +5980,28 @@ class AutoReportApp {
     this.showToast(`Participante "${participant.name}" atualizado com sucesso!`, 'success');
   }
 
+  clearManualParticipantField(participantId, field) {
+    if (!this.currentTraining) return;
+    let participant = (this.currentTraining.attendance || []).find(p => p.id === participantId);
+    if (!participant) {
+      participant = (this.currentTraining.registrations || []).find(p => p.id === participantId);
+    }
+    if (!participant) return;
+
+    if (field === 'municipality') {
+      participant.municipality = '';
+      participant.isManualMunicipality = false;
+      participant.ibgeCode = null;
+    } else if (field === 'representation') {
+      participant.representation = '';
+      participant.isManualRepresentation = false;
+    }
+
+    this.reconcileMunicipalitiesFromRegistrationAndAttendance();
+    this.renderAttendanceStep();
+    this.saveCurrentStepData();
+  }
+
   renderAttendanceStep() {
     const statusBanner = document.getElementById('wizard-attendance-status-banner');
     const attContainer = document.getElementById('wizard-attendance-table-container');
@@ -6083,39 +6105,45 @@ class AutoReportApp {
 
     // Helper de renderização de linha de participante
     const renderParticipantRow = (p) => {
-      // PERMITIR EDIÇÃO APENAS PARA PARTICIPANTES NO STATUS 'Apenas Presente'
-      const isEditable = p.status === 'Apenas Presente';
       const isUnmappedMun = !p.municipality;
       const isUnmappedVinculo = !p.representation;
-      const isRowIncomplete = isEditable && (isUnmappedMun || isUnmappedVinculo);
+      const isRowIncomplete = isUnmappedMun || isUnmappedVinculo;
 
-      let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Inscrito e Presente</span>`;
+      // Status simplificado com siglas AP, AI, IP mantendo as cores
+      let statusBadge = `<span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:800; padding:0.15rem 0.5rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Inscrito e Presente"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>IP</span>`;
       if (p.status === 'Apenas Inscrito') {
-        statusBadge = `<span class="nav-badge badge-blue" style="font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>Apenas Inscrito</span>`;
+        statusBadge = `<span class="nav-badge badge-blue" style="font-size:0.75rem; font-weight:800; padding:0.15rem 0.5rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Apenas Inscrito"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>AI</span>`;
       } else if (p.status === 'Apenas Presente') {
-        statusBadge = `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.2); color:var(--accent-amber-text); font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:0.25rem;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>Apenas Presente</span>`;
+        statusBadge = `<span class="nav-badge" style="background:rgba(245, 158, 11, 0.2); color:var(--accent-amber-text); font-size:0.75rem; font-weight:800; padding:0.15rem 0.5rem; display:inline-flex; align-items:center; gap:0.25rem;" title="Apenas Presente"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle></svg>AP</span>`;
       }
 
-      const munTd = isEditable ? `
-        <select class="participant-table-select ${isUnmappedMun ? 'unmapped' : ''}" style="min-width:150px;" onchange="app.updateParticipantField('${p.id}', 'municipality', this.value)">
+      // Município: só pede para selecionar se não foi localizado na planilha
+      const munTd = isUnmappedMun ? `
+        <select class="participant-table-select unmapped" style="min-width:150px;" onchange="app.updateParticipantField('${p.id}', 'municipality', this.value)">
           <option value="">-- Selecionar Município --</option>
-          ${invitedMunOptions.map(m => `<option value="${m}" ${p.municipality && p.municipality.toLowerCase() === m.toLowerCase() ? 'selected' : ''}>${m}</option>`).join('')}
+          ${invitedMunOptions.map(m => `<option value="${m}">${m}</option>`).join('')}
         </select>
       ` : `
-        <span style="font-weight:600; color:var(--text-primary);">${p.municipality || '-'}</span>
-        ${p.matchedByCpf ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.25rem; padding:0.1rem 0.3rem; display:inline-flex; align-items:center; gap:0.2rem;"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>CPF Conciliado</span>' : ''}
+        <div style="display:inline-flex; align-items:center; gap:0.35rem;">
+          <span style="font-weight:600; color:var(--text-primary);">${p.municipality}</span>
+          ${p.isManualMunicipality ? `<button type="button" class="btn btn-sm btn-ghost text-muted" onclick="app.clearManualParticipantField('${p.id}', 'municipality')" title="Alterar município selecionado manualmente" style="padding:0 0.2rem; font-size:0.7rem; line-height:1;">${window.icons.edit}</button>` : ''}
+        </div>
       `;
 
-      const repTd = isEditable ? `
-        <select class="participant-table-select ${isUnmappedVinculo ? 'unmapped' : ''}" style="min-width:160px;" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
-          <option value="" ${!p.representation ? 'selected' : ''}>-- Selecionar Vínculo --</option>
-          <option value="Gestão municipal" ${p.representation === 'Gestão municipal' ? 'selected' : ''}>Gestão municipal</option>
-          <option value="CACS-FUNDEB" ${p.representation === 'CACS-FUNDEB' ? 'selected' : ''}>CACS-FUNDEB</option>
+      // Vínculo: só pede para selecionar se não foi localizado na planilha
+      const repTd = isUnmappedVinculo ? `
+        <select class="participant-table-select unmapped" style="min-width:160px;" onchange="app.updateParticipantField('${p.id}', 'representation', this.value)">
+          <option value="">-- Selecionar Vínculo --</option>
+          <option value="Gestão municipal">Gestão municipal</option>
+          <option value="CACS-FUNDEB">CACS-FUNDEB</option>
         </select>
       ` : `
-        <span class="nav-badge ${p.representation === 'CACS-FUNDEB' ? 'badge-emerald' : 'badge-blue'}" style="font-size:0.78rem; font-weight:600; white-space:nowrap;">
-          ${p.representation || 'Não informado'}
-        </span>
+        <div style="display:inline-flex; align-items:center; gap:0.35rem;">
+          <span class="nav-badge ${p.representation === 'CACS-FUNDEB' ? 'badge-emerald' : 'badge-blue'}" style="font-size:0.78rem; font-weight:600; white-space:nowrap;">
+            ${p.representation}
+          </span>
+          ${p.isManualRepresentation ? `<button type="button" class="btn btn-sm btn-ghost text-muted" onclick="app.clearManualParticipantField('${p.id}', 'representation')" title="Alterar vínculo selecionado manualmente" style="padding:0 0.2rem; font-size:0.7rem; line-height:1;">${window.icons.edit}</button>` : ''}
+        </div>
       `;
 
       return `
@@ -6123,9 +6151,9 @@ class AutoReportApp {
           <td style="vertical-align:middle;"><strong>${p.name || 'Não informado'}</strong></td>
           <td style="font-family:monospace; vertical-align:middle; white-space:nowrap;">
             ${p.cpf || '-'}
-            ${p.isCpfValidated ? '<span class="nav-badge badge-emerald" style="font-size:0.68rem; margin-left:0.35rem; padding:0.1rem 0.35rem; display:inline-flex; align-items:center; gap:0.2rem;" title="CPF validado na coluna CPF: XXX.XXX.XXX-XX"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>Validado</span>' : ''}
+            ${p.isCpfValidated ? '<span class="nav-badge badge-emerald" style="font-size:0.7rem; margin-left:0.35rem; padding:0.15rem 0.3rem; display:inline-flex; align-items:center;" title="CPF validado na coluna CPF: XXX.XXX.XXX-XX"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>' : ''}
           </td>
-          <td style="vertical-align:middle;">${statusBadge}</td>
+          <td style="vertical-align:middle; text-align:center;">${statusBadge}</td>
           <td style="vertical-align:middle;">${munTd}</td>
           <td style="vertical-align:middle;">${repTd}</td>
         </tr>
@@ -6138,9 +6166,25 @@ class AutoReportApp {
         attContainer.innerHTML = `<p style="color:var(--text-muted); padding:1rem 0;">Nenhuma planilha importada ainda. Arraste ou selecione as planilhas acima.</p>`;
       } else {
         attContainer.innerHTML = `
-          <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-            <span>Exibindo <strong>${consolidatedList.length}</strong> participantes total (Inscritos: <strong>${regList.length}</strong> | Presentes: <strong>${attList.length}</strong>):</span>
-            <span style="font-size:0.78rem; color:var(--text-secondary);">Edição de município e vínculo ativada exclusivamente para participantes no status "Apenas Presente".</span>
+          <div style="margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;">
+            <span style="font-size:0.85rem; color:var(--text-secondary);">
+              Exibindo <strong>${consolidatedList.length}</strong> participantes (Inscritos: <strong>${regList.length}</strong> | Presentes: <strong>${attList.length}</strong>):
+            </span>
+            <div style="display:flex; align-items:center; gap:0.85rem; flex-wrap:wrap; font-size:0.8rem; background:rgba(148, 163, 184, 0.08); padding:0.35rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+              <span style="font-weight:700; color:var(--text-primary);">Legenda:</span>
+              <span style="display:inline-flex; align-items:center; gap:0.35rem; color:var(--text-secondary);">
+                <span class="nav-badge" style="background:rgba(245, 158, 11, 0.2); color:var(--accent-amber-text); font-size:0.72rem; font-weight:800; padding:0.1rem 0.4rem;">AP</span>
+                <span>Apenas presente inscrito</span>
+              </span>
+              <span style="display:inline-flex; align-items:center; gap:0.35rem; color:var(--text-secondary);">
+                <span class="nav-badge badge-blue" style="font-size:0.72rem; font-weight:800; padding:0.1rem 0.4rem;">AI</span>
+                <span>Apenas inscrito</span>
+              </span>
+              <span style="display:inline-flex; align-items:center; gap:0.35rem; color:var(--text-secondary);">
+                <span class="nav-badge badge-emerald" style="font-size:0.72rem; font-weight:800; padding:0.1rem 0.4rem;">IP</span>
+                <span>Inscrito e Presente</span>
+              </span>
+            </div>
           </div>
           <div class="table-responsive-wrapper" style="max-height:480px; overflow-y:auto;">
             <table class="report-data-table">
@@ -6158,9 +6202,9 @@ class AutoReportApp {
                       <span class="sort-icon-badge">${this.getAttendanceSortIcon('cpf')}</span>
                     </div>
                   </th>
-                  <th class="th-sortable" onclick="app.sortAttendanceTable('status')" style="cursor:pointer; user-select:none; width:180px;" title="Clique para classificar por Status">
-                    <div style="display:inline-flex; align-items:center; gap:0.45rem;">
-                      <span>Status de Participação</span>
+                  <th class="th-sortable" onclick="app.sortAttendanceTable('status')" style="cursor:pointer; user-select:none; width:95px; text-align:center;" title="Clique para classificar por Status">
+                    <div style="display:inline-flex; align-items:center; justify-content:center; gap:0.45rem;">
+                      <span>Status</span>
                       <span class="sort-icon-badge">${this.getAttendanceSortIcon('status')}</span>
                     </div>
                   </th>
