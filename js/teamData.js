@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Catálogo Oficial de Equipe Participante (UFG & FNDE)
- * Versão: v.1.9.4
+ * Versão: v.2.4.5
  */
 
 window.OFFICIAL_PRONOUNS = [
@@ -10,19 +10,14 @@ window.OFFICIAL_PRONOUNS = [
   { value: 'Eng.', label: 'Eng. (Engenheiro/a)' },
   { value: 'Eng.ª', label: 'Eng.ª (Engenheira)' },
   { value: 'Pesquisador Visitante', label: 'Pesquisador Visitante' },
-  { value: 'Pesquisadora Visitante', label: 'Pesquisadora Visitante' },
-  { value: 'Sr.', label: 'Sr. (Senhor)' },
-  { value: 'Sra.', label: 'Sra. (Senhora)' }
+  { value: 'Pesquisadora Visitante', label: 'Pesquisadora Visitante' }
 ];
 
 window.OFFICIAL_TITLES = [
   { value: 'NENHUM', label: '(Nenhuma titulação)' },
   { value: 'Dr.', label: 'Dr. (Doutor)' },
   { value: 'Dra.', label: 'Dra. (Doutora)' },
-  { value: 'M.Sc.', label: 'M.Sc. (Mestre)' },
-  { value: 'Esp.', label: 'Esp. (Especialista)' },
-  { value: 'Bel.', label: 'Bel. (Bacharel)' },
-  { value: 'Grad.', label: 'Grad. (Graduado/a)' }
+  { value: 'M.Sc.', label: 'M.Sc. (Mestre)' }
 ];
 
 window.OFFICIAL_ROLES = [
