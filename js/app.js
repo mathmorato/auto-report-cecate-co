@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.5.3
+ * Versão: v.2.5.4
  */
 
 window.icons = {
@@ -2215,7 +2215,7 @@ class AutoReportApp {
   promptNavigateToCourseStructure() {
     const modal = document.getElementById('modal-confirm-navigate-structure');
     if (!modal) {
-      this.navigateTo('master-course-structure');
+      this.navigateTo('course-structure');
       return;
     }
     const statusEl = document.getElementById('modal-nav-structure-status');
@@ -2332,13 +2332,13 @@ class AutoReportApp {
 
   proceedNavigateToCourseStructure() {
     this.closeNavigateStructureModal();
-    this.navigateTo('master-course-structure');
+    this.navigateTo('course-structure');
   }
 
   confirmClearCourseStructure() {
     this.openConfirmModal({
       title: 'Limpar Seleção da Estrutura',
-      msg: 'Tem certeza de que deseja limpar a estrutura de curso desta capacitação? A Tabela 2 ficará vazia até que você selecione uma nova estrutura.',
+      msg: 'Deseja realmente remover a estrutura de curso escolhida para esta capacitação? A Tabela 2 ficará sem estrutura até que você selecione um novo modelo.',
       btnText: 'Sim, Limpar Estrutura',
       onConfirm: async () => {
         if (!this.currentTraining) return;
@@ -2346,9 +2346,11 @@ class AutoReportApp {
         this.currentTraining.baseTemplateId = null;
         this.currentTraining.baseTemplateName = 'Nenhuma selecionada';
         this.currentTraining.isCustomized = false;
-        await this.db.saveTraining(this.currentTraining);
+        if (window.db) {
+          await window.db.saveTrainingFull(this.currentTraining, 'Limpeza da estrutura de curso selecionada');
+        }
         this.renderCourseStructureStep();
-        this.showToast('Seleção de estrutura removida com sucesso.', 'info');
+        this.showToast('Estrutura removida com sucesso. Selecione um novo modelo quando desejar.', 'info');
       }
     });
   }
@@ -3519,26 +3521,31 @@ class AutoReportApp {
   renderCourseStructureStep() {
     if (!this.currentTraining) return;
 
-    // Se a capacitação ainda não tem módulos, carrega automaticamente uma cópia do Modelo Padrão ativo
-    if (!Array.isArray(this.currentTraining.courseModules) || this.currentTraining.courseModules.length === 0) {
+    // Normaliza módulos se existirem, sem reinjetar modelo automaticamente se tiver sido limpo
+    if (Array.isArray(this.currentTraining.courseModules) && this.currentTraining.courseModules.length > 0) {
       if (window.courseStructureHelper) {
-        this.currentTraining.courseModules = window.courseStructureHelper.getMasterCopy();
-        this.currentTraining.baseTemplateName = 'Modelo Padrão';
-        this.currentTraining.isCustomized = false;
+        this.currentTraining.courseModules = window.courseStructureHelper.normalize(this.currentTraining.courseModules);
       }
-    } else if (window.courseStructureHelper) {
-      this.currentTraining.courseModules = window.courseStructureHelper.normalize(this.currentTraining.courseModules);
+    } else {
+      this.currentTraining.courseModules = [];
     }
 
     // Atualizar banner de status da estrutura
     const nameEl = document.getElementById('step4-base-template-name');
     const statusEl = document.getElementById('step4-structure-status-tag');
-    if (nameEl) nameEl.textContent = this.currentTraining.baseTemplateName || 'Modelo Padrão';
+    const hasMods = this.currentTraining.courseModules.length > 0;
+    if (nameEl) {
+      nameEl.textContent = hasMods ? (this.currentTraining.baseTemplateName || 'Modelo Padrão') : 'Nenhuma selecionada';
+    }
     if (statusEl) {
-      if (this.currentTraining.isCustomized) {
+      if (!hasMods) {
+        statusEl.style.display = 'none';
+      } else if (this.currentTraining.isCustomized) {
+        statusEl.style.display = 'inline-flex';
         statusEl.className = 'nav-badge badge-blue';
         statusEl.textContent = 'Personalizada para esta capacitação';
       } else {
+        statusEl.style.display = 'inline-flex';
         statusEl.className = 'nav-badge badge-emerald';
         statusEl.textContent = 'Cópia independente da capacitação';
       }

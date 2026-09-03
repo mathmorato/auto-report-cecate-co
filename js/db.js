@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Banco de Dados Local (IndexedDB & State Management)
- * Versão: v.2.5.3
+ * Versão: v.2.5.4
  */
 
 class TrainingDB {
