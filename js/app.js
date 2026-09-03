@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.5.4
+ * Versão: v.2.5.5
  */
 
 window.icons = {
@@ -1208,6 +1208,15 @@ class AutoReportApp {
       }
     }
 
+    if (stepNumber === 5) {
+      const contactDateVal = this.getVal('wiz-contact-start-date');
+      if (contactDateVal && !this.validateContactStartDate(contactDateVal, true)) {
+        const cInput = document.getElementById('wiz-contact-start-date');
+        if (cInput) cInput.focus();
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -1250,6 +1259,7 @@ class AutoReportApp {
     // Ações ao entrar em etapas específicas
     if (this.currentStep === 3) this.renderMunicipalitiesStep();
     if (this.currentStep === 4) this.renderCourseStructureStep();
+    if (this.currentStep === 5) this.updateContactDateHint();
     if (this.currentStep === 6) this.renderAttendanceStep();
     if (this.currentStep === 7) {
       this.renderEvaluationStep();
@@ -1398,12 +1408,17 @@ class AutoReportApp {
       this.syncContactCheckboxesFromSavedMethods(sMethods);
       this.setVal('wiz-contact-responsible', t.contactsData.responsible || '');
       this.setVal('wiz-contact-notes', t.contactsData.notes || '');
+      this.updateContactDateHint();
+      if (sDate) {
+        this.validateContactStartDate(sDate, false);
+      }
     } else {
       this.setVal('wiz-contact-start-date', '');
       this.setVal('wiz-contact-methods', '');
       this.syncContactCheckboxesFromSavedMethods('');
       this.setVal('wiz-contact-responsible', '');
       this.setVal('wiz-contact-notes', '');
+      this.updateContactDateHint();
     }
 
     // Etapa 6: Inscrições & Presença
@@ -1738,7 +1753,16 @@ class AutoReportApp {
     }
     // Se completou os 10 caracteres (DD/MM/AAAA), dispara cálculo automático imediatamente
     if (input.value.length === 10) {
-      this.onDatesChanged();
+      if (input.id === 'wiz-contact-start-date') {
+        this.validateContactStartDate(input.value, true);
+        this.saveCurrentStepData();
+      } else {
+        this.onDatesChanged();
+      }
+    } else if (input.id === 'wiz-contact-start-date') {
+      const errEl = document.getElementById('wiz-contact-date-error');
+      if (errEl) errEl.style.display = 'none';
+      input.style.borderColor = '';
     }
   }
 
@@ -1755,6 +1779,19 @@ class AutoReportApp {
         if (startInput && startInput.value) {
           const isoStart = this.dmyToIso(startInput.value);
           if (isoStart) picker.min = isoStart;
+        }
+      }
+      if (field === 'contact') {
+        const startTrainingDate = this.currentTraining?.startDate || this.dmyToIso(this.getVal('wiz-train-start-date'));
+        if (startTrainingDate) {
+          const tDate = this.parseDateValue(startTrainingDate);
+          if (tDate) {
+            const maxAllowedDate = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate() - 7, 12, 0, 0);
+            const y = maxAllowedDate.getFullYear();
+            const m = String(maxAllowedDate.getMonth() + 1).padStart(2, '0');
+            const d = String(maxAllowedDate.getDate()).padStart(2, '0');
+            picker.max = `${y}-${m}-${d}`;
+          }
         }
       }
       try {
@@ -1779,9 +1816,100 @@ class AutoReportApp {
       if (field !== 'contact') {
         this.onDatesChanged();
       } else {
+        this.validateContactStartDate(textInput.value, true);
         this.saveCurrentStepData();
       }
     }
+  }
+
+  validateContactStartDate(contactDateStr, showToastIfInvalid = true) {
+    const input = document.getElementById('wiz-contact-start-date');
+    const errEl = document.getElementById('wiz-contact-date-error');
+
+    if (!contactDateStr || !contactDateStr.trim()) {
+      if (errEl) errEl.style.display = 'none';
+      if (input) input.style.borderColor = '';
+      return true;
+    }
+
+    const cDate = this.parseDateValue(contactDateStr);
+    if (!cDate) {
+      if (errEl) {
+        errEl.textContent = 'Data de início inválida. Use o formato DD/MM/AAAA.';
+        errEl.style.display = 'block';
+      }
+      if (input) input.style.borderColor = 'var(--accent-rose-border, #f43f5e)';
+      if (showToastIfInvalid) {
+        this.showToast('Data de Início dos Contatos inválida. Utilize o formato DD/MM/AAAA.', 'warning');
+      }
+      return false;
+    }
+
+    const tStartRaw = this.currentTraining?.startDate || this.dmyToIso(this.getVal('wiz-train-start-date'));
+    if (!tStartRaw) {
+      if (errEl) errEl.style.display = 'none';
+      if (input) input.style.borderColor = '';
+      return true;
+    }
+
+    const tDate = this.parseDateValue(tStartRaw);
+    if (!tDate) {
+      if (errEl) errEl.style.display = 'none';
+      if (input) input.style.borderColor = '';
+      return true;
+    }
+
+    // Regra institucional: a data de início dos contatos não pode ser maior que 1 semana antes do 1º dia da capacitação
+    const maxAllowedDate = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate() - 7, 12, 0, 0);
+    const maxAllowedDmy = `${String(maxAllowedDate.getDate()).padStart(2, '0')}/${String(maxAllowedDate.getMonth() + 1).padStart(2, '0')}/${maxAllowedDate.getFullYear()}`;
+    const tStartDmy = `${String(tDate.getDate()).padStart(2, '0')}/${String(tDate.getMonth() + 1).padStart(2, '0')}/${tDate.getFullYear()}`;
+
+    if (cDate.getTime() > maxAllowedDate.getTime()) {
+      const msg = `A data de início dos contatos (${this.isoToDmy(this.dmyToIso(contactDateStr))}) não pode ser maior que uma semana antes do primeiro dia da capacitação (${tStartDmy}). Limite máximo permitido: ${maxAllowedDmy}.`;
+      if (errEl) {
+        errEl.textContent = `A data não pode ser posterior a ${maxAllowedDmy} (pelo menos 1 semana antes da capacitação em ${tStartDmy}).`;
+        errEl.style.display = 'block';
+      }
+      if (input) input.style.borderColor = 'var(--accent-rose-border, #f43f5e)';
+      if (showToastIfInvalid) {
+        this.showToast(msg, 'warning');
+      }
+      return false;
+    }
+
+    if (errEl) errEl.style.display = 'none';
+    if (input) input.style.borderColor = '';
+    return true;
+  }
+
+  updateContactDateHint() {
+    const hintEl = document.getElementById('wiz-contact-date-hint');
+    if (!hintEl) return;
+
+    const startTrainingDate = this.currentTraining?.startDate || this.dmyToIso(this.getVal('wiz-train-start-date'));
+    if (!startTrainingDate) {
+      hintEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">Defina a Data Inicial na Etapa 1 para calcular o prazo limite de contato.</span>';
+      return;
+    }
+
+    const tDate = this.parseDateValue(startTrainingDate);
+    if (!tDate) return;
+
+    const maxAllowedDate = new Date(tDate.getFullYear(), tDate.getMonth(), tDate.getDate() - 7, 12, 0, 0);
+    const maxAllowedDmy = `${String(maxAllowedDate.getDate()).padStart(2, '0')}/${String(maxAllowedDate.getMonth() + 1).padStart(2, '0')}/${maxAllowedDate.getFullYear()}`;
+    const tStartDmy = `${String(tDate.getDate()).padStart(2, '0')}/${String(tDate.getMonth() + 1).padStart(2, '0')}/${tDate.getFullYear()}`;
+
+    hintEl.innerHTML = `<span style="color:var(--text-muted); font-size:0.75rem;">Início da Capacitação: <strong>${tStartDmy}</strong> | Limite máximo para contato: <strong style="color:var(--accent-blue-text);">${maxAllowedDmy}</strong> (pelo menos 7 dias antes)</span>`;
+  }
+
+  onContactDateBlur(input) {
+    if (!input || !input.value) {
+      const errEl = document.getElementById('wiz-contact-date-error');
+      if (errEl) errEl.style.display = 'none';
+      if (input) input.style.borderColor = '';
+      return;
+    }
+    this.validateContactStartDate(input.value, true);
   }
 
   onDatesBlur(field) {
@@ -1926,6 +2054,11 @@ class AutoReportApp {
       this.currentTraining.endDate = isEndInvalid ? '' : (this.dmyToIso(endVal) || endVal || this.currentTraining.startDate);
       this.currentTraining.datesFormatted = formatted;
       this.currentTraining.workload = `${autoWorkload} horas`;
+      this.updateContactDateHint();
+      const contactDateVal = this.getVal('wiz-contact-start-date');
+      if (contactDateVal) {
+        this.validateContactStartDate(contactDateVal, false);
+      }
       this.saveCurrentStepData();
     }
   }
@@ -2333,6 +2466,9 @@ class AutoReportApp {
   proceedNavigateToCourseStructure() {
     this.closeNavigateStructureModal();
     this.navigateTo('course-structure');
+    if (this.renderCourseTemplatesCatalog) this.renderCourseTemplatesCatalog();
+    if (this.renderGlobalMasterCourseStructure) this.renderGlobalMasterCourseStructure();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   confirmClearCourseStructure() {

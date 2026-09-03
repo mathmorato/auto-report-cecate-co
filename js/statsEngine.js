@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Tabelas Consolidadas
- * Versão: v.2.5.4
+ * Versão: v.2.5.5
  */
 
 class StatsEngine {
@@ -246,8 +246,12 @@ class StatsEngine {
     if (sorted.length === 0) {
       rowsHtml = `
         <tr>
-          <td colspan="5" style="text-align:center; padding:2rem 1rem; color:var(--text-muted); font-style:italic;">
-            Nenhuma estrutura de curso selecionada no momento. Clique no botão "Selecionar Estrutura" acima para escolher um modelo.
+          <td colspan="5" style="text-align:center; padding:3rem 1.5rem; color:var(--text-muted);">
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.6rem;">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.45;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              <div style="font-size:0.95rem; font-weight:600; color:var(--text-secondary);">Nenhuma estrutura de curso selecionada no momento.</div>
+              <div style="font-size:0.82rem; color:var(--text-muted);">Clique no botão <strong>"Selecionar Estrutura"</strong> acima para aplicar um modelo com seus módulos e cargas horárias.</div>
+            </div>
           </td>
         </tr>
       `;
@@ -368,6 +372,7 @@ class StatsEngine {
           <tbody>
             ${rowsHtml}
           </tbody>
+          ${sorted.length > 0 ? `
           <tfoot>
             <tr style="font-weight:700; background:rgba(99, 102, 241, 0.08);">
               <td colspan="3" style="text-align:center; vertical-align:middle;">Total Geral de Carga Horária:</td>
@@ -375,6 +380,7 @@ class StatsEngine {
               <td style="text-align:center; vertical-align:middle; font-weight:800; color:var(--accent-emerald-text);">${totalHoursCACS.toFixed(1).replace('.', ',')} h</td>
             </tr>
           </tfoot>
+          ` : ''}
         </table>
       </div>
     `;
