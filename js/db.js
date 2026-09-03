@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerenciador de Banco de Dados Local (IndexedDB)
- * Versão: v.2.8.3
+ * Versão: v.2.8.4
  */
 
 class TrainingDB {

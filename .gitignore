@@ -1,0 +1,13 @@
+# Arquivos temporários de bloqueio do Microsoft Office / Excel
+~$*
+~$*.xlsx
+~$*.xls
+~$*.docx
+~$*.doc
+~$*.pptx
+
+# Arquivos de sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
