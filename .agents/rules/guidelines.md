@@ -181,7 +181,19 @@ O agente deverá automaticamente:
 5. Atualizar os cabeçalhos de versionamento em todos os arquivos JavaScript do projeto (`js/*.js`).
 6. Verificar a consistência da versão em todo o projeto.
 
-Não solicitar autorização para incrementar a versão.
+## 3.4 Persistência Híbrida Obrigatória: Nuvem (Supabase) e Sistema Local (IndexedDB)
+
+A aplicação opera sob arquitetura híbrida de alta disponibilidade e persistência compartilhada em nuvem:
+
+1. **Dualidade Obrigatória em Toda Alteração de Dados:**
+   - **Sempre que for realizada qualquer criação, edição, salvamento, exclusão ou atualização de dados** (capacitações, histórico, integrantes da equipe, municípios, presenças, módulos ou configurações), a alteração deve ocorrer **obrigatoriamente tanto no sistema local (IndexedDB) quanto na nuvem (Supabase PostgreSQL)**.
+   - É estritamente proibido salvar ou deletar dados exclusivamente no IndexedDB local ou exclusivamente na nuvem. Os dois ambientes devem sempre permanecer perfeitamente sincronizados.
+2. **Exclusões Completas e em Cascata:**
+   - Ao excluir qualquer registro, o agente e a aplicação devem remover os dados em cascata do IndexedDB local e enviar imediatamente o comando de exclusão correspondente para o Supabase (`deleteTrainingFromCloud` / `DELETE`).
+   - Se uma capacitação for excluída na nuvem, as rotinas de sincronização (`syncFromCloud`) devem expurgá-la do banco de dados local dos demais usuários para manter a integridade absoluta da base.
+3. **Carregamento Instantâneo e Tolerância Offline (Offline-First):**
+   - A aplicação deve inicializar de forma instantânea a partir do cache local do IndexedDB, garantindo que abrir o arquivo `index.html` localmente funcione com velocidade máxima mesmo sem internet.
+   - A sincronização em nuvem (`syncFromCloud`) deve rodar em segundo plano de forma não-bloqueante, atualizando o cache local e a interface sempre que houver novidades na nuvem compartilhada.
 
 ---
 
@@ -387,6 +399,7 @@ Uma tarefa somente deverá ser considerada concluída quando:
 * As logos existentes em `assets` tiverem sido utilizadas corretamente.
 * A versão tiver sido incrementada corretamente.
 * A nova versão estiver visível no rodapé.
+* A persistência híbrida (salvamento e exclusão tanto no sistema local IndexedDB quanto na nuvem Supabase) tiver sido assegurada e validada.
 * Os testes e validações aplicáveis tiverem sido executados.
 * Não existirem erros introduzidos pela alteração.
 * O commit tiver sido criado.
