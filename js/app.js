@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.4.6
+ * Versão: v.2.4.7
  */
 
 window.icons = {
@@ -2893,6 +2893,9 @@ class AutoReportApp {
       calcDesc.innerHTML = `Calculado automaticamente: <strong>4 participantes × ${muns.length} municípios</strong> (incluindo o município sede/polo <em>${poloName}</em>) = <strong>${autoExpected} participantes previstos</strong>.`;
     }
 
+    const bulkContainer = document.getElementById('mun-bulk-actions-container');
+    if (bulkContainer) bulkContainer.style.display = 'none';
+
     if (muns.length === 0) {
       container.innerHTML = `
         <div style="text-align:center; padding:2.5rem 1.5rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-muted);">
@@ -2923,6 +2926,12 @@ class AutoReportApp {
       return `
         <tr>
           <td style="text-align:center;">
+            ${m.isSede 
+              ? `<input type="checkbox" disabled title="A sede do polo não pode ser excluída" style="opacity:0.25; cursor:not-allowed; width:15px; height:15px;">` 
+              : `<input type="checkbox" class="mun-row-checkbox" data-target-index="${targetIdx}" onchange="app.onMunicipalityCheckboxChange()" style="cursor:pointer; width:15px; height:15px;">`
+            }
+          </td>
+          <td style="text-align:center;">
             <span class="font-mono" style="font-weight:700; color:var(--accent-blue-text); font-size:0.92rem;">${m.ibgeCode || '-'}</span>
           </td>
           <td>
@@ -2941,10 +2950,12 @@ class AutoReportApp {
           </td>
           <td style="text-align:center; white-space:nowrap;">
             <div style="display:inline-flex; gap:0.4rem; justify-content:center; align-items:center;">
-              <button type="button" class="btn btn-secondary btn-sm btn-action-edit" onclick="app.openMunicipalityInPageEditor(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar dados do município">${window.icons.edit} Editar</button>
               ${m.isSede 
-                ? `<span class="btn btn-secondary btn-sm" style="opacity:0.65; cursor:default; font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Município Sede / Polo Oficial">${window.icons.sede} Sede</span>`
-                : `<button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMunicipality(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir município">${window.icons.delete} Excluir</button>`
+                ? `<span class="btn btn-secondary btn-sm" style="opacity:0.75; cursor:default; font-size:0.75rem; padding:0.25rem 0.65rem; display:inline-flex; align-items:center; font-weight:600;" title="Município Sede / Polo Oficial">${window.icons.sede} Sede</span>`
+                : `
+                  <button type="button" class="btn btn-secondary btn-sm btn-action-edit" onclick="app.openMunicipalityInPageEditor(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Editar dados do município">${window.icons.edit} Editar</button>
+                  <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.removeMunicipality(${targetIdx})" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center;" title="Excluir município">${window.icons.delete} Excluir</button>
+                `
               }
             </div>
           </td>
@@ -2957,10 +2968,13 @@ class AutoReportApp {
         <table class="report-data-table">
           <thead>
             <tr>
-              <th style="width: 140px; text-align:center;">Código IBGE</th>
+              <th style="width: 44px; text-align:center;">
+                <input type="checkbox" id="mun-table-select-all" onchange="app.toggleSelectAllTableMunicipalities(this.checked)" title="Selecionar todos os municípios convocados" style="cursor:pointer; width:16px; height:16px;">
+              </th>
+              <th style="width: 130px; text-align:center;">Código IBGE</th>
               <th>Nome do Município</th>
-              <th style="width: 80px; text-align:center;">UF</th>
-              <th style="width: 160px; text-align:right;">Distância (km)</th>
+              <th style="width: 70px; text-align:center;">UF</th>
+              <th style="width: 140px; text-align:right;">Distância (km)</th>
               <th style="width: 140px; text-align:center;">Ações</th>
             </tr>
           </thead>
@@ -3159,6 +3173,82 @@ class AutoReportApp {
     this.renderMunicipalitiesStep();
     this.saveCurrentStepData();
     this.showToast('Município removido da lista.');
+  }
+
+  /* --------------------------------------------------------------------------
+     AÇÕES EM MASSA: SELEÇÃO E EXCLUSÃO DE MUNICÍPIOS
+     -------------------------------------------------------------------------- */
+  toggleSelectAllTableMunicipalities(isChecked) {
+    const checkboxes = document.querySelectorAll('.mun-row-checkbox');
+    checkboxes.forEach(cb => {
+      cb.checked = isChecked;
+    });
+    this.onMunicipalityCheckboxChange();
+  }
+
+  onMunicipalityCheckboxChange() {
+    const checkboxes = document.querySelectorAll('.mun-row-checkbox');
+    const checked = Array.from(checkboxes).filter(cb => cb.checked);
+    const container = document.getElementById('mun-bulk-actions-container');
+    const btnText = document.getElementById('btn-delete-selected-muns-text');
+    const selectAllCb = document.getElementById('mun-table-select-all');
+
+    if (selectAllCb) {
+      selectAllCb.checked = checkboxes.length > 0 && checked.length === checkboxes.length;
+      selectAllCb.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+    }
+
+    if (container) {
+      if (checked.length > 0) {
+        container.style.display = 'flex';
+        if (btnText) {
+          btnText.textContent = `Excluir Selecionados (${checked.length})`;
+        }
+      } else {
+        container.style.display = 'none';
+      }
+    }
+  }
+
+  confirmDeleteSelectedMunicipalities() {
+    const checkboxes = document.querySelectorAll('.mun-row-checkbox:checked');
+    const count = checkboxes.length;
+    if (count === 0) return;
+
+    this.openConfirmModal({
+      title: 'Excluir Municípios Selecionados',
+      msg: `Tem certeza que deseja excluir os ${count} municípios selecionados da lista de convocados? O município sede/polo será preservado.`,
+      btnText: 'Sim, Excluir Selecionados',
+      onConfirm: () => {
+        this.executeDeleteSelectedMunicipalities();
+      }
+    });
+  }
+
+  async executeDeleteSelectedMunicipalities() {
+    if (!this.currentTraining || !Array.isArray(this.currentTraining.municipalities)) return;
+
+    const checkboxes = document.querySelectorAll('.mun-row-checkbox:checked');
+    const indicesToDelete = new Set();
+    checkboxes.forEach(cb => {
+      const idx = parseInt(cb.getAttribute('data-target-index'), 10);
+      if (!isNaN(idx)) indicesToDelete.add(idx);
+    });
+
+    if (indicesToDelete.size === 0) return;
+
+    const deletedCount = indicesToDelete.size;
+    this.currentTraining.municipalities = this.currentTraining.municipalities.filter((m, idx) => {
+      if (m.isSede) return true; // Sempre preserva o município sede
+      return !indicesToDelete.has(idx);
+    });
+
+    this.renderMunicipalitiesStep();
+    this.saveCurrentStepData();
+    if (window.db) {
+      await window.db.saveTrainingFull(this.currentTraining, `Exclusão em massa de ${deletedCount} municípios convocados`);
+    }
+    this.showToast(`${deletedCount} município(s) excluído(s) com sucesso!`, 'success');
   }
 
   recalculateAllDistancesToPolo() {
