@@ -226,7 +226,7 @@
               </div>
 
               <div style="display:flex; gap:0.5rem; align-items:center;">
-                <button class="btn btn-secondary btn-sm" onclick="app.navigateTo('dashboard')" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                <button class="btn btn-secondary btn-sm" onclick="app.promptExitWizardToDashboard()" style="display:inline-flex; align-items:center; gap:0.35rem;" title="Retornar ao Dashboard inicial com segurança">
                   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 5 12 10 7"></polyline><line x1="15" y1="12" x2="5" y2="12"></line></svg> Sair para Dashboard
                 </button>
                 <button class="btn btn-secondary btn-sm" id="wizard-btn-save" onclick="app.manualSaveTraining()" title="Salvar todas as alterações agora" style="display:inline-flex; align-items:center; gap:0.35rem;">
@@ -1483,7 +1483,7 @@
           </span>
         </div>
         <div class="footer-right">
-          <span class="footer-version-tag" id="app-footer-version">v.2.4.2</span>
+          <span class="footer-version-tag" id="app-footer-version">v.2.4.3</span>
         </div>
       </footer>
     </div>
@@ -2424,33 +2424,65 @@
     </div>
   </div>
 
-  <!-- Modal de Alerta de Saída para Equipe Técnica -->
-  <div id="modal-confirm-navigate-team" class="modal-backdrop" style="display:none; align-items:center; justify-content:center; animation:fadeIn 0.2s ease;">
-    <div class="modal-card" style="max-width:500px; width:92%; text-align:center; padding:1.75rem;">
-      <div style="width:52px; height:52px; border-radius:50%; background:rgba(245, 158, 11, 0.15); color:var(--accent-amber, #f59e0b); display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem;">
+  <!-- Modal 1: Alerta de Saída para Equipe Técnica -->
+  <div id="modal-confirm-navigate-team" class="modal-backdrop" style="display:none; align-items:center; justify-content:center;">
+    <div class="modal-dialog modal-safety-dialog">
+      <div class="modal-safety-icon-box">
         <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
       </div>
-      <h3 style="margin:0 0 0.5rem 0; font-size:1.2rem; color:var(--text-primary); font-weight:700;">Atenção: Mudança de Tela</h3>
-      <p style="margin:0 0 1.25rem 0; font-size:0.92rem; color:var(--text-secondary); line-height:1.5;">
+      <h3 class="modal-safety-title">Atenção: Mudança de Tela</h3>
+      <p class="modal-safety-desc">
         Você está prestes a sair do preenchimento desta capacitação para gerenciar a Equipe Técnica geral. Para evitar que alterações não salvas sejam perdidas, salve os dados antes de prosseguir.
       </p>
 
       <!-- Status de Salvamento Dinâmico -->
-      <div id="modal-nav-team-status" style="display:none; margin-bottom:1.25rem; padding:0.75rem 1rem; border-radius:var(--radius-md); font-size:0.88rem; font-weight:600;"></div>
+      <div id="modal-nav-team-status" style="display:none; margin-bottom:1.5rem; padding:0.85rem 1rem; border-radius:var(--radius-md); font-size:0.92rem; font-weight:700;"></div>
 
-      <div style="display:flex; justify-content:center; gap:0.75rem; flex-wrap:wrap;">
-        <button type="button" class="btn btn-secondary" id="modal-nav-team-btn-cancel" onclick="app.closeNavigateTeamModal()">Cancelar</button>
+      <div style="display:flex; justify-content:center; gap:0.85rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-safety-cancel" id="modal-nav-team-btn-cancel" onclick="app.closeNavigateTeamModal()">Cancelar</button>
         
         <!-- Botão Salvar com Rodela de Carregamento -->
-        <button type="button" class="btn btn-primary" id="modal-nav-team-btn-save" onclick="app.saveAndPrepareNavigateToTeam()" style="display:inline-flex; align-items:center; gap:0.5rem; font-weight:700;">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <button type="button" class="btn btn-safety-save" id="modal-nav-team-btn-save" onclick="app.saveAndPrepareNavigateToTeam()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
           <span id="modal-nav-team-btn-save-text">Salvar Alterações</span>
         </button>
 
         <!-- Botão Continuar: Aparece SOMENTE DEPOIS do salvamento concluído -->
-        <button type="button" class="btn" id="modal-nav-team-btn-continue" onclick="app.proceedNavigateToTeam()" style="display:none; align-items:center; gap:0.4rem; font-weight:700; background:var(--accent-success, #10b981); color:#fff; border:none; padding:0.5rem 1.25rem; border-radius:var(--radius-md);">
+        <button type="button" class="btn btn-safety-continue" id="modal-nav-team-btn-continue" onclick="app.proceedNavigateToTeam()" style="display:none;">
           <span>Continuar para Equipe Técnica</span>
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Alerta de Saída para o Dashboard -->
+  <div id="modal-confirm-exit-wizard" class="modal-backdrop" style="display:none; align-items:center; justify-content:center;">
+    <div class="modal-dialog modal-safety-dialog">
+      <div class="modal-safety-icon-box">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </div>
+      <h3 class="modal-safety-title">Atenção: Sair do Preenchimento</h3>
+      <p class="modal-safety-desc">
+        Você está prestes a sair do formulário desta capacitação para retornar ao Dashboard. Para evitar que alterações não salvas sejam perdidas, salve os dados antes de sair.
+      </p>
+
+      <!-- Status de Salvamento Dinâmico -->
+      <div id="modal-exit-wiz-status" style="display:none; margin-bottom:1.5rem; padding:0.85rem 1rem; border-radius:var(--radius-md); font-size:0.92rem; font-weight:700;"></div>
+
+      <div style="display:flex; justify-content:center; gap:0.85rem; flex-wrap:wrap;">
+        <button type="button" class="btn btn-safety-cancel" id="modal-exit-wiz-btn-cancel" onclick="app.closeExitWizardModal()">Cancelar</button>
+        
+        <!-- Botão Salvar com Rodela de Carregamento -->
+        <button type="button" class="btn btn-safety-save" id="modal-exit-wiz-btn-save" onclick="app.saveAndPrepareExitToDashboard()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span id="modal-exit-wiz-btn-save-text">Salvar Alterações</span>
+        </button>
+
+        <!-- Botão Continuar: Aparece SOMENTE DEPOIS do salvamento concluído -->
+        <button type="button" class="btn btn-safety-continue" id="modal-exit-wiz-btn-continue" onclick="app.proceedExitToDashboard()" style="display:none;">
+          <span>Continuar para Dashboard</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </div>
     </div>

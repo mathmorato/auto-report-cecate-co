@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.4.2
+ * Versão: v.2.4.3
  */
 
 window.icons = {
@@ -1984,8 +1984,8 @@ class AutoReportApp {
       statusEl.style.alignItems = 'center';
       statusEl.style.justifyContent = 'center';
       statusEl.style.gap = '0.5rem';
-      statusEl.style.background = 'rgba(59, 130, 246, 0.1)';
-      statusEl.style.border = '1px solid rgba(59, 130, 246, 0.25)';
+      statusEl.style.background = 'rgba(59, 130, 246, 0.15)';
+      statusEl.style.border = '1px solid rgba(59, 130, 246, 0.35)';
       statusEl.style.color = '#60a5fa';
       statusEl.innerHTML = `
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
@@ -2006,9 +2006,9 @@ class AutoReportApp {
 
       // 3. Sucesso: esconde botão de salvar e somente agora exibe o botão de continuar
       if (statusEl) {
-        statusEl.style.background = 'rgba(16, 185, 129, 0.12)';
-        statusEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
-        statusEl.style.color = '#10b981';
+        statusEl.style.background = 'rgba(16, 185, 129, 0.18)';
+        statusEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+        statusEl.style.color = '#34d399';
         statusEl.innerHTML = `
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           <span>Dados salvos com sucesso! Você pode prosseguir com segurança.</span>
@@ -2030,14 +2030,14 @@ class AutoReportApp {
       if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerHTML = `
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
           <span>Tentar Salvar Novamente</span>
         `;
       }
       if (statusEl) {
-        statusEl.style.background = 'rgba(239, 68, 68, 0.12)';
-        statusEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-        statusEl.style.color = '#ef4444';
+        statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+        statusEl.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+        statusEl.style.color = '#f87171';
         statusEl.innerHTML = 'Ocorreu um erro ao salvar os dados. Tente novamente.';
       }
       this.showToast('Erro ao salvar alterações.', 'error');
@@ -2047,6 +2047,134 @@ class AutoReportApp {
   proceedNavigateToTeam() {
     this.closeNavigateTeamModal();
     this.navigateTo('team');
+  }
+
+  /* --------------------------------------------------------------------------
+     ALERTA DE SEGURANÇA E SALVAMENTO AO SAIR PARA DASHBOARD
+     -------------------------------------------------------------------------- */
+  promptExitWizardToDashboard() {
+    const modal = document.getElementById('modal-confirm-exit-wizard');
+    if (!modal) {
+      this.navigateTo('dashboard');
+      return;
+    }
+    const statusEl = document.getElementById('modal-exit-wiz-status');
+    const saveBtn = document.getElementById('modal-exit-wiz-btn-save');
+    const continueBtn = document.getElementById('modal-exit-wiz-btn-continue');
+    const cancelBtn = document.getElementById('modal-exit-wiz-btn-cancel');
+
+    if (statusEl) {
+      statusEl.style.display = 'none';
+      statusEl.innerHTML = '';
+    }
+    if (saveBtn) {
+      saveBtn.style.display = 'inline-flex';
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <span id="modal-exit-wiz-btn-save-text">Salvar Alterações</span>
+      `;
+    }
+    if (continueBtn) {
+      continueBtn.style.display = 'none';
+    }
+    if (cancelBtn) {
+      cancelBtn.style.display = 'inline-flex';
+    }
+
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
+
+  closeExitWizardModal() {
+    const modal = document.getElementById('modal-confirm-exit-wizard');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  }
+
+  async saveAndPrepareExitToDashboard() {
+    const statusEl = document.getElementById('modal-exit-wiz-status');
+    const saveBtn = document.getElementById('modal-exit-wiz-btn-save');
+    const continueBtn = document.getElementById('modal-exit-wiz-btn-continue');
+
+    // 1. Rodela de carregamento giratória
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite; vertical-align:-2px;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+        <span>Salvando dados...</span>
+      `;
+    }
+
+    if (statusEl) {
+      statusEl.style.display = 'flex';
+      statusEl.style.alignItems = 'center';
+      statusEl.style.justifyContent = 'center';
+      statusEl.style.gap = '0.5rem';
+      statusEl.style.background = 'rgba(59, 130, 246, 0.15)';
+      statusEl.style.border = '1px solid rgba(59, 130, 246, 0.35)';
+      statusEl.style.color = '#60a5fa';
+      statusEl.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.8s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+        <span>Gravando dados da capacitação com segurança...</span>
+      `;
+    }
+
+    try {
+      // 2. Persistir no IndexedDB
+      this.saveCurrentStepData();
+
+      if (this.currentTraining && window.db) {
+        await window.db.saveTrainingFull(this.currentTraining, 'Salvamento prévio antes de sair para o Dashboard');
+      }
+
+      await new Promise(res => setTimeout(res, 600));
+
+      // 3. Exibir confirmação e liberar botão de continuar
+      if (statusEl) {
+        statusEl.style.background = 'rgba(16, 185, 129, 0.18)';
+        statusEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+        statusEl.style.color = '#34d399';
+        statusEl.innerHTML = `
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Dados salvos com sucesso! Você pode prosseguir com segurança.</span>
+        `;
+      }
+
+      if (saveBtn) {
+        saveBtn.style.display = 'none';
+      }
+
+      // SOMENTE DEPOIS APARECER O BOTÃO DE CONTINUAR
+      if (continueBtn) {
+        continueBtn.style.display = 'inline-flex';
+      }
+
+      this.showToast('Dados salvos com segurança!', 'success');
+    } catch (err) {
+      console.error('Erro ao salvar dados antes de sair:', err);
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span>Tentar Salvar Novamente</span>
+        `;
+      }
+      if (statusEl) {
+        statusEl.style.background = 'rgba(239, 68, 68, 0.15)';
+        statusEl.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+        statusEl.style.color = '#f87171';
+        statusEl.innerHTML = 'Ocorreu um erro ao salvar os dados. Tente novamente.';
+      }
+      this.showToast('Erro ao salvar alterações.', 'error');
+    }
+  }
+
+  proceedExitToDashboard() {
+    this.closeExitWizardModal();
+    this.navigateTo('dashboard');
   }
 
   renderTeamList() {

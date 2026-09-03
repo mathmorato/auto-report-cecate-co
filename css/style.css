@@ -2395,6 +2395,144 @@ body.light-theme .course-topic-col {
   align-items: center;
 }
 
+/* ==========================================================================
+   Modais de Alerta de Segurança e Salvamento (Transição de Tela Segura)
+   ========================================================================== */
+.modal-safety-dialog {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 16px !important;
+  padding: 2rem !important;
+  max-width: 520px !important;
+  width: 92%;
+  text-align: center;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+.modal-safety-dialog .modal-safety-title {
+  margin: 0 0 0.75rem 0 !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.modal-safety-dialog .modal-safety-desc {
+  margin: 0 0 1.5rem 0 !important;
+  font-size: 0.95rem !important;
+  color: #cbd5e1 !important;
+  line-height: 1.6 !important;
+}
+
+.modal-safety-dialog .modal-safety-icon-box {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.btn-safety-cancel {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  border: 1px solid #475569 !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  padding: 0.65rem 1.4rem !important;
+  border-radius: var(--radius-md) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-safety-cancel:hover {
+  background: #334155 !important;
+  border-color: #64748b !important;
+  color: #ffffff !important;
+}
+
+.btn-safety-save {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #3b82f6 !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  padding: 0.65rem 1.5rem !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-safety-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+.btn-safety-save:disabled {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.btn-safety-continue {
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #34d399 !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  padding: 0.65rem 1.5rem !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.45) !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
+}
+
+.btn-safety-continue:hover {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6) !important;
+  transform: translateY(-1px);
+}
+
+/* Ajustes em Modo Claro */
+body.light-theme .modal-safety-dialog {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+body.light-theme .modal-safety-dialog .modal-safety-title {
+  color: #0f172a !important;
+}
+
+body.light-theme .modal-safety-dialog .modal-safety-desc {
+  color: #334155 !important;
+}
+
+body.light-theme .btn-safety-cancel {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+body.light-theme .btn-safety-cancel:hover {
+  background: #e2e8f0 !important;
+  color: #000000 !important;
+}
+
+
 
 
 
