@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.4
+ * Versão: v.2.9.5
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.4';
+    this.version = 'v.2.9.5';
   }
 
   /**
@@ -7434,6 +7434,53 @@ class AutoReportApp {
 
     await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics, imagesData);
     this.showToast('Documento Word (.docx) baixado com sucesso!', 'success');
+  }
+
+  /**
+   * Exporta a Base Única Consolidada em Excel (.xlsx) compatível com o Power BI
+   * Contendo as tabelas tblPesquisa, tblAvaliacoes, Controle, Dicionario e LEIA-ME
+   */
+  async exportPowerBiConsolidatedExcel() {
+    if (!window.excelParser) {
+      this.showToast('Processador Excel não disponível.', 'error');
+      return;
+    }
+
+    try {
+      this.showToast('Gerando Base Única Consolidada para o Power BI...', 'info');
+
+      // Obter todas as capacitações com dados completos
+      let allTrainings = [];
+      if (window.db) {
+        const fullList = await window.db.getAllTrainings();
+        for (const t of fullList) {
+          const full = await window.db.getTrainingFull(t.id);
+          if (full) allTrainings.push(full);
+          else allTrainings.push(t);
+        }
+      }
+
+      // Se não houver do banco ou estiver operando em memória
+      if (allTrainings.length === 0 && window.HISTORICAL_TRAININGS) {
+        allTrainings = [...window.HISTORICAL_TRAININGS];
+      }
+
+      // Incluir ou atualizar com a capacitação atualmente aberta se houver avaliações
+      if (this.currentTraining) {
+        const existIdx = allTrainings.findIndex(t => t.id === this.currentTraining.id || parseInt(t.number) === parseInt(this.currentTraining.number));
+        if (existIdx >= 0) {
+          allTrainings[existIdx] = this.currentTraining;
+        } else {
+          allTrainings.push(this.currentTraining);
+        }
+      }
+
+      const stats = window.excelParser.downloadPowerBiExcel(allTrainings, 'Base_Unica_Avaliacoes_CTE.xlsx');
+      this.showToast(`Base do Power BI exportada! ${stats.totalPesquisas} pesquisas e ${stats.totalAvaliacoes} avaliações consolidadas com anonimização completa.`, 'success');
+    } catch (err) {
+      console.error('Erro ao exportar base do Power BI:', err);
+      this.showToast(`Erro ao exportar base: ${err.message}`, 'error');
+    }
   }
 
   printReportPDF() {

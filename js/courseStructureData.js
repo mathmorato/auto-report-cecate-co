@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Estrutura Padrão do Curso e Módulos
- * Versão: v.2.9.4
+ * AutoReport CECATE - Estruturas Oficiais do Curso (Módulos, Temáticas e Cargas Horárias)
+ * Versão: v.2.9.5
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [

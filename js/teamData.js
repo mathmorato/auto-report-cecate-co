@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Equipe Técnica Oficial CECATE/UFG e FNDE
- * Versão: v.2.9.4
+ * AutoReport CECATE - Catálogo de Integrantes da Equipe Técnica Oficial
+ * Versão: v.2.9.5
  */
 
 window.OFFICIAL_PRONOUNS = [
