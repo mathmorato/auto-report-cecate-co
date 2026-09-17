@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.6
+ * Versão: v.2.9.7
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.6';
+    this.version = 'v.2.9.7';
   }
 
   /**
@@ -3893,7 +3893,7 @@ class AutoReportApp {
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
                   </button>
                   <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.deleteCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center;">
-                    ${window.icons.delete}
+                    Excluir
                   </button>
                 </div>
               </div>
@@ -4980,7 +4980,7 @@ class AutoReportApp {
                     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Duplicar
                   </button>
                   <button type="button" class="btn btn-secondary btn-sm btn-action-delete" onclick="app.deleteGlobalMasterCourseModule(${modIdx})" title="Excluir Módulo" style="padding:0.2rem 0.5rem; display:inline-flex; align-items:center;">
-                    ${window.icons.delete}
+                    Excluir
                   </button>
                 </div>
               </div>
@@ -6208,7 +6208,7 @@ class AutoReportApp {
       ` : `
         <div style="display:inline-flex; align-items:center; gap:0.35rem;">
           <span style="font-weight:600; color:var(--text-primary);">${p.municipality}</span>
-          ${p.isManualMunicipality ? `<button type="button" class="btn btn-sm btn-ghost text-muted" onclick="app.clearManualParticipantField('${p.id}', 'municipality')" title="Alterar município selecionado manualmente" style="padding:0 0.2rem; font-size:0.7rem; line-height:1;">${window.icons.edit}</button>` : ''}
+          ${p.isManualMunicipality ? `<button type="button" class="btn btn-sm btn-ghost text-muted" onclick="app.clearManualParticipantField('${p.id}', 'municipality')" title="Alterar município selecionado manualmente" style="padding:0.1rem 0.35rem; font-size:0.75rem; font-weight:600;">Alterar</button>` : ''}
         </div>
       `;
 
@@ -6224,7 +6224,7 @@ class AutoReportApp {
           <span class="nav-badge ${p.representation === 'CACS-FUNDEB' ? 'badge-emerald' : 'badge-blue'}" style="font-size:0.78rem; font-weight:600; white-space:nowrap;">
             ${p.representation}
           </span>
-          ${p.isManualRepresentation ? `<button type="button" class="btn btn-sm btn-ghost text-muted" onclick="app.clearManualParticipantField('${p.id}', 'representation')" title="Alterar vínculo selecionado manualmente" style="padding:0 0.2rem; font-size:0.7rem; line-height:1;">${window.icons.edit}</button>` : ''}
+          ${p.isManualRepresentation ? `<button type="button" class="btn btn-sm btn-ghost text-muted" onclick="app.clearManualParticipantField('${p.id}', 'representation')" title="Alterar vínculo selecionado manualmente" style="padding:0.1rem 0.35rem; font-size:0.75rem; font-weight:600;">Alterar</button>` : ''}
         </div>
       `;
 
