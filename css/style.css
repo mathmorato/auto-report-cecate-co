@@ -3445,39 +3445,6 @@ body.light-theme .mobile-menu-toggle-btn:hover {
   background: #f1f5f9 !important;
 }
 
-/* ==========================================================================
-   Ocultação de Ícones de Botões e Ações da Plataforma (Preservando Navegação)
-   ========================================================================== */
-
-/* Ocultar ícones em botões e elementos de ação da plataforma */
-.btn svg,
-.btn-primary svg,
-.btn-secondary svg,
-.btn-gradient svg,
-.btn-ghost svg,
-.btn-action-delete svg,
-.btn-action-edit svg,
-.table-action-btn svg,
-.filter-tab-btn svg,
-.team-tab-btn svg,
-.spinner-btn svg,
-.wizard-actions-footer button svg,
-.wizard-actions-footer a svg,
-.upload-dropzone button svg,
-button.btn svg,
-a.btn svg {
-  display: none !important;
-}
-
-/* Preservar estritamente os ícones do menu de navegação lateral e controles estruturais */
-.sidebar-nav a.nav-item svg,
-.sidebar-nav button.nav-item svg,
-.mobile-menu-toggle-btn svg,
-.modal-close-btn svg {
-  display: inline-block !important;
-}
-
-
 
 
 
