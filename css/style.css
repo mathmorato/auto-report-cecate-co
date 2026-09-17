@@ -1803,6 +1803,7 @@ body.light-theme .step-tab-btn.active .step-tab-num {
 .wizard-card-title {
   font-size: 1.15rem;
   font-weight: 700;
+  font-style: italic;
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
