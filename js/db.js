@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerenciador de Banco de Dados Local (IndexedDB) & Sincronização em Nuvem (Supabase)
- * Versão: v.2.9.4
+ * Versão: v.2.9.5
  */
 
 const SUPABASE_CONFIG = {

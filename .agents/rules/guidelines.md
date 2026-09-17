@@ -244,8 +244,8 @@ Executar automaticamente:
 8. Verificar se não foram introduzidas alterações desnecessárias.
 9. Corrigir automaticamente problemas encontrados.
 10. Verificar o estado do Git.
-11. Criar o commit.
-12. Enviar o commit para o GitHub.
+11. Criar o commit na branch ativa atual.
+12. Enviar o commit para o GitHub na respectiva branch ativa.
 
 Não solicitar autorização para nenhuma dessas etapas.
 
@@ -255,9 +255,11 @@ Não solicitar autorização para nenhuma dessas etapas.
 
 ## 5.1 Commit obrigatório
 
-Toda solicitação que modificar arquivos do projeto deverá obrigatoriamente gerar um commit.
+Toda solicitação que modificar arquivos do projeto deverá obrigatoriamente gerar um commit registrado na branch atualmente ativa no repositório.
 
 A tarefa **não poderá ser considerada concluída enquanto a alteração não estiver registrada no Git**.
+
+É estritamente vedado alterar de branch, mesclar ou enviar código para a `main` automaticamente quando o trabalho estiver sendo realizado em uma branch de trabalho ou feature branch. O commit e as alterações pertencem e devem permanecer exclusivamente na branch ativa.
 
 ## 5.2 Mensagem do commit
 
@@ -297,13 +299,15 @@ Validações:
 
 ## 5.4 GitHub
 
-Após criar o commit local, executar automaticamente:
+Após criar o commit local na branch ativa, executar automaticamente:
 
 ```bash
-git push origin main
+git push origin HEAD
 ```
 
-O push deverá fazer parte do fluxo normal de conclusão da tarefa.
+O push deverá ser direcionado à respectiva branch ativa no repositório remoto (`HEAD`) e fazer parte do fluxo normal de conclusão da tarefa.
+
+É expressamente proibido enviar commits ou fazer merge para a branch `main`, a menos que a `main` seja explicitamente a branch ativa em uso pelo usuário.
 
 Não solicitar autorização para realizar o commit ou o push.
 
@@ -404,7 +408,7 @@ Uma tarefa somente deverá ser considerada concluída quando:
 * Não existirem erros introduzidos pela alteração.
 * O commit tiver sido criado.
 * O commit estiver registrado localmente.
-* O push para `origin main` tiver sido realizado com sucesso.
+* O push para a branch ativa no repositório remoto (ex.: `git push origin HEAD`) tiver sido realizado com sucesso.
 
 ---
 
@@ -424,7 +428,7 @@ Lista dos principais arquivos modificados.
 Testes e verificações realizadas e seus respectivos resultados.
 
 **Git:**
-Commit realizado, mensagem utilizada e status do push para `origin main`.
+Commit realizado, mensagem utilizada e status do push para a respectiva branch remota ativa.
 
 Não solicitar aprovação para considerar a tarefa concluída quando todos os critérios acima tiverem sido atendidos.
 
