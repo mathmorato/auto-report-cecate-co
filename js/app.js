@@ -1,6 +1,6 @@
-/**
+﻿/**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.4
+ * Versão: v.2.9.5
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.4';
+    this.version = 'v.2.9.5';
   }
 
   /**
@@ -7240,16 +7240,21 @@ class AutoReportApp {
         <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
         ${window.statsEngine.generateTable2Html(t.courseModules || [])}
 
-        <!-- 3. ARTICULAÇÃO INSTITUCIONAL & TABELA 3 -->
-        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. ARTICULAÇÃO INSTITUCIONAL</h3>
-        <p style="text-align:justify; line-height:1.6;">Para assegurar a ampla participação dos municípios convocados, a equipe do CECATE-CO realizou ações contínuas de articulação e contato direto com as secretarias municipais de educação e conselhos sociais, conforme discriminado na Tabela 3:</p>
+        <!-- 3. CONTATO COM OS MUNICÍPIOS -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. CONTATO COM OS MUNICÍPIOS</h3>
+        <p style="text-align:justify; line-height:1.6;">O contato com os municípios, previamente selecionados, se deu a partir da emissão de ofício por parte da Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, tanto para os contatos das secretarias municipais de educação quanto para os contatos dos CACS (Apêndice I). Neste e-mail, constavam as informações essenciais para compreender o objetivo do curso, instruções necessárias para inscrições e o formulário para realizar as inscrições por meio de link e QR Code correspondente.</p>
+        <p style="text-align:justify; line-height:1.6;">Posteriormente, a equipe técnica do CECATE-CO realizou um novo encaminhamento (Apêndice II), utilizando informações das prefeituras e secretarias de educação dos municípios disponíveis nos sítios eletrônicos oficiais. Com isso, foi realizado um contato complementar por e-mail e por telefone, assegurando o esclarecimento de dúvidas e a mobilização das delegações municipais.</p>
 
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 3. Articulação institucional para mobilização dos municípios.</em></p>
+        <!-- 4. DESENVOLVIMENTO DO CURSO & TABELA 3 & TABELA 4 -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">4. DESENVOLVIMENTO DO CURSO</h3>
+        <p style="text-align:justify; line-height:1.6;">Ao final do processo, houve um total de ${metrics.totalInscribed} pessoas inscritas, sendo ${metrics.totalInscribedGestores} gestores municipais e ${metrics.totalInscribedCACS} representantes dos CACS/FUNDEB. Cabe destacar que ${metrics.totalInscribedMunicipalities} municípios tiveram representantes inscritos. Os detalhes por município podem ser analisados na Tabela 3:</p>
+
+        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 3. Inscritos por município.</em></p>
         ${window.statsEngine.generateTable3Html(t.municipalities || [])}
 
-        <!-- 4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO & TABELA 4 & FIGURA 3 -->
-        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6;">O evento registrou ${metrics.totalInscribed} inscritos e ${metrics.totalPresent} presentes efetivos, com taxa global de comparecimento de ${metrics.participationRateGeneral}%. A discriminação detalhada da presença entre Gestores Municipais e Conselheiros CACS-FUNDEB por município é apresentada na Tabela 4:</p>
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem;">Durante as atividades formativas, foram executadas dinâmicas por meio do uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos (Kahoot e Plickers), permitindo verificar a evolução dos participantes e aumentar o engajamento com os conteúdos temáticos.</p>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.25rem;">A participação dos municípios registrou ${metrics.totalPresentMunicipalities} municípios presentes dos ${metrics.totalInscribedMunicipalities} inscritos, com um total de ${metrics.totalPresent} participantes presentes e taxa global de presença de ${metrics.participationRateGeneral}%. Os resultados detalhados por município são apresentados na Tabela 4 a seguir:</p>
 
         <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
         ${window.statsEngine.generateTable4Html(t.municipalities || [])}
@@ -7293,13 +7298,13 @@ class AutoReportApp {
         <!-- FIGURAS 7 E 8 (NUVENS DE PALAVRAS) -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; page-break-inside:avoid;">
           <div style="text-align:center;">
-            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos positivos destacados.</em></p>
+            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos que gostaram da capacitação.</em></p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <canvas id="report-preview-fig7-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
           </div>
           <div style="text-align:center;">
-            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos a serem aprimorados.</em></p>
+            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos que devem melhorar da capacitação.</em></p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <canvas id="report-preview-fig8-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
@@ -7324,6 +7329,11 @@ class AutoReportApp {
         <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE II: CONVOCAÇÕES DO CECATE</h3>
         <p style="text-align:justify; line-height:1.6;">Relação dos comunicados e e-mails de convocação emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação:</p>
         ${cecateHtml}
+
+        <!-- APÊNDICE III: AVALIAÇÃO INDIVIDUAL DAS RESPOSTAS QUALITATIVAS -->
+        <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE III: AVALIAÇÃO INDIVIDUAL DAS RESPOSTAS QUALITATIVAS</h3>
+        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela com as respostas dissertativas dos participantes.</em></p>
+        ${window.statsEngine.generateTable8Html(t.evaluations || [])}
       </div>
     `;
 

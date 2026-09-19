@@ -1,6 +1,6 @@
-/**
+﻿/**
  * AutoReport CECATE - Motor de Estatísticas e Análise de Dados
- * Versão: v.2.9.4
+ * Versão: v.2.9.5
  */
 
 class StatsEngine {
@@ -518,6 +518,45 @@ class StatsEngine {
               <td style="text-align:center;"><span class="attendance-status-count ${totalPres >= 2 ? 'status-count-many' : (totalPres === 1 ? 'status-count-one' : 'status-count-zero')}">${totalPres}/${totalInsc}</span></td>
             </tr>
           </tfoot>
+        </table>
+      </div>
+    `;
+  }
+
+  /**
+   * Gera o HTML da Tabela do Apêndice III: Respostas Dissertativas Qualitativas da Avaliação
+   */
+  generateTable8Html(evaluations = []) {
+    let rowsHtml = '';
+    evaluations.forEach(ev => {
+      const liked = ev.likedAspects || '-';
+      const improve = ev.improveAspects || '-';
+      rowsHtml += `
+        <tr>
+          <td style="text-align:center; font-family:monospace; font-weight:700;">${ev.ibgeCode || '-'}</td>
+          <td><strong>${ev.municipality || '-'}</strong></td>
+          <td style="text-align:center;"><span class="nav-badge badge-blue" style="font-size:0.75rem; padding:0.1rem 0.45rem;">${ev.representation || 'Gestão municipal'}</span></td>
+          <td style="font-size:0.86rem; line-height:1.4;">${liked}</td>
+          <td style="font-size:0.86rem; line-height:1.4;">${improve}</td>
+        </tr>
+      `;
+    });
+
+    return `
+      <div class="table-responsive-wrapper">
+        <table class="report-data-table">
+          <thead>
+            <tr>
+              <th style="width: 110px; text-align:center;">Código IBGE</th>
+              <th style="width: 160px;">Município que representa:</th>
+              <th style="width: 140px; text-align:center;">Você faz parte do:</th>
+              <th>Indique dois aspectos que você mais gostou na Formação:</th>
+              <th>Indique dois aspectos que poderiam ser melhorados na Formação (com detalhes);</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml || '<tr><td colspan="5" style="text-align:center;">Nenhuma avaliação dissertativa registrada.</td></tr>'}
+          </tbody>
         </table>
       </div>
     `;
