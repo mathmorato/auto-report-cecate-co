@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.8
+ * Versão: v.2.9.9
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.8';
+    this.version = 'v.2.9.9';
   }
 
   /**
@@ -7286,9 +7286,54 @@ class AutoReportApp {
     container.innerHTML = `
       <div style="font-family:'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif;">
         <!-- =========================================================================
-             1. CAPA OFICIAL (FOLHA DE ROSTO BRANCA)
+             1. CAPA OFICIAL (CAPA ESCURA ILUSTRADA CONFORME MODELO DE CAPA)
              ========================================================================= -->
-        <div class="report-cover-page" style="page-break-after: always; break-after: page;">
+        <div class="report-cover-page" style="background-color: #4D4D4D !important; color: #ffffff !important; min-height: 1080px; width: 100%; max-width: 820px; margin: 0 auto 3rem auto; box-shadow: 0 10px 35px rgba(0,0,0,0.35); border-radius: 6px; border: 1px solid #334155; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; break-after: page; box-sizing: border-box; overflow: hidden; padding: 0;">
+          <!-- PARTE SUPERIOR: FIGURA DA SALA DE AULA (FIGURACAPA.PNG) -->
+          <div style="padding-top: 3.5rem; text-align: center; width: 100%;">
+            <img src="./modelodecapa/figuracapa.png" onerror="if(window.REPORT_ASSETS &amp;&amp; window.REPORT_ASSETS.contracapaCover){this.src='data:image/png;base64,'+window.REPORT_ASSETS.contracapaCover;}" alt="Capa Capacitação Transporte Escolar" style="max-width: 82%; max-height: 420px; width: auto; height: auto; object-fit: contain; display: block; margin: 0 auto; filter: drop-shadow(0 0 20px rgba(249, 219, 97, 0.2));" />
+          </div>
+
+          <!-- BLOCO CENTRAL: TÍTULOS E FAIXA AMARELA -->
+          <div style="width: 100%; margin: 1.5rem 0 2rem 0;">
+            <!-- ESCRITA ACIMA DA FAIXA AMARELA COM COR #F9DB61 (16PT) -->
+            <div style="padding: 0 3.5rem 0.6rem 3.5rem; text-align: left;">
+              <p style="font-size: 16pt; color: #F9DB61; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', sans-serif;">
+                RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}
+              </p>
+            </div>
+
+            <!-- FAIXA AMARELA (#E9C95C / #F9DB61) -->
+            <div style="background-color: #E9C95C; width: 100%; padding: 1.15rem 2rem; box-sizing: border-box; text-align: center;">
+              <h1 style="font-size: 20pt; font-weight: 900; color: #000000; margin: 0; text-transform: uppercase; line-height: 1.25; font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', sans-serif;">
+                CAPACITAÇÃO EM TRANSPORTE ESCOLAR
+              </h1>
+              <p style="font-size: 16pt; font-weight: 600; color: #000000; margin: 0.45rem 0 0 0; line-height: 1.35; font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', sans-serif;">
+                ${locationAndDate}
+              </p>
+            </div>
+
+            <!-- TEXTO ABAIXO DA FAIXA AMARELA / ACIMA DO RODAPÉ (SEM CORES #D9D9D9 - 16PT) -->
+            <div style="padding: 2.2rem 3.5rem 0 3.5rem; text-align: center;">
+              <p style="font-size: 16pt; color: #D9D9D9; margin: 0; line-height: 1.5; font-weight: 500; font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', sans-serif;">
+                Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS<br />
+                PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL
+              </p>
+            </div>
+          </div>
+
+          <!-- RODAPÉ: FORMA COM PREENCHIMENTO #D9D9D9 COM OS 3 LOGOS CENTRALIZADOS -->
+          <div style="background-color: #D9D9D9; width: 100%; padding: 1.1rem 2rem; box-sizing: border-box; display: flex; justify-content: center; align-items: center; gap: 3.5rem;">
+            <img src="./modelodecapa/logocecate.svg" onerror="if(window.REPORT_ASSETS &amp;&amp; window.REPORT_ASSETS.logoCecate){this.src='data:image/png;base64,'+window.REPORT_ASSETS.logoCecate;}" alt="CECATE Centro-Oeste" style="max-height: 48px; max-width: 170px; width: auto; height: auto; object-fit: contain;" />
+            <img src="./modelodecapa/logoufg.svg" onerror="if(window.REPORT_ASSETS &amp;&amp; window.REPORT_ASSETS.logoUfg){this.src='data:image/png;base64,'+window.REPORT_ASSETS.logoUfg;}" alt="UFG" style="max-height: 48px; max-width: 150px; width: auto; height: auto; object-fit: contain;" />
+            <img src="./modelodecapa/logofnde.svg" onerror="if(window.REPORT_ASSETS &amp;&amp; window.REPORT_ASSETS.logoFnde){this.src='data:image/png;base64,'+window.REPORT_ASSETS.logoFnde;}" alt="FNDE" style="max-height: 48px; max-width: 170px; width: auto; height: auto; object-fit: contain;" />
+          </div>
+        </div>
+
+        <!-- =========================================================================
+             2. FOLHA DE ROSTO INSTITUCIONAL (BRANCA)
+             ========================================================================= -->
+        <div class="report-doc-page report-folha-rosto" style="display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; break-after: page; min-height: 980px;">
           <!-- LINHA SUPERIOR COM O PROJETO -->
           <div style="border-top: 1.5px solid #94a3b8; padding-top: 0.75rem; text-align: center;">
             <p style="font-size: 11pt; font-weight: 700; color: #334155; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -7309,7 +7354,7 @@ class AutoReportApp {
             <p style="font-size: 12pt; color: #334155; margin: 0.25rem 0 0 0; font-weight: 600;">${coverMonthYear}</p>
           </div>
 
-          <!-- RODAPÉ DA CAPA BRANCA -->
+          <!-- RODAPÉ DA FOLHA DE ROSTO -->
           <div style="border-top: 1.5px solid #94a3b8; padding-top: 0.8rem; text-align: center;">
             ${assets.coverFooterLogos ? `<img src="${getAssetDataUrl('coverFooterLogos')}" alt="Logos CECATE, UFG, FNDE" style="max-height: 55px; max-width: 90%; width: auto; height: auto; object-fit: contain; display: block; margin: 0 auto;" />` : ''}
           </div>

@@ -3459,7 +3459,6 @@ body.light-theme .mobile-menu-toggle-btn:hover {
 /* ==========================================================================
    ESTILOS OFICIAIS DO RELATÓRIO TÉCNICO INSTITUCIONAL
    ========================================================================== */
-.report-cover-page,
 .report-doc-page {
   background: #ffffff !important;
   color: #0f172a !important;
@@ -3476,9 +3475,22 @@ body.light-theme .mobile-menu-toggle-btn:hover {
 }
 
 .report-cover-page {
+  background: #4D4D4D !important;
+  color: #ffffff !important;
+  width: 100%;
+  max-width: 820px;
+  min-height: 1080px;
+  padding: 0 !important;
+  margin: 0 auto 3rem auto;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+  font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+  border: 1px solid #334155;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  overflow: hidden;
 }
 
 .report-normal-page-header {
@@ -3495,12 +3507,14 @@ body.light-theme .mobile-menu-toggle-btn:hover {
 
 @media print {
   .report-cover-page {
-    background: #ffffff !important;
-    color: #0f172a !important;
+    background: #4D4D4D !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color: #ffffff !important;
     box-shadow: none !important;
     border: none !important;
     margin: 0 !important;
-    padding: 2rem 2.5rem !important;
+    padding: 0 !important;
     min-height: 100vh !important;
     page-break-after: always !important;
     break-after: page !important;

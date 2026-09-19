@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial Word (.docx)
- * Versão: v.2.9.8
+ * Versão: v.2.9.9
  * 
  * Compatibilidade total com o modelo oficial institucional (modelodecapa.docx):
  * - Capa (Folha de Rosto branca oficial) e Contracapa (capa escura ilustrada) oficiais
@@ -817,30 +817,40 @@ class ReportDocxGenerator {
       }
       modelDocXml = modelDocXml.replace(/<w:p\b[\s\S]*?substituir pelo[\s\S]*?cargo[\s\S]*?<\/w:p>/gi, fndeXml);
 
-      // (c) Localização e Datas (Capa e Contracapa)
-      modelDocXml = modelDocXml.replace(/<w:p\b[\s\S]*?Municipio da capacitação[\s\S]*?<\/w:p>/gi, (match) => {
-        const pPrMatch = match.match(/<w:pPr>[\s\S]*?<\/w:pPr>/);
-        const pPr = pPrMatch ? pPrMatch[0] : '';
-        return `<w:p>${pPr}<w:r><w:t>${locationAndDate}</w:t></w:r></w:p>`;
+      // (c) Capa Ilustrada Oficial - Número da capacitação acima da faixa amarela (paraId="6B2E95A7")
+      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="6B2E95A7"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
+        const newContent = `<w:pPr><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:bCs/><w:color w:val="F9DB61"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:bCs/><w:color w:val="F9DB61"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr><w:t>RELATÓRIO DE ATIVIDADES Nº ${num}</w:t></w:r>`;
+        return `${pOpen}${newContent}${pClose}`;
       });
 
-      // (d) Mês/ano da capacitação (Capa)
-      modelDocXml = modelDocXml.replace(/<w:p\b[\s\S]*?Mês\/ano da capacitação[\s\S]*?<\/w:p>/gi, (match) => {
-        const pPrMatch = match.match(/<w:pPr>[\s\S]*?<\/w:pPr>/);
-        const pPr = pPrMatch ? pPrMatch[0] : '';
-        return `<w:p>${pPr}<w:r><w:t>${coverMonthYear}</w:t></w:r></w:p>`;
+      // (d) Capa Ilustrada Oficial - Faixa amarela Município, Estado e Data (paraId="11C62FAC")
+      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="11C62FAC"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
+        const newContent = `<w:pPr><w:pStyle w:val="NormalWeb"/><w:spacing w:before="0" w:beforeAutospacing="0" w:after="0" w:afterAutospacing="0" w:line="288" w:lineRule="auto"/><w:jc w:val="center"/><w:rPr><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/></w:rPr></w:pPr><w:r><w:rPr><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/></w:rPr><w:t>${locationAndDate}</w:t></w:r>`;
+        return `${pOpen}${newContent}${pClose}`;
       });
 
-      // (e) Número da capacitação (Capa, Contracapa e Equipe)
-      modelDocXml = modelDocXml.replace(/<w:p\b[\s\S]*?Numero[\s\S]*?da capacitação[\s\S]*?<\/w:p>/gi, (match) => {
-        const pPrMatch = match.match(/<w:pPr>[\s\S]*?<\/w:pPr>/);
-        const pPr = pPrMatch ? pPrMatch[0] : '';
-        const isUpper = match.includes('RELATÓRIO');
-        const text = isUpper ? `RELATÓRIO DE ATIVIDADES Nº ${num}` : `Relatório de Atividades Nº ${num}`;
-        if (match.includes('F9DB61')) {
-          return `<w:p>${pPr}<w:r><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:bCs/><w:smallCaps/><w:color w:val="F9DB61"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr><w:t>${text}</w:t></w:r></w:p>`;
-        }
-        return `<w:p>${pPr}<w:r><w:t>${text}</w:t></w:r></w:p>`;
+      // (e) Folha de Rosto branca - Número da capacitação (paraId="12094424")
+      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="12094424"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
+        const newContent = `<w:pPr><w:spacing w:line="276" w:lineRule="auto"/><w:ind w:right="-1"/><w:jc w:val="center"/><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr><w:t>Relatório de Atividades Nº ${num}</w:t></w:r>`;
+        return `${pOpen}${newContent}${pClose}`;
+      });
+
+      // (f) Folha de Rosto branca - Município, Estado e Data (paraId="77E7B364")
+      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="77E7B364"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
+        const newContent = `<w:pPr><w:pStyle w:val="NormalWeb"/><w:spacing w:before="0" w:beforeAutospacing="0" w:after="0" w:afterAutospacing="0" w:line="288" w:lineRule="auto"/><w:jc w:val="center"/><w:rPr><w:b/><w:bCs/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/></w:rPr></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/></w:rPr><w:t>${locationAndDate}</w:t></w:r>`;
+        return `${pOpen}${newContent}${pClose}`;
+      });
+
+      // (g) Folha de Rosto branca - Mês/ano da capacitação (paraId="4CBE7E4E")
+      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="4CBE7E4E"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
+        const newContent = `<w:pPr><w:pStyle w:val="NormalWeb"/><w:spacing w:before="0" w:beforeAutospacing="0" w:after="0" w:afterAutospacing="0"/><w:ind w:right="-1"/><w:jc w:val="center"/><w:rPr><w:bCs/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr></w:pPr><w:r><w:rPr><w:bCs/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>${coverMonthYear}</w:t></w:r>`;
+        return `${pOpen}${newContent}${pClose}`;
+      });
+
+      // (h) Equipe Participante - Número da capacitação (paraId="36D7C093")
+      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="36D7C093"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
+        const newContent = `<w:pPr><w:pStyle w:val="TECapa-Ttulo"/><w:jc w:val="center"/><w:rPr><w:b/><w:bCs/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr><w:t>RELATÓRIO DE ATIVIDADES Nº ${num}</w:t></w:r>`;
+        return `${pOpen}${newContent}${pClose}`;
       });
 
       // 3. Remapear mídias e relacionamentos do corpo gerado pelo docx.js
