@@ -1,6 +1,6 @@
-﻿/**
+/**
  * AutoReport CECATE - Gerador de Relatório Oficial Word (.docx)
- * Versão: v.2.9.5
+ * Versão: v.2.9.6
  * 
  * Compatibilidade total com a estrutura institucional oficial (6CTE a 16CTE):
  * - Capa e folha de rosto oficial com logomarcas UFG, CECATE Centro-Oeste e FNDE
@@ -40,22 +40,181 @@ class ReportDocxGenerator {
     }
   }
 
-  createImageParagraph(dataUrlOrB64, width, height, captionText, sourceText, docxDeps) {
+  /**
+   * Obtém as dimensões naturais (largura e altura) de uma imagem a partir
+   * de um buffer Uint8Array inspecionando os cabeçalhos binários oficiais.
+   * Retorna { width, height } em pixels, de forma instantânea e síncrona.
+   */
+  getImageDimensionsFromBytes(bytes) {
+    if (!bytes || bytes.length < 24) return null;
+    try {
+      // 1. PNG: Assinatura 137, 80, 78, 71 (IHDR chunk at bytes 16..23)
+      if (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71) {
+        const width = ((bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19]) >>> 0;
+        const height = ((bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23]) >>> 0;
+        if (width > 0 && height > 0) return { width, height };
+      }
+
+      // 2. JPEG: Assinatura 0xFF, 0xD8
+      if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
+        let offset = 2;
+        while (offset < bytes.length - 8) {
+          if (bytes[offset] !== 0xFF) {
+            offset++;
+            continue;
+          }
+          const marker = bytes[offset + 1];
+          // Marcadores SOF0 a SOF15 (exceto DHT e DAC)
+          if ((marker >= 0xC0 && marker <= 0xC3) || (marker >= 0xC5 && marker <= 0xC7) ||
+              (marker >= 0xC9 && marker <= 0xCB) || (marker >= 0xCD && marker <= 0xCF)) {
+            const height = ((bytes[offset + 5] << 8) | bytes[offset + 6]) >>> 0;
+            const width = ((bytes[offset + 7] << 8) | bytes[offset + 8]) >>> 0;
+            if (width > 0 && height > 0) return { width, height };
+            break;
+          } else {
+            const segLen = ((bytes[offset + 2] << 8) | bytes[offset + 3]) >>> 0;
+            offset += 2 + segLen;
+          }
+        }
+      }
+
+      // 3. GIF: 'GIF87a' ou 'GIF89a'
+      if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
+        const width = (bytes[6] | (bytes[7] << 8)) >>> 0;
+        const height = (bytes[8] | (bytes[9] << 8)) >>> 0;
+        if (width > 0 && height > 0) return { width, height };
+      }
+
+      // 4. WebP: 'RIFF' .... 'WEBP'
+      if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+          bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
+        if (bytes[12] === 0x56 && bytes[13] === 0x50 && bytes[14] === 0x38 && bytes[15] === 0x20) {
+          const width = ((bytes[26] | (bytes[27] << 8)) & 0x3fff) >>> 0;
+          const height = ((bytes[28] | (bytes[29] << 8)) & 0x3fff) >>> 0;
+          if (width > 0 && height > 0) return { width, height };
+        }
+        if (bytes[12] === 0x56 && bytes[13] === 0x50 && bytes[14] === 0x38 && bytes[15] === 0x4C) {
+          const b1 = bytes[21], b2 = bytes[22], b3 = bytes[23], b4 = bytes[24];
+          const width = (1 + (((b2 & 0x3f) << 8) | b1)) >>> 0;
+          const height = (1 + (((b4 & 0xf) << 10) | (b3 << 2) | ((b2 & 0xc0) >> 6))) >>> 0;
+          if (width > 0 && height > 0) return { width, height };
+        }
+        if (bytes[12] === 0x56 && bytes[13] === 0x50 && bytes[14] === 0x38 && bytes[15] === 0x58) {
+          const width = (1 + (bytes[24] | (bytes[25] << 8) | (bytes[26] << 16))) >>> 0;
+          const height = (1 + (bytes[27] | (bytes[28] << 8) | (bytes[29] << 16))) >>> 0;
+          if (width > 0 && height > 0) return { width, height };
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao decodificar dimensões dos bytes da imagem:', e);
+    }
+    return null;
+  }
+
+  /**
+   * Obtém as dimensões naturais (largura e altura) de uma imagem a partir
+   * de um data URL ou string Base64 via elemento Image em fallback.
+   */
+  getImageNaturalSize(dataUrlOrB64) {
+    return new Promise((resolve) => {
+      if (!dataUrlOrB64) return resolve(null);
+      try {
+        let mime = 'image/png';
+        const clean = dataUrlOrB64.includes(',') ? dataUrlOrB64.split(',')[1] : dataUrlOrB64;
+        if (clean.startsWith('/9j/')) mime = 'image/jpeg';
+        else if (clean.startsWith('UklGR')) mime = 'image/webp';
+        else if (clean.startsWith('R0lGOD')) mime = 'image/gif';
+
+        const src = dataUrlOrB64.startsWith('data:')
+          ? dataUrlOrB64
+          : `data:${mime};base64,${clean}`;
+
+        const img = new Image();
+        let done = false;
+        const timer = setTimeout(() => {
+          if (!done) {
+            done = true;
+            resolve(null);
+          }
+        }, 1200);
+
+        img.onload = () => {
+          if (!done) {
+            done = true;
+            clearTimeout(timer);
+            resolve({ width: img.naturalWidth, height: img.naturalHeight });
+          }
+        };
+        img.onerror = () => {
+          if (!done) {
+            done = true;
+            clearTimeout(timer);
+            resolve(null);
+          }
+        };
+        img.src = src;
+        if (img.complete && img.naturalWidth > 0) {
+          done = true;
+          clearTimeout(timer);
+          resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        }
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+
+  /**
+   * Calcula dimensões que preservam o aspect ratio original da imagem dentro de limites
+   * máximos (maxW x maxH). Espelha perfeitamente o comportamento 'object-fit: contain' do PDF.
+   */
+  fitToAspectRatio(naturalW, naturalH, maxW, maxH) {
+    if (!naturalW || !naturalH) return { width: maxW, height: maxH };
+    const ar = naturalW / naturalH;
+    let w = maxW;
+    let h = Math.round(maxW / ar);
+    if (h > maxH) {
+      h = maxH;
+      w = Math.round(maxH * ar);
+    }
+    return { width: Math.max(1, w), height: Math.max(1, h) };
+  }
+
+  /**
+   * Cria um ImageRun preservando o aspect ratio original da imagem.
+   * maxW e maxH definem o espaço máximo em pixels.
+   */
+  async createImageRunWithAR(dataUrlOrB64, bytes, maxW, maxH, ImageRun) {
+    let natural = this.getImageDimensionsFromBytes(bytes);
+    if (!natural) {
+      natural = await this.getImageNaturalSize(dataUrlOrB64);
+    }
+    const dims = natural
+      ? this.fitToAspectRatio(natural.width, natural.height, maxW, maxH)
+      : { width: maxW, height: maxH };
+    return new ImageRun({
+      data: bytes,
+      transformation: { width: dims.width, height: dims.height }
+    });
+  }
+
+  /**
+   * Cria parágrafos de imagem preservando o aspect ratio original.
+   * maxW e maxH definem os limites máximos de exibição (em pixels).
+   */
+  async createImageParagraph(dataUrlOrB64, maxW, maxH, captionText, sourceText, docxDeps) {
     const bytes = this.base64ToUint8Array(dataUrlOrB64);
     if (!bytes) return [];
 
     const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps;
 
+    const imageRun = await this.createImageRunWithAR(dataUrlOrB64, bytes, maxW, maxH, ImageRun);
+
     const nodes = [
       new Paragraph({
         alignment: AlignmentType.CENTER,
         spacing: { before: 180, after: 80 },
-        children: [
-          new ImageRun({
-            data: bytes,
-            transformation: { width, height }
-          })
-        ]
+        children: [imageRun]
       })
     ];
 
@@ -567,24 +726,27 @@ class ReportDocxGenerator {
     if (logoUfgBytes || logoCecateBytes || logoFndeBytes) {
       const logoCells = [];
       if (logoUfgBytes) {
+        const ufgRun = await this.createImageRunWithAR(assets.logoUfg, logoUfgBytes, 75, 60, ImageRun);
         logoCells.push(new TableCell({
-          width: { size: 33, type: WidthType.PERCENTAGE },
+          width: { size: 30, type: WidthType.PERCENTAGE },
           borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ alignment: AlignmentType.LEFT, children: [new ImageRun({ data: logoUfgBytes, transformation: { width: 90, height: 65 } })] })]
+          children: [new Paragraph({ alignment: AlignmentType.LEFT, children: [ufgRun] })]
         }));
       }
       if (logoCecateBytes) {
+        const cecateRun = await this.createImageRunWithAR(assets.logoCecate, logoCecateBytes, 125, 55, ImageRun);
         logoCells.push(new TableCell({
-          width: { size: 34, type: WidthType.PERCENTAGE },
+          width: { size: 35, type: WidthType.PERCENTAGE },
           borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: logoCecateBytes, transformation: { width: 140, height: 60 } })] })]
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [cecateRun] })]
         }));
       }
       if (logoFndeBytes) {
+        const fndeRun = await this.createImageRunWithAR(assets.logoFnde, logoFndeBytes, 160, 45, ImageRun);
         logoCells.push(new TableCell({
-          width: { size: 33, type: WidthType.PERCENTAGE },
+          width: { size: 35, type: WidthType.PERCENTAGE },
           borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new ImageRun({ data: logoFndeBytes, transformation: { width: 110, height: 60 } })] })]
+          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [fndeRun] })]
         }));
       }
 
@@ -844,11 +1006,11 @@ class ReportDocxGenerator {
     );
 
     // Figura 1: Kahoot
-    const fig1Nodes = this.createImageParagraph(assets.fig1Kahoot, 480, 240, 'Figura 1: Avaliação via ferramenta kahoot.', 'Fonte: Elaborada pelos autores.', docxDeps);
+    const fig1Nodes = await this.createImageParagraph(assets.fig1Kahoot, 480, 275, 'Figura 1: Avaliação via ferramenta kahoot.', 'Fonte: Elaborada pelos autores.', docxDeps);
     if (fig1Nodes) docChildren.push(...fig1Nodes);
 
     // Figura 2: Plickers
-    const fig2Nodes = this.createImageParagraph(assets.fig2Plickers, 480, 220, 'Figura 2: Avaliação via ferramenta Plickers.', 'Fonte: Elaborada pelos autores.', docxDeps);
+    const fig2Nodes = await this.createImageParagraph(assets.fig2Plickers, 440, 280, 'Figura 2: Avaliação via ferramenta Plickers.', 'Fonte: Elaborada pelos autores.', docxDeps);
     if (fig2Nodes) docChildren.push(...fig2Nodes);
 
     // Tabela 4
@@ -885,7 +1047,7 @@ class ReportDocxGenerator {
 
     // Figura 3: Representação
     if (chartsData.fig3) {
-      const f3 = this.createImageParagraph(chartsData.fig3, 440, 240, 'Figura 3. Participação segundo o tipo de representação.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f3 = await this.createImageParagraph(chartsData.fig3, 460, 260, 'Figura 3. Participação segundo o tipo de representação.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f3) docChildren.push(...f3);
     }
 
@@ -898,15 +1060,15 @@ class ReportDocxGenerator {
 
     // Figuras 4, 5 e 6
     if (chartsData.fig4) {
-      const f4 = this.createImageParagraph(chartsData.fig4, 480, 240, 'Figura 4. Avaliação da capacitação de todos os participantes.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f4 = await this.createImageParagraph(chartsData.fig4, 500, 280, 'Figura 4. Avaliação da capacitação de todos os participantes.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f4) docChildren.push(...f4);
     }
     if (chartsData.fig5) {
-      const f5 = this.createImageParagraph(chartsData.fig5, 480, 240, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f5 = await this.createImageParagraph(chartsData.fig5, 500, 280, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f5) docChildren.push(...f5);
     }
     if (chartsData.fig6) {
-      const f6 = this.createImageParagraph(chartsData.fig6, 480, 240, 'Figura 6. Avaliação da capacitação dos gestores municipais.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f6 = await this.createImageParagraph(chartsData.fig6, 500, 280, 'Figura 6. Avaliação da capacitação dos gestores municipais.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f6) docChildren.push(...f6);
     }
 
@@ -919,11 +1081,11 @@ class ReportDocxGenerator {
 
     // Figuras 7 e 8: Nuvens de Palavras
     if (chartsData.fig7) {
-      const f7 = this.createImageParagraph(chartsData.fig7, 460, 250, 'Figura 7. Aspectos que gostaram da capacitação.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f7 = await this.createImageParagraph(chartsData.fig7, 480, 280, 'Figura 7. Aspectos que gostaram da capacitação.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f7) docChildren.push(...f7);
     }
     if (chartsData.fig8) {
-      const f8 = this.createImageParagraph(chartsData.fig8, 460, 250, 'Figura 8. Aspectos que devem melhorar da capacitação', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f8 = await this.createImageParagraph(chartsData.fig8, 480, 280, 'Figura 8. Aspectos que devem melhorar da capacitação', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f8) docChildren.push(...f8);
     }
 
@@ -949,11 +1111,12 @@ class ReportDocxGenerator {
     ];
 
     if (photos.length > 0) {
-      photos.forEach((ph, idx) => {
+      for (let idx = 0; idx < photos.length; idx++) {
+        const ph = photos[idx];
         const caption = photoCaptions[idx] || ph.caption || `Figura ${idx + 9}. Registro fotográfico oficial.`;
-        const phNodes = this.createImageParagraph(ph.blob, 480, 270, caption, 'Fonte: Elaborada pelos autores.', docxDeps);
+        const phNodes = await this.createImageParagraph(ph.blob, 480, 360, caption, 'Fonte: Elaborada pelos autores.', docxDeps);
         if (phNodes) docChildren.push(...phNodes);
-      });
+      }
     } else {
       docChildren.push(
         this.createBodyParagraph('Registros fotográficos anexados na pasta oficial do projeto.', docxDeps)
@@ -983,11 +1146,11 @@ class ReportDocxGenerator {
       this.createSectionHeading('Apêndice I: Convocação do FNDE', docxDeps, true)
     );
     if (assets.convocacaoFndeP1) {
-      const p1 = this.createImageParagraph(assets.convocacaoFndeP1, 480, 640, null, null, docxDeps);
+      const p1 = await this.createImageParagraph(assets.convocacaoFndeP1, 490, 693, null, null, docxDeps);
       if (p1) docChildren.push(...p1);
     }
     if (assets.convocacaoFndeP2) {
-      const p2 = this.createImageParagraph(assets.convocacaoFndeP2, 480, 640, null, null, docxDeps);
+      const p2 = await this.createImageParagraph(assets.convocacaoFndeP2, 490, 693, null, null, docxDeps);
       if (p2) docChildren.push(...p2);
     }
 
@@ -996,11 +1159,11 @@ class ReportDocxGenerator {
       this.createSectionHeading('Apêndice II: Convocação do CECATE', docxDeps, true)
     );
     if (assets.convocacaoCecateP1) {
-      const c1 = this.createImageParagraph(assets.convocacaoCecateP1, 480, 640, null, null, docxDeps);
+      const c1 = await this.createImageParagraph(assets.convocacaoCecateP1, 490, 693, null, null, docxDeps);
       if (c1) docChildren.push(...c1);
     }
     if (assets.convocacaoCecateP2) {
-      const c2 = this.createImageParagraph(assets.convocacaoCecateP2, 480, 640, null, null, docxDeps);
+      const c2 = await this.createImageParagraph(assets.convocacaoCecateP2, 490, 693, null, null, docxDeps);
       if (c2) docChildren.push(...c2);
     }
 

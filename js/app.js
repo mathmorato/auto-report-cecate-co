@@ -1,6 +1,6 @@
-﻿/**
+/**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.5
+ * Versão: v.2.9.6
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.5';
+    this.version = 'v.2.9.6';
   }
 
   /**
@@ -7136,6 +7136,15 @@ class AutoReportApp {
     const metrics = window.statsEngine.calculateAllMetrics(t);
     this.metrics = metrics;
 
+    const assets = window.REPORT_ASSETS || {};
+    const getAssetDataUrl = (key) => {
+      const raw = assets[key];
+      if (!raw) return '';
+      return raw.startsWith('data:') ? raw : `data:image/png;base64,${raw}`;
+    };
+
+    const is16Hours = (t.workloadNum === 16 || String(t.workload || '').includes('16'));
+
     // 1. Figuras fotográficas em ordem oficial
     const photos = (t.media || []).filter(m => m.type === 'photo');
     const slots = this.getStandardPhotoSlots();
@@ -7153,11 +7162,12 @@ class AutoReportApp {
 
       if (p && p.blob) {
         photosHtml += `
-          <div style="margin: 2rem 0; text-align: center; page-break-inside: avoid;">
-            <img src="${p.blob}" alt="${p.caption || slot.defaultCaption}" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-top: 0.6rem; text-align: center;">
+          <div style="margin: 2rem 0; text-align: center; page-break-inside: avoid; break-inside: avoid;">
+            <p style="font-weight: 600; font-size: 0.95rem; color: #1e293b; margin-bottom: 0.5rem; text-align: center;">
               <em>${p.caption || slot.defaultCaption}</em>
             </p>
+            <img src="${p.blob}" alt="${p.caption || slot.defaultCaption}" style="max-width: 100%; max-height: 380px; width: auto; height: auto; border-radius: 4px; border: 1px solid #cbd5e1; object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: block; margin: 0 auto;">
+            <p style="font-size: 0.85rem; font-style: italic; color: #64748b; margin-top: 0.35rem; text-align: center;">Fonte: Elaborada pelos autores.</p>
           </div>
         `;
       }
@@ -7167,18 +7177,19 @@ class AutoReportApp {
     extraPhotos.forEach((ph, idx) => {
       if (ph.blob) {
         photosHtml += `
-          <div style="margin: 2rem 0; text-align: center; page-break-inside: avoid;">
-            <img src="${ph.blob}" alt="${ph.caption || 'Foto Extra'}" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-top: 0.6rem; text-align: center;">
+          <div style="margin: 2rem 0; text-align: center; page-break-inside: avoid; break-inside: avoid;">
+            <p style="font-weight: 600; font-size: 0.95rem; color: #1e293b; margin-bottom: 0.5rem; text-align: center;">
               <em>${ph.caption || `Figura Extra ${idx + 1}. Registro fotográfico complementar.`}</em>
             </p>
+            <img src="${ph.blob}" alt="${ph.caption || 'Foto Extra'}" style="max-width: 100%; max-height: 380px; width: auto; height: auto; border-radius: 4px; border: 1px solid #cbd5e1; object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: block; margin: 0 auto;">
+            <p style="font-size: 0.85rem; font-style: italic; color: #64748b; margin-top: 0.35rem; text-align: center;">Fonte: Elaborada pelos autores.</p>
           </div>
         `;
       }
     });
 
     if (!photosHtml) {
-      photosHtml = `<p style="color:var(--text-muted); font-style:italic;">Nenhum registro fotográfico anexado no momento.</p>`;
+      photosHtml = `<p style="color:#64748b; font-style:italic;">Registros fotográficos anexados na pasta oficial do projeto.</p>`;
     }
 
     // 2. Apêndices (FNDE e CECATE)
@@ -7186,45 +7197,152 @@ class AutoReportApp {
     const cecateDocs = (t.media || []).filter(m => m.type === 'doc_cecate');
 
     const fndeHtml = fndeDocs.length === 0
-      ? `<p style="color:var(--text-muted); font-style:italic;">Nenhum documento de convocação do FNDE anexado.</p>`
+      ? ''
       : fndeDocs.map(d => `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.4rem;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:0.4rem;">
           <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary);">${d.fileName}</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#475569; flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <span style="font-weight:600; font-size:0.86rem; color:#1e293b;">${d.fileName}</span>
           </div>
           ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Visualizar / Baixar</a>` : ''}
         </div>
       `).join('');
 
     const cecateHtml = cecateDocs.length === 0
-      ? `<p style="color:var(--text-muted); font-style:italic;">Nenhuma convocação ou comunicado do CECATE anexado.</p>`
+      ? ''
       : cecateDocs.map(d => `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.4rem;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:#f8fafc; border:1px solid #cbd5e1; border-radius:4px; margin-bottom:0.4rem;">
           <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary);">${d.fileName}</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#475569; flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <span style="font-weight:600; font-size:0.86rem; color:#1e293b;">${d.fileName}</span>
           </div>
           ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Visualizar / Baixar</a>` : ''}
         </div>
       `).join('');
 
     container.innerHTML = `
-      <div class="report-doc-page">
-        <!-- CABEÇALHO OFICIAL -->
-        <div style="text-align:center; border-bottom: 2px solid #1e3a8a; padding-bottom: 1.25rem; margin-bottom: 2rem;">
-          <h2 style="font-size:16pt; margin:0; font-weight:800; color:#1e293b;">UNIVERSIDADE FEDERAL DE GOIÁS - UFG</h2>
-          <h3 style="font-size:13pt; margin:4px 0; color:#0284c7; font-weight:700;">CENTRO COLABORADOR DE APOIO AO TRANSPORTE ESCOLAR - CECATE CENTRO-OESTE</h3>
-          <p style="font-size:10pt; color:#475569; margin:0; font-weight:600;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE</p>
+      <div class="report-doc-page" style="font-family:'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif;">
+        <!-- =========================================================================
+             1. CAPA OFICIAL PADRONIZADA (ESPELHO WORD & REFERÊNCIA OFICIAL)
+             ========================================================================= -->
+        <div class="report-cover-page" style="page-break-after: always; break-after: page; min-height: 980px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; margin-bottom: 2rem;">
+          
+          <!-- LOGOS INSTITUCIONAIS PADRONIZADOS -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem 1.5rem 1rem; border-bottom: 1.5px solid #cbd5e1; gap: 1rem;">
+            <div style="flex: 1; text-align: left;">
+              ${assets.logoUfg ? `<img src="${getAssetDataUrl('logoUfg')}" alt="Logo UFG" style="max-height: 60px; max-width: 75px; width: auto; height: auto; object-fit: contain; display: inline-block;" />` : ''}
+            </div>
+            <div style="flex: 1.2; text-align: center;">
+              ${assets.logoCecate ? `<img src="${getAssetDataUrl('logoCecate')}" alt="Logo CECATE" style="max-height: 55px; max-width: 125px; width: auto; height: auto; object-fit: contain; display: inline-block;" />` : ''}
+            </div>
+            <div style="flex: 1.2; text-align: right;">
+              ${assets.logoFnde ? `<img src="${getAssetDataUrl('logoFnde')}" alt="Logo FNDE" style="max-height: 45px; max-width: 160px; width: auto; height: auto; object-fit: contain; display: inline-block;" />` : ''}
+            </div>
+          </div>
+
+          <!-- CABEÇALHO INSTITUCIONAL -->
+          <div style="margin-top: 1.5rem;">
+            <h2 style="font-size: 15pt; margin: 0; font-weight: 800; color: #1e3a8a; letter-spacing: 0.5px;">UNIVERSIDADE FEDERAL DE GOIÁS - UFG</h2>
+            <h3 style="font-size: 12pt; margin: 6px 0 0 0; color: #0284c7; font-weight: 700;">CENTRO COLABORADOR DE APOIO AO TRANSPORTE ESCOLAR - CECATE CENTRO-OESTE</h3>
+            <p style="font-size: 11pt; color: #475569; margin: 6px 0 0 0; font-weight: 600;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE</p>
+          </div>
+
+          <!-- BLOCO CENTRAL: TÍTULO DA CAPACITAÇÃO -->
+          <div style="margin: 4.5rem 0 3.5rem 0;">
+            <h1 style="font-size: 24pt; margin-bottom: 0.75rem; font-weight: 800; color: #0f172a; line-height: 1.25;">CAPACITAÇÃO EM TRANSPORTE ESCOLAR</h1>
+            <h2 style="font-size: 16pt; color: #2563eb; margin: 0.5rem 0; font-weight: 700;">${t.polo || 'Polo Regional'} - ${t.uf || 'UF'}, ${t.datesFormatted || '2026'}</h2>
+            <h3 style="font-size: 18pt; color: #1e3a8a; margin-top: 1.5rem; font-weight: 800;">Relatório de Atividades Nº ${t.number || ''}</h3>
+          </div>
+
+          <!-- BLOCO INFERIOR: PROJETO E PROCESSO -->
+          <div style="margin-top: auto; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+            <p style="font-size: 11pt; color: #475569; font-style: italic; margin: 0; line-height: 1.5;">
+              Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL
+            </p>
+            <p style="font-size: 10pt; color: #64748b; margin-top: 0.4rem;">
+              Processo Administrativo: ${t.processNumber || '23070.012345/2026-00'}
+            </p>
+          </div>
         </div>
 
-        <!-- TÍTULO DO RELATÓRIO -->
-        <div style="text-align:center; margin: 2.5rem 0;">
-          <h1 style="font-size:22pt; margin-bottom:0.5rem; font-weight:800; color:#0f172a;">RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}</h1>
-          <h2 style="font-size:16pt; color:#2563eb; margin:0; font-weight:700;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
-          <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem; font-weight:600;">${t.polo || 'Polo Regional'} - ${t.uf || 'GO'}, ${t.datesFormatted || '2026'}</h3>
+        <!-- =========================================================================
+             2. FOLHA DE EQUIPE PARTICIPANTE (FOLHA DE ROSTO)
+             ========================================================================= -->
+        <div class="report-team-page" style="page-break-after: always; break-after: page; min-height: 980px; padding-top: 1rem; margin-bottom: 2rem;">
+          <div style="text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 1rem; margin-bottom: 2.5rem;">
+            <h2 style="font-size: 17pt; color: #1e3a8a; margin: 0; font-weight: 800;">RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}</h2>
+            <h3 style="font-size: 14pt; color: #0f172a; margin: 0.4rem 0 0 0; font-weight: 700;">EQUIPE PARTICIPANTE</h3>
+          </div>
+
+          <div style="margin-bottom: 2.5rem;">
+            <h4 style="font-size: 13pt; color: #1e3a8a; font-weight: 700; margin-bottom: 0.8rem; border-left: 4px solid #1e3a8a; padding-left: 0.6rem;">UNIVERSIDADE FEDERAL DE GOIÁS - UFG</h4>
+            <p style="margin: 0.5rem 0; font-size: 11pt; line-height: 1.6;">
+              <strong>Coordenação Geral:</strong> Prof. Dr. Willer Luciano Carvalho
+            </p>
+            <p style="margin: 0.5rem 0; font-size: 11pt; line-height: 1.6;">
+              <strong>Equipe Técnica:</strong><br />
+              • Eng. M.Sc. Lara Batista Ferreira de Lima<br />
+              • Eng. M.Sc. Matheus Henrique Morato de Moraes<br />
+              • Prof. Dr. Marcos Paulino Roriz Junior<br />
+              • Prof. Dr. Liosber Medina Garcia
+            </p>
+          </div>
+
+          <div style="margin-bottom: 2.5rem;">
+            <h4 style="font-size: 13pt; color: #1e3a8a; font-weight: 700; margin-bottom: 0.8rem; border-left: 4px solid #1e3a8a; padding-left: 0.6rem;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE</h4>
+            <p style="margin: 0.5rem 0; font-size: 11pt; line-height: 1.6;">
+              <strong>Coordenação-Geral da Política do Transporte Escolar - CGPTE:</strong> Haroldo da Silva Gomes
+            </p>
+          </div>
         </div>
 
+        <!-- =========================================================================
+             3. PÁGINAS PRÉ-TEXTUAIS: LISTA DE FIGURAS, LISTA DE TABELAS, SUMÁRIO
+             ========================================================================= -->
+        <div class="report-pretextual-page" style="page-break-after: always; break-after: page; min-height: 980px; padding-top: 1rem; margin-bottom: 2rem;">
+          <h3 style="font-size: 15pt; color: #1e3a8a; font-weight: 800; border-bottom: 2px solid #1e3a8a; padding-bottom: 0.4rem; margin-top: 0;">Lista de Figuras</h3>
+          <div style="font-size: 10.5pt; line-height: 1.9; margin: 1rem 0 2rem 0;">
+            <div style="display:flex; justify-content:space-between;"><span>Figura 1: Avaliação via ferramenta kahoot ...................................................................</span><span>10</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 2: Avaliação via ferramenta Plickers .................................................................</span><span>11</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 3. Participação segundo o tipo de representação ................................................</span><span>12</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 4. Avaliação da capacitação de todos os participantes ........................................</span><span>13</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 5. Avaliação da capacitação dos conselheiros CACS ..........................................</span><span>14</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 6. Avaliação da capacitação dos gestores municipais ..........................................</span><span>15</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 7. Aspectos que gostaram da capacitação ...........................................................</span><span>16</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 8. Aspectos que devem melhorar da capacitação ................................................</span><span>16</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 9. Acomodação dos participantes ......................................................................</span><span>17</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 10. Apresentação inicial do curso .....................................................................</span><span>17</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Figura 11. Apresentação dos módulos teóricos .............................................................</span><span>18</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>${is16Hours ? 'Figura 12. Apresentação do primeiro dia' : 'Figura 12. Apresentação do Software SETE'} .....................................................................</span><span>18</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>${is16Hours ? 'Figura 13. Final da capacitação do segundo dia' : 'Figura 13. Final da capacitação'} ..........................................................</span><span>19</span></div>
+          </div>
+
+          <h3 style="font-size: 15pt; color: #1e3a8a; font-weight: 800; border-bottom: 2px solid #1e3a8a; padding-bottom: 0.4rem; margin-top: 1.5rem;">Lista de Tabelas</h3>
+          <div style="font-size: 10.5pt; line-height: 1.9; margin: 1rem 0 2rem 0;">
+            <div style="display:flex; justify-content:space-between;"><span>Tabela 1. Municípios convocados .................................................................................</span><span>5</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Tabela 2. Estrutura do curso de capacitação em transporte escolar .............................</span><span>7</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Tabela 3. Inscritos por município ................................................................................</span><span>9</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Tabela 4. Participação por município ...........................................................................</span><span>11</span></div>
+          </div>
+
+          <h3 style="font-size: 15pt; color: #1e3a8a; font-weight: 800; border-bottom: 2px solid #1e3a8a; padding-bottom: 0.4rem; margin-top: 1.5rem;">Sumário</h3>
+          <div style="font-size: 10.5pt; line-height: 1.9; margin: 1rem 0 1rem 0;">
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>1. INTRODUÇÃO .........................................................................................................</span><span>4</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>2. DADOS BÁSICOS DO CURSO ...............................................................................</span><span>5</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>3. CONTATO COM OS MUNICÍPIOS ..........................................................................</span><span>8</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>4. DESENVOLVIMENTO DO CURSO .........................................................................</span><span>9</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>5. AVALIAÇÃO DA CAPACITAÇÃO ...........................................................................</span><span>12</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO ...............................................</span><span>17</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>7. CONSIDERAÇÕES FINAIS ....................................................................................</span><span>20</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>APÊNDICE I: CONVOCAÇÃO DO FNDE ...................................................................</span><span>21</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>APÊNDICE II: CONVOCAÇÃO DO CECATE ...............................................................</span><span>23</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:700;"><span>APÊNDICE III: AVALIAÇÃO INDIVIDUAL DAS RESPOSTAS QUALITATIVAS .......</span><span>25</span></div>
+          </div>
+        </div>
+
+        <!-- =========================================================================
+             4. CONTEÚDO TEXTUAL DO RELATÓRIO
+             ========================================================================= -->
         <!-- 1. INTRODUÇÃO -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">1. INTRODUÇÃO</h3>
         <p style="text-align:justify; line-height:1.6;">O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${t.number || ''}, executada no município polo de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, nas datas de ${t.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${t.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
@@ -7235,36 +7353,63 @@ class AutoReportApp {
         
         <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 1. Municípios convocados.</em></p>
         ${window.statsEngine.generateTable1Html(t.municipalities || [])}
+        <p style="font-size:0.85rem; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.<br />** Municípios que solicitaram inclusão na capacitação.</p>
 
         <p style="text-align:justify; line-height:1.6; margin-top:1.5rem;">A matriz curricular e a distribuição de carga horária programada para os módulos teóricos e práticos são apresentadas na Tabela 2:</p>
         <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
         ${window.statsEngine.generateTable2Html(t.courseModules || [])}
+        <p style="font-size:0.85rem; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
 
         <!-- 3. CONTATO COM OS MUNICÍPIOS -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. CONTATO COM OS MUNICÍPIOS</h3>
         <p style="text-align:justify; line-height:1.6;">O contato com os municípios, previamente selecionados, se deu a partir da emissão de ofício por parte da Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, tanto para os contatos das secretarias municipais de educação quanto para os contatos dos CACS (Apêndice I). Neste e-mail, constavam as informações essenciais para compreender o objetivo do curso, instruções necessárias para inscrições e o formulário para realizar as inscrições por meio de link e QR Code correspondente.</p>
         <p style="text-align:justify; line-height:1.6;">Posteriormente, a equipe técnica do CECATE-CO realizou um novo encaminhamento (Apêndice II), utilizando informações das prefeituras e secretarias de educação dos municípios disponíveis nos sítios eletrônicos oficiais. Com isso, foi realizado um contato complementar por e-mail e por telefone, assegurando o esclarecimento de dúvidas e a mobilização das delegações municipais.</p>
 
-        <!-- 4. DESENVOLVIMENTO DO CURSO & TABELA 3 & TABELA 4 -->
+        <!-- 4. DESENVOLVIMENTO DO CURSO & TABELA 3 & FIGURAS 1 E 2 & TABELA 4 -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">4. DESENVOLVIMENTO DO CURSO</h3>
         <p style="text-align:justify; line-height:1.6;">Ao final do processo, houve um total de ${metrics.totalInscribed} pessoas inscritas, sendo ${metrics.totalInscribedGestores} gestores municipais e ${metrics.totalInscribedCACS} representantes dos CACS/FUNDEB. Cabe destacar que ${metrics.totalInscribedMunicipalities} municípios tiveram representantes inscritos. Os detalhes por município podem ser analisados na Tabela 3:</p>
 
         <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 3. Inscritos por município.</em></p>
         ${window.statsEngine.generateTable3Html(t.municipalities || [])}
+        <p style="font-size:0.85rem; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
 
         <p style="text-align:justify; line-height:1.6; margin-top:1.5rem;">Durante as atividades formativas, foram executadas dinâmicas por meio do uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos (Kahoot e Plickers), permitindo verificar a evolução dos participantes e aumentar o engajamento com os conteúdos temáticos.</p>
+
+        <!-- FIGURA 1: KAHOOT -->
+        ${assets.fig1Kahoot ? `
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid; break-inside:avoid;">
+          <p style="font-weight:600; font-size:10pt; margin-bottom:0.5rem; color:#1e293b;">
+            <em>Figura 1: Avaliação via ferramenta kahoot.</em>
+          </p>
+          <img src="${getAssetDataUrl('fig1Kahoot')}" alt="Figura 1: Kahoot" style="max-width:100%; max-height:280px; width:auto; height:auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:block; margin:0 auto;" />
+          <p style="font-size:9pt; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
+        </div>` : ''}
+
+        <!-- FIGURA 2: PLICKERS -->
+        ${assets.fig2Plickers ? `
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid; break-inside:avoid;">
+          <p style="font-weight:600; font-size:10pt; margin-bottom:0.5rem; color:#1e293b;">
+            <em>Figura 2: Avaliação via ferramenta Plickers.</em>
+          </p>
+          <img src="${getAssetDataUrl('fig2Plickers')}" alt="Figura 2: Plickers" style="max-width:100%; max-height:280px; width:auto; height:auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 2px 6px rgba(0,0,0,0.06); display:block; margin:0 auto;" />
+          <p style="font-size:9pt; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
+        </div>` : ''}
 
         <p style="text-align:justify; line-height:1.6; margin-top:1.25rem;">A participação dos municípios registrou ${metrics.totalPresentMunicipalities} municípios presentes dos ${metrics.totalInscribedMunicipalities} inscritos, com um total de ${metrics.totalPresent} participantes presentes e taxa global de presença de ${metrics.participationRateGeneral}%. Os resultados detalhados por município são apresentados na Tabela 4 a seguir:</p>
 
         <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
         ${window.statsEngine.generateTable4Html(t.municipalities || [])}
+        <p style="font-size:0.85rem; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.25rem;">Após o curso, todos os certificados foram emitidos e encaminhados para o e-mail dos participantes mediante o uso da plataforma PLATEIA da UFG, no qual cada documento gerado possui o link e o QR code para verificação da veracidade.</p>
 
         <!-- FIGURA 3 -->
-        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid; break-inside:avoid;">
           <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 3. Participação de Gestores e Conselheiros CACS.</em></p>
           <div style="max-width:520px; height:280px; position:relative; margin:auto;">
             <canvas id="report-preview-fig3-canvas"></canvas>
           </div>
+          <p style="font-size:9pt; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
         </div>
 
         <!-- 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8 -->
@@ -7272,47 +7417,52 @@ class AutoReportApp {
         <p style="text-align:justify; line-height:1.6;">Registrou-se ${metrics.evalStatsGeneral.totalResponses} questionários de avaliação preenchidos, com média geral de satisfação de ${metrics.evalStatsGeneral.overallMean} / 5.0. A distribuição percentual de notas atribuídas pelos participantes nos sete critérios pedagógicos e estruturais avaliados é sintetizada a seguir:</p>
 
         <!-- FIGURA 4 -->
-        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid; break-inside:avoid;">
           <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 4. Avaliação da capacitação de todos os participantes.</em></p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig4-canvas"></canvas>
           </div>
+          <p style="font-size:9pt; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
         </div>
 
         <!-- FIGURA 5 -->
-        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid; break-inside:avoid;">
           <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 5. Avaliação da capacitação dos conselheiros CACS.</em></p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig5-canvas"></canvas>
           </div>
+          <p style="font-size:9pt; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
         </div>
 
         <!-- FIGURA 6 -->
-        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid; break-inside:avoid;">
           <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 6. Avaliação da capacitação dos gestores municipais.</em></p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig6-canvas"></canvas>
           </div>
+          <p style="font-size:9pt; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
         </div>
 
         <!-- FIGURAS 7 E 8 (NUVENS DE PALAVRAS) -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; page-break-inside:avoid;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; page-break-inside:avoid; break-inside:avoid;">
           <div style="text-align:center;">
             <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos que gostaram da capacitação.</em></p>
-            <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <div style="background:#f8fafc; padding:0.75rem; border-radius:var(--radius-md); border:1px solid #cbd5e1;">
               <canvas id="report-preview-fig7-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
+            <p style="font-size:9pt; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
           </div>
           <div style="text-align:center;">
             <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos que devem melhorar da capacitação.</em></p>
-            <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
+            <div style="background:#f8fafc; padding:0.75rem; border-radius:var(--radius-md); border:1px solid #cbd5e1;">
               <canvas id="report-preview-fig8-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
+            <p style="font-size:9pt; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Elaborada pelos autores.</p>
           </div>
         </div>
 
         <!-- 6. REGISTROS FOTOGRÁFICOS -->
-        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">6. REGISTROS FOTOGRÁFICOS</h3>
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO</h3>
         <p style="text-align:justify; line-height:1.6;">A seguir são apresentados os registros fotográficos oficiais realizados durante os momentos de acolhimento, exposição temática e encerramento da capacitação:</p>
         ${photosHtml}
 
@@ -7320,20 +7470,57 @@ class AutoReportApp {
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">7. CONSIDERAÇÕES FINAIS</h3>
         <p style="text-align:justify; line-height:1.6;">A realização da Capacitação nº ${t.number} no polo de ${t.polo} cumpriu integralmente as metas e diretrizes estabelecidas pelo CECATE-CO e pelo FNDE. O estreitamento do diálogo técnico entre a gestão municipal e o controle social do CACS-FUNDEB fortalece as diretrizes de governança, segurança e eficiência no transporte escolar dos estudantes da Educação Básica.</p>
 
-        <!-- APÊNDICE I: CONVOCAÇÕES DO FNDE -->
-        <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:3rem;">APÊNDICE I: CONVOCAÇÕES DO FNDE</h3>
-        <p style="text-align:justify; line-height:1.6;">Relação dos ofícios e convocações oficiais emitidos pelo FNDE referentes a esta capacitação:</p>
-        ${fndeHtml}
+        <!-- APÊNDICE I: CONVOCAÇÃO DO FNDE -->
+        <div style="margin-top:2.5rem; page-break-before:always; break-before:page;">
+          <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem;">APÊNDICE I: CONVOCAÇÃO DO FNDE</h3>
+          <p style="text-align:justify; line-height:1.6;">Ofício circular oficial de convocação expedido pela Coordenação-Geral da Política do Transporte Escolar (CGPTE/FNDE) aos municípios convocados:</p>
+          
+          <div style="display:flex; flex-direction:column; gap:1.5rem; align-items:center; margin:1.5rem 0;">
+            ${assets.convocacaoFndeP1 ? `
+              <div style="text-align:center; page-break-inside:avoid; break-inside:avoid; max-width:650px; width:100%;">
+                <img src="${getAssetDataUrl('convocacaoFndeP1')}" alt="Convocação FNDE - Página 1" style="max-width:100%; height:auto; border:1px solid #cbd5e1; box-shadow:0 3px 10px rgba(0,0,0,0.08); border-radius:4px; display:block; margin:0 auto;" />
+                <p style="font-size:9pt; color:#64748b; margin-top:0.35rem; font-style:italic;">Página 1 do Ofício de Convocação FNDE</p>
+              </div>
+            ` : ''}
+            ${assets.convocacaoFndeP2 ? `
+              <div style="text-align:center; page-break-inside:avoid; break-inside:avoid; max-width:650px; width:100%;">
+                <img src="${getAssetDataUrl('convocacaoFndeP2')}" alt="Convocação FNDE - Página 2" style="max-width:100%; height:auto; border:1px solid #cbd5e1; box-shadow:0 3px 10px rgba(0,0,0,0.08); border-radius:4px; display:block; margin:0 auto;" />
+                <p style="font-size:9pt; color:#64748b; margin-top:0.35rem; font-style:italic;">Página 2 do Ofício de Convocação FNDE</p>
+              </div>
+            ` : ''}
+          </div>
+          ${fndeHtml ? `<div style="margin-top:1rem;">${fndeHtml}</div>` : ''}
+        </div>
 
-        <!-- APÊNDICE II: CONVOCAÇÕES DO CECATE -->
-        <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE II: CONVOCAÇÕES DO CECATE</h3>
-        <p style="text-align:justify; line-height:1.6;">Relação dos comunicados e e-mails de convocação emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação:</p>
-        ${cecateHtml}
+        <!-- APÊNDICE II: CONVOCAÇÃO DO CECATE -->
+        <div style="margin-top:2.5rem; page-break-before:always; break-before:page;">
+          <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem;">APÊNDICE II: CONVOCAÇÃO DO CECATE</h3>
+          <p style="text-align:justify; line-height:1.6;">Comunicado oficial emitido pela coordenação técnica do CECATE Centro-Oeste / UFG para confirmação das inscrições e mobilização local:</p>
+          
+          <div style="display:flex; flex-direction:column; gap:1.5rem; align-items:center; margin:1.5rem 0;">
+            ${assets.convocacaoCecateP1 ? `
+              <div style="text-align:center; page-break-inside:avoid; break-inside:avoid; max-width:650px; width:100%;">
+                <img src="${getAssetDataUrl('convocacaoCecateP1')}" alt="Convocação CECATE - Página 1" style="max-width:100%; height:auto; border:1px solid #cbd5e1; box-shadow:0 3px 10px rgba(0,0,0,0.08); border-radius:4px; display:block; margin:0 auto;" />
+                <p style="font-size:9pt; color:#64748b; margin-top:0.35rem; font-style:italic;">Página 1 do Comunicado de Convocação CECATE</p>
+              </div>
+            ` : ''}
+            ${assets.convocacaoCecateP2 ? `
+              <div style="text-align:center; page-break-inside:avoid; break-inside:avoid; max-width:650px; width:100%;">
+                <img src="${getAssetDataUrl('convocacaoCecateP2')}" alt="Convocação CECATE - Página 2" style="max-width:100%; height:auto; border:1px solid #cbd5e1; box-shadow:0 3px 10px rgba(0,0,0,0.08); border-radius:4px; display:block; margin:0 auto;" />
+                <p style="font-size:9pt; color:#64748b; margin-top:0.35rem; font-style:italic;">Página 2 do Comunicado de Convocação CECATE</p>
+              </div>
+            ` : ''}
+          </div>
+          ${cecateHtml ? `<div style="margin-top:1rem;">${cecateHtml}</div>` : ''}
+        </div>
 
         <!-- APÊNDICE III: AVALIAÇÃO INDIVIDUAL DAS RESPOSTAS QUALITATIVAS -->
-        <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE III: AVALIAÇÃO INDIVIDUAL DAS RESPOSTAS QUALITATIVAS</h3>
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela com as respostas dissertativas dos participantes.</em></p>
-        ${window.statsEngine.generateTable8Html(t.evaluations || [])}
+        <div style="margin-top:2.5rem; page-break-before:always; break-before:page;">
+          <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem;">APÊNDICE III: AVALIAÇÃO INDIVIDUAL DAS RESPOSTAS QUALITATIVAS</h3>
+          <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela com as respostas dissertativas dos participantes.</em></p>
+          ${window.statsEngine.generateTable8Html(t.evaluations || [])}
+          <p style="font-size:0.85rem; font-style:italic; color:#64748b; margin-top:0.35rem;">Fonte: Formulário de Avaliação da Capacitação (FNDE/CECATE-CO).</p>
+        </div>
       </div>
     `;
 
@@ -7541,7 +7728,7 @@ class AutoReportApp {
       padding: 0;
       background: #ffffff !important;
       color: #0f172a !important;
-      font-family: 'Times New Roman', serif;
+      font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif !important;
       font-size: 11pt;
       line-height: 1.6;
     }
@@ -7554,9 +7741,10 @@ class AutoReportApp {
       margin: 0 !important;
       box-shadow: none !important;
       border: none !important;
+      font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif !important;
     }
     h1, h2, h3, h4 {
-      font-family: 'Times New Roman', serif;
+      font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif !important;
       page-break-after: avoid;
       break-after: avoid;
       color: #1e3a8a;
@@ -7590,9 +7778,18 @@ class AutoReportApp {
       break-inside: avoid;
     }
     div[style*="page-break-inside: avoid"],
-    div[style*="page-break-inside:avoid"] {
+    div[style*="page-break-inside:avoid"],
+    div[style*="break-inside: avoid"],
+    div[style*="break-inside:avoid"] {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
+    }
+    div[style*="page-break-after: always"],
+    div[style*="page-break-after:always"],
+    div[style*="break-after: page"],
+    div[style*="break-after:page"] {
+      page-break-after: always !important;
+      break-after: page !important;
     }
     a {
       color: #1e3a8a;
@@ -7606,15 +7803,27 @@ class AutoReportApp {
 </html>`);
     iframeDoc.close();
 
-    setTimeout(() => {
-      try {
-        printIframe.contentWindow.focus();
-        printIframe.contentWindow.print();
-      } catch (err) {
-        console.error('Falha ao acionar impressão via iframe:', err);
-        window.print();
-      }
-    }, 450);
+    // Aguardar o carregamento e decodificação completa de todas as imagens antes de acionar impressão
+    const allImgs = Array.from(iframeDoc.images);
+    const imgPromises = allImgs.map(img => {
+      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+      return new Promise(res => {
+        img.onload = () => res();
+        img.onerror = () => res();
+      });
+    });
+
+    Promise.all(imgPromises).then(() => {
+      setTimeout(() => {
+        try {
+          printIframe.contentWindow.focus();
+          printIframe.contentWindow.print();
+        } catch (err) {
+          console.error('Falha ao acionar impressão via iframe:', err);
+          window.print();
+        }
+      }, 300);
+    });
   }
 
   async directDownloadDocx(trainingId) {

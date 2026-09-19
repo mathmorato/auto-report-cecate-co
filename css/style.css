@@ -2100,6 +2100,12 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
   max-height: 80vh;
 }
 
+body.light-theme .report-doc-preview-wrapper,
+[data-theme="light"] .report-doc-preview-wrapper {
+  background: #cbd5e1;
+  border-color: #94a3b8;
+}
+
 .report-doc-page {
   background: #ffffff;
   color: #0f172a;
@@ -2108,13 +2114,19 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
   min-height: 1100px;
   padding: 3rem 3.5rem;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
-  font-family: 'Times New Roman', serif;
+  font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif;
   line-height: 1.6;
   font-size: 11pt;
 }
 
+body.light-theme .report-doc-page,
+[data-theme="light"] .report-doc-page {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid #cbd5e1;
+}
+
 .report-doc-page h1, .report-doc-page h2, .report-doc-page h3, .report-doc-page h4 {
-  font-family: 'Times New Roman', serif;
+  font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif;
   color: #1e3a8a;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
