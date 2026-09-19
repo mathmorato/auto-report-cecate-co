@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.7
+ * Versão: v.2.9.8
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.7';
+    this.version = 'v.2.9.8';
   }
 
   /**
@@ -7286,40 +7286,7 @@ class AutoReportApp {
     container.innerHTML = `
       <div style="font-family:'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif;">
         <!-- =========================================================================
-             1. CONTRACAPA (CAPA ILUSTRADA OFICIAL - IMAGEM 3)
-             ========================================================================= -->
-        <div class="report-contracapa-page" style="page-break-after: always; break-after: page;">
-          <!-- ILUSTRAÇÃO SUPERIOR -->
-          <div style="text-align: center; margin-top: 0.5rem; margin-bottom: 1.5rem;">
-            ${assets.contracapaCover ? `<img src="${getAssetDataUrl('contracapaCover')}" alt="Ilustração Transporte Escolar" style="max-width: 100%; max-height: 380px; width: auto; height: auto; object-fit: contain; margin: 0 auto; display: block; border-radius: 4px;" />` : ''}
-          </div>
-
-          <!-- TÍTULO ACIMA DA FAIXA -->
-          <p style="color: #E5B83B; font-weight: 700; font-size: 13pt; margin-top: 0.5rem; margin-bottom: 0.5rem; text-align: left; letter-spacing: 0.5px;">
-            RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}
-          </p>
-
-          <!-- FAIXA AMARELA / DOURADA -->
-          <div style="background: #E5B83B; color: #000000; padding: 1.25rem 1rem; margin: 0.5rem 0 1.5rem 0; text-align: center; border-radius: 3px;">
-            <h1 style="font-size: 20pt; font-weight: 900; margin: 0; color: #000000; text-transform: uppercase; letter-spacing: 0.5px;">CAPACITAÇÃO EM TRANSPORTE ESCOLAR</h1>
-            <p style="font-size: 13pt; font-weight: 700; margin: 0.4rem 0 0 0; color: #1e293b;">${locationAndDate}</p>
-          </div>
-
-          <!-- SUBTÍTULO DO PROJETO -->
-          <div style="text-align: right; margin: 0.5rem 0 2rem auto; max-width: 500px;">
-            <p style="font-size: 11pt; color: #e2e8f0; font-style: italic; font-weight: 600; line-height: 1.6; margin: 0;">
-              Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL
-            </p>
-          </div>
-
-          <!-- RODAPÉ DA CONTRACAPA (FAIXA CINZA CLARA COM LOGOS) -->
-          <div style="background: #e2e8f0; padding: 0.9rem 1.5rem; margin-top: auto; margin-left: -3rem; margin-right: -3rem; text-align: center; display: flex; justify-content: center; align-items: center;">
-            ${assets.coverFooterLogos ? `<img src="${getAssetDataUrl('coverFooterLogos')}" alt="Logos Institucionais" style="max-height: 55px; max-width: 90%; width: auto; height: auto; object-fit: contain; display: block; margin: 0 auto;" />` : ''}
-          </div>
-        </div>
-
-        <!-- =========================================================================
-             2. CAPA OFICIAL (CAPA BRANCA / FOLHA DE ROSTO - IMAGEM 1)
+             1. CAPA OFICIAL (FOLHA DE ROSTO BRANCA)
              ========================================================================= -->
         <div class="report-cover-page" style="page-break-after: always; break-after: page;">
           <!-- LINHA SUPERIOR COM O PROJETO -->
