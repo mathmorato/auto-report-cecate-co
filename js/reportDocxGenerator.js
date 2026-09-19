@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial Word (.docx)
- * Versão: v.2.9.6
+ * Versão: v.2.9.7
  * 
  * Compatibilidade total com a estrutura institucional oficial (6CTE a 16CTE):
  * - Capa e folha de rosto oficial com logomarcas UFG, CECATE Centro-Oeste e FNDE
@@ -660,6 +660,53 @@ class ReportDocxGenerator {
   /**
    * Construtor Principal do Documento
    */
+
+  getStateFullName(uf) {
+    const map = {
+      'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas', 'BA': 'Bahia', 'CE': 'Ceará',
+      'DF': 'Distrito Federal', 'ES': 'Espírito Santo', 'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso',
+      'MS': 'Mato Grosso do Sul', 'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná',
+      'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte',
+      'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina',
+      'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'
+    };
+    if (!uf) return '';
+    const clean = String(uf).trim().toUpperCase();
+    return map[clean] || uf;
+  }
+
+  getCoverLocationAndDate(training) {
+    const polo = training.polo || 'Município Polo';
+    const state = this.getStateFullName(training.uf) || training.uf || '';
+    const dates = training.datesFormatted || training.startDate || '2026';
+    if (state) {
+      return `${polo}, ${state}, ${dates}`;
+    }
+    return `${polo}, ${dates}`;
+  }
+
+  getCoverMonthYear(training) {
+    const months = {
+      'janeiro': '01', 'fevereiro': '02', 'março': '03', 'marco': '03', 'abril': '04',
+      'maio': '05', 'junho': '06', 'julho': '07', 'agosto': '08', 'setembro': '09',
+      'outubro': '10', 'novembro': '11', 'dezembro': '12'
+    };
+    const str = String(training.datesFormatted || training.startDate || '').toLowerCase();
+    for (const [mName, mNum] of Object.entries(months)) {
+      if (str.includes(mName)) {
+        const yMatch = str.match(/\b(20\d\d)\b/);
+        const y = yMatch ? yMatch[1] : (training.startDate ? training.startDate.slice(0, 4) : '2026');
+        return `${mNum}/${y}`;
+      }
+    }
+    if (training.startDate && training.startDate.includes('-')) {
+      const parts = training.startDate.split('-');
+      if (parts.length >= 2) return `${parts[1]}/${parts[0]}`;
+    }
+    const now = new Date();
+    return `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+  }
+
   async generateAndDownload(training, metrics, chartsData = {}) {
     if (!training) {
       alert('Selecione ou salve uma capacitação primeiro.');
@@ -714,86 +761,280 @@ class ReportDocxGenerator {
     };
 
     const assets = window.REPORT_ASSETS || {};
-    const docChildren = [];
+    const locationAndDate = this.getCoverLocationAndDate(training);
+    const coverMonthYear = this.getCoverMonthYear(training);
+
+    const noBorder = { style: BorderStyle.NONE, size: 0, color: 'auto' };
+    const grayLineBorder = { style: BorderStyle.SINGLE, size: 6, color: '94A3B8' };
 
     // =========================================================================
-    // 1. CAPA OFICIAL
+    // 1. SEÇÃO 1: CONTRACAPA E CAPA OFICIAL (SEM CABEÇALHOS/RODAPÉS NORMAIS)
     // =========================================================================
-    const logoUfgBytes = this.base64ToUint8Array(assets.logoUfg);
-    const logoCecateBytes = this.base64ToUint8Array(assets.logoCecate);
-    const logoFndeBytes = this.base64ToUint8Array(assets.logoFnde);
+    const coverChildren = [];
 
-    if (logoUfgBytes || logoCecateBytes || logoFndeBytes) {
-      const logoCells = [];
-      if (logoUfgBytes) {
-        const ufgRun = await this.createImageRunWithAR(assets.logoUfg, logoUfgBytes, 75, 60, ImageRun);
-        logoCells.push(new TableCell({
-          width: { size: 30, type: WidthType.PERCENTAGE },
-          borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ alignment: AlignmentType.LEFT, children: [ufgRun] })]
-        }));
+    // --- PÁGINA 1: CONTRACAPA (CAPA ILUSTRADA OFICIAL - IMAGEM 3) ---
+    if (assets.contracapaCover) {
+      const coverBytes = this.base64ToUint8Array(assets.contracapaCover);
+      if (coverBytes) {
+        const coverRun = await this.createImageRunWithAR(assets.contracapaCover, coverBytes, 430, 270, ImageRun);
+        coverChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 80, after: 60 },
+            children: [coverRun]
+          })
+        );
       }
-      if (logoCecateBytes) {
-        const cecateRun = await this.createImageRunWithAR(assets.logoCecate, logoCecateBytes, 125, 55, ImageRun);
-        logoCells.push(new TableCell({
-          width: { size: 35, type: WidthType.PERCENTAGE },
-          borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [cecateRun] })]
-        }));
-      }
-      if (logoFndeBytes) {
-        const fndeRun = await this.createImageRunWithAR(assets.logoFnde, logoFndeBytes, 160, 45, ImageRun);
-        logoCells.push(new TableCell({
-          width: { size: 35, type: WidthType.PERCENTAGE },
-          borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [fndeRun] })]
-        }));
-      }
-
-      docChildren.push(
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          rows: [new TableRow({ children: logoCells })]
-        })
-      );
     }
 
-    docChildren.push(
+    coverChildren.push(
       new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 240, after: 120 },
+        alignment: AlignmentType.LEFT,
+        spacing: { before: 80, after: 60 },
         children: [
-          new TextRun({ text: 'UNIVERSIDADE FEDERAL DE GOIÁS - UFG', font: 'Gill Sans MT', bold: true, size: 24, color: '1E3A8A' }),
-          new TextRun({ text: '\nCENTRO COLABORADOR DE APOIO AO TRANSPORTE ESCOLAR - CECATE CENTRO-OESTE', font: 'Gill Sans MT', bold: true, size: 20, color: '0284C7' }),
-          new TextRun({ text: '\nFUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE', font: 'Gill Sans MT', bold: true, size: 18, color: '475569' })
-        ]
-      }),
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 700, after: 300 },
-        children: [
-          new TextRun({ text: `CAPACITAÇÃO EM TRANSPORTE ESCOLAR`, font: 'Gill Sans MT', bold: true, size: 32, color: '0F172A' }),
-          new TextRun({ text: `\n${training.polo || 'Polo Regional'}, ${training.uf || 'MT'}, ${training.datesFormatted || '2026'}`, font: 'Gill Sans MT', bold: true, size: 24, color: '2563EB' }),
-          new TextRun({ text: `\n\nRelatório de Atividades Nº ${training.number || 16}`, font: 'Gill Sans MT', bold: true, size: 26, color: '1E3A8A' })
-        ]
-      }),
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 800, after: 400 },
-        children: [
-          new TextRun({ text: `Projeto:  FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL`, font: 'Gill Sans MT', italics: true, size: 20, color: '475569' }),
-          new TextRun({ text: `\nProcesso Administrativo: ${training.processNumber || '23070.012345/2026-00'}`, font: 'Gill Sans MT', size: 18, color: '64748B' })
+          new TextRun({
+            text: `RELATÓRIO DE ATIVIDADES Nº ${training.number || 16}`,
+            font: 'Gill Sans MT',
+            bold: true,
+            size: 22,
+            color: 'D97706'
+          })
         ]
       })
     );
 
+    // Faixa Dourada com Título e Localização
+    coverChildren.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                shading: { fill: 'E5B83B', type: ShadingType.CLEAR },
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 120, after: 40 },
+                    children: [
+                      new TextRun({
+                        text: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+                        font: 'Gill Sans MT',
+                        bold: true,
+                        size: 28,
+                        color: '000000'
+                      })
+                    ]
+                  }),
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 0, after: 100 },
+                    children: [
+                      new TextRun({
+                        text: locationAndDate,
+                        font: 'Gill Sans MT',
+                        bold: true,
+                        size: 20,
+                        color: '1E293B'
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      })
+    );
+
+    // Subtítulo do Projeto
+    coverChildren.push(
+      new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        spacing: { before: 140, after: 180 },
+        children: [
+          new TextRun({
+            text: 'Projeto:  FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+            font: 'Gill Sans MT',
+            bold: true,
+            italics: true,
+            size: 18,
+            color: '475569'
+          })
+        ]
+      })
+    );
+
+    // Rodapé da Contracapa (faixa cinza clara com logos)
+    if (assets.coverFooterLogos) {
+      const covFootBytes = this.base64ToUint8Array(assets.coverFooterLogos);
+      if (covFootBytes) {
+        const footRun = await this.createImageRunWithAR(assets.coverFooterLogos, covFootBytes, 440, 60, ImageRun);
+        coverChildren.push(
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    shading: { fill: 'E2E8F0', type: ShadingType.CLEAR },
+                    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 60, after: 60 },
+                        children: [footRun]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        );
+      }
+    }
+
+    // --- PÁGINA 2: CAPA OFICIAL (FOLHA DE ROSTO BRANCA - IMAGEM 1) ---
+    // Linha superior com o projeto
+    coverChildren.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: { top: grayLineBorder, bottom: noBorder, left: noBorder, right: noBorder },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                children: [
+                  new Paragraph({
+                    pageBreakBefore: true,
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 80, after: 0 },
+                    children: [
+                      new TextRun({
+                        text: 'Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+                        font: 'Gill Sans MT',
+                        bold: true,
+                        size: 19,
+                        color: '334155'
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      }),
+      // Bloco Central
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 2400, after: 80 },
+        children: [
+          new TextRun({
+            text: `Relatório de Atividades Nº ${training.number || 16}`,
+            font: 'Gill Sans MT',
+            size: 22,
+            color: '334155'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 80 },
+        children: [
+          new TextRun({
+            text: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+            font: 'Gill Sans MT',
+            bold: true,
+            size: 28,
+            color: '000000'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0 },
+        children: [
+          new TextRun({
+            text: locationAndDate,
+            font: 'Gill Sans MT',
+            bold: true,
+            size: 20,
+            color: '1E293B'
+          })
+        ]
+      }),
+      // Bloco Inferior: Cidade e Mês/Ano
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 2400, after: 40 },
+        children: [
+          new TextRun({
+            text: 'Aparecida de Goiânia',
+            font: 'Gill Sans MT',
+            size: 20,
+            color: '334155'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 120 },
+        children: [
+          new TextRun({
+            text: coverMonthYear,
+            font: 'Gill Sans MT',
+            size: 20,
+            color: '334155'
+          })
+        ]
+      })
+    );
+
+    // Rodapé da capa branca (Linha + Logos Institucionais)
+    if (assets.coverFooterLogos) {
+      const covFootBytes = this.base64ToUint8Array(assets.coverFooterLogos);
+      if (covFootBytes) {
+        const footRun = await this.createImageRunWithAR(assets.coverFooterLogos, covFootBytes, 440, 60, ImageRun);
+        coverChildren.push(
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: { top: grayLineBorder, bottom: noBorder, left: noBorder, right: noBorder },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 80, after: 0 },
+                        children: [footRun]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        );
+      }
+    }
+
+    // =========================================================================
+    // 2. SEÇÃO 2: CONTEÚDO PRINCIPAL (EQUIPE, LISTAS, SUMÁRIO, SEÇÕES 1-7, APÊNDICES)
+    // =========================================================================
+    const contentChildren = [];
     // =========================================================================
     // 2. FOLHA DE EQUIPE PARTICIPANTE
     // =========================================================================
-    docChildren.push(
+    contentChildren.push(
       new Paragraph({
-        pageBreakBefore: true,
         alignment: AlignmentType.CENTER,
         spacing: { before: 200, after: 150 },
         children: [
@@ -825,7 +1066,7 @@ class ReportDocxGenerator {
     // =========================================================================
     // 3. PÁGINAS PRÉ-TEXTUAIS: LISTA DE FIGURAS, LISTA DE TABELAS, SUMÁRIO
     // =========================================================================
-    docChildren.push(
+    contentChildren.push(
       new Paragraph({
         pageBreakBefore: true,
         spacing: { before: 200, after: 160 },
@@ -852,7 +1093,7 @@ class ReportDocxGenerator {
     ];
 
     figuresList.forEach(fig => {
-      docChildren.push(
+      contentChildren.push(
         new Paragraph({
           spacing: { before: 40, after: 60 },
           children: [new TextRun({ text: fig, font: 'Gill Sans MT', size: 20, color: '334155' })]
@@ -860,7 +1101,7 @@ class ReportDocxGenerator {
       );
     });
 
-    docChildren.push(
+    contentChildren.push(
       new Paragraph({
         spacing: { before: 300, after: 160 },
         children: [new TextRun({ text: 'Lista de Tabelas', font: 'Gill Sans MT', bold: true, size: 24, color: '1E3A8A' })]
@@ -875,7 +1116,7 @@ class ReportDocxGenerator {
     ];
 
     tablesList.forEach(tab => {
-      docChildren.push(
+      contentChildren.push(
         new Paragraph({
           spacing: { before: 40, after: 60 },
           children: [new TextRun({ text: tab, font: 'Gill Sans MT', size: 20, color: '334155' })]
@@ -884,7 +1125,7 @@ class ReportDocxGenerator {
     });
 
     // Sumário
-    docChildren.push(
+    contentChildren.push(
       new Paragraph({
         pageBreakBefore: true,
         spacing: { before: 200, after: 180 },
@@ -906,7 +1147,7 @@ class ReportDocxGenerator {
     ];
 
     summaryItems.forEach(item => {
-      docChildren.push(
+      contentChildren.push(
         new Paragraph({
           spacing: { before: 50, after: 70 },
           children: [
@@ -919,7 +1160,7 @@ class ReportDocxGenerator {
     // =========================================================================
     // 4. SEÇÃO 1: INTRODUÇÃO
     // =========================================================================
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('1. INTRODUÇÃO', docxDeps, true),
       this.createBodyParagraph(
         `O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${training.number || 16}, executada no município polo de ${training.polo || 'Município Polo'}, Estado de ${training.uf || 'MT'}, nas datas de ${training.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).`,
@@ -934,7 +1175,7 @@ class ReportDocxGenerator {
     // =========================================================================
     // 5. SEÇÃO 2: DADOS BÁSICOS DO CURSO & TABELAS 1 E 2
     // =========================================================================
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('2. DADOS BÁSICOS DO CURSO', docxDeps),
       this.createBodyParagraph(
         `Dada a quantidade de municípios a serem capacitados durante o projeto, foi estabelecido que cada município teria duas vagas por dia de capacitação, assim, a oferta é de duas (02) vagas para gestores e de duas (02) para conselheiros. Vale ressaltar que dentro do ofício de convocação foi explicitada, no caso de gestores, a preferência de servidores de carreira, tentando diminuir o impacto da saída de pessoas capacitadas pelas mudanças das gestões municipais. Como critério de escolha dos municípios foi usada a distância até o local de capacitação, selecionando os mais próximos que não foram convocados em ciclos anteriores. A relação completa dos municípios convocados é apresentada na Tabela 1.`,
@@ -955,7 +1196,7 @@ class ReportDocxGenerator {
     // =========================================================================
     // 6. SEÇÃO 3: CONTATO COM OS MUNICÍPIOS (ESTRITAMENTE NARRATIVA)
     // =========================================================================
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('3. CONTATO COM OS MUNICÍPIOS', docxDeps),
       this.createBodyParagraph(
         `O contato com os municípios, previamente selecionados, se deu a partir da emissão de ofício por parte da Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, tanto para os contatos das secretarias municipais de educação quanto para os contatos dos CACS (Apêndice I). Neste e-mail, constavam as informações essenciais para compreender o objetivo do curso, instruções necessárias para inscrições e o formulário para realizar as inscrições por meio de link e QR Code correspondente.`,
@@ -978,7 +1219,7 @@ class ReportDocxGenerator {
     const totInscMun = metrics?.totalInscribedMunicipalities || 0;
     const partRate = metrics?.participationRateGeneral || '0,0';
 
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('4. DESENVOLVIMENTO DO CURSO', docxDeps),
       this.createBodyParagraph(
         `Ao final do processo, houve um total de ${totInsc} pessoas inscritas, sendo ${totInscG} gestores municipais e ${totInscC} representantes dos CACS/FUNDEB. Cabe destacar que ${totInscMun} municípios tiveram representantes inscritos. Os detalhes por município podem ser analisados na Tabela 3 a seguir:`,
@@ -1007,14 +1248,14 @@ class ReportDocxGenerator {
 
     // Figura 1: Kahoot
     const fig1Nodes = await this.createImageParagraph(assets.fig1Kahoot, 480, 275, 'Figura 1: Avaliação via ferramenta kahoot.', 'Fonte: Elaborada pelos autores.', docxDeps);
-    if (fig1Nodes) docChildren.push(...fig1Nodes);
+    if (fig1Nodes) contentChildren.push(...fig1Nodes);
 
     // Figura 2: Plickers
     const fig2Nodes = await this.createImageParagraph(assets.fig2Plickers, 440, 280, 'Figura 2: Avaliação via ferramenta Plickers.', 'Fonte: Elaborada pelos autores.', docxDeps);
-    if (fig2Nodes) docChildren.push(...fig2Nodes);
+    if (fig2Nodes) contentChildren.push(...fig2Nodes);
 
     // Tabela 4
-    docChildren.push(
+    contentChildren.push(
       this.createBodyParagraph(
         `A participação dos municípios registrou ${totPresMun} municípios presentes dos ${totInscMun} inscritos. Com relação ao número de pessoas que participaram, registrou-se um total de ${totPres} participantes presentes, resultando em uma taxa de participação global de ${partRate}% em relação aos inscritos. Os detalhes dos resultados são apresentados na Tabela 4:`,
         docxDeps
@@ -1033,7 +1274,7 @@ class ReportDocxGenerator {
     // =========================================================================
     const totEval = metrics?.evalStatsGeneral?.totalResponses || (training.evaluations || []).length || totPres;
 
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('5. AVALIAÇÃO DA CAPACITAÇÃO', docxDeps),
       this.createBodyParagraph(
         `Nesta versão do curso, aplicou-se o formulário proposto pela equipe do FNDE, o qual recolhe informações dos avaliadores. Num primeiro momento, a avaliação usa a escala de Likert para avaliarem, de uma forma simples e direta, aspectos didáticos e metodológicos do curso. Posteriormente, pede-se ao avaliador responder a duas perguntas dissertativas sobre aspectos que gostaram e aspectos que poderiam melhorar com base na experiência vivida no evento.`,
@@ -1048,10 +1289,10 @@ class ReportDocxGenerator {
     // Figura 3: Representação
     if (chartsData.fig3) {
       const f3 = await this.createImageParagraph(chartsData.fig3, 460, 260, 'Figura 3. Participação segundo o tipo de representação.', 'Fonte: Elaborada pelos autores.', docxDeps);
-      if (f3) docChildren.push(...f3);
+      if (f3) contentChildren.push(...f3);
     }
 
-    docChildren.push(
+    contentChildren.push(
       this.createBodyParagraph(
         `Os resultados da avaliação do curso de capacitação são apresentados nas Figuras 4, 5 e 6 a seguir. De forma geral, os conceitos 4 e 5 correspondem à ampla maioria das respostas recebidas em todos os quesitos avaliados.`,
         docxDeps
@@ -1061,18 +1302,18 @@ class ReportDocxGenerator {
     // Figuras 4, 5 e 6
     if (chartsData.fig4) {
       const f4 = await this.createImageParagraph(chartsData.fig4, 500, 280, 'Figura 4. Avaliação da capacitação de todos os participantes.', 'Fonte: Elaborada pelos autores.', docxDeps);
-      if (f4) docChildren.push(...f4);
+      if (f4) contentChildren.push(...f4);
     }
     if (chartsData.fig5) {
       const f5 = await this.createImageParagraph(chartsData.fig5, 500, 280, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', 'Fonte: Elaborada pelos autores.', docxDeps);
-      if (f5) docChildren.push(...f5);
+      if (f5) contentChildren.push(...f5);
     }
     if (chartsData.fig6) {
       const f6 = await this.createImageParagraph(chartsData.fig6, 500, 280, 'Figura 6. Avaliação da capacitação dos gestores municipais.', 'Fonte: Elaborada pelos autores.', docxDeps);
-      if (f6) docChildren.push(...f6);
+      if (f6) contentChildren.push(...f6);
     }
 
-    docChildren.push(
+    contentChildren.push(
       this.createBodyParagraph(
         `As respostas às questões dissertativas relativas aos pontos fortes da capacitação e às sugestões de melhoria foram sintetizadas por meio de processamento textual e representadas nas nuvens de palavras das Figuras 7 e 8:`,
         docxDeps
@@ -1082,17 +1323,17 @@ class ReportDocxGenerator {
     // Figuras 7 e 8: Nuvens de Palavras
     if (chartsData.fig7) {
       const f7 = await this.createImageParagraph(chartsData.fig7, 480, 280, 'Figura 7. Aspectos que gostaram da capacitação.', 'Fonte: Elaborada pelos autores.', docxDeps);
-      if (f7) docChildren.push(...f7);
+      if (f7) contentChildren.push(...f7);
     }
     if (chartsData.fig8) {
       const f8 = await this.createImageParagraph(chartsData.fig8, 480, 280, 'Figura 8. Aspectos que devem melhorar da capacitação', 'Fonte: Elaborada pelos autores.', docxDeps);
-      if (f8) docChildren.push(...f8);
+      if (f8) contentChildren.push(...f8);
     }
 
     // =========================================================================
     // 9. SEÇÃO 6: REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO & FIGURAS 9 A 13
     // =========================================================================
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', docxDeps),
       this.createBodyParagraph(
         `Durante a realização da capacitação, foram registrados diversos momentos por meio de fotografias que ilustram a participação ativa dos representantes municipais e dos conselheiros do CACS-FUNDEB. As imagens capturam desde a ambientação do local, momentos de fala dos facilitadores e participantes, até as interações durante as atividades formativas. Esses registros visuais documentam o evento e reforçam o compromisso coletivo com a melhoria da gestão do transporte escolar nos municípios, sendo apresentados nas Figuras 9 a 13:`,
@@ -1115,10 +1356,10 @@ class ReportDocxGenerator {
         const ph = photos[idx];
         const caption = photoCaptions[idx] || ph.caption || `Figura ${idx + 9}. Registro fotográfico oficial.`;
         const phNodes = await this.createImageParagraph(ph.blob, 480, 360, caption, 'Fonte: Elaborada pelos autores.', docxDeps);
-        if (phNodes) docChildren.push(...phNodes);
+        if (phNodes) contentChildren.push(...phNodes);
       }
     } else {
-      docChildren.push(
+      contentChildren.push(
         this.createBodyParagraph('Registros fotográficos anexados na pasta oficial do projeto.', docxDeps)
       );
     }
@@ -1126,7 +1367,7 @@ class ReportDocxGenerator {
     // =========================================================================
     // 10. SEÇÃO 7: CONSIDERAÇÕES FINAIS
     // =========================================================================
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('7. CONSIDERAÇÕES FINAIS', docxDeps),
       this.createBodyParagraph(
         `Este relatório se propôs a apresentar os detalhes do curso de capacitação em transporte escolar realizado dentro do projeto intitulado "Fortalecendo e aprimorando as políticas públicas de transporte escolar do Brasil", além de apresentar as avaliações recebidas pelos participantes. Salienta-se que, de forma geral, o curso atendeu integralmente ao objetivo de aprimorar conhecimentos de gestores e conselheiros, conforme os resultados das avaliações.`,
@@ -1142,34 +1383,34 @@ class ReportDocxGenerator {
     // 11. APÊNDICES I, II E III
     // =========================================================================
     // Apêndice I: FNDE
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('Apêndice I: Convocação do FNDE', docxDeps, true)
     );
     if (assets.convocacaoFndeP1) {
       const p1 = await this.createImageParagraph(assets.convocacaoFndeP1, 490, 693, null, null, docxDeps);
-      if (p1) docChildren.push(...p1);
+      if (p1) contentChildren.push(...p1);
     }
     if (assets.convocacaoFndeP2) {
       const p2 = await this.createImageParagraph(assets.convocacaoFndeP2, 490, 693, null, null, docxDeps);
-      if (p2) docChildren.push(...p2);
+      if (p2) contentChildren.push(...p2);
     }
 
     // Apêndice II: CECATE
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('Apêndice II: Convocação do CECATE', docxDeps, true)
     );
     if (assets.convocacaoCecateP1) {
       const c1 = await this.createImageParagraph(assets.convocacaoCecateP1, 490, 693, null, null, docxDeps);
-      if (c1) docChildren.push(...c1);
+      if (c1) contentChildren.push(...c1);
     }
     if (assets.convocacaoCecateP2) {
       const c2 = await this.createImageParagraph(assets.convocacaoCecateP2, 490, 693, null, null, docxDeps);
-      if (c2) docChildren.push(...c2);
+      if (c2) contentChildren.push(...c2);
     }
 
     // Apêndice III: Respostas Dissertativas da Avaliação
     const evals = training.evaluations || [];
-    docChildren.push(
+    contentChildren.push(
       this.createSectionHeading('Apêndice III: Avaliação Individual das Respostas Qualitativas', docxDeps, true),
       this.createTableCaption('Tabela com as respostas dissertativas dos participantes.', docxDeps),
       this.createTable8ApendiceIII(evals, docxDeps),
@@ -1177,7 +1418,120 @@ class ReportDocxGenerator {
     );
 
     // =========================================================================
-    // 12. COMPILAÇÃO DO DOCUMENTO (.DOCX)
+    // CABEÇALHO E RODAPÉ PADRONIZADOS DAS PÁGINAS NORMAIS (IMAGEM 2)
+    // =========================================================================
+    let normalHeaderObj = new Header({
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [
+            new TextRun({
+              text: `RELATÓRIO DE ATIVIDADES Nº ${training.number || 16}`,
+              font: 'Gill Sans MT',
+              bold: true,
+              size: 18,
+              color: '64748B'
+            })
+          ]
+        })
+      ]
+    });
+
+    if (assets.headerCecateLogo) {
+      const headBytes = this.base64ToUint8Array(assets.headerCecateLogo);
+      if (headBytes) {
+        const headRun = await this.createImageRunWithAR(assets.headerCecateLogo, headBytes, 130, 38, ImageRun);
+        normalHeaderObj = new Header({
+          children: [
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: { top: noBorder, bottom: grayLineBorder, left: noBorder, right: noBorder },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 40, type: WidthType.PERCENTAGE },
+                      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.LEFT,
+                          children: [headRun]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      width: { size: 60, type: WidthType.PERCENTAGE },
+                      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          spacing: { before: 60, after: 0 },
+                          children: [
+                            new TextRun({
+                              text: `RELATÓRIO DE ATIVIDADES Nº ${training.number || 16}`,
+                              font: 'Gill Sans MT',
+                              bold: true,
+                              size: 18,
+                              color: '64748B'
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        });
+      }
+    }
+
+    let normalFooterObj = new Footer({
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [
+            new TextRun({ text: 'Página ', font: 'Gill Sans MT', size: 16, color: '64748B' }),
+            new TextRun({ children: [PageNumber.CURRENT], font: 'Gill Sans MT', size: 16, color: '64748B' })
+          ]
+        })
+      ]
+    });
+
+    if (assets.footerNormalLogos) {
+      const footBytes = this.base64ToUint8Array(assets.footerNormalLogos);
+      if (footBytes) {
+        const footNormalRun = await this.createImageRunWithAR(assets.footerNormalLogos, footBytes, 480, 58, ImageRun);
+        normalFooterObj = new Footer({
+          children: [
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: { top: grayLineBorder, bottom: noBorder, left: noBorder, right: noBorder },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          spacing: { before: 60, after: 30 },
+                          children: [footNormalRun]
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        });
+      }
+    }
+
+    // =========================================================================
+    // 3. COMPILAÇÃO DO DOCUMENTO (.DOCX) COM SEÇÕES 1 E 2
     // =========================================================================
     try {
       const doc = new Document({
@@ -1200,6 +1554,7 @@ class ReportDocxGenerator {
           }
         },
         sections: [
+          // Seção 1: Contracapa e Capa Oficial (Sem cabeçalho/rodapé das páginas normais)
           {
             properties: {
               page: {
@@ -1207,38 +1562,27 @@ class ReportDocxGenerator {
               }
             },
             headers: {
-              default: new Header({
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.RIGHT,
-                    children: [
-                      new TextRun({
-                        text: `Relatório de Atividades Nº ${training.number || 16}`,
-                        font: 'Gill Sans MT',
-                        size: 16,
-                        color: '94A3B8'
-                      })
-                    ]
-                  })
-                ]
-              })
+              default: new Header({ children: [] })
             },
             footers: {
-              default: new Footer({
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.RIGHT,
-                    children: [
-                      new TextRun({ text: 'Página ', font: 'Gill Sans MT', size: 16, color: '64748B' }),
-                      new TextRun({ children: [PageNumber.CURRENT], font: 'Gill Sans MT', size: 16, color: '64748B' }),
-                      new TextRun({ text: ' de ', font: 'Gill Sans MT', size: 16, color: '64748B' }),
-                      new TextRun({ children: [PageNumber.TOTAL_PAGES], font: 'Gill Sans MT', size: 16, color: '64748B' })
-                    ]
-                  })
-                ]
-              })
+              default: new Footer({ children: [] })
             },
-            children: docChildren
+            children: coverChildren
+          },
+          // Seção 2: Conteúdo Principal com Cabeçalho e Rodapé Institucionais Padronizados
+          {
+            properties: {
+              page: {
+                margin: { top: 1418, right: 1418, bottom: 1418, left: 1418 }
+              }
+            },
+            headers: {
+              default: normalHeaderObj
+            },
+            footers: {
+              default: normalFooterObj
+            },
+            children: contentChildren
           }
         ]
       });
