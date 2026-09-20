@@ -2213,6 +2213,7 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
+  border-top: 1.5px solid #4D4D4D;
 }
 
 .cover-realizado-por {
@@ -2248,6 +2249,63 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
   height: 48px;
   max-width: 200px;
   object-fit: contain;
+}
+
+/* Cabeçalho e Rodapé Padronizados dos Relatórios Oficiais */
+.report-standard-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  border-bottom: 1px solid #4D4D4D;
+  padding-bottom: 6px;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.report-header-left {
+  display: flex;
+  align-items: flex-end;
+}
+
+.report-header-logo {
+  height: 28px;
+  max-width: 140px;
+  object-fit: contain;
+  display: block;
+}
+
+.report-header-right {
+  display: flex;
+  align-items: flex-end;
+}
+
+.report-header-title {
+  font-family: 'Times New Roman', serif;
+  font-size: 9pt;
+  font-weight: 700;
+  color: #595959;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.report-standard-footer {
+  border-top: 1px solid #4D4D4D;
+  padding-top: 8px;
+  margin-top: 3rem;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.report-footer-banner {
+  height: 24px;
+  max-width: 100%;
+  object-fit: contain;
+  display: inline-block;
 }
 
 .report-doc-page {

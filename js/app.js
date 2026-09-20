@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.7
+ * Versão: v.2.9.8
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.7';
+    this.version = 'v.2.9.8';
   }
 
   /**
@@ -7357,17 +7357,20 @@ class AutoReportApp {
 
     container.innerHTML = coverHtml + `
       <div class="report-doc-page">
-        <!-- CABEÇALHO OFICIAL -->
-        <div style="text-align:center; border-bottom: 2px solid #1e3a8a; padding-bottom: 1.25rem; margin-bottom: 2rem;">
-          <h2 style="font-size:16pt; margin:0; font-weight:800; color:#1e293b;">UNIVERSIDADE FEDERAL DE GOIÁS - UFG</h2>
-          <h3 style="font-size:13pt; margin:4px 0; color:#0284c7; font-weight:700;">CENTRO COLABORADOR DE APOIO AO TRANSPORTE ESCOLAR - CECATE CENTRO-OESTE</h3>
-          <p style="font-size:10pt; color:#475569; margin:0; font-weight:600;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE</p>
+        <!-- CABEÇALHO OFICIAL PADRONIZADO -->
+        <div class="report-standard-header">
+          <div class="report-header-left">
+            <img src="visualrelatorio/cabecalho/cecate_cabecalho.png" alt="CECATE Centro-Oeste" class="report-header-logo" onerror="if(window.coverAssets?.cecateCabecalho) this.src=window.coverAssets.cecateCabecalho">
+          </div>
+          <div class="report-header-right">
+            <span class="report-header-title">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</span>
+          </div>
         </div>
 
         <!-- TÍTULO DO RELATÓRIO -->
         <div style="text-align:center; margin: 2.5rem 0;">
-          <h1 style="font-size:22pt; margin-bottom:0.5rem; font-weight:800; color:#0f172a;">RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}</h1>
-          <h2 style="font-size:16pt; color:#2563eb; margin:0; font-weight:700;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
+          <h1 style="font-size:20pt; margin-bottom:0.5rem; font-weight:800; color:#0f172a;">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</h1>
+          <h2 style="font-size:16pt; color:#1e3a8a; margin:0; font-weight:700;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
           <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem; font-weight:600;">${t.polo || 'Polo Regional'} - ${t.uf || 'GO'}, ${t.datesFormatted || '2026'}</h3>
         </div>
 
@@ -7470,6 +7473,11 @@ class AutoReportApp {
         <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE II: CONVOCAÇÕES DO CECATE</h3>
         <p style="text-align:justify; line-height:1.6;">Relação dos comunicados e e-mails de convocação emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação:</p>
         ${cecateHtml}
+
+        <!-- RODAPÉ OFICIAL PADRONIZADO -->
+        <div class="report-standard-footer">
+          <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
+        </div>
       </div>
     `;
 
@@ -7646,7 +7654,7 @@ class AutoReportApp {
       el.style.boxShadow = 'none';
     });
 
-    // Garantir imagens da capa com Data URLs para impressão isolada no iframe
+    // Garantir imagens da capa e cabeçalho/rodapé com Data URLs para impressão isolada no iframe
     if (window.coverAssets) {
       const coverFig = clone.querySelector('.cover-main-illustration');
       if (coverFig && window.coverAssets.figuradacapa) coverFig.src = window.coverAssets.figuradacapa;
@@ -7656,6 +7664,10 @@ class AutoReportApp {
       if (logoUfg && window.coverAssets.ufg) logoUfg.src = window.coverAssets.ufg;
       const logoFnde = clone.querySelector('.cover-logo-fnde');
       if (logoFnde && window.coverAssets.fnde) logoFnde.src = window.coverAssets.fnde;
+      const headerLogo = clone.querySelector('.report-header-logo');
+      if (headerLogo && window.coverAssets.cecateCabecalho) headerLogo.src = window.coverAssets.cecateCabecalho;
+      const footerBanner = clone.querySelector('.report-footer-banner');
+      if (footerBanner && window.coverAssets.rodape5Logos) footerBanner.src = window.coverAssets.rodape5Logos;
     }
 
     // Iframe isolado para impressão exclusiva do relatório

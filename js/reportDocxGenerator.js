@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial Word (.docx)
- * Versão: v.2.9.7
+ * Versão: v.2.9.8
  */
 
 class ReportDocxGenerator {
@@ -180,11 +180,13 @@ class ReportDocxGenerator {
       const coverInfo = this.formatCoverTrainingInfo(training);
       const coverAssets = window.coverAssets || {};
 
-      // Carregar bytes das imagens da capa oficial
+      // Carregar bytes das imagens da capa oficial, cabeçalho e rodapé
       const figBytes = this.base64ToUint8Array(coverAssets.figuradacapa);
       const cecateBytes = this.base64ToUint8Array(coverAssets.cecate);
       const ufgBytes = this.base64ToUint8Array(coverAssets.ufg);
       const fndeBytes = this.base64ToUint8Array(coverAssets.fnde);
+      const headerLogoBytes = this.base64ToUint8Array(coverAssets.cecateCabecalho || coverAssets.cecate);
+      const rodape5LogosBytes = this.base64ToUint8Array(coverAssets.rodape5Logos);
 
       // 1. MONTAGEM DA CAPA OFICIAL (Seção 1)
       const topChildren = [];
@@ -399,7 +401,7 @@ class ReportDocxGenerator {
             children: [
               new TableCell({
                 shading: { fill: 'D8D8D8' },
-                borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                borders: { top: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
@@ -862,6 +864,133 @@ class ReportDocxGenerator {
         });
       }
 
+      // CABEÇALHO OFICIAL PADRÃO (Conforme modelo de referência de 02-Relatórios exemplos)
+      // À esquerda: Logo CECATE. À direita: "RELATÓRIO DE ATIVIDADES Nº XX". Borda inferior sólida #4D4D4D.
+      const headerTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.NONE },
+          bottom: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' },
+          left: { style: BorderStyle.NONE },
+          right: { style: BorderStyle.NONE },
+          insideHorizontal: { style: BorderStyle.NONE },
+          insideVertical: { style: BorderStyle.NONE }
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 45, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.CENTER,
+                borders: {
+                  top: { style: BorderStyle.NONE },
+                  bottom: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' },
+                  left: { style: BorderStyle.NONE },
+                  right: { style: BorderStyle.NONE }
+                },
+                children: [
+                  headerLogoBytes ? new Paragraph({
+                    alignment: AlignmentType.LEFT,
+                    spacing: { before: 0, after: 60 },
+                    children: [
+                      new ImageRun({
+                        data: headerLogoBytes,
+                        transformation: { width: 130, height: 27 }
+                      })
+                    ]
+                  }) : new Paragraph({
+                    alignment: AlignmentType.LEFT,
+                    spacing: { before: 0, after: 60 },
+                    children: [
+                      new TextRun({
+                        text: 'CECATE CENTRO-OESTE',
+                        font: 'Times New Roman',
+                        bold: true,
+                        size: 20,
+                        color: '4D4D4D'
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableCell({
+                width: { size: 55, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.CENTER,
+                borders: {
+                  top: { style: BorderStyle.NONE },
+                  bottom: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' },
+                  left: { style: BorderStyle.NONE },
+                  right: { style: BorderStyle.NONE }
+                },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.RIGHT,
+                    spacing: { before: 0, after: 60 },
+                    children: [
+                      new TextRun({
+                        text: `RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}`,
+                        font: 'Times New Roman',
+                        size: 20,
+                        color: '4D4D4D'
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      });
+
+      // RODAPÉ OFICIAL PADRÃO (Conforme modelo de referência de 02-Relatórios exemplos)
+      // Linha superior sólida #4D4D4D e faixa de 5 logomarcas institucionais
+      const footerTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' },
+          bottom: { style: BorderStyle.NONE },
+          left: { style: BorderStyle.NONE },
+          right: { style: BorderStyle.NONE },
+          insideHorizontal: { style: BorderStyle.NONE },
+          insideVertical: { style: BorderStyle.NONE }
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.CENTER,
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' },
+                  bottom: { style: BorderStyle.NONE },
+                  left: { style: BorderStyle.NONE },
+                  right: { style: BorderStyle.NONE }
+                },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 80, after: 40 },
+                    children: rodape5LogosBytes ? [
+                      new ImageRun({
+                        data: rodape5LogosBytes,
+                        transformation: { width: 480, height: 24 }
+                      })
+                    ] : [
+                      new TextRun({
+                        text: 'CECATE Centro-Oeste • Engenharia de Transportes • FCT • UFG • FNDE',
+                        font: 'Times New Roman',
+                        size: 16,
+                        color: '4D4D4D'
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      });
+
       // CRIAR DOCUMENTO DOCX COM DUAS SEÇÕES: CAPA OFICIAL E CONTEÚDO TÉCNICO
       const doc = new Document({
         sections: [
@@ -881,27 +1010,12 @@ class ReportDocxGenerator {
             },
             headers: {
               default: new Header({
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.RIGHT,
-                    children: [new TextRun({ text: 'CECATE Centro-Oeste • UFG / FNDE', size: 16, color: '94A3B8' })]
-                  })
-                ]
+                children: [headerTable]
               })
             },
             footers: {
               default: new Footer({
-                children: [
-                  new Paragraph({
-                    alignment: AlignmentType.RIGHT,
-                    children: [
-                      new TextRun({ text: 'Página ' }),
-                      new TextRun({ children: [PageNumber.CURRENT] }),
-                      new TextRun({ text: ' de ' }),
-                      new TextRun({ children: [PageNumber.TOTAL_PAGES] })
-                    ]
-                  })
-                ]
+                children: [footerTable]
               })
             },
             children: docChildren
