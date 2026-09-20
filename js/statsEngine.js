@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Análise de Dados
- * Versão: v.2.9.9
+ * Versão: v.3.0.0
  */
 
 class StatsEngine {
@@ -478,10 +478,16 @@ class StatsEngine {
         statusClass = 'status-count-one';
       }
 
+      let displayName = m.name || '';
+      const ufSuffix = `(${m.uf || 'MT'})`;
+      if (!displayName.endsWith(ufSuffix) && !displayName.match(/\([A-Z]{2}\)$/)) {
+        displayName = `${displayName} ${ufSuffix}`;
+      }
+
       rowsHtml += `
         <tr>
           <td style="text-align:center; font-family:monospace;">${m.ibgeCode || '-'}</td>
-          <td><strong>${m.name}</strong> (${m.uf || 'MT'})</td>
+          <td><strong>${displayName}</strong></td>
           <td style="text-align:center;">${preC}/${insC}</td>
           <td style="text-align:center;">${preG}/${insG}</td>
           <td style="text-align:center;"><span class="attendance-status-count ${statusClass}">${preTot}/${insTot}</span></td>

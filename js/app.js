@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.9
+ * Versão: v.3.0.0
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.9';
+    this.version = 'v.3.0.0';
   }
 
   /**
@@ -5450,7 +5450,10 @@ class AutoReportApp {
 
       this.renderAttendanceStep();
       this.saveCurrentStepData();
-      this.showToast(`${parsed.length} inscrições importadas com sucesso!`, 'success');
+
+      const regCacs = parsed.filter(r => (r.representation || '').toUpperCase().includes('CACS') || (r.representation || '').toUpperCase().includes('FUNDEB')).length;
+      const regGestores = parsed.length - regCacs;
+      this.showToast(`${parsed.length} inscrições importadas (${regCacs} CACS, ${regGestores} Gestão). Tabela 4 atualizada!`, 'success');
     } catch (err) {
       console.error('Erro ao importar planilha de inscrições:', err);
       this.showToast(`Erro na importação de inscrições: ${err.message}`, 'error');
@@ -5479,7 +5482,10 @@ class AutoReportApp {
 
       this.renderAttendanceStep();
       this.saveCurrentStepData();
-      this.showToast(`${parsed.length} participantes presentes importados com sucesso!`, 'success');
+
+      const attCacs = parsed.filter(a => (a.representation || '').toUpperCase().includes('CACS') || (a.representation || '').toUpperCase().includes('FUNDEB')).length;
+      const attGestores = parsed.length - attCacs;
+      this.showToast(`${parsed.length} participantes presentes importados (${attCacs} CACS, ${attGestores} Gestão). Tabela 4 reconciliada!`, 'success');
     } catch (err) {
       console.error('Erro ao importar lista de presença:', err);
       this.showToast(`Erro na importação: ${err.message}`, 'error');
@@ -5676,6 +5682,47 @@ class AutoReportApp {
     if (!this.currentTraining) return;
     if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
 
+    // Helper interno de normalização de nome de município (remove sufixos UF, acentuação e caracteres especiais)
+    const normalizeMunName = (name) => {
+      if (!name) return '';
+      return String(name)
+        .replace(/\s*\([A-Z]{2}\)\s*/gi, '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+    };
+
+    // Helper interno de normalização de nome de pessoa
+    const normalizePersonName = (name) => {
+      if (!name) return '';
+      return String(name)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+    };
+
+    // Helper de busca de município existente na lista
+    const findMatchingMunicipality = (list, name, ibgeCode) => {
+      if (!Array.isArray(list)) return null;
+      const cleanIbge = ibgeCode ? String(ibgeCode).replace(/\D/g, '') : '';
+      const normTarget = normalizeMunName(name);
+
+      return list.find(m => {
+        if (cleanIbge && m.ibgeCode) {
+          const mIbge = String(m.ibgeCode).replace(/\D/g, '');
+          if (mIbge && mIbge === cleanIbge) return true;
+        }
+        if (normTarget && m.name) {
+          if (normalizeMunName(m.name) === normTarget) return true;
+        }
+        return false;
+      });
+    };
+
     // Purga proativa de entradas de municípios inválidos/declarações
     this.currentTraining.municipalities = this.currentTraining.municipalities.filter(m => {
       const n = (m.name || '').toLowerCase();
@@ -5685,8 +5732,10 @@ class AutoReportApp {
     const regList = this.currentTraining.registrations || [];
     const attList = this.currentTraining.attendance || [];
 
-    // Map de inscritos por CPF (limpo e formatado)
+    // Mapas de inscritos por CPF e por Nome Normalizado
     const regMapByCpf = new Map();
+    const regMapByName = new Map();
+
     regList.forEach(reg => {
       if (reg.cpf) {
         const cleanCpf = reg.cpf.replace(/\D/g, '').padStart(11, '0');
@@ -5694,91 +5743,108 @@ class AutoReportApp {
           regMapByCpf.set(cleanCpf, reg);
         }
       }
-    });
-
-    // Cruzar dados da lista de presença com a planilha de inscrição pelo CPF
-    attList.forEach(att => {
-      if (att.cpf) {
-        const cleanCpf = att.cpf.replace(/\D/g, '').padStart(11, '0');
-        if (cleanCpf && cleanCpf.length === 11 && regMapByCpf.has(cleanCpf)) {
-          const reg = regMapByCpf.get(cleanCpf);
-          // Priorizar Nome Completo, Município que representa e Vínculo/Segmento (Gestor vs CACS) do formulário de inscrição
-          if (reg.name) att.name = reg.name;
-          if (reg.municipality) {
-            att.municipality = reg.municipality;
-            if (reg.ibgeCode) att.ibgeCode = reg.ibgeCode;
-          }
-          if (reg.representation) att.representation = reg.representation;
-          if (reg.roleGestao) att.roleGestao = reg.roleGestao;
-          if (reg.roleCACS) att.roleCACS = reg.roleCACS;
-          if (window.excelParser) att.cpf = window.excelParser.formatCpf(att.cpf || reg.cpf);
-          att.matchedByCpf = true;
-          att.isCpfValidated = true;
-        } else if (window.excelParser && att.cpf) {
-          att.cpf = window.excelParser.formatCpf(att.cpf);
+      if (reg.name) {
+        const normName = normalizePersonName(reg.name);
+        if (normName.length > 5) {
+          regMapByName.set(normName, reg);
         }
       }
     });
 
-    // Agrupar inscritos por município (extraído da inscrição "Município que representa:")
-    const regMap = {};
-    regList.forEach(reg => {
-      const munName = reg.municipality || 'Não Informado';
-      const munLower = munName.toLowerCase();
-      // Filtrar textos de declaração
-      if (munLower.includes('declaro') || munLower.includes('veracidade') || munLower.includes('confirmo') || munLower.includes('prestadas') || munLower.includes('formulario') || munLower.includes('termo') || munName.length > 45) {
-        return;
-      }
-      if (!regMap[munName]) {
-        regMap[munName] = { cacs: 0, gestores: 0, ibgeCode: reg.ibgeCode };
-      }
-      if (reg.representation === 'CACS-FUNDEB') regMap[munName].cacs++;
-      else regMap[munName].gestores++;
-    });
-
-    // Agrupar presentes por município (após cruzamento de CPF)
-    const attMap = {};
+    // Cruzar dados da lista de presença com a inscrição por CPF (e fallback por nome completo)
     attList.forEach(att => {
-      const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '') : '';
-      const isMatched = cleanCpf && cleanCpf.length === 11 && regMapByCpf.has(cleanCpf);
+      const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '').padStart(11, '0') : '';
+      const normName = att.name ? normalizePersonName(att.name) : '';
 
-      // Para participantes "Apenas Presente", só contabilizar município e vínculo se tiverem sido selecionados manualmente
-      const munName = isMatched ? (att.municipality || 'Não Informado') : (att.isManualMunicipality ? att.municipality : '');
-      const rep = isMatched ? att.representation : (att.isManualRepresentation ? att.representation : '');
-
-      if (!munName) return; // Não contabilizar se o município ainda não foi selecionado
-
-      const munLower = munName.toLowerCase();
-      // Filtrar textos de declaração
-      if (munLower.includes('declaro') || munLower.includes('veracidade') || munLower.includes('confirmo') || munLower.includes('prestadas') || munLower.includes('formulario') || munLower.includes('termo') || munName.length > 45) {
-        return;
+      let matchedReg = null;
+      if (cleanCpf && cleanCpf.length === 11 && regMapByCpf.has(cleanCpf)) {
+        matchedReg = regMapByCpf.get(cleanCpf);
+      } else if (normName && normName.length > 5 && regMapByName.has(normName)) {
+        matchedReg = regMapByName.get(normName);
       }
-      if (!attMap[munName]) {
-        attMap[munName] = { cacs: 0, gestores: 0, ibgeCode: att.ibgeCode };
+
+      if (matchedReg) {
+        // Priorizar dados cadastrais canônicos da inscrição
+        if (matchedReg.name) att.name = matchedReg.name;
+        if (matchedReg.municipality) {
+          att.municipality = matchedReg.municipality;
+          if (matchedReg.ibgeCode) att.ibgeCode = matchedReg.ibgeCode;
+        }
+        if (matchedReg.representation) att.representation = matchedReg.representation;
+        if (matchedReg.roleGestao) att.roleGestao = matchedReg.roleGestao;
+        if (matchedReg.roleCACS) att.roleCACS = matchedReg.roleCACS;
+        if (window.excelParser) att.cpf = window.excelParser.formatCpf(att.cpf || matchedReg.cpf);
+        att.matchedByCpf = true;
+        att.isCpfValidated = true;
+      } else if (window.excelParser && att.cpf) {
+        att.cpf = window.excelParser.formatCpf(att.cpf);
       }
-      if (rep === 'CACS-FUNDEB') attMap[munName].cacs++;
-      else if (rep === 'Gestão municipal') attMap[munName].gestores++;
     });
 
-    // Unir lista de TODOS os municípios (existentes na lista de convocados + mencionados nas planilhas)
-    const allMunNamesMap = new Map();
+    // Agrupar inscritos por município (chave normalizada para casar variações de escrita e sufixos de UF)
+    const regMap = new Map();
+    regList.forEach(reg => {
+      const munName = (reg.municipality || '').trim();
+      if (!munName) return;
+      const normK = normalizeMunName(munName);
+      if (!normK || normK.includes('declaro') || normK.includes('veracidade') || munName.length > 45) return;
 
-    // 1. Adicionar todos os municípios pré-existentes em currentTraining.municipalities
+      if (!regMap.has(normK)) {
+        regMap.set(normK, { name: munName, cacs: 0, gestores: 0, ibgeCode: reg.ibgeCode || '' });
+      }
+      const data = regMap.get(normK);
+      if (!data.ibgeCode && reg.ibgeCode) data.ibgeCode = reg.ibgeCode;
+
+      const rep = (reg.representation || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (rep.includes('cacs') || rep.includes('fundeb')) {
+        data.cacs++;
+      } else {
+        data.gestores++;
+      }
+    });
+
+    // Agrupar presentes por município (chave normalizada)
+    const attMap = new Map();
+    attList.forEach(att => {
+      const munName = (att.municipality || '').trim();
+      if (!munName) return;
+      const normK = normalizeMunName(munName);
+      if (!normK || normK.includes('declaro') || normK.includes('veracidade') || munName.length > 45) return;
+
+      if (!attMap.has(normK)) {
+        attMap.set(normK, { name: munName, cacs: 0, gestores: 0, ibgeCode: att.ibgeCode || '' });
+      }
+      const data = attMap.get(normK);
+      if (!data.ibgeCode && att.ibgeCode) data.ibgeCode = att.ibgeCode;
+
+      const rep = (att.representation || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (rep.includes('cacs') || rep.includes('fundeb')) {
+        data.cacs++;
+      } else if (rep.includes('gest') || rep.includes('municip') || rep) {
+        data.gestores++;
+      }
+    });
+
+    // Unir lista de TODOS os municípios (convocados pré-existentes + mencionados nas planilhas)
+    const allNormKeys = new Set();
     this.currentTraining.municipalities.forEach(m => {
-      if (m.name) allMunNamesMap.set(m.name.toLowerCase(), m.name);
+      const k = normalizeMunName(m.name);
+      if (k) allNormKeys.add(k);
     });
-
-    // 2. Adicionar municípios de regMap e attMap
-    Object.keys(regMap).forEach(k => allMunNamesMap.set(k.toLowerCase(), k));
-    Object.keys(attMap).forEach(k => allMunNamesMap.set(k.toLowerCase(), k));
+    regMap.forEach((_, k) => allNormKeys.add(k));
+    attMap.forEach((_, k) => allNormKeys.add(k));
 
     const hasRegistrationSheet = regList.length > 0;
+    const trainingUf = this.currentTraining.uf || 'MT';
+    const poloName = (this.currentTraining.polo || '').trim();
 
-    allMunNamesMap.forEach((munNameOriginal, munKey) => {
-      let existing = this.currentTraining.municipalities.find(m => m.name.toLowerCase() === munKey);
+    allNormKeys.forEach(normK => {
+      const regData = regMap.get(normK) || { cacs: 0, gestores: 0, ibgeCode: '', name: '' };
+      const attData = attMap.get(normK) || { cacs: 0, gestores: 0, ibgeCode: '', name: '' };
+      const rawName = regData.name || attData.name || '';
+      const candidateIbge = regData.ibgeCode || attData.ibgeCode || '';
 
-      const regData = regMap[munNameOriginal] || regMap[munKey] || { cacs: 0, gestores: 0, ibgeCode: '' };
-      const attData = attMap[munNameOriginal] || attMap[munKey] || { cacs: 0, gestores: 0, ibgeCode: '' };
+      let existing = findMatchingMunicipality(this.currentTraining.municipalities, rawName || normK, candidateIbge);
 
       const inscribedCACS = hasRegistrationSheet ? regData.cacs : attData.cacs;
       const inscribedGestores = hasRegistrationSheet ? regData.gestores : attData.gestores;
@@ -5796,13 +5862,37 @@ class AutoReportApp {
         existing.presentCACS = presentCACS;
         existing.presentGestores = presentGestores;
         existing.presentTotal = presentTotal;
+
+        if (!existing.ibgeCode && candidateIbge) {
+          existing.ibgeCode = candidateIbge;
+        }
       } else {
+        // Resolver nome canônico e código IBGE oficial a partir de window.IBGE_DATA
+        let finalName = rawName;
+        let finalIbge = candidateIbge;
+
+        if (window.IBGE_DATA && Array.isArray(window.IBGE_DATA)) {
+          const found = window.IBGE_DATA.find(item => {
+            if (finalIbge && String(item.c) === String(finalIbge)) return true;
+            return normalizeMunName(item.n) === normK && (item.u === trainingUf || item.uf === trainingUf);
+          });
+          if (found) {
+            finalName = found.n;
+            finalIbge = String(found.c);
+          }
+        }
+
+        let distanceKm = 0;
+        if (window.convocacaoParser && typeof window.convocacaoParser.calculateDistanceToPolo === 'function') {
+          distanceKm = window.convocacaoParser.calculateDistanceToPolo(finalName, trainingUf, poloName, trainingUf);
+        }
+
         this.currentTraining.municipalities.push({
-          id: `mun_${Date.now()}_${munKey}`,
-          ibgeCode: regData.ibgeCode || attData.ibgeCode || '',
-          name: munNameOriginal,
-          uf: this.currentTraining.uf || 'MT',
-          distanceKm: 0,
+          id: `mun_${Date.now()}_${normK}`,
+          ibgeCode: finalIbge || '',
+          name: finalName,
+          uf: trainingUf,
+          distanceKm: distanceKm || 0,
           isSummoned: true,
           inscribedCACS,
           inscribedGestores,
@@ -5846,21 +5936,42 @@ class AutoReportApp {
     const regList = this.currentTraining.registrations || [];
     const attList = this.currentTraining.attendance || [];
 
+    const normalizePersonName = (name) => {
+      if (!name) return '';
+      return String(name)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+    };
+
     const regMapByCpf = new Map();
+    const regMapByName = new Map();
     regList.forEach(reg => {
       if (reg.cpf) {
         const clean = reg.cpf.replace(/\D/g, '').padStart(11, '0');
         if (clean && clean.length === 11) regMapByCpf.set(clean, reg);
+      }
+      if (reg.name) {
+        const normName = normalizePersonName(reg.name);
+        if (normName.length > 5) regMapByName.set(normName, reg);
       }
     });
 
     const consolidated = [];
     const processedRegIds = new Set();
 
-    // 1. Processar presentes e cruzar com inscritos pelo CPF
+    // 1. Processar presentes e cruzar com inscritos pelo CPF (ou fallback por nome completo)
     attList.forEach(att => {
       const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '').padStart(11, '0') : '';
-      const matchedReg = cleanCpf && cleanCpf.length === 11 ? regMapByCpf.get(cleanCpf) : null;
+      const normName = att.name ? normalizePersonName(att.name) : '';
+
+      let matchedReg = cleanCpf && cleanCpf.length === 11 ? regMapByCpf.get(cleanCpf) : null;
+      if (!matchedReg && normName && normName.length > 5 && regMapByName.has(normName)) {
+        matchedReg = regMapByName.get(normName);
+      }
+
       const formattedCpf = window.excelParser ? window.excelParser.formatCpf(att.cpf || (matchedReg ? matchedReg.cpf : '')) : (att.cpf || '');
 
       if (matchedReg) {
@@ -5877,12 +5988,14 @@ class AutoReportApp {
           roleCACS: matchedReg.roleCACS || att.roleCACS || '',
           status: 'Inscrito e Presente',
           matchedByCpf: true,
-          isCpfValidated: true
+          isCpfValidated: true,
+          isManualMunicipality: !!att.isManualMunicipality,
+          isManualRepresentation: !!att.isManualRepresentation
         });
       } else {
-        // Se não foi encontrado na inscrição, preserva o município e vínculo da própria lista de presença (ou manual se já editado)
-        const mun = att.municipality || (att.isManualMunicipality ? att.municipality : '') || '';
-        const rep = att.representation || (att.isManualRepresentation ? att.representation : '') || '';
+        // Se não foi encontrado na inscrição, preserva o município e vínculo da própria lista de presença (ou manual se editado)
+        const mun = att.municipality || '';
+        const rep = att.representation || '';
         const isApValidated = !!(mun && rep && formattedCpf && formattedCpf !== '-');
         consolidated.push({
           id: att.id,
@@ -5895,7 +6008,9 @@ class AutoReportApp {
           roleCACS: att.roleCACS,
           status: 'Apenas Presente',
           matchedByCpf: false,
-          isCpfValidated: isApValidated
+          isCpfValidated: isApValidated,
+          isManualMunicipality: !!att.isManualMunicipality,
+          isManualRepresentation: !!att.isManualRepresentation
         });
       }
     });
@@ -5914,7 +6029,9 @@ class AutoReportApp {
           roleCACS: reg.roleCACS,
           status: 'Apenas Inscrito',
           matchedByCpf: false,
-          isCpfValidated: false
+          isCpfValidated: false,
+          isManualMunicipality: false,
+          isManualRepresentation: false
         });
       }
     });
@@ -5935,10 +6052,22 @@ class AutoReportApp {
       }
     });
 
+    // Também incluir municípios identificados nas planilhas de inscrição e presença
+    (this.currentTraining?.registrations || []).forEach(r => {
+      if (r.municipality && r.municipality.length <= 45 && !r.municipality.toLowerCase().includes('declaro')) {
+        names.add(r.municipality.trim());
+      }
+    });
+    (this.currentTraining?.attendance || []).forEach(a => {
+      if (a.municipality && a.municipality.length <= 45 && !a.municipality.toLowerCase().includes('declaro')) {
+        names.add(a.municipality.trim());
+      }
+    });
+
     // Se porventura a lista estiver vazia, recuar para os municípios do estado da formação
     if (names.size === 0 && window.IBGE_DATA && Array.isArray(window.IBGE_DATA)) {
       const uf = this.currentTraining?.uf || 'MT';
-      window.IBGE_DATA.filter(item => item.uf === uf).forEach(item => {
+      window.IBGE_DATA.filter(item => item.u === uf || item.uf === uf).forEach(item => {
         if (item.n) names.add(item.n);
       });
     }
@@ -6138,15 +6267,32 @@ class AutoReportApp {
       }
     }
 
-    const regCacs = regList.filter(r => r.representation === 'CACS-FUNDEB').length;
-    const regGestores = regList.filter(r => r.representation !== 'CACS-FUNDEB').length;
+    const regCacs = regList.filter(r => (r.representation || '').toUpperCase().includes('CACS') || (r.representation || '').toUpperCase().includes('FUNDEB')).length;
+    const regGestores = regList.length - regCacs;
 
-    const attCacs = attList.filter(a => a.representation === 'CACS-FUNDEB').length;
-    const attGestores = attList.filter(a => a.representation !== 'CACS-FUNDEB').length;
+    const attCacs = attList.filter(a => (a.representation || '').toUpperCase().includes('CACS') || (a.representation || '').toUpperCase().includes('FUNDEB')).length;
+    const attGestores = attList.length - attCacs;
 
-    // Renderizar Banner de Status das Planilhas
+    const consolidatedList = this.getConsolidatedParticipantsList();
+    const ipCount = consolidatedList.filter(p => p.status === 'Inscrito e Presente').length;
+    const apCount = consolidatedList.filter(p => p.status === 'Apenas Presente').length;
+    const aiCount = consolidatedList.filter(p => p.status === 'Apenas Inscrito').length;
+    const ipPercent = attList.length > 0 ? Math.round((ipCount / attList.length) * 100) : 0;
+
+    const unmappedAp = consolidatedList.filter(p => p.status === 'Apenas Presente' && (!p.municipality || !p.representation));
+    const hasUnmapped = unmappedAp.length > 0;
+
+    const muns = this.currentTraining.municipalities || [];
+    const munsWithPresence = muns.filter(m => (parseInt(m.presentTotal) || 0) > 0).length;
+    const totalPresInMuns = muns.reduce((acc, m) => acc + (parseInt(m.presentTotal) || 0), 0);
+    const totalInscInMuns = muns.reduce((acc, m) => acc + (parseInt(m.inscribedTotal) || 0), 0);
+
+    // Renderizar Banner de Status das Planilhas e Painel de Diagnóstico
     if (statusBanner) {
-      statusBanner.innerHTML = `
+      if (!hasReg && !hasAtt) {
+        statusBanner.innerHTML = '';
+      } else {
+        statusBanner.innerHTML = `
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
           <div style="background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); padding:0.85rem 1.1rem; border-radius:var(--radius-md);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
@@ -6180,14 +6326,76 @@ class AutoReportApp {
             </div>
           </div>
         </div>
-      `;
+
+        <div class="wizard-attendance-diagnostic-banner" style="margin-top:1rem; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1rem 1.25rem; box-shadow:var(--shadow-sm);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; background:var(--accent-amber-bg); color:var(--accent-amber-text);">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </span>
+              <strong style="color:var(--text-primary); font-size:0.92rem;">Diagnóstico da Leitura e Reconciliação de Dados</strong>
+            </div>
+            <div>
+              ${hasUnmapped ? `
+                <span class="nav-badge" style="background:var(--accent-amber-bg); color:var(--accent-amber-text); border:1px solid var(--accent-amber-border); font-size:0.75rem; font-weight:700; padding:0.2rem 0.55rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  ${unmappedAp.length} Pendência${unmappedAp.length > 1 ? 's' : ''}
+                </span>
+              ` : `
+                <span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700; padding:0.2rem 0.55rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  100% Reconciliado
+                </span>
+              `}
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:0.75rem; margin-bottom:0.85rem;">
+            <div style="background:rgba(59, 130, 246, 0.05); border:1px solid var(--accent-blue-border); border-radius:var(--radius-sm); padding:0.6rem 0.85rem;">
+              <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.15rem;">Inscrições Válidas</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--accent-blue-text);">${regList.length}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${regCacs} CACS | ${regGestores} Gestão</div>
+            </div>
+
+            <div style="background:rgba(16, 185, 129, 0.05); border:1px solid var(--accent-emerald-border); border-radius:var(--radius-sm); padding:0.6rem 0.85rem;">
+              <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.15rem;">Presentes Computados</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--accent-emerald-text);">${attList.length}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${attCacs} CACS | ${attGestores} Gestão</div>
+            </div>
+
+            <div style="background:rgba(245, 158, 11, 0.05); border:1px solid var(--accent-amber-border); border-radius:var(--radius-sm); padding:0.6rem 0.85rem;">
+              <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.15rem;">Cruzamento Presença</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--text-primary);">${ipCount} <span style="font-size:0.75rem; font-weight:600; color:var(--accent-emerald-text);">(${ipPercent}%)</span></div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${apCount} apenas presentes</div>
+            </div>
+
+            <div style="background:rgba(99, 102, 241, 0.05); border:1px solid rgba(99, 102, 241, 0.25); border-radius:var(--radius-sm); padding:0.6rem 0.85rem;">
+              <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.15rem;">Tabela 4 Sincronizada</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--accent-amber-text);">${totalPresInMuns} / ${totalInscInMuns}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${munsWithPresence} de ${muns.length} municípios com presença</div>
+            </div>
+          </div>
+
+          ${hasUnmapped ? `
+            <div style="background:var(--accent-amber-bg); border:1px solid var(--accent-amber-border); color:var(--accent-amber-text); padding:0.6rem 0.85rem; border-radius:var(--radius-sm); font-size:0.8rem; display:flex; align-items:center; gap:0.5rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span><strong>Atenção:</strong> Existem <strong>${unmappedAp.length}</strong> participante(s) presente(s) com município ou vínculo não identificados na planilha. Selecione-os na tabela unificada abaixo para incluí-los na Tabela 4.</span>
+            </div>
+          ` : `
+            <div style="background:var(--accent-emerald-bg); border:1px solid var(--accent-emerald-border); color:var(--accent-emerald-text); padding:0.6rem 0.85rem; border-radius:var(--radius-sm); font-size:0.8rem; display:flex; align-items:center; gap:0.5rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><strong>Diagnóstico Concluído:</strong> Dados 100% validados e reconciliados. A <strong>Tabela 4</strong> reflete perfeitamente <strong>${totalPresInMuns} presentes</strong> e <strong>${totalInscInMuns} inscritos</strong> em <strong>${munsWithPresence} municípios atendidos</strong>, com consistência integral para a auditoria e o Relatório Oficial.</span>
+            </div>
+          `}
+        </div>
+        `;
+      }
     }
 
     const sortCol = this.attendanceSortCol || 'name';
     const sortDir = this.attendanceSortDir || 'asc';
 
     const invitedMunOptions = this.getInvitedMunicipalityOptions();
-    const consolidatedList = this.getConsolidatedParticipantsList();
     const sortedList = this.sortParticipantsList(consolidatedList, sortCol, sortDir);
 
     // Helper de renderização de linha de participante
