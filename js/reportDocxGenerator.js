@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.0.6
+ * Versão: v.3.0.7
  */
 
 class ReportDocxGenerator {
@@ -1039,8 +1039,8 @@ class ReportDocxGenerator {
         ]
       });
 
-      // RODAPÉ OFICIAL PADRÃO (Conforme modelo de referência de 02-Relatórios exemplos)
-      // Linha superior sólida #4D4D4D e faixa de 5 logomarcas institucionais
+      // RODAPÉ OFICIAL PADRÃO - SEÇÃO 3 (Página 3 - Equipe Participante, sem número de página)
+      // Linha superior sólida #4D4D4D e faixa de 5 logomarcas institucionais ampliada
       const footerTable = new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         borders: {
@@ -1058,19 +1058,20 @@ class ReportDocxGenerator {
                 width: { size: 100, type: WidthType.PERCENTAGE },
                 verticalAlign: VerticalAlign.CENTER,
                 borders: {
-                  top: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' },
+                  top: { style: BorderStyle.NONE },
                   bottom: { style: BorderStyle.NONE },
                   left: { style: BorderStyle.NONE },
                   right: { style: BorderStyle.NONE }
                 },
+                margins: { top: 60, bottom: 40, left: 0, right: 0 },
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    spacing: { before: 80, after: 40 },
+                    spacing: { before: 40, after: 20 },
                     children: rodape5LogosBytes ? [
                       new ImageRun({
                         data: rodape5LogosBytes,
-                        transformation: { width: 480, height: 24 }
+                        transformation: { width: 440, height: 27 }
                       })
                     ] : [
                       new TextRun({
@@ -1078,6 +1079,81 @@ class ReportDocxGenerator {
                         font: 'Times New Roman',
                         size: 16,
                         color: '4D4D4D'
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      });
+
+      // RODAPÉ OFICIAL COM NÚMERO DE PÁGINA - SEÇÃO 4 (Página 4+ - Introdução em diante)
+      // Conforme modelo de referência: 2 colunas, logomarcas à esquerda com separador vertical e número da página à direita
+      const footerTableWithPageNum = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' },
+          bottom: { style: BorderStyle.NONE },
+          left: { style: BorderStyle.NONE },
+          right: { style: BorderStyle.NONE },
+          insideHorizontal: { style: BorderStyle.NONE },
+          insideVertical: { style: BorderStyle.NONE }
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 95, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.CENTER,
+                borders: {
+                  top: { style: BorderStyle.NONE },
+                  bottom: { style: BorderStyle.NONE },
+                  left: { style: BorderStyle.NONE },
+                  right: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' }
+                },
+                margins: { top: 60, bottom: 40, left: 0, right: 80 },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 40, after: 20 },
+                    children: rodape5LogosBytes ? [
+                      new ImageRun({
+                        data: rodape5LogosBytes,
+                        transformation: { width: 430, height: 26.5 }
+                      })
+                    ] : [
+                      new TextRun({
+                        text: 'CECATE Centro-Oeste • Engenharia de Transportes • FCT • UFG • FNDE',
+                        font: 'Times New Roman',
+                        size: 16,
+                        color: '4D4D4D'
+                      })
+                    ]
+                  })
+                ]
+              }),
+              new TableCell({
+                width: { size: 5, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.CENTER,
+                borders: {
+                  top: { style: BorderStyle.NONE },
+                  bottom: { style: BorderStyle.NONE },
+                  left: { style: BorderStyle.NONE },
+                  right: { style: BorderStyle.NONE }
+                },
+                margins: { top: 60, bottom: 40, left: 60, right: 0 },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 0, after: 0 },
+                    children: [
+                      new TextRun({
+                        children: [PageNumber.CURRENT],
+                        font: 'Times New Roman',
+                        size: 20, // 10pt
+                        color: '000000'
                       })
                     ]
                   })
@@ -1556,7 +1632,10 @@ class ReportDocxGenerator {
             properties: {
               page: {
                 size: { width: PAGE_WIDTH_DXA, height: PAGE_HEIGHT_DXA },
-                margin: { top: 1440, right: 1440, bottom: 1440, left: 1440, header: 720, footer: 720 }
+                margin: { top: 1440, right: 1440, bottom: 1440, left: 1440, header: 720, footer: 720 },
+                pageNumbers: {
+                  start: 1
+                }
               }
             },
             headers: {
@@ -1566,7 +1645,7 @@ class ReportDocxGenerator {
             },
             footers: {
               default: new Footer({
-                children: [footerTable]
+                children: [footerTableWithPageNum]
               })
             },
             children: docChildren

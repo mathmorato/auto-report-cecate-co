@@ -2302,7 +2302,7 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
 }
 
 .report-footer-banner {
-  height: 24px;
+  height: 28px;
   max-width: 100%;
   object-fit: contain;
   display: inline-block;

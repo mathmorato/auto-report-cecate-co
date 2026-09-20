@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Processador de Documentos de Convocação
- * Versão: v.3.0.6
+ * Versão: v.3.0.7
  */
 
 class ConvocacaoParser {

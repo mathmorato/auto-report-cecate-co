@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.0.6
+ * Versão: v.3.0.7
  */
 
 window.icons = {
@@ -37,12 +37,12 @@ class AutoReportApp {
     this.trainingList = [];
     this.dashboardFilter = 'all';
     this.trainingToDeleteId = null;
-    this.theme = localStorage.getItem('autoreport_theme') || 'light';
+    this.theme = localStorage.getItem('autoreport_theme') || 'dark';
     this.metrics = null;
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.0.6';
+    this.version = 'v.3.0.7';
   }
 
   /**
@@ -7683,8 +7683,13 @@ class AutoReportApp {
         ${cecateHtml}
 
         <!-- RODAPÉ OFICIAL PADRONIZADO -->
-        <div class="report-standard-footer">
-          <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
+        <div class="report-standard-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #4D4D4D; padding-top: 6px; margin-top: 3rem;">
+          <div style="flex: 1; text-align: center; border-right: 1px solid #4D4D4D; padding-right: 12px;">
+            <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
+          </div>
+          <div style="width: 36px; text-align: center; font-family: 'Times New Roman', serif; font-size: 10pt; color: #000; padding-left: 8px;">
+            1
+          </div>
         </div>
       </div>
     `;
