@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Gerador de Relatório Oficial Word (.docx)
- * Versão: v.2.9.8
+ * AutoReport CECATE - Gerador de Relatório em Formato Word (.docx)
+ * Versão: v.2.9.9
  */
 
 class ReportDocxGenerator {
@@ -166,8 +166,15 @@ class ReportDocxGenerator {
       ImageRun,
       Header,
       Footer,
-      PageNumber
+      PageNumber,
+      VerticalAlign: DocxVerticalAlign
     } = window.docx || {};
+
+    const VerticalAlign = DocxVerticalAlign || window.docx?.VerticalAlign || {
+      BOTTOM: 'bottom',
+      CENTER: 'center',
+      TOP: 'top'
+    };
 
     if (!Document) {
       console.warn('Biblioteca docx.js não carregada, disparando fallback HTML...');
