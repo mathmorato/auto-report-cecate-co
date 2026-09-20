@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Gerador de Relatórios Oficiais Microsoft Word (.docx)
- * Versão: v.3.0.5
+ * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
+ * Versão: v.3.0.6
  */
 
 class ReportDocxGenerator {
@@ -1372,7 +1372,7 @@ class ReportDocxGenerator {
             equipeChildren.push(
               new Paragraph({
                 alignment: AlignmentType.LEFT,
-                spacing: { before: 0, after: 0 },
+                spacing: { before: 0, after: 160 },
                 indent: { left: 1416 },
                 children: [
                   new TextRun({
@@ -1410,7 +1410,7 @@ class ReportDocxGenerator {
             equipeChildren.push(
               new Paragraph({
                 alignment: AlignmentType.LEFT,
-                spacing: { before: 0, after: 0 },
+                spacing: { before: 0, after: 160 },
                 indent: { left: 1416 },
                 children: [
                   new TextRun({
@@ -1479,7 +1479,7 @@ class ReportDocxGenerator {
             equipeChildren.push(
               new Paragraph({
                 alignment: AlignmentType.LEFT,
-                spacing: { before: 0, after: 0 },
+                spacing: { before: 0, after: 160 },
                 indent: { left: 1416 },
                 children: [
                   new TextRun({
@@ -1698,13 +1698,13 @@ class ReportDocxGenerator {
                 <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Coordenador do Projeto</p>
                 <p style="margin: 0 0 0.5rem 0;">Prof. Dr. Willer Luciano Carvalho</p>
                 <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Equipe de Técnica</p>
-                <p style="margin: 0;">Eng. M.Sc. Lara Batista Ferreira de Lima</p>
-                <p style="margin: 0;">Eng. M.Sc. Matheus Henrique Morato de Moraes</p>
-                <p style="margin: 0;">Prof. Dr. Liosber Medina Garcia</p>
-                <p style="margin: 0;">Prof. Dr. Marcos Paulino Roriz Junior</p>
-                <p style="margin: 0;">Prof. Dr. Robinson Andrés Giraldo Zuluaga</p>
-                <p style="margin: 0;">Prof. Dr. Ronny Marcelo Aliaga Medrano</p>
-                <p style="margin: 0;">Pesquisadora Visitante Dra. Yaeko Yamashita</p>
+                <p style="margin: 0 0 0.4rem 0;">Eng. M.Sc. Lara Batista Ferreira de Lima</p>
+                <p style="margin: 0 0 0.4rem 0;">Eng. M.Sc. Matheus Henrique Morato de Moraes</p>
+                <p style="margin: 0 0 0.4rem 0;">Prof. Dr. Liosber Medina Garcia</p>
+                <p style="margin: 0 0 0.4rem 0;">Prof. Dr. Marcos Paulino Roriz Junior</p>
+                <p style="margin: 0 0 0.4rem 0;">Prof. Dr. Robinson Andrés Giraldo Zuluaga</p>
+                <p style="margin: 0 0 0.4rem 0;">Prof. Dr. Ronny Marcelo Aliaga Medrano</p>
+                <p style="margin: 0 0 0.4rem 0;">Pesquisadora Visitante Dra. Yaeko Yamashita</p>
                 <p style="margin: 0 0 0.5rem 0;">Pesquisador Visitante José Maria Rodrigues de Souza</p>
               </div>
             </div>

@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Estrutura Canônica de Cursos, Módulos e Cargas Horárias
- * Versão: v.3.0.5
+ * AutoReport CECATE - Estrutura Padrão de Cursos e Módulos Formativos
+ * Versão: v.3.0.6
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [
