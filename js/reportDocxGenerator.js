@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório em Formato Word (.docx)
- * Versão: v.3.0.0
+ * Versão: v.3.0.1
  */
 
 class ReportDocxGenerator {
@@ -167,6 +167,9 @@ class ReportDocxGenerator {
       Header,
       Footer,
       PageNumber,
+      HeightRule: DocxHeightRule,
+      TableLayoutType: DocxTableLayoutType,
+      LineRuleType: DocxLineRuleType,
       VerticalAlign: DocxVerticalAlign
     } = window.docx || {};
 
@@ -174,6 +177,24 @@ class ReportDocxGenerator {
       BOTTOM: 'bottom',
       CENTER: 'center',
       TOP: 'top'
+    };
+
+    const HeightRule = DocxHeightRule || window.docx?.HeightRule || {
+      AUTO: 'auto',
+      ATLEAST: 'atLeast',
+      EXACT: 'exact'
+    };
+
+    const TableLayoutType = DocxTableLayoutType || window.docx?.TableLayoutType || {
+      AUTOFIT: 'autofit',
+      FIXED: 'fixed'
+    };
+
+    const LineRuleType = DocxLineRuleType || window.docx?.LineRuleType || {
+      AT_LEAST: 'atLeast',
+      EXACTLY: 'exactly',
+      EXACT: 'exact',
+      AUTO: 'auto'
     };
 
     if (!Document) {
@@ -195,17 +216,31 @@ class ReportDocxGenerator {
       const headerLogoBytes = this.base64ToUint8Array(coverAssets.cecateCabecalho || coverAssets.cecate);
       const rodape5LogosBytes = this.base64ToUint8Array(coverAssets.rodape5Logos);
 
-      // 1. MONTAGEM DA CAPA OFICIAL (Seção 1)
+      // 1. MONTAGEM DA CAPA OFICIAL (Seção 1 - Preenchimento Integral da 1ª Folha A4)
+      const PAGE_WIDTH_DXA = 11906; // 210mm (Largura padrão A4)
+      const PAGE_HEIGHT_DXA = 16838; // 297mm (Altura padrão A4)
+
+      const noBorders = {
+        top: { style: BorderStyle.NONE },
+        bottom: { style: BorderStyle.NONE },
+        left: { style: BorderStyle.NONE },
+        right: { style: BorderStyle.NONE },
+        insideHorizontal: { style: BorderStyle.NONE },
+        insideVertical: { style: BorderStyle.NONE }
+      };
+
+      const cellMargins = { top: 0, bottom: 0, left: 0, right: 0 };
+
       const topChildren = [];
       if (figBytes) {
         topChildren.push(
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 550, after: 300 },
+            spacing: { before: 500, after: 200 },
             children: [
               new ImageRun({
                 data: figBytes,
-                transformation: { width: 520, height: 292 }
+                transformation: { width: 510, height: 285 }
               })
             ]
           })
@@ -230,7 +265,7 @@ class ReportDocxGenerator {
       topChildren.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 150, after: 300 },
+          spacing: { before: 80, after: 120 },
           children: [
             new TextRun({
               text: coverInfo.numText,
@@ -246,7 +281,7 @@ class ReportDocxGenerator {
       const stripeChildren = [
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 140, after: 60 },
+          spacing: { before: 120, after: 40 },
           children: [
             new TextRun({
               text: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
@@ -259,7 +294,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 60, after: 140 },
+          spacing: { before: 40, after: 120 },
           children: [
             new TextRun({
               text: coverInfo.infoLine,
@@ -275,14 +310,30 @@ class ReportDocxGenerator {
       const projectChildren = [
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 600, after: 600 },
+          spacing: { before: 200, after: 200 },
           children: [
             new TextRun({
-              text: 'Projeto:  FORTALECENDO E APRIMORANDO AS POLÍTICAS\n            PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+              text: 'Projeto:  FORTALECENDO E APRIMORANDO AS POLÍTICAS',
               font: 'Times New Roman',
               bold: true,
-              size: 32, // 16pt
+              size: 30, // 15pt
               color: 'D9D9D9'
+            }),
+            new TextRun({
+              text: 'PÚBLICAS DE TRANSPORTE ESCOLAR',
+              font: 'Times New Roman',
+              bold: true,
+              size: 30, // 15pt
+              color: 'D9D9D9',
+              break: 1
+            }),
+            new TextRun({
+              text: 'DO BRASIL',
+              font: 'Times New Roman',
+              bold: true,
+              size: 30, // 15pt
+              color: 'D9D9D9',
+              break: 1
             })
           ]
         })
@@ -294,11 +345,11 @@ class ReportDocxGenerator {
         logoCells.push(
           new TableCell({
             width: { size: 38, type: WidthType.PERCENTAGE },
-            borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+            borders: noBorders,
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 40, after: 40 },
+                spacing: { before: 10, after: 10 },
                 children: [
                   new ImageRun({
                     data: cecateBytes,
@@ -314,11 +365,11 @@ class ReportDocxGenerator {
         logoCells.push(
           new TableCell({
             width: { size: 24, type: WidthType.PERCENTAGE },
-            borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+            borders: noBorders,
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 40, after: 40 },
+                spacing: { before: 10, after: 10 },
                 children: [
                   new ImageRun({
                     data: ufgBytes,
@@ -334,11 +385,11 @@ class ReportDocxGenerator {
         logoCells.push(
           new TableCell({
             width: { size: 38, type: WidthType.PERCENTAGE },
-            borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+            borders: noBorders,
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 40, after: 40 },
+                spacing: { before: 10, after: 10 },
                 children: [
                   new ImageRun({
                     data: fndeBytes,
@@ -353,66 +404,84 @@ class ReportDocxGenerator {
 
       const logosTable = new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
-        borders: {
-          top: { style: BorderStyle.NONE },
-          bottom: { style: BorderStyle.NONE },
-          left: { style: BorderStyle.NONE },
-          right: { style: BorderStyle.NONE },
-          insideHorizontal: { style: BorderStyle.NONE },
-          insideVertical: { style: BorderStyle.NONE }
-        },
+        borders: noBorders,
         rows: [
           new TableRow({ children: logoCells.length > 0 ? logoCells : [new TableCell({ children: [new Paragraph({})] })] })
         ]
       });
 
+      // Tabela de capa que ocupa 100% da primeira página A4 (sem margens brancas)
+      // Distribuição proporcional rigorosa baseada nos relatórios de referência:
+      // Linha 1: 8900 dxa (~157mm) - Bloco cinza escuro superior (Ilustração + Nº Relatório)
+      // Linha 2: 1600 dxa (~28mm)  - Faixa amarela institucional (Capacitação + Polo/Data)
+      // Linha 3: 3750 dxa (~66mm)  - Bloco cinza escuro do Projeto (Texto institucional)
+      // Linha 4: 1950 dxa (~34mm)  - Faixa cinza clara institucional (Realizado por + 3 logos)
+      // Linha 5: 600 dxa (~11mm)   - Faixa cinza escura de fechamento da borda inferior
+      // Total = 16800 dxa (A4 total = 16838 dxa, preenchendo a folha inteira sem salto de página)
       const coverTable = new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        borders: {
-          top: { style: BorderStyle.NONE },
-          bottom: { style: BorderStyle.NONE },
-          left: { style: BorderStyle.NONE },
-          right: { style: BorderStyle.NONE },
-          insideHorizontal: { style: BorderStyle.NONE },
-          insideVertical: { style: BorderStyle.NONE }
-        },
+        width: { size: PAGE_WIDTH_DXA, type: WidthType.DXA },
+        layout: TableLayoutType.FIXED,
+        alignment: AlignmentType.CENTER,
+        indent: { size: 0, type: WidthType.DXA },
+        margins: cellMargins,
+        borders: noBorders,
         rows: [
           new TableRow({
+            height: { value: 8900, rule: HeightRule.EXACT },
+            cantSplit: true,
             children: [
               new TableCell({
+                width: { size: PAGE_WIDTH_DXA, type: WidthType.DXA },
                 shading: { fill: '4D4D4D' },
-                borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                margins: cellMargins,
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
                 children: topChildren
               })
             ]
           }),
           new TableRow({
+            height: { value: 1600, rule: HeightRule.EXACT },
+            cantSplit: true,
             children: [
               new TableCell({
+                width: { size: PAGE_WIDTH_DXA, type: WidthType.DXA },
                 shading: { fill: 'E9C95C' },
-                borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                margins: cellMargins,
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
                 children: stripeChildren
               })
             ]
           }),
           new TableRow({
+            height: { value: 3750, rule: HeightRule.EXACT },
+            cantSplit: true,
             children: [
               new TableCell({
+                width: { size: PAGE_WIDTH_DXA, type: WidthType.DXA },
                 shading: { fill: '4D4D4D' },
-                borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                margins: cellMargins,
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
                 children: projectChildren
               })
             ]
           }),
           new TableRow({
+            height: { value: 1950, rule: HeightRule.EXACT },
+            cantSplit: true,
             children: [
               new TableCell({
+                width: { size: PAGE_WIDTH_DXA, type: WidthType.DXA },
                 shading: { fill: 'D8D8D8' },
-                borders: { top: { style: BorderStyle.SINGLE, size: 8, color: '4D4D4D' }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                margins: cellMargins,
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    spacing: { before: 80, after: 60 },
+                    spacing: { before: 30, after: 20 },
                     children: [
                       new TextRun({
                         text: 'Realizado por:',
@@ -427,8 +496,33 @@ class ReportDocxGenerator {
                 ]
               })
             ]
+          }),
+          new TableRow({
+            height: { value: 600, rule: HeightRule.EXACT },
+            cantSplit: true,
+            children: [
+              new TableCell({
+                width: { size: PAGE_WIDTH_DXA, type: WidthType.DXA },
+                shading: { fill: '4D4D4D' },
+                margins: cellMargins,
+                borders: noBorders,
+                children: [
+                  new Paragraph({
+                    spacing: { before: 0, after: 0, line: 20, lineRule: LineRuleType.EXACT },
+                    children: [new TextRun({ text: '', size: 1 })]
+                  })
+                ]
+              })
+            ]
           })
         ]
+      });
+
+      // Parágrafo residual da Seção 1 com microespaçamento e fundo escuro para não criar página extra
+      const coverTrailingPara = new Paragraph({
+        shading: { fill: '4D4D4D' },
+        spacing: { before: 0, after: 0, line: 20, lineRule: LineRuleType.EXACT },
+        children: [new TextRun({ text: '', size: 1 })]
       });
 
       // Início do corpo do relatório na Seção 2
@@ -1004,15 +1098,17 @@ class ReportDocxGenerator {
           {
             properties: {
               page: {
-                margin: { top: 0, right: 0, bottom: 0, left: 0 }
+                size: { width: PAGE_WIDTH_DXA, height: PAGE_HEIGHT_DXA },
+                margin: { top: 0, right: 0, bottom: 0, left: 0, header: 0, footer: 0 }
               }
             },
-            children: [coverTable]
+            children: [coverTable, coverTrailingPara]
           },
           {
             properties: {
               page: {
-                margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+                size: { width: PAGE_WIDTH_DXA, height: PAGE_HEIGHT_DXA },
+                margin: { top: 1440, right: 1440, bottom: 1440, left: 1440, header: 720, footer: 720 }
               }
             },
             headers: {

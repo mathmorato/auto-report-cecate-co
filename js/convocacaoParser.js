@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Motor de Leitura OCR e Extração Inteligente de Convocação PDF
- * Versão: v.3.0.0
+ * AutoReport CECATE - Parser de Documentos de Convocação
+ * Versão: v.3.0.1
  */
 
 class ConvocacaoParser {
