@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatórios Oficiais Microsoft Word (.docx)
- * Versão: v.3.0.3
+ * Versão: v.3.0.4
  */
 
 class ReportDocxGenerator {
@@ -1186,7 +1186,7 @@ class ReportDocxGenerator {
 
       const contraCapaNumPara = new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 3800, after: 120 },
+        spacing: { before: 8300, after: 120 },
         children: [
           new TextRun({
             text: `Relatório de Atividades Nº ${training.number != null ? String(training.number).trim() : '16'}`,
@@ -1228,7 +1228,7 @@ class ReportDocxGenerator {
 
       const contraCapaCityPara = new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 3600, after: 60 },
+        spacing: { before: 2900, after: 60 },
         children: [
           new TextRun({
             text: 'Aparecida de Goiânia',
@@ -1242,7 +1242,7 @@ class ReportDocxGenerator {
 
       const contraCapaDatePara = new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 60, after: 360 },
+        spacing: { before: 60, after: 850 },
         children: [
           new TextRun({
             text: contraCapaMonthYear,
@@ -1274,7 +1274,7 @@ class ReportDocxGenerator {
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    spacing: { before: 160, after: 40 },
+                    spacing: { before: 120, after: 20 },
                     children: cecateBytes ? [
                       new ImageRun({
                         data: cecateBytes,
@@ -1291,7 +1291,7 @@ class ReportDocxGenerator {
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    spacing: { before: 160, after: 40 },
+                    spacing: { before: 120, after: 20 },
                     children: ufgBytes ? [
                       new ImageRun({
                         data: ufgBytes,
@@ -1308,7 +1308,7 @@ class ReportDocxGenerator {
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    spacing: { before: 160, after: 40 },
+                    spacing: { before: 120, after: 20 },
                     children: fndeBytes ? [
                       new ImageRun({
                         data: fndeBytes,
@@ -1341,7 +1341,7 @@ class ReportDocxGenerator {
             properties: {
               page: {
                 size: { width: PAGE_WIDTH_DXA, height: PAGE_HEIGHT_DXA },
-                margin: { top: 1134, right: 1418, bottom: 1134, left: 1418, header: 0, footer: 0 }
+                margin: { top: 567, right: 1418, bottom: 400, left: 1418, header: 0, footer: 0 }
               }
             },
             children: [
