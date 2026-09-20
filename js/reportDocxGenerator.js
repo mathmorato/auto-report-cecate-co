@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatórios Oficiais Microsoft Word (.docx)
- * Versão: v.3.0.4
+ * Versão: v.3.0.5
  */
 
 class ReportDocxGenerator {
@@ -561,47 +561,6 @@ class ReportDocxGenerator {
         spacing: { before: 0, after: 0, line: 20, lineRule: LineRuleType.EXACT },
         children: [new TextRun({ text: '', size: 1 })]
       });
-
-      // Início do corpo do relatório na Seção 2
-      docChildren.push(
-        new Paragraph({
-          heading: HeadingLevel.HEADING_1,
-          children: [new TextRun({ text: 'EQUIPE PARTICIPANTE', bold: true, size: 28, color: '1E3A8A' })]
-        })
-      );
-
-      // 2. TABELA DE EQUIPE
-      const team = training.team || [];
-      const teamRows = [
-        new TableRow({
-          tableHeader: true,
-          children: [
-            new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Nome do Integrante', bold: true })] })] }),
-            new TableCell({ width: { size: 25, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Instituição', bold: true })] })] }),
-            new TableCell({ width: { size: 25, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Função / Cargo', bold: true })] })] })
-          ]
-        })
-      ];
-
-      team.forEach(tm => {
-        const displayName = (window.formatTeamMemberFullName ? window.formatTeamMemberFullName(tm) : tm.fullName) || tm.name || '';
-        teamRows.push(
-          new TableRow({
-            children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: displayName, bold: true })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: tm.institution || 'UFG' })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: tm.role || 'Equipe Técnica' })] })] })
-            ]
-          })
-        );
-      });
-
-      docChildren.push(
-        new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: teamRows
-        })
-      );
 
       // 3. SEÇÃO 1: INTRODUÇÃO
       docChildren.push(
@@ -1323,7 +1282,225 @@ class ReportDocxGenerator {
         ]
       });
 
-      // CRIAR DOCUMENTO DOCX COM TRÊS SEÇÕES: CAPA OFICIAL (PÁG 1), CONTRA-CAPA (PÁG 2) E CONTEÚDO TÉCNICO (PÁG 3+)
+      // 1.2 MONTAGEM DA PÁGINA 3: EQUIPE PARTICIPANTE (Seção 3 Oficial)
+      const equipeChildren = [];
+
+      // Título superior centralizado em azul escuro (#1F4E79)
+      equipeChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 0, after: 360 },
+          children: [
+            new TextRun({
+              text: `RELATÓRIO DE ATIVIDADES Nº ${training.number != null ? String(training.number).trim() : '16'}`,
+              font: 'Times New Roman',
+              bold: true,
+              size: 36, // 18pt
+              color: '1F4E79'
+            })
+          ]
+        })
+      );
+
+      // Título EQUIPE PARTICIPANTE
+      equipeChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.LEFT,
+          spacing: { before: 480, after: 120 },
+          children: [
+            new TextRun({
+              text: 'EQUIPE PARTICIPANTE',
+              font: 'Times New Roman',
+              bold: true,
+              size: 28, // 14pt
+              color: '000000'
+            })
+          ]
+        })
+      );
+
+      // Obter lista da equipe
+      const teamList = (training.team && training.team.length > 0)
+        ? training.team
+        : (window.getMasterTeam ? window.getMasterTeam() : (window.DEFAULT_OFFICIAL_TEAM || []));
+
+      // Separar UFG e FNDE
+      const ufgMembers = teamList.filter(m => (m.institutionGroup === 'UFG' || m.institution === 'UFG' || m.type === 'coordenacao' || m.type === 'tecnica' || !m.institution || m.institution !== 'FNDE'));
+      const fndeMembers = teamList.filter(m => (m.institutionGroup === 'FNDE' || m.institution === 'FNDE' || m.type === 'fnde'));
+
+      // 1. Bloco UFG
+      if (ufgMembers.length > 0) {
+        equipeChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.LEFT,
+            spacing: { before: 120, after: 120 },
+            indent: { left: 708 },
+            children: [
+              new TextRun({
+                text: 'UNIVERSIDADE FEDERAL DE GOIÁS – UFG',
+                font: 'Times New Roman',
+                bold: true,
+                size: 24, // 12pt
+                color: '000000'
+              })
+            ]
+          })
+        );
+
+        const ufgCoords = ufgMembers.filter(m => (m.role && m.role.toLowerCase().includes('coordenador')) || m.type === 'coordenacao');
+        const ufgTech = ufgMembers.filter(m => !ufgCoords.includes(m));
+
+        if (ufgCoords.length > 0) {
+          equipeChildren.push(
+            new Paragraph({
+              alignment: AlignmentType.LEFT,
+              spacing: { before: 120, after: 0 },
+              indent: { left: 1416 },
+              children: [
+                new TextRun({
+                  text: 'Coordenador do Projeto',
+                  font: 'Times New Roman',
+                  bold: true,
+                  size: 24, // 12pt
+                  color: '000000'
+                })
+              ]
+            })
+          );
+          ufgCoords.forEach(m => {
+            const name = (window.formatTeamMemberFullName ? window.formatTeamMemberFullName(m) : m.fullName) || m.name || '';
+            equipeChildren.push(
+              new Paragraph({
+                alignment: AlignmentType.LEFT,
+                spacing: { before: 0, after: 0 },
+                indent: { left: 1416 },
+                children: [
+                  new TextRun({
+                    text: name,
+                    font: 'Times New Roman',
+                    bold: false,
+                    size: 24, // 12pt
+                    color: '000000'
+                  })
+                ]
+              })
+            );
+          });
+        }
+
+        if (ufgTech.length > 0) {
+          equipeChildren.push(
+            new Paragraph({
+              alignment: AlignmentType.LEFT,
+              spacing: { before: 120, after: 0 },
+              indent: { left: 1416 },
+              children: [
+                new TextRun({
+                  text: 'Equipe de Técnica',
+                  font: 'Times New Roman',
+                  bold: true,
+                  size: 24, // 12pt
+                  color: '000000'
+                })
+              ]
+            })
+          );
+          ufgTech.forEach(m => {
+            const name = (window.formatTeamMemberFullName ? window.formatTeamMemberFullName(m) : m.fullName) || m.name || '';
+            equipeChildren.push(
+              new Paragraph({
+                alignment: AlignmentType.LEFT,
+                spacing: { before: 0, after: 0 },
+                indent: { left: 1416 },
+                children: [
+                  new TextRun({
+                    text: name,
+                    font: 'Times New Roman',
+                    bold: false,
+                    size: 24, // 12pt
+                    color: '000000'
+                  })
+                ]
+              })
+            );
+          });
+        }
+      }
+
+      // 2. Bloco FNDE
+      if (fndeMembers.length > 0) {
+        equipeChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.LEFT,
+            spacing: { before: 240, after: 240 },
+            indent: { left: 708 },
+            children: [
+              new TextRun({
+                text: 'FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO – FNDE',
+                font: 'Times New Roman',
+                bold: true,
+                size: 24, // 12pt
+                color: '000000'
+              })
+            ]
+          })
+        );
+
+        const fndeRoles = [];
+        const fndeByRole = new Map();
+        fndeMembers.forEach(m => {
+          const r = m.role || 'Representante Técnico FNDE';
+          if (!fndeByRole.has(r)) {
+            fndeByRole.set(r, []);
+            fndeRoles.push(r);
+          }
+          fndeByRole.get(r).push(m);
+        });
+
+        fndeRoles.forEach(r => {
+          equipeChildren.push(
+            new Paragraph({
+              alignment: AlignmentType.LEFT,
+              spacing: { before: 120, after: 0 },
+              indent: { left: 1416 },
+              children: [
+                new TextRun({
+                  text: r,
+                  font: 'Times New Roman',
+                  bold: true,
+                  size: 24, // 12pt
+                  color: '000000'
+                })
+              ]
+            })
+          );
+          fndeByRole.get(r).forEach(m => {
+            const name = (window.formatTeamMemberFullName ? window.formatTeamMemberFullName(m) : m.fullName) || m.name || '';
+            equipeChildren.push(
+              new Paragraph({
+                alignment: AlignmentType.LEFT,
+                spacing: { before: 0, after: 0 },
+                indent: { left: 1416 },
+                children: [
+                  new TextRun({
+                    text: name,
+                    font: 'Times New Roman',
+                    bold: false,
+                    size: 24, // 12pt
+                    color: '000000'
+                  })
+                ]
+              })
+            );
+          });
+        });
+      }
+
+      // CRIAR DOCUMENTO DOCX COM QUATRO SEÇÕES OFICIAIS:
+      // SEÇÃO 1: CAPA OFICIAL (PÁG 1)
+      // SEÇÃO 2: CONTRA-CAPA (PÁG 2)
+      // SEÇÃO 3: EQUIPE PARTICIPANTE (PÁG 3)
+      // SEÇÃO 4: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS (PÁG 4+)
       const doc = new Document({
         sections: [
           // SEÇÃO 1: CAPA OFICIAL INTEGRAL
@@ -1354,7 +1531,27 @@ class ReportDocxGenerator {
               contraCapaBottomTable
             ]
           },
-          // SEÇÃO 3: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS
+          // SEÇÃO 3: EQUIPE PARTICIPANTE (PÁGINA 3)
+          {
+            properties: {
+              page: {
+                size: { width: PAGE_WIDTH_DXA, height: PAGE_HEIGHT_DXA },
+                margin: { top: 1702, right: 1134, bottom: 1701, left: 1134, header: 0, footer: 328 }
+              }
+            },
+            headers: {
+              default: new Header({
+                children: []
+              })
+            },
+            footers: {
+              default: new Footer({
+                children: [footerTable]
+              })
+            },
+            children: equipeChildren
+          },
+          // SEÇÃO 4: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS (PÁGINA 4+)
           {
             properties: {
               page: {
@@ -1487,6 +1684,48 @@ class ReportDocxGenerator {
               <img src="visualrelatorio/capa/ufgfigura.svg" style="height: 38px;" alt="UFG">
               <img src="visualrelatorio/capa/fndefigura.svg" style="height: 38px;" alt="FNDE">
             </div>
+          </div>
+        </div>
+
+        <!-- PÁGINA 3: EQUIPE PARTICIPANTE OFICIAL -->
+        <div class="equipe-page" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; padding: 2.5cm; box-sizing: border-box;">
+          <div>
+            <h2 style="text-align: center; color: #1F4E79; font-size: 18pt; font-weight: bold; margin-bottom: 2rem;">RELATÓRIO DE ATIVIDADES Nº ${training.number || '16'}</h2>
+            <h3 style="font-size: 14pt; font-weight: bold; color: #000000; margin-bottom: 1.5rem;">EQUIPE PARTICIPANTE</h3>
+            <div style="margin-left: 1.25cm; margin-bottom: 1.5rem;">
+              <h4 style="font-size: 12pt; font-weight: bold; margin-bottom: 0.5rem;">UNIVERSIDADE FEDERAL DE GOIÁS – UFG</h4>
+              <div style="margin-left: 1.25cm;">
+                <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Coordenador do Projeto</p>
+                <p style="margin: 0 0 0.5rem 0;">Prof. Dr. Willer Luciano Carvalho</p>
+                <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Equipe de Técnica</p>
+                <p style="margin: 0;">Eng. M.Sc. Lara Batista Ferreira de Lima</p>
+                <p style="margin: 0;">Eng. M.Sc. Matheus Henrique Morato de Moraes</p>
+                <p style="margin: 0;">Prof. Dr. Liosber Medina Garcia</p>
+                <p style="margin: 0;">Prof. Dr. Marcos Paulino Roriz Junior</p>
+                <p style="margin: 0;">Prof. Dr. Robinson Andrés Giraldo Zuluaga</p>
+                <p style="margin: 0;">Prof. Dr. Ronny Marcelo Aliaga Medrano</p>
+                <p style="margin: 0;">Pesquisadora Visitante Dra. Yaeko Yamashita</p>
+                <p style="margin: 0 0 0.5rem 0;">Pesquisador Visitante José Maria Rodrigues de Souza</p>
+              </div>
+            </div>
+            <div style="margin-left: 1.25cm;">
+              <h4 style="font-size: 12pt; font-weight: bold; margin-bottom: 0.5rem;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO – FNDE</h4>
+              <div style="margin-left: 1.25cm;">
+                <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Coordenador-Geral da Política do Transporte Escolar - CGPTE</p>
+                <p style="margin: 0 0 0.5rem 0;">Haroldo da Silva Gomes</p>
+                <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Coordenadora de Monitoramento, Avaliação e Apoio à Gestão do Transporte Escolar - CMATE</p>
+                <p style="margin: 0 0 0.5rem 0;">Daniela Oshiro Yanaze</p>
+                <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Coordenadora de Apoio ao Transporte Escolar – COATE</p>
+                <p style="margin: 0 0 0.5rem 0;">Neuza Helena Portugal dos Santos</p>
+                <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Coordenadora de Apoio ao Caminho da Escola – COACE</p>
+                <p style="margin: 0 0 0.5rem 0;">Maria Angelica Floriano Pedrosa</p>
+              </div>
+            </div>
+          </div>
+          <div style="border-top: 1.5px solid #4D4D4D; padding-top: 0.8rem; text-align: center;">
+            <img src="visualrelatorio/capa/cecatefigura.svg" style="height: 24px; margin: 0 10px;" alt="CECATE">
+            <img src="visualrelatorio/capa/ufgfigura.svg" style="height: 24px; margin: 0 10px;" alt="UFG">
+            <img src="visualrelatorio/capa/fndefigura.svg" style="height: 24px; margin: 0 10px;" alt="FNDE">
           </div>
         </div>
         <div class="content-page">
