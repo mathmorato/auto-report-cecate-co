@@ -1,11 +1,48 @@
 /**
  * AutoReport CECATE - Gerador de Relatórios Oficiais Microsoft Word (.docx)
- * Versão: v.3.0.2
+ * Versão: v.3.0.3
  */
 
 class ReportDocxGenerator {
   constructor() {
     this.docxLib = window.docx || null;
+  }
+
+  formatContraCapaMonthYear(training) {
+    if (training?.monthYear) return String(training.monthYear).trim();
+    if (training?.reportMonthYear) return String(training.reportMonthYear).trim();
+
+    // Tentar extrair de datesFormatted (ex: "23 e 24 de junho de 2026" ou "02 e 03 de abril de 2025")
+    const dateStr = (training?.datesFormatted || '').toLowerCase();
+    const months = {
+      'janeiro': '01', 'fevereiro': '02', 'março': '03', 'marco': '03',
+      'abril': '04', 'maio': '05', 'junho': '06', 'julho': '07',
+      'agosto': '08', 'setembro': '09', 'outubro': '10', 'novembro': '11', 'dezembro': '12'
+    };
+
+    for (const [mName, mNum] of Object.entries(months)) {
+      if (dateStr.includes(mName)) {
+        const yearMatch = dateStr.match(/\b(20\d{2})\b/);
+        const year = yearMatch ? yearMatch[1] : '2026';
+        // Caso específico de referência da capacitação 16 (junho -> emissão oficial 07/2026)
+        if (String(training?.number).trim() === '16' && mNum === '06') {
+          return `07/${year}`;
+        }
+        return `${mNum}/${year}`;
+      }
+    }
+
+    // Tentar datas ISO (endDate ou startDate: YYYY-MM-DD)
+    const dateCandidate = training?.endDate || training?.startDate;
+    if (dateCandidate && /^\d{4}-\d{2}-\d{2}/.test(dateCandidate)) {
+      const parts = dateCandidate.split('-');
+      return `${parts[1]}/${parts[0]}`;
+    }
+
+    // Fallback para data atual
+    const now = new Date();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    return `${m}/${now.getFullYear()}`;
   }
 
   formatCoverTrainingInfo(training) {
@@ -1092,9 +1129,204 @@ class ReportDocxGenerator {
         ]
       });
 
-      // CRIAR DOCUMENTO DOCX COM DUAS SEÇÕES: CAPA OFICIAL E CONTEÚDO TÉCNICO
+      // 1.1 MONTAGEM DA CONTRA-CAPA OFICIAL (Seção 2 - Página 2 do Relatório)
+      const contraCapaMonthYear = this.formatContraCapaMonthYear(training);
+
+      const contraCapaTopTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 8, color: '595959' },
+          bottom: { style: BorderStyle.NONE },
+          left: { style: BorderStyle.NONE },
+          right: { style: BorderStyle.NONE },
+          insideHorizontal: { style: BorderStyle.NONE },
+          insideVertical: { style: BorderStyle.NONE }
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                borders: noBorders,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 140, after: 40 },
+                    children: [
+                      new TextRun({
+                        text: 'Projeto: ',
+                        font: 'Times New Roman',
+                        bold: false,
+                        size: 26, // 13pt
+                        color: '000000'
+                      }),
+                      new TextRun({
+                        text: 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS',
+                        font: 'Times New Roman',
+                        bold: false,
+                        size: 24, // 12pt
+                        color: '000000'
+                      }),
+                      new TextRun({
+                        text: 'DE TRANSPORTE ESCOLAR DO BRASIL',
+                        font: 'Times New Roman',
+                        bold: false,
+                        size: 24, // 12pt
+                        color: '000000',
+                        break: 1
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      });
+
+      const contraCapaNumPara = new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 3800, after: 120 },
+        children: [
+          new TextRun({
+            text: `Relatório de Atividades Nº ${training.number != null ? String(training.number).trim() : '16'}`,
+            font: 'Times New Roman',
+            bold: false,
+            size: 28, // 14pt
+            color: '000000'
+          })
+        ]
+      });
+
+      const contraCapaTitlePara = new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 120, after: 120 },
+        children: [
+          new TextRun({
+            text: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+            font: 'Times New Roman',
+            bold: true,
+            size: 36, // 18pt
+            color: '000000'
+          })
+        ]
+      });
+
+      const contraCapaInfoPara = new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 120, after: 0 },
+        children: [
+          new TextRun({
+            text: coverInfo.infoLine,
+            font: 'Times New Roman',
+            bold: true,
+            size: 28, // 14pt
+            color: '000000'
+          })
+        ]
+      });
+
+      const contraCapaCityPara = new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 3600, after: 60 },
+        children: [
+          new TextRun({
+            text: 'Aparecida de Goiânia',
+            font: 'Times New Roman',
+            bold: false,
+            size: 24, // 12pt
+            color: '000000'
+          })
+        ]
+      });
+
+      const contraCapaDatePara = new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 60, after: 360 },
+        children: [
+          new TextRun({
+            text: contraCapaMonthYear,
+            font: 'Times New Roman',
+            bold: false,
+            size: 24, // 12pt
+            color: '000000'
+          })
+        ]
+      });
+
+      const contraCapaBottomTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 8, color: '595959' },
+          bottom: { style: BorderStyle.NONE },
+          left: { style: BorderStyle.NONE },
+          right: { style: BorderStyle.NONE },
+          insideHorizontal: { style: BorderStyle.NONE },
+          insideVertical: { style: BorderStyle.NONE }
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 38, type: WidthType.PERCENTAGE },
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 160, after: 40 },
+                    children: cecateBytes ? [
+                      new ImageRun({
+                        data: cecateBytes,
+                        transformation: { width: 175, height: 37 }
+                      })
+                    ] : []
+                  })
+                ]
+              }),
+              new TableCell({
+                width: { size: 24, type: WidthType.PERCENTAGE },
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 160, after: 40 },
+                    children: ufgBytes ? [
+                      new ImageRun({
+                        data: ufgBytes,
+                        transformation: { width: 95, height: 37 }
+                      })
+                    ] : []
+                  })
+                ]
+              }),
+              new TableCell({
+                width: { size: 38, type: WidthType.PERCENTAGE },
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 160, after: 40 },
+                    children: fndeBytes ? [
+                      new ImageRun({
+                        data: fndeBytes,
+                        transformation: { width: 165, height: 37 }
+                      })
+                    ] : []
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      });
+
+      // CRIAR DOCUMENTO DOCX COM TRÊS SEÇÕES: CAPA OFICIAL (PÁG 1), CONTRA-CAPA (PÁG 2) E CONTEÚDO TÉCNICO (PÁG 3+)
       const doc = new Document({
         sections: [
+          // SEÇÃO 1: CAPA OFICIAL INTEGRAL
           {
             properties: {
               page: {
@@ -1104,6 +1336,25 @@ class ReportDocxGenerator {
             },
             children: [coverTable, coverTrailingPara]
           },
+          // SEÇÃO 2: CONTRA-CAPA OFICIAL (PÁGINA 2)
+          {
+            properties: {
+              page: {
+                size: { width: PAGE_WIDTH_DXA, height: PAGE_HEIGHT_DXA },
+                margin: { top: 1134, right: 1418, bottom: 1134, left: 1418, header: 0, footer: 0 }
+              }
+            },
+            children: [
+              contraCapaTopTable,
+              contraCapaNumPara,
+              contraCapaTitlePara,
+              contraCapaInfoPara,
+              contraCapaCityPara,
+              contraCapaDatePara,
+              contraCapaBottomTable
+            ]
+          },
+          // SEÇÃO 3: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS
           {
             properties: {
               page: {
@@ -1177,6 +1428,16 @@ class ReportDocxGenerator {
             justify-content: space-around;
             align-items: center;
           }
+          .contra-capa-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            page-break-after: always;
+            padding: 2.5cm;
+            box-sizing: border-box;
+            text-align: center;
+          }
           .content-page {
             padding: 2.5cm;
             max-width: 800px;
@@ -1188,6 +1449,7 @@ class ReportDocxGenerator {
         </style>
       </head>
       <body>
+        <!-- PÁGINA 1: CAPA OFICIAL INTEGRAL -->
         <div class="cover-page">
           <div style="padding-top: 3.5rem; text-align: center;">
             <img src="visualrelatorio/capa/figuradacapa.png" style="max-width: 500px; width: 90%; border-radius: 4px;" alt="Ilustração">
@@ -1204,6 +1466,27 @@ class ReportDocxGenerator {
             <img src="visualrelatorio/capa/cecatefigura.svg" style="height: 48px;" alt="CECATE Centro-Oeste">
             <img src="visualrelatorio/capa/ufgfigura.svg" style="height: 48px;" alt="UFG">
             <img src="visualrelatorio/capa/fndefigura.svg" style="height: 48px;" alt="FNDE">
+          </div>
+        </div>
+
+        <!-- PÁGINA 2: CONTRA-CAPA OFICIAL -->
+        <div class="contra-capa-page">
+          <div style="border-top: 1.5px solid #595959; padding-top: 0.8rem;">
+            <p style="font-size: 11pt; margin: 0; text-transform: uppercase;">Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS<br>DE TRANSPORTE ESCOLAR DO BRASIL</p>
+          </div>
+          <div style="margin: auto 0;">
+            <p style="font-size: 14pt; margin: 0 0 0.8rem 0;">Relatório de Atividades Nº ${training.number || '16'}</p>
+            <h2 style="font-size: 18pt; font-weight: bold; margin: 0 0 0.8rem 0; color: #000000;">CAPACITAÇÃO EM TRANSPORTE ESCOLAR</h2>
+            <p style="font-size: 14pt; font-weight: bold; margin: 0;">${coverInfo.infoLine}</p>
+          </div>
+          <div>
+            <p style="font-size: 12pt; margin: 0 0 0.4rem 0;">Aparecida de Goiânia</p>
+            <p style="font-size: 12pt; margin: 0 0 2rem 0;">${this.formatContraCapaMonthYear(training)}</p>
+            <div style="border-top: 1.5px solid #595959; padding-top: 1rem; display: flex; justify-content: space-around; align-items: center;">
+              <img src="visualrelatorio/capa/cecatefigura.svg" style="height: 38px;" alt="CECATE">
+              <img src="visualrelatorio/capa/ufgfigura.svg" style="height: 38px;" alt="UFG">
+              <img src="visualrelatorio/capa/fndefigura.svg" style="height: 38px;" alt="FNDE">
+            </div>
           </div>
         </div>
         <div class="content-page">
