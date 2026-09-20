@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.0.7
+ * Versão: v.3.0.8
  */
 
 class ReportDocxGenerator {
@@ -204,6 +204,7 @@ class ReportDocxGenerator {
       Header,
       Footer,
       PageNumber,
+      PageBreak,
       HeightRule: DocxHeightRule,
       TableLayoutType: DocxTableLayoutType,
       LineRuleType: DocxLineRuleType,
@@ -1572,11 +1573,148 @@ class ReportDocxGenerator {
         });
       }
 
-      // CRIAR DOCUMENTO DOCX COM QUATRO SEÇÕES OFICIAIS:
+      // 1.3 MONTAGEM DA PÁGINA 4: ÍNDICE DE FIGURAS E ÍNDICE DE TABELAS (Seção 4 Oficial)
+      const figuresList = [
+        { label: 'Figura 1: Avaliação via ferramenta ', italicWord: 'kahoot', afterWord: '.', page: '6' },
+        { label: 'Figura 2: Avaliação via ferramenta ', italicWord: 'Plickers', afterWord: '.', page: '6' },
+        { label: 'Figura 3. Participação segundo o tipo de representação.', page: '8' },
+        { label: 'Figura 4. Avaliação da capacitação de todos os participantes.', page: '8' },
+        { label: 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', page: '9' },
+        { label: 'Figura 6. Avaliação da capacitação dos gestores municipais.', page: '9' },
+        { label: 'Figura 7. Aspectos que gostaram da capacitação.', page: '10' },
+        { label: 'Figura 8. Aspectos que devem melhorar da capacitação', page: '10' },
+        { label: 'Figura 9. Acomodação dos participantes.', page: '11' },
+        { label: 'Figura 10. Apresentação inicial do curso', page: '12' },
+        { label: 'Figura 11. Apresentação dos módulos teóricos.', page: '12' },
+        { label: 'Figura 12. Apresentação do Software SETE.', page: '13' },
+        { label: 'Figura 13. Final da capacitação.', page: '14' }
+      ];
+
+      const tablesList = [
+        { label: 'Tabela 1. Municípios convocados.', page: '2' },
+        { label: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', page: '3' },
+        { label: 'Tabela 3. Inscritos por município.', page: '4' },
+        { label: 'Tabela 4. Participação por município.', page: '7' }
+      ];
+
+      const indicesChildren = [];
+      indicesChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 0, after: 180 },
+          children: [
+            new TextRun({
+              text: 'ÍNDICE DE FIGURAS',
+              font: 'Times New Roman',
+              bold: true,
+              size: 32, // 16pt
+              color: '1F4E79'
+            })
+          ]
+        })
+      );
+
+      figuresList.forEach(fig => {
+        const textRuns = [];
+        if (fig.italicWord) {
+          textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
+          textRuns.push(new TextRun({ text: fig.italicWord, font: 'Times New Roman', italics: true, size: 24, color: '000000' }));
+          if (fig.afterWord) {
+            textRuns.push(new TextRun({ text: fig.afterWord, font: 'Times New Roman', size: 24, color: '000000' }));
+          }
+        } else {
+          textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
+        }
+        textRuns.push(new TextRun({ text: '\t' + fig.page, font: 'Times New Roman', size: 24, color: '000000' }));
+
+        indicesChildren.push(
+          new Paragraph({
+            spacing: { before: 0, after: 40 },
+            tabStops: [{ type: 'right', position: 9628 }],
+            children: textRuns
+          })
+        );
+      });
+
+      indicesChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 240, after: 180 },
+          children: [
+            new TextRun({
+              text: 'ÍNDICE DE TABELAS',
+              font: 'Times New Roman',
+              bold: true,
+              size: 32, // 16pt
+              color: '1F4E79'
+            })
+          ]
+        })
+      );
+
+      tablesList.forEach(tab => {
+        indicesChildren.push(
+          new Paragraph({
+            spacing: { before: 0, after: 40 },
+            tabStops: [{ type: 'right', position: 9628 }],
+            children: [
+              new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' }),
+              new TextRun({ text: '\t' + tab.page, font: 'Times New Roman', size: 24, color: '000000' })
+            ]
+          })
+        );
+      });
+
+      // 1.4 MONTAGEM DA PÁGINA 5: SUMÁRIO
+      const sumarioList = [
+        { label: '1.   INTRODUÇÃO', page: '1' },
+        { label: '2.   DADOS DOS BÁSICOS DO CURSO', page: '1' },
+        { label: '3.   CONTATO COM OS MUNICÍPIOS', page: '3' },
+        { label: '4.   DESENVOLVIMENTO DO CURSO', page: '4' },
+        { label: '5.   AVALIAÇÃO DA CAPACITAÇÃO', page: '8' },
+        { label: '6.   REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', page: '11' },
+        { label: '7.   CONSIDERAÇÕES FINAIS', page: '14' },
+        { label: 'Apêndice I', page: '15' },
+        { label: 'Apêndice II', page: '17' },
+        { label: 'Apêndice III', page: '19' }
+      ];
+
+      const sumarioChildren = [];
+      sumarioChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 0, after: 240 },
+          children: [
+            new TextRun({
+              text: 'SUMÁRIO',
+              font: 'Times New Roman',
+              bold: true,
+              size: 32, // 16pt
+              color: '1F4E79'
+            })
+          ]
+        })
+      );
+
+      sumarioList.forEach(item => {
+        sumarioChildren.push(
+          new Paragraph({
+            spacing: { before: 0, after: 100 },
+            tabStops: [{ type: 'right', position: 9628 }],
+            children: [
+              new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' }),
+              new TextRun({ text: '\t' + item.page, font: 'Times New Roman', size: 24, color: '000000' })
+            ]
+          })
+        );
+      });
+
+      // CRIAR DOCUMENTO DOCX COM CINCO SEÇÕES OFICIAIS:
       // SEÇÃO 1: CAPA OFICIAL (PÁG 1)
       // SEÇÃO 2: CONTRA-CAPA (PÁG 2)
       // SEÇÃO 3: EQUIPE PARTICIPANTE (PÁG 3)
-      // SEÇÃO 4: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS (PÁG 4+)
+      // SEÇÃO 4: ÍNDICE DE FIGURAS, ÍNDICE DE TABELAS E SUMÁRIO (PÁGS 4 E 5)
+      // SEÇÃO 5: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS (PÁG 6+)
       const doc = new Document({
         sections: [
           // SEÇÃO 1: CAPA OFICIAL INTEGRAL
@@ -1627,7 +1765,31 @@ class ReportDocxGenerator {
             },
             children: equipeChildren
           },
-          // SEÇÃO 4: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS (PÁGINA 4+)
+          // SEÇÃO 4: ÍNDICE DE FIGURAS, ÍNDICE DE TABELAS E SUMÁRIO (PÁGINAS 4 E 5)
+          {
+            properties: {
+              page: {
+                size: { width: PAGE_WIDTH_DXA, height: PAGE_HEIGHT_DXA },
+                margin: { top: 1702, right: 1134, bottom: 1701, left: 1134, header: 851, footer: 328 }
+              }
+            },
+            headers: {
+              default: new Header({
+                children: [headerTable]
+              })
+            },
+            footers: {
+              default: new Footer({
+                children: [footerTable]
+              })
+            },
+            children: [
+              ...indicesChildren,
+              new Paragraph({ children: [new PageBreak()] }),
+              ...sumarioChildren
+            ]
+          },
+          // SEÇÃO 5: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS (PÁGINA 6+)
           {
             properties: {
               page: {
@@ -1799,6 +1961,64 @@ class ReportDocxGenerator {
                 <p style="font-weight: bold; margin: 0.5rem 0 0 0;">Coordenadora de Apoio ao Caminho da Escola – COACE</p>
                 <p style="margin: 0 0 0.5rem 0;">Maria Angelica Floriano Pedrosa</p>
               </div>
+            </div>
+          </div>
+          <div style="border-top: 1.5px solid #4D4D4D; padding-top: 0.8rem; text-align: center;">
+            <img src="visualrelatorio/capa/cecatefigura.svg" style="height: 24px; margin: 0 10px;" alt="CECATE">
+            <img src="visualrelatorio/capa/ufgfigura.svg" style="height: 24px; margin: 0 10px;" alt="UFG">
+            <img src="visualrelatorio/capa/fndefigura.svg" style="height: 24px; margin: 0 10px;" alt="FNDE">
+          </div>
+        </div>
+
+        <!-- PÁGINA 4: ÍNDICE DE FIGURAS E ÍNDICE DE TABELAS -->
+        <div class="indices-page" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; padding: 2.5cm; box-sizing: border-box;">
+          <div>
+            <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.2rem;">ÍNDICE DE FIGURAS</h2>
+            <div style="font-size: 12pt; line-height: 1.8;">
+              <div style="display: flex; justify-content: space-between;"><span>Figura 1: Avaliação via ferramenta <em>kahoot</em>.</span><span>6</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 2: Avaliação via ferramenta <em>Plickers</em>.</span><span>6</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 3. Participação segundo o tipo de representação.</span><span>8</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 4. Avaliação da capacitação de todos os participantes.</span><span>8</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 5. Avaliação da capacitação dos conselheiros CACS.</span><span>9</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 6. Avaliação da capacitação dos gestores municipais.</span><span>9</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 7. Aspectos que gostaram da capacitação.</span><span>10</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 8. Aspectos que devem melhorar da capacitação</span><span>10</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 9. Acomodação dos participantes.</span><span>11</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 10. Apresentação inicial do curso</span><span>12</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 11. Apresentação dos módulos teóricos.</span><span>12</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 12. Apresentação do Software SETE.</span><span>13</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Figura 13. Final da capacitação.</span><span>14</span></div>
+            </div>
+            <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1.2rem;">ÍNDICE DE TABELAS</h2>
+            <div style="font-size: 12pt; line-height: 1.8;">
+              <div style="display: flex; justify-content: space-between;"><span>Tabela 1. Municípios convocados.</span><span>2</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</span><span>3</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Tabela 3. Inscritos por município.</span><span>4</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Tabela 4. Participação por município.</span><span>7</span></div>
+            </div>
+          </div>
+          <div style="border-top: 1.5px solid #4D4D4D; padding-top: 0.8rem; text-align: center;">
+            <img src="visualrelatorio/capa/cecatefigura.svg" style="height: 24px; margin: 0 10px;" alt="CECATE">
+            <img src="visualrelatorio/capa/ufgfigura.svg" style="height: 24px; margin: 0 10px;" alt="UFG">
+            <img src="visualrelatorio/capa/fndefigura.svg" style="height: 24px; margin: 0 10px;" alt="FNDE">
+          </div>
+        </div>
+
+        <!-- PÁGINA 5: SUMÁRIO -->
+        <div class="sumario-page" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; padding: 2.5cm; box-sizing: border-box;">
+          <div>
+            <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem;">SUMÁRIO</h2>
+            <div style="font-size: 12pt; line-height: 2;">
+              <div style="display: flex; justify-content: space-between;"><span>1.   INTRODUÇÃO</span><span>1</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>2.   DADOS DOS BÁSICOS DO CURSO</span><span>1</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>3.   CONTATO COM OS MUNICÍPIOS</span><span>3</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>4.   DESENVOLVIMENTO DO CURSO</span><span>4</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>5.   AVALIAÇÃO DA CAPACITAÇÃO</span><span>8</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>6.   REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO</span><span>11</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>7.   CONSIDERAÇÕES FINAIS</span><span>14</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Apêndice I</span><span>15</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Apêndice II</span><span>17</span></div>
+              <div style="display: flex; justify-content: space-between;"><span>Apêndice III</span><span>19</span></div>
             </div>
           </div>
           <div style="border-top: 1.5px solid #4D4D4D; padding-top: 0.8rem; text-align: center;">
