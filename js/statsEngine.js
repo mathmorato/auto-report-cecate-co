@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Análise de Dados
- * Versão: v.3.0.1
+ * Versão: v.3.0.2
  */
 
 class StatsEngine {

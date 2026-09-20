@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Parser de Documentos de Convocação
- * Versão: v.3.0.1
+ * AutoReport CECATE - Parser de Ofícios e Documentos de Convocação FNDE/CECATE
+ * Versão: v.3.0.2
  */
 
 class ConvocacaoParser {

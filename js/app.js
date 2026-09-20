@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.3.0.1
+ * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
+ * Versão: v.3.0.2
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.0.1';
+    this.version = 'v.3.0.2';
   }
 
   /**
@@ -6665,15 +6665,15 @@ class AutoReportApp {
 
     // Figura 4: Avaliação da capacitação de todos os participantes
     const statsGen = window.statsEngine.calculateEvaluationStats(evals);
-    window.chartEngine.renderEvaluationStackedBarChart('chart-fig4-canvas', statsGen.criterionDistributionPercent, 'Figura 4. Avaliação da capacitação de todos os participantes.', isDark);
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig4-canvas', statsGen.criterionDistributionPercent, '', isDark);
 
     // Figura 5: Avaliação dos conselheiros CACS
     const statsCACS = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation === 'CACS-FUNDEB'));
-    window.chartEngine.renderEvaluationStackedBarChart('chart-fig5-canvas', statsCACS.criterionDistributionPercent, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', isDark);
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig5-canvas', statsCACS.criterionDistributionPercent, '', isDark);
 
     // Figura 6: Avaliação dos gestores municipais
     const statsGest = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation !== 'CACS-FUNDEB'));
-    window.chartEngine.renderEvaluationStackedBarChart('chart-fig6-canvas', statsGest.criterionDistributionPercent, 'Figura 6. Avaliação da capacitação dos gestores municipais.', isDark);
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig6-canvas', statsGest.criterionDistributionPercent, '', isDark);
   }
 
   renderWordClouds() {
@@ -7720,17 +7720,17 @@ class AutoReportApp {
     // Figura 4, 5, 6: Avaliação
     const statsGen = window.statsEngine.calculateEvaluationStats(evals);
     if (document.getElementById('report-preview-fig4-canvas')) {
-      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig4-canvas', statsGen.criterionDistributionPercent, 'Figura 4. Avaliação da capacitação de todos os participantes.', isDark);
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig4-canvas', statsGen.criterionDistributionPercent, '', isDark);
     }
 
     const statsCACS = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation === 'CACS-FUNDEB'));
     if (document.getElementById('report-preview-fig5-canvas')) {
-      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig5-canvas', statsCACS.criterionDistributionPercent, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', isDark);
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig5-canvas', statsCACS.criterionDistributionPercent, '', isDark);
     }
 
     const statsGest = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation !== 'CACS-FUNDEB'));
     if (document.getElementById('report-preview-fig6-canvas')) {
-      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig6-canvas', statsGest.criterionDistributionPercent, 'Figura 6. Avaliação da capacitação dos gestores municipais.', isDark);
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig6-canvas', statsGest.criterionDistributionPercent, '', isDark);
     }
 
     // Figura 7 e 8: Nuvem de palavras
