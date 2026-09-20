@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.3.0.0
+ * Versão: v.2.9.9
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.0.0';
+    this.version = 'v.2.9.9';
   }
 
   /**
@@ -7354,11 +7354,9 @@ class AutoReportApp {
             <p style="font-size: 12pt; color: #334155; margin: 0.25rem 0 0 0; font-weight: 600;">${coverMonthYear}</p>
           </div>
 
-          <!-- RODAPÉ DA FOLHA DE ROSTO (CONTRA-CAPA) -->
-          <div style="border-top: 1.5px solid #94a3b8; padding-top: 0.9rem; text-align: center; display: flex; justify-content: center; align-items: center; gap: 3.5rem;">
-            <img src="./modelodecapa/logocecate.svg" onerror="if(window.REPORT_ASSETS && window.REPORT_ASSETS.logoCecate){this.src='data:image/png;base64,'+window.REPORT_ASSETS.logoCecate;}" alt="CECATE Centro-Oeste" style="max-height: 44px; max-width: 160px; width: auto; height: auto; object-fit: contain;" />
-            <img src="./modelodecapa/logoufg.svg" onerror="if(window.REPORT_ASSETS && window.REPORT_ASSETS.logoUfg){this.src='data:image/png;base64,'+window.REPORT_ASSETS.logoUfg;}" alt="UFG" style="max-height: 44px; max-width: 140px; width: auto; height: auto; object-fit: contain;" />
-            <img src="./modelodecapa/logofnde.svg" onerror="if(window.REPORT_ASSETS && window.REPORT_ASSETS.logoFnde){this.src='data:image/png;base64,'+window.REPORT_ASSETS.logoFnde;}" alt="FNDE" style="max-height: 44px; max-width: 160px; width: auto; height: auto; object-fit: contain;" />
+          <!-- RODAPÉ DA FOLHA DE ROSTO -->
+          <div style="border-top: 1.5px solid #94a3b8; padding-top: 0.8rem; text-align: center;">
+            ${assets.coverFooterLogos ? `<img src="${getAssetDataUrl('coverFooterLogos')}" alt="Logos CECATE, UFG, FNDE" style="max-height: 55px; max-width: 90%; width: auto; height: auto; object-fit: contain; display: block; margin: 0 auto;" />` : ''}
           </div>
         </div>
 
@@ -7812,15 +7810,11 @@ class AutoReportApp {
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <base href="${window.location.href}">
   <title>${docTitle}</title>
   <style>
     @page {
       size: A4 portrait;
-      margin: 12mm 15mm 15mm 15mm;
-    }
-    @page :first {
-      margin: 0;
+      margin: 15mm 15mm 15mm 15mm;
     }
     * {
       box-sizing: border-box;
@@ -7835,39 +7829,6 @@ class AutoReportApp {
       font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif !important;
       font-size: 11pt;
       line-height: 1.6;
-    }
-    .report-cover-page {
-      width: 100vw !important;
-      min-height: 100vh !important;
-      height: 100vh !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      background-color: #4D4D4D !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
-      box-sizing: border-box !important;
-      page-break-before: avoid !important;
-      page-break-after: always !important;
-      break-after: page !important;
-    }
-    .report-folha-rosto {
-      page-break-before: always !important;
-      page-break-after: always !important;
-      break-after: page !important;
-      min-height: 96vh !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
-      padding: 1.5rem 0 !important;
-    }
-    .report-team-page, .report-pretextual-page {
-      page-break-before: always !important;
-      page-break-after: always !important;
-      break-after: page !important;
-      min-height: 94vh !important;
     }
     .report-doc-page {
       background: #ffffff !important;

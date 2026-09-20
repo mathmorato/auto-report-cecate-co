@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial Word (.docx)
- * Versão: v.3.0.0
+ * Versão: v.2.9.9
  * 
  * Compatibilidade total com o modelo oficial institucional (modelodecapa.docx):
  * - Capa (Folha de Rosto branca oficial) e Contracapa (capa escura ilustrada) oficiais
@@ -900,39 +900,21 @@ class ReportDocxGenerator {
         bodyXml = bodyXml.replace(new RegExp(`"${oldId}"`, 'g'), `"${newId}"`);
       });
 
-      // 4. Inserir Bloco Pré-Textual Oficial (Índice de Figuras, Tabelas e Sumário) e Corpo do Relatório
+      // 4. Inserir corpo do documento exatamente após o Sumário (</w:sdt>) e antes de <w:sectPr> final
       const bodyContentMatch = bodyXml.match(/<w:body>([\s\S]*?)<\/w:body>/);
       if (bodyContentMatch) {
         let bodyChildren = bodyContentMatch[1];
         bodyChildren = bodyChildren.replace(/<w:sectPr[\s\S]*?<\/w:sectPr>$/, '');
 
-        const is16Hours = (training?.workloadNum === 16 || String(training?.workload || '').includes('16'));
-        let pretextualXml = '';
-        if (typeof window.getReportPretextualXml === 'function') {
-          pretextualXml = window.getReportPretextualXml(is16Hours);
-        } else if (typeof globalThis.getReportPretextualXml === 'function') {
-          pretextualXml = globalThis.getReportPretextualXml(is16Hours);
-        }
+        const sdtEndIdx = modelDocXml.indexOf('</w:sdt>');
+        const lastSectIdx = modelDocXml.lastIndexOf('<w:sectPr');
 
-        // Seção final com rodapé oficial de página (rId25) e numeração iniciando em 1 na Introdução
-        const finalSectionXml = '<w:p w14:paraId="0F2582D8" w14:textId="77777777" w:rsidR="00215BAD" w:rsidRDefault="00215BAD"><w:pPr><w:spacing w:after="160" w:line="259" w:lineRule="auto"/><w:jc w:val="left"/></w:pPr></w:p><w:sectPr w:rsidR="00283A50" w:rsidSect="005F1E37"><w:footerReference w:type="default" r:id="rId25"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1702" w:right="1134" w:bottom="1701" w:left="1134" w:header="851" w:footer="194" w:gutter="0"/><w:pgNumType w:start="1"/><w:cols w:space="708"/><w:docGrid w:linePitch="360"/></w:sectPr>';
-
-        // O ponto de corte é no parágrafo 7CBD19FD (fim da página da Equipe Participante)
-        const p73Idx = modelDocXml.indexOf('w14:paraId="7CBD19FD"');
-        if (p73Idx !== -1 && pretextualXml) {
-          const cutStart = modelDocXml.lastIndexOf('<w:p', p73Idx);
-          modelDocXml = modelDocXml.substring(0, cutStart) + pretextualXml + bodyChildren + finalSectionXml + '</w:body></w:document>';
+        if (sdtEndIdx !== -1 && lastSectIdx !== -1 && sdtEndIdx < lastSectIdx) {
+          modelDocXml = modelDocXml.substring(0, sdtEndIdx + 8) + bodyChildren + modelDocXml.substring(lastSectIdx);
+        } else if (lastSectIdx !== -1) {
+          modelDocXml = modelDocXml.substring(0, lastSectIdx) + bodyChildren + modelDocXml.substring(lastSectIdx);
         } else {
-          // Fallback caso o bloco pré-textual não esteja carregado
-          const sdtEndIdx = modelDocXml.indexOf('</w:sdt>');
-          const lastSectIdx = modelDocXml.lastIndexOf('<w:sectPr');
-          if (sdtEndIdx !== -1 && lastSectIdx !== -1 && sdtEndIdx < lastSectIdx) {
-            modelDocXml = modelDocXml.substring(0, sdtEndIdx + 8) + bodyChildren + modelDocXml.substring(lastSectIdx);
-          } else if (lastSectIdx !== -1) {
-            modelDocXml = modelDocXml.substring(0, lastSectIdx) + bodyChildren + modelDocXml.substring(lastSectIdx);
-          } else {
-            modelDocXml = modelDocXml.replace('</w:body>', `${bodyChildren}</w:body>`);
-          }
+          modelDocXml = modelDocXml.replace('</w:body>', `${bodyChildren}</w:body>`);
         }
         modelZip.file('word/document.xml', modelDocXml);
       }
@@ -1001,61 +983,111 @@ class ReportDocxGenerator {
     const locationAndDate = this.getCoverLocationAndDate(training);
     const coverMonthYear = this.getCoverMonthYear(training);
 
-    const is16Hours = (training.workloadNum === 16 || String(training.workload || '').includes('16'));
-
-    const doc = await this.buildReportBodyDocx(training, metrics, chartsData, docxDeps);
-    const bodyBlob = await Packer.toBlob(doc);
-
-    // Mesclar corpo do relatório com o modelo oficial (Capa Ilustrada, Folha de Rosto, Equipe e Sumário)
-    let finalBlob = bodyBlob;
-    try {
-      finalBlob = await this.mergeBodyWithModelDocx(training, bodyBlob);
-    } catch (mergeErr) {
-      console.error('Falha ao mesclar corpo com o modelo oficial. Utilizando blob padrão:', mergeErr);
-    }
-
-    const poloClean = (training.polo || 'polo').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `Relatorio_Capacitacao_${training.number || 16}_${poloClean}.docx`;
-
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(finalBlob);
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-  }
-
-  async buildReportBodyDocx(training, metrics, chartsData, docxDeps) {
-    const {
-      Document,
-      Paragraph,
-      TextRun,
-      Table,
-      TableRow,
-      TableCell,
-      WidthType,
-      AlignmentType,
-      BorderStyle,
-      ShadingType,
-      ImageRun
-    } = docxDeps;
-
     const noBorder = { style: BorderStyle.NONE, size: 0, color: 'auto' };
     const grayLineBorder = { style: BorderStyle.SINGLE, size: 6, color: '94A3B8' };
 
     // =========================================================================
-    // CORPO DO DOCUMENTO (SEÇÃO 4): SEÇÕES 1-7 E APÊNDICES
-    // (A Capa, Contracapa, Equipe, Índice de Figuras, Índice de Tabelas e
-    //  Sumário oficial já residem na estrutura pré-textual do modelo)
+    // CORPO DO DOCUMENTO (SEÇÃO 3): LISTA DE FIGURAS, TABELAS, SEÇÕES 1-7 E APÊNDICES
+    // (A Capa, Contracapa e Equipe com Sumário já residem nativamente no modelo modelocapa.docx)
     // =========================================================================
     const contentChildren = [];
 
+    contentChildren.push(
+      new Paragraph({
+        pageBreakBefore: false,
+        spacing: { before: 200, after: 160 },
+        children: [new TextRun({ text: 'Lista de Figuras', font: 'Gill Sans MT', bold: true, size: 24, color: '1E3A8A' })]
+      })
+    );
+
+    const is16Hours = (training.workloadNum === 16 || String(training.workload || '').includes('16'));
+
+    const figuresList = [
+      'Figura 1: Avaliação via ferramenta kahoot.',
+      'Figura 2: Avaliação via ferramenta Plickers.',
+      'Figura 3. Participação segundo o tipo de representação.',
+      'Figura 4. Avaliação da capacitação de todos os participantes.',
+      'Figura 5. Avaliação da capacitação dos conselheiros CACS.',
+      'Figura 6. Avaliação da capacitação dos gestores municipais.',
+      'Figura 7. Aspectos que gostaram da capacitação.',
+      'Figura 8. Aspectos que devem melhorar da capacitação',
+      'Figura 9. Acomodação dos participantes.',
+      'Figura 10. Apresentação inicial do curso',
+      'Figura 11. Apresentação dos módulos teóricos.',
+      is16Hours ? 'Figura 12. Apresentação do primeiro dia.' : 'Figura 12. Apresentação do Software SETE.',
+      is16Hours ? 'Figura 13. Final da capacitação do segundo dia.' : 'Figura 13. Final da capacitação.'
+    ];
+
+    figuresList.forEach(fig => {
+      contentChildren.push(
+        new Paragraph({
+          spacing: { before: 40, after: 60 },
+          children: [new TextRun({ text: fig, font: 'Gill Sans MT', size: 20, color: '334155' })]
+        })
+      );
+    });
+
+    contentChildren.push(
+      new Paragraph({
+        spacing: { before: 300, after: 160 },
+        children: [new TextRun({ text: 'Lista de Tabelas', font: 'Gill Sans MT', bold: true, size: 24, color: '1E3A8A' })]
+      })
+    );
+
+    const tablesList = [
+      'Tabela 1. Municípios convocados.',
+      'Tabela 2. Estrutura do curso de capacitação em transporte escolar.',
+      'Tabela 3. Inscritos por município.',
+      'Tabela 4. Participação por município.'
+    ];
+
+    tablesList.forEach(tab => {
+      contentChildren.push(
+        new Paragraph({
+          spacing: { before: 40, after: 60 },
+          children: [new TextRun({ text: tab, font: 'Gill Sans MT', size: 20, color: '334155' })]
+        })
+      );
+    });
+
+    // Sumário
+    contentChildren.push(
+      new Paragraph({
+        pageBreakBefore: true,
+        spacing: { before: 200, after: 180 },
+        children: [new TextRun({ text: 'Sumário', font: 'Gill Sans MT', bold: true, size: 26, color: '1E3A8A' })]
+      })
+    );
+
+    const summaryItems = [
+      '1. INTRODUÇÃO',
+      '2. DADOS BÁSICOS DO CURSO',
+      '3. CONTATO COM OS MUNICÍPIOS',
+      '4. DESENVOLVIMENTO DO CURSO',
+      '5. AVALIAÇÃO DA CAPACITAÇÃO',
+      '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO',
+      '7. CONSIDERAÇÕES FINAIS',
+      'Apêndice I',
+      'Apêndice II',
+      'Apêndice III'
+    ];
+
+    summaryItems.forEach(item => {
+      contentChildren.push(
+        new Paragraph({
+          spacing: { before: 50, after: 70 },
+          children: [
+            new TextRun({ text: item, font: 'Gill Sans MT', bold: true, size: 20, color: '1E293B' })
+          ]
+        })
+      );
+    });
+
     // =========================================================================
-    // 1. SEÇÃO 1: INTRODUÇÃO
+    // 4. SEÇÃO 1: INTRODUÇÃO
     // =========================================================================
     contentChildren.push(
-      this.createSectionHeading('1. INTRODUÇÃO', docxDeps, false),
+      this.createSectionHeading('1. INTRODUÇÃO', docxDeps, true),
       this.createBodyParagraph(
         `O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${training.number || 16}, executada no município polo de ${training.polo || 'Município Polo'}, Estado de ${training.uf || 'MT'}, nas datas de ${training.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).`,
         docxDeps
