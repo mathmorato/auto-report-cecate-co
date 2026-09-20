@@ -3520,3 +3520,36 @@ body.light-theme .mobile-menu-toggle-btn:hover {
     break-after: page !important;
   }
 }
+
+/* ==========================================================================
+   ESTILOS DE PRÉ-VISUALIZAÇÃO IDÊNTICA AO WORD (DOCX-PREVIEW)
+   ========================================================================== */
+.docx-wrapper {
+  background: transparent !important;
+  padding: 1.25rem 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 1.5rem !important;
+}
+
+.docx-wrapper > section.docx {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(148, 163, 184, 0.25) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 820px !important;
+  min-height: 1080px !important;
+  padding: 2.5rem 3rem !important;
+  font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif !important;
+  transition: box-shadow 0.2s ease;
+}
+
+[data-theme="light"] .docx-wrapper > section.docx {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border-color: #cbd5e1 !important;
+}
+

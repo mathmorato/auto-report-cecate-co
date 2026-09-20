@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.9
+ * Versão: v.3.0.0
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.9';
+    this.version = 'v.3.0.0';
   }
 
   /**
@@ -7695,17 +7695,8 @@ class AutoReportApp {
     }
   }
 
-  async downloadDocxReport() {
-    if (!this.currentTraining || !window.reportDocxGenerator) return;
-    this.showToast('Preparando dados e gráficos para o documento Word (.docx)...', 'info');
-    if (!this.metrics) {
-      this.metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
-    }
-
-    // Renderizar gráficos prévios para garantir canvases populados
+  extractChartsImagesData() {
     this.renderReportPreviewCharts();
-
-    // Capturar imagens dos gráficos e nuvens a partir dos canvases
     const imagesData = {};
     const canvasMap = [
       { key: 'fig3', id: 'report-preview-fig3-canvas' },
@@ -7726,68 +7717,50 @@ class AutoReportApp {
         }
       }
     });
+    return imagesData;
+  }
 
+  async downloadDocxReport() {
+    if (!this.currentTraining || !window.reportDocxGenerator) return;
+    this.showToast('Preparando dados e gráficos para o documento Word (.docx)...', 'info');
+    if (!this.metrics) {
+      this.metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
+    }
+
+    const imagesData = this.extractChartsImagesData();
     await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics, imagesData);
     this.showToast('Documento Word (.docx) baixado com sucesso!', 'success');
   }
 
-  printReportPDF() {
+  async printReportPDF() {
     if (!this.currentTraining) {
       this.showToast('Nenhuma capacitação selecionada.', 'warning');
       return;
     }
 
     const t = this.currentTraining;
-    this.showToast('Preparando PDF do relatório oficial...', 'info');
+    this.showToast('Gerando documento Word (.docx) para o PDF oficial idêntico...', 'info');
 
-    // Garantir renderização dos gráficos e nuvens de palavras
-    this.renderReportPreviewCharts();
+    const imagesData = this.extractChartsImagesData();
 
-    const previewEl = document.getElementById('wizard-report-preview-document');
-    if (!previewEl) {
-      this.showToast('Documento do relatório não encontrado.', 'error');
+    if (!this.metrics && window.statsEngine) {
+      this.metrics = window.statsEngine.calculateAllMetrics(t);
+    }
+
+    // 1. Gerar o Blob Word (.docx) oficial completo
+    let docxBlob;
+    try {
+      docxBlob = await window.reportDocxGenerator.generateDocxBlob(t, this.metrics, imagesData);
+    } catch (e) {
+      console.error('Falha ao gerar blob do Word para PDF:', e);
+    }
+
+    if (!docxBlob) {
+      this.showToast('Não foi possível gerar a versão Word para o PDF.', 'error');
       return;
     }
 
-    // Clonar para isolamento estrito da página
-    const clone = previewEl.cloneNode(true);
-
-    // Converter todos os <canvas> no clone para elementos <img> contendo PNG em alta resolução
-    const origCanvases = previewEl.querySelectorAll('canvas');
-    const cloneCanvases = clone.querySelectorAll('canvas');
-    origCanvases.forEach((origCanvas, idx) => {
-      const cloneCanvas = cloneCanvases[idx];
-      if (origCanvas && cloneCanvas) {
-        try {
-          const imgData = origCanvas.toDataURL('image/png');
-          const imgEl = document.createElement('img');
-          imgEl.src = imgData;
-          imgEl.style.maxWidth = '100%';
-          imgEl.style.height = 'auto';
-          imgEl.style.display = 'block';
-          imgEl.style.margin = '0 auto';
-          imgEl.style.borderRadius = '4px';
-          const parent = cloneCanvas.parentNode;
-          if (parent) {
-            parent.replaceChild(imgEl, cloneCanvas);
-            parent.style.height = 'auto';
-            parent.style.maxHeight = 'none';
-          }
-        } catch (e) {
-          console.warn('Erro ao converter canvas para img:', e);
-        }
-      }
-    });
-
-    // Remover fundos ou bordas escuras de formulário
-    clone.querySelectorAll('[style*="var(--bg-input)"]').forEach(el => {
-      el.style.background = '#ffffff';
-      el.style.border = 'none';
-      el.style.padding = '0';
-      el.style.boxShadow = 'none';
-    });
-
-    // Iframe isolado para impressão exclusiva do relatório
+    // 2. Iframe isolado para renderização do Word e impressão direta do PDF
     let printIframe = document.getElementById('report-pdf-print-iframe');
     if (printIframe) printIframe.remove();
 
@@ -7814,7 +7787,7 @@ class AutoReportApp {
   <style>
     @page {
       size: A4 portrait;
-      margin: 15mm 15mm 15mm 15mm;
+      margin: 0;
     }
     * {
       box-sizing: border-box;
@@ -7827,79 +7800,80 @@ class AutoReportApp {
       background: #ffffff !important;
       color: #0f172a !important;
       font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif !important;
-      font-size: 11pt;
-      line-height: 1.6;
     }
-    .report-doc-page {
+    .docx-wrapper {
       background: #ffffff !important;
-      color: #0f172a !important;
-      width: 100% !important;
-      max-width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
+    }
+    .docx-wrapper > section.docx {
       box-shadow: none !important;
-      border: none !important;
-      font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif !important;
+      margin: 0 auto !important;
+      padding: 12mm 15mm 12mm 15mm !important;
+      width: 100% !important;
+      max-width: 210mm !important;
+      min-height: 297mm !important;
+      box-sizing: border-box !important;
+      page-break-after: always !important;
+      break-after: page !important;
+      position: relative !important;
     }
-    h1, h2, h3, h4 {
-      font-family: 'Gill Sans MT', 'Gill Sans', 'Calibri', 'Segoe UI', sans-serif !important;
-      page-break-after: avoid;
-      break-after: avoid;
-      color: #1e3a8a;
-    }
-    p {
-      margin: 0.75rem 0;
-      text-align: justify;
-      line-height: 1.6;
+    .docx-wrapper > section.docx:last-child {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
     }
     table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1.25rem 0;
-      font-size: 10pt;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-    th, td {
-      border: 1px solid #475569;
-      padding: 6px 8px;
-      color: #0f172a;
-    }
-    th {
-      background-color: #f1f5f9 !important;
-      font-weight: bold;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
     }
     img {
       max-width: 100% !important;
       height: auto !important;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-    div[style*="page-break-inside: avoid"],
-    div[style*="page-break-inside:avoid"],
-    div[style*="break-inside: avoid"],
-    div[style*="break-inside:avoid"] {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
     }
-    div[style*="page-break-after: always"],
-    div[style*="page-break-after:always"],
-    div[style*="break-after: page"],
-    div[style*="break-after:page"] {
-      page-break-after: always !important;
-      break-after: page !important;
-    }
-    a {
-      color: #1e3a8a;
-      text-decoration: none;
+    @media print {
+      body {
+        background: transparent !important;
+      }
+      .docx-wrapper {
+        padding: 0 !important;
+        background: transparent !important;
+      }
+      .docx-wrapper > section.docx {
+        margin: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
     }
   </style>
 </head>
 <body>
-  ${clone.innerHTML}
+  <div id="docx-render-container"></div>
 </body>
 </html>`);
     iframeDoc.close();
+
+    const targetEl = iframeDoc.getElementById('docx-render-container');
+    try {
+      if (window.docx && typeof window.docx.renderAsync === 'function') {
+        await window.docx.renderAsync(docxBlob, targetEl, null, {
+          renderHeaders: true,
+          renderFooters: true,
+          breakPages: true,
+          inWrapper: true
+        });
+      } else {
+        throw new Error('docx.renderAsync não disponível');
+      }
+    } catch (err) {
+      console.warn('Fallback na renderização docx para impressão:', err);
+      const previewEl = document.getElementById('wizard-report-preview-document');
+      if (previewEl) {
+        targetEl.innerHTML = previewEl.innerHTML;
+      }
+    }
 
     // Aguardar o carregamento e decodificação completa de todas as imagens antes de acionar impressão
     const allImgs = Array.from(iframeDoc.images);
@@ -7920,7 +7894,7 @@ class AutoReportApp {
           console.error('Falha ao acionar impressão via iframe:', err);
           window.print();
         }
-      }, 300);
+      }, 350);
     });
   }
 

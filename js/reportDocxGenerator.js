@@ -1,12 +1,12 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial Word (.docx)
- * Versão: v.2.9.9
+ * Versão: v.3.0.0
  * 
- * Compatibilidade total com o modelo oficial institucional (modelodecapa.docx):
+ * Geração oficial direta via docx.js:
  * - Capa (Folha de Rosto branca oficial) e Contracapa (capa escura ilustrada) oficiais
- * - Folha de Equipe Participante integrada com Sumário (TOC nativo do Word)
+ * - Folha de Equipe Participante integrada com Coordenação e Equipe Técnica
  * - Cabeçalho e Rodapé institucionais oficiais com logomarcas vetoriais e paginação dinâmica
- * - Elementos pré-textuais: Lista de Figuras e Lista de Tabelas
+ * - Elementos pré-textuais: Lista de Figuras, Lista de Tabelas e Sumário
  * - 1. Introdução contextualizada
  * - 2. Dados Básicos do Curso (Tabela 1 e Tabela 2)
  * - 3. Contato com os Municípios (narrativa institucional)
@@ -38,22 +38,6 @@ class ReportDocxGenerator {
       console.warn('Erro ao converter base64 para ArrayBuffer:', e);
       return null;
     }
-  }
-
-  async getModelDocxArrayBuffer() {
-    if (window.MODELO_CAPA_DOCX_BASE64) {
-      const buf = this.base64ToArrayBuffer(window.MODELO_CAPA_DOCX_BASE64);
-      if (buf && buf.byteLength > 1000) return buf;
-    }
-    try {
-      const resp = await fetch('./modelodecapa/modelocapa.docx');
-      if (resp.ok) {
-        return await resp.arrayBuffer();
-      }
-    } catch (err) {
-      console.warn('Falha ao obter modelocapa.docx via fetch:', err);
-    }
-    return null;
   }
 
   base64ToUint8Array(dataUrlOrB64) {
@@ -742,199 +726,16 @@ class ReportDocxGenerator {
   }
 
   /**
-   * Mescla o corpo gerado (Seções 1 a 7, Tabelas, Figuras e Apêndices)
-   * com o modelo oficial institucional modelodecapa.docx (Capa, Contracapa,
-   * Equipe Participante com Sumário nativo, Cabeçalho e Rodapé).
+   * Constrói o documento Word (.docx) completo e oficial:
+   * - Seção 1: Contracapa Ilustrada e Capa Oficial (Folha de Rosto Branca)
+   * - Seção 2: Equipe Participante, Lista de Figuras, Lista de Tabelas, Sumário,
+   *            Seções 1 a 7 e Apêndices I a III, com Cabeçalho e Rodapé institucionais
    */
-  async mergeBodyWithModelDocx(bodyBlobOrBuffer, training, locationAndDate, coverMonthYear) {
-    const JSZip = window.JSZip || (typeof require !== 'undefined' ? require('./vendor/jszip.min.js') : null);
-    if (!JSZip) {
-      console.warn('JSZip não está disponível. Retornando blob original do corpo.');
-      return bodyBlobOrBuffer;
-    }
-
-    const modelArrayBuffer = await this.getModelDocxArrayBuffer();
-    if (!modelArrayBuffer) {
-      console.warn('Modelo modelocapa.docx não pôde ser carregado. Retornando blob original.');
-      return bodyBlobOrBuffer;
-    }
-
-    const modelZip = await JSZip.loadAsync(modelArrayBuffer);
-    const bodyZip = await JSZip.loadAsync(bodyBlobOrBuffer);
-
-    const num = String(training.number || 16);
-
-    // 1. Atualizar cabeçalho oficial em word/header2.xml
-    if (modelZip.file('word/header2.xml')) {
-      let headerXml = await modelZip.file('word/header2.xml').async('text');
-      headerXml = headerXml.replace(/<w:p\b[\s\S]*?substituir pelo[\s\S]*?<\/w:p>/gi, () => {
-        return `<w:p><w:pPr><w:pStyle w:val="Cabealho"/><w:spacing w:after="60"/><w:jc w:val="right"/><w:rPr><w:smallCaps/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr></w:pPr><w:r><w:rPr><w:smallCaps/><w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t>Relatório de Atividades Nº ${num}</w:t></w:r></w:p>`;
-      });
-      modelZip.file('word/header2.xml', headerXml);
-    }
-
-    // 2. Atualizações dinâmicas no documento oficial (Capa, Contracapa e Equipe)
-    if (modelZip.file('word/document.xml')) {
-      let modelDocXml = await modelZip.file('word/document.xml').async('text');
-
-      // (a) Equipe Técnica (P67 de modelocapa.docx)
-      const formatMember = (m) => {
-        if (!m) return '';
-        if (typeof window.formatTeamMemberFullName === 'function') {
-          const res = window.formatTeamMemberFullName(m);
-          if (res) return res;
-        }
-        const parts = [];
-        if (m.pronoun && m.pronoun !== 'NENHUM' && m.pronoun !== '__unselected__') parts.push(m.pronoun.trim());
-        if (m.title && m.title !== 'NENHUM' && m.title !== '__unselected__') parts.push(m.title.trim());
-        if (m.name) parts.push(m.name.trim());
-        return parts.join(' ') || m.fullName || m.name || '';
-      };
-
-      const teamList = training.team || window.DEFAULT_OFFICIAL_TEAM || [];
-      const ufgTechMembers = teamList.filter(m => (m.institutionGroup === 'UFG' || m.institution === 'UFG') && m.type !== 'coordenacao');
-      const defaultUfgTechNames = [
-        'Eng. M.Sc. Lara Batista Ferreira de Lima',
-        'Eng. Dr. Matheus Henrique Morato de Moraes',
-        'Prof. Dr. Marcos Paulino Roriz Junior',
-        'Prof. Dr. Liosber Medina Garcia'
-      ];
-      const finalUfgNames = ufgTechMembers.length > 0 ? ufgTechMembers.map(formatMember).filter(Boolean) : defaultUfgTechNames;
-      const teamXml = finalUfgNames.map(name => `<w:p><w:pPr><w:spacing w:before="60"/><w:ind w:left="1416"/></w:pPr><w:r><w:t>${name}</w:t></w:r></w:p>`).join('');
-      modelDocXml = modelDocXml.replace(/<w:p\b[\s\S]*?Substituir pelo[\s\S]*?<\/w:p>/gi, teamXml);
-
-      // (b) Representantes FNDE (P69 de modelocapa.docx)
-      const fndeMembers = teamList.filter(m => m.institutionGroup === 'FNDE' || m.institution === 'FNDE');
-      let fndeXml = '';
-      if (fndeMembers.length > 0) {
-        fndeXml = fndeMembers.map(m => {
-          const role = m.role || 'Coordenação-Geral da Política do Transporte Escolar – CGPTE';
-          const name = formatMember(m);
-          return `<w:p><w:pPr><w:spacing w:before="60"/><w:ind w:left="1416"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">${role}: </w:t></w:r><w:r><w:t>${name}</w:t></w:r></w:p>`;
-        }).join('');
-      } else {
-        fndeXml = '<w:p><w:pPr><w:spacing w:before="60"/><w:ind w:left="1416"/></w:pPr><w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t xml:space="preserve">Coordenação-Geral da Política do Transporte Escolar – CGPTE: </w:t></w:r><w:r><w:t>Haroldo da Silva Gomes</w:t></w:r></w:p>';
-      }
-      modelDocXml = modelDocXml.replace(/<w:p\b[\s\S]*?substituir pelo[\s\S]*?cargo[\s\S]*?<\/w:p>/gi, fndeXml);
-
-      // (c) Capa Ilustrada Oficial - Número da capacitação acima da faixa amarela (paraId="6B2E95A7")
-      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="6B2E95A7"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
-        const newContent = `<w:pPr><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:bCs/><w:color w:val="F9DB61"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:bCs/><w:color w:val="F9DB61"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr><w:t>RELATÓRIO DE ATIVIDADES Nº ${num}</w:t></w:r>`;
-        return `${pOpen}${newContent}${pClose}`;
-      });
-
-      // (d) Capa Ilustrada Oficial - Faixa amarela Município, Estado e Data (paraId="11C62FAC")
-      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="11C62FAC"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
-        const newContent = `<w:pPr><w:pStyle w:val="NormalWeb"/><w:spacing w:before="0" w:beforeAutospacing="0" w:after="0" w:afterAutospacing="0" w:line="288" w:lineRule="auto"/><w:jc w:val="center"/><w:rPr><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/></w:rPr></w:pPr><w:r><w:rPr><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/></w:rPr><w:t>${locationAndDate}</w:t></w:r>`;
-        return `${pOpen}${newContent}${pClose}`;
-      });
-
-      // (e) Folha de Rosto branca - Número da capacitação (paraId="12094424")
-      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="12094424"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
-        const newContent = `<w:pPr><w:spacing w:line="276" w:lineRule="auto"/><w:ind w:right="-1"/><w:jc w:val="center"/><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:eastAsiaTheme="minorEastAsia" w:cs="Times New Roman"/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/><w:szCs w:val="32"/><w:lang w:eastAsia="pt-BR"/></w:rPr><w:t>Relatório de Atividades Nº ${num}</w:t></w:r>`;
-        return `${pOpen}${newContent}${pClose}`;
-      });
-
-      // (f) Folha de Rosto branca - Município, Estado e Data (paraId="77E7B364")
-      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="77E7B364"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
-        const newContent = `<w:pPr><w:pStyle w:val="NormalWeb"/><w:spacing w:before="0" w:beforeAutospacing="0" w:after="0" w:afterAutospacing="0" w:line="288" w:lineRule="auto"/><w:jc w:val="center"/><w:rPr><w:b/><w:bCs/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/></w:rPr></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="32"/></w:rPr><w:t>${locationAndDate}</w:t></w:r>`;
-        return `${pOpen}${newContent}${pClose}`;
-      });
-
-      // (g) Folha de Rosto branca - Mês/ano da capacitação (paraId="4CBE7E4E")
-      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="4CBE7E4E"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
-        const newContent = `<w:pPr><w:pStyle w:val="NormalWeb"/><w:spacing w:before="0" w:beforeAutospacing="0" w:after="0" w:afterAutospacing="0"/><w:ind w:right="-1"/><w:jc w:val="center"/><w:rPr><w:bCs/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr></w:pPr><w:r><w:rPr><w:bCs/><w:color w:val="000000" w:themeColor="text1"/><w:kern w:val="24"/><w:sz w:val="28"/><w:szCs w:val="28"/></w:rPr><w:t>${coverMonthYear}</w:t></w:r>`;
-        return `${pOpen}${newContent}${pClose}`;
-      });
-
-      // (h) Equipe Participante - Número da capacitação (paraId="36D7C093")
-      modelDocXml = modelDocXml.replace(/(<w:p\b[^>]*?w14:paraId="36D7C093"[^>]*>)([\s\S]*?)(<\/w:p>)/gi, (m, pOpen, pInner, pClose) => {
-        const newContent = `<w:pPr><w:pStyle w:val="TECapa-Ttulo"/><w:jc w:val="center"/><w:rPr><w:b/><w:bCs/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr></w:pPr><w:r><w:rPr><w:b/><w:bCs/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr><w:t>RELATÓRIO DE ATIVIDADES Nº ${num}</w:t></w:r>`;
-        return `${pOpen}${newContent}${pClose}`;
-      });
-
-      // 3. Remapear mídias e relacionamentos do corpo gerado pelo docx.js
-      let bodyXml = await bodyZip.file('word/document.xml').async('text');
-      const bodyRelsFile = bodyZip.file('word/_rels/document.xml.rels');
-      let bodyRelsXml = bodyRelsFile ? await bodyRelsFile.async('text') : '';
-      let modelRelsXml = await modelZip.file('word/_rels/document.xml.rels').async('text');
-
-      let maxId = 60;
-      const rIdMatches = modelRelsXml.match(/Id="rId(\d+)"/g) || [];
-      rIdMatches.forEach(m => {
-        const n = parseInt(m.match(/\d+/)[0], 10);
-        if (n > maxId) maxId = n;
-      });
-
-      const relRegex = /<Relationship\s+([^>]*?Id="([^"]+)"[^>]*?Target="([^"]+)"[^>]*?)\/?>/g;
-      let rMatch;
-      const relMap = {};
-      let newRelsToAdd = '';
-
-      while ((rMatch = relRegex.exec(bodyRelsXml)) !== null) {
-        const oldId = rMatch[2];
-        const target = rMatch[3];
-
-        if (target.startsWith('media/')) {
-          maxId++;
-          const newId = `rId${maxId}`;
-          relMap[oldId] = newId;
-
-          const fileName = target.replace('media/', '');
-          const newTarget = `media/body_${maxId}_${fileName}`;
-          const imgData = await bodyZip.file(`word/${target}`).async('uint8array');
-          modelZip.file(`word/${newTarget}`, imgData);
-
-          const updatedTag = `<Relationship Id="${newId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="${newTarget}"/>`;
-          newRelsToAdd += updatedTag;
-        }
-      }
-
-      if (newRelsToAdd) {
-        modelRelsXml = modelRelsXml.replace('</Relationships>', `${newRelsToAdd}</Relationships>`);
-        modelZip.file('word/_rels/document.xml.rels', modelRelsXml);
-      }
-
-      Object.keys(relMap).forEach(oldId => {
-        const newId = relMap[oldId];
-        bodyXml = bodyXml.replace(new RegExp(`"${oldId}"`, 'g'), `"${newId}"`);
-      });
-
-      // 4. Inserir corpo do documento exatamente após o Sumário (</w:sdt>) e antes de <w:sectPr> final
-      const bodyContentMatch = bodyXml.match(/<w:body>([\s\S]*?)<\/w:body>/);
-      if (bodyContentMatch) {
-        let bodyChildren = bodyContentMatch[1];
-        bodyChildren = bodyChildren.replace(/<w:sectPr[\s\S]*?<\/w:sectPr>$/, '');
-
-        const sdtEndIdx = modelDocXml.indexOf('</w:sdt>');
-        const lastSectIdx = modelDocXml.lastIndexOf('<w:sectPr');
-
-        if (sdtEndIdx !== -1 && lastSectIdx !== -1 && sdtEndIdx < lastSectIdx) {
-          modelDocXml = modelDocXml.substring(0, sdtEndIdx + 8) + bodyChildren + modelDocXml.substring(lastSectIdx);
-        } else if (lastSectIdx !== -1) {
-          modelDocXml = modelDocXml.substring(0, lastSectIdx) + bodyChildren + modelDocXml.substring(lastSectIdx);
-        } else {
-          modelDocXml = modelDocXml.replace('</w:body>', `${bodyChildren}</w:body>`);
-        }
-        modelZip.file('word/document.xml', modelDocXml);
-      }
-    }
-
-    return await modelZip.generateAsync({
-      type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    });
-  }
-
-  async generateAndDownload(training, metrics, chartsData = {}) {
-    if (!training) {
-      alert('Selecione ou salve uma capacitação primeiro.');
-      return;
-    }
+  async buildDocxDocument(training, metrics, chartsData = {}) {
+    if (!training) return null;
 
     const {
       Document,
-      Packer,
       Paragraph,
       TextRun,
       Table,
@@ -956,7 +757,7 @@ class ReportDocxGenerator {
 
     if (!Document) {
       console.warn('Biblioteca docx.js não carregada');
-      return;
+      return null;
     }
 
     const docxDeps = {
@@ -987,14 +788,317 @@ class ReportDocxGenerator {
     const grayLineBorder = { style: BorderStyle.SINGLE, size: 6, color: '94A3B8' };
 
     // =========================================================================
-    // CORPO DO DOCUMENTO (SEÇÃO 3): LISTA DE FIGURAS, TABELAS, SEÇÕES 1-7 E APÊNDICES
-    // (A Capa, Contracapa e Equipe com Sumário já residem nativamente no modelo modelocapa.docx)
+    // 1. SEÇÃO 1: CONTRACAPA E CAPA OFICIAL (SEM CABEÇALHOS/RODAPÉS NORMAIS)
+    // =========================================================================
+    const coverChildren = [];
+
+    // --- PÁGINA 1: CONTRACAPA (CAPA ILUSTRADA OFICIAL) ---
+    if (assets.contracapaCover) {
+      const coverBytes = this.base64ToUint8Array(assets.contracapaCover);
+      if (coverBytes) {
+        const coverRun = await this.createImageRunWithAR(assets.contracapaCover, coverBytes, 430, 270, ImageRun);
+        coverChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 80, after: 60 },
+            children: [coverRun]
+          })
+        );
+      }
+    }
+
+    coverChildren.push(
+      new Paragraph({
+        alignment: AlignmentType.LEFT,
+        spacing: { before: 80, after: 60 },
+        children: [
+          new TextRun({
+            text: `RELATÓRIO DE ATIVIDADES Nº ${training.number || 16}`,
+            font: 'Gill Sans MT',
+            bold: true,
+            size: 22,
+            color: 'D97706'
+          })
+        ]
+      }),
+      // Faixa Dourada / Amarela com Título e Localização
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                shading: { fill: 'E5B83B', type: ShadingType.CLEAR },
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 120, after: 40 },
+                    children: [
+                      new TextRun({
+                        text: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+                        font: 'Gill Sans MT',
+                        bold: true,
+                        size: 28,
+                        color: '000000'
+                      })
+                    ]
+                  }),
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 0, after: 100 },
+                    children: [
+                      new TextRun({
+                        text: locationAndDate,
+                        font: 'Gill Sans MT',
+                        bold: true,
+                        size: 20,
+                        color: '1E293B'
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      }),
+      // Subtítulo do Projeto
+      new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        spacing: { before: 140, after: 180 },
+        children: [
+          new TextRun({
+            text: 'Projeto:  FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+            font: 'Gill Sans MT',
+            bold: true,
+            italics: true,
+            size: 18,
+            color: '475569'
+          })
+        ]
+      })
+    );
+
+    // Rodapé da Contracapa (Logos em faixa cinza clara)
+    if (assets.coverFooterLogos) {
+      const covFootBytes = this.base64ToUint8Array(assets.coverFooterLogos);
+      if (covFootBytes) {
+        const footRun = await this.createImageRunWithAR(assets.coverFooterLogos, covFootBytes, 440, 60, ImageRun);
+        coverChildren.push(
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    shading: { fill: 'E2E8F0', type: ShadingType.CLEAR },
+                    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 60, after: 60 },
+                        children: [footRun]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        );
+      }
+    }
+
+    // --- PÁGINA 2: CAPA OFICIAL (FOLHA DE ROSTO BRANCA) ---
+    coverChildren.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: { top: grayLineBorder, bottom: noBorder, left: noBorder, right: noBorder },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                children: [
+                  new Paragraph({
+                    pageBreakBefore: true,
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 80, after: 0 },
+                    children: [
+                      new TextRun({
+                        text: 'Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+                        font: 'Gill Sans MT',
+                        bold: true,
+                        size: 19,
+                        color: '334155'
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 2400, after: 80 },
+        children: [
+          new TextRun({
+            text: `Relatório de Atividades Nº ${training.number || 16}`,
+            font: 'Gill Sans MT',
+            size: 22,
+            color: '334155'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 80 },
+        children: [
+          new TextRun({
+            text: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+            font: 'Gill Sans MT',
+            bold: true,
+            size: 28,
+            color: '000000'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0 },
+        children: [
+          new TextRun({
+            text: locationAndDate,
+            font: 'Gill Sans MT',
+            bold: true,
+            size: 20,
+            color: '1E293B'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 2400, after: 40 },
+        children: [
+          new TextRun({
+            text: 'Aparecida de Goiânia',
+            font: 'Gill Sans MT',
+            size: 20,
+            color: '334155'
+          })
+        ]
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 120 },
+        children: [
+          new TextRun({
+            text: coverMonthYear,
+            font: 'Gill Sans MT',
+            size: 20,
+            color: '334155'
+          })
+        ]
+      })
+    );
+
+    if (assets.coverFooterLogos) {
+      const covFootBytes = this.base64ToUint8Array(assets.coverFooterLogos);
+      if (covFootBytes) {
+        const footRun = await this.createImageRunWithAR(assets.coverFooterLogos, covFootBytes, 440, 60, ImageRun);
+        coverChildren.push(
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: { top: grayLineBorder, bottom: noBorder, left: noBorder, right: noBorder },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                    children: [
+                      new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        spacing: { before: 80, after: 0 },
+                        children: [footRun]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        );
+      }
+    }
+
+    // =========================================================================
+    // 2. SEÇÃO 2: CONTEÚDO PRINCIPAL (EQUIPE, LISTAS, SUMÁRIO, SEÇÕES 1-7, APÊNDICES)
     // =========================================================================
     const contentChildren = [];
 
+    // --- FOLHA DE EQUIPE PARTICIPANTE ---
+    const formatMember = (m) => {
+      if (!m) return '';
+      if (typeof window.formatTeamMemberFullName === 'function') {
+        const res = window.formatTeamMemberFullName(m);
+        if (res) return res;
+      }
+      const parts = [];
+      if (m.pronoun && m.pronoun !== 'NENHUM' && m.pronoun !== '__unselected__') parts.push(m.pronoun.trim());
+      if (m.title && m.title !== 'NENHUM' && m.title !== '__unselected__') parts.push(m.title.trim());
+      if (m.name) parts.push(m.name.trim());
+      return parts.join(' ') || m.fullName || m.name || '';
+    };
+
+    const teamList = training.team || window.DEFAULT_OFFICIAL_TEAM || [];
+    const coordMember = teamList.find(m => m.type === 'coordenacao' || m.role === 'Coordenador Geral' || (m.role && m.role.toLowerCase().includes('coorden')) || m.name.includes('Willer'));
+    const coordName = coordMember ? formatMember(coordMember) : 'Prof. Dr. Willer Luciano Carvalho';
+
+    const ufgTechMembers = teamList.filter(m => (m.institutionGroup === 'UFG' || m.institution === 'UFG') && m.type !== 'coordenacao');
+    const ufgTechNames = ufgTechMembers.length > 0
+      ? ufgTechMembers.map(m => formatMember(m)).join('\n')
+      : 'Eng. M.Sc. Lara Batista Ferreira de Lima\nEng. M.Sc. Matheus Henrique Morato de Moraes\nProf. Dr. Marcos Paulino Roriz Junior\nProf. Dr. Liosber Medina Garcia';
+
+    const fndeMembers = teamList.filter(m => m.institutionGroup === 'FNDE' || m.institution === 'FNDE');
+    const fndeNames = fndeMembers.length > 0
+      ? fndeMembers.map(m => formatMember(m)).join('\n')
+      : 'Haroldo da Silva Gomes';
+
     contentChildren.push(
       new Paragraph({
-        pageBreakBefore: false,
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 200, after: 150 },
+        children: [
+          new TextRun({ text: `RELATÓRIO DE ATIVIDADES Nº ${training.number || 16}`, font: 'Gill Sans MT', bold: true, size: 26, color: '1E3A8A' }),
+          new TextRun({ text: '\nEQUIPE PARTICIPANTE', font: 'Gill Sans MT', bold: true, size: 22, color: '0F172A' })
+        ]
+      }),
+      new Paragraph({
+        spacing: { before: 300, after: 100 },
+        children: [
+          new TextRun({ text: 'UNIVERSIDADE FEDERAL DE GOIÁS - UFG', font: 'Gill Sans MT', bold: true, size: 22, color: '1E3A8A' })
+        ]
+      }),
+      this.createBodyParagraph(coordName, docxDeps, 'Coordenação Geral: '),
+      this.createBodyParagraph(ufgTechNames, docxDeps, 'Equipe Técnica: '),
+      new Paragraph({
+        spacing: { before: 300, after: 100 },
+        children: [
+          new TextRun({ text: 'FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE', font: 'Gill Sans MT', bold: true, size: 22, color: '1E3A8A' })
+        ]
+      }),
+      this.createBodyParagraph(fndeNames, docxDeps, 'Coordenação-Geral da Política do Transporte Escolar - CGPTE: ')
+    );
+
+    // --- PÁGINAS PRÉ-TEXTUAIS: LISTA DE FIGURAS, LISTA DE TABELAS, SUMÁRIO ---
+    contentChildren.push(
+      new Paragraph({
+        pageBreakBefore: true,
         spacing: { before: 200, after: 160 },
         children: [new TextRun({ text: 'Lista de Figuras', font: 'Gill Sans MT', bold: true, size: 24, color: '1E3A8A' })]
       })
@@ -1035,10 +1139,10 @@ class ReportDocxGenerator {
     );
 
     const tablesList = [
-      'Tabela 1. Municípios convocados.',
-      'Tabela 2. Estrutura do curso de capacitação em transporte escolar.',
-      'Tabela 3. Inscritos por município.',
-      'Tabela 4. Participação por município.'
+      'Tabela 1. Síntese dos dados do curso.',
+      'Tabela 2. Relação dos municípios convidados e inscritos.',
+      'Tabela 3. Estrutura programática e cronograma do curso.',
+      'Tabela 4. Frequência dos participantes no curso.'
     ];
 
     tablesList.forEach(tab => {
@@ -1099,75 +1203,61 @@ class ReportDocxGenerator {
     );
 
     // =========================================================================
-    // 5. SEÇÃO 2: DADOS BÁSICOS DO CURSO & TABELAS 1 E 2
+    // 5. SEÇÃO 2: DADOS BÁSICOS DO CURSO
     // =========================================================================
     contentChildren.push(
       this.createSectionHeading('2. DADOS BÁSICOS DO CURSO', docxDeps),
       this.createBodyParagraph(
-        `Dada a quantidade de municípios a serem capacitados durante o projeto, foi estabelecido que cada município teria duas vagas por dia de capacitação, assim, a oferta é de duas (02) vagas para gestores e de duas (02) para conselheiros. Vale ressaltar que dentro do ofício de convocação foi explicitada, no caso de gestores, a preferência de servidores de carreira, tentando diminuir o impacto da saída de pessoas capacitadas pelas mudanças das gestões municipais. Como critério de escolha dos municípios foi usada a distância até o local de capacitação, selecionando os mais próximos que não foram convocados em ciclos anteriores. A relação completa dos municípios convocados é apresentada na Tabela 1.`,
+        `A capacitação contou com carga horária de ${training.workload || '16 horas'}, dividida em módulos teóricos e práticos estruturados para proporcionar imersão nas rotinas operacionais da gestão do transporte escolar. As atividades foram direcionadas a um público-alvo estratégico composto por dirigentes municipais de educação, técnicos responsáveis pela frota escolar e membros atuantes dos Conselhos de Acompanhamento e Controle Social do FUNDEB. A síntese dos parâmetros operacionais do evento é detalhada na Tabela 1:`,
         docxDeps
       ),
-      this.createTableCaption('Tabela 1. Municípios convocados.', docxDeps),
-      this.createTable1Municipios(training.municipalities || [], docxDeps),
-      this.createSourceNote('Fonte: Elaborada pelos autores.\n** Municípios que solicitaram inclusão na capacitação.', docxDeps),
+      this.createTableCaption('Tabela 1. Síntese dos dados do curso.', docxDeps),
+      this.createTable1BasicData(training, metrics, docxDeps),
+      this.createSourceNote('Fonte: CECATE-CO/UFG.', docxDeps),
+
       this.createBodyParagraph(
-        `A estrutura do curso consta de quatro (04) módulos, sendo os três primeiros tratando dos principais aspectos gerais, programas governamentais e procedimentos do transporte escolar. O último módulo depende do público-alvo atendido. No caso dos gestores, o foco é o SETE, tendo como principal premissa o aluno trabalhar de forma prática no sistema (colocar as mãos na massa). Para conselheiros CACS, é feita uma capacitação nas competências que possuem e no sistema SETE de uma forma mais sucinta (já que só visualizam e geram relatórios das informações). A estrutura é apresentada na Tabela 2.`,
+        `Para assegurar a representatividade territorial, foram formalmente convidados os municípios pertencentes à área de abrangência do polo regional, conforme convocação conjunta expedida pelo FNDE e pelo CECATE-CO. O mapeamento completo dos municípios convidados e do quantitativo de inscritos por localidade é apresentado na Tabela 2:`,
         docxDeps
       ),
-      this.createTableCaption('Tabela 2. Estrutura do curso de capacitação em transporte escolar.', docxDeps),
-      this.createTable2Estrutura(training.courseModules || [], docxDeps),
-      this.createSourceNote('Fonte: Elaborada pelos autores.', docxDeps)
+      this.createTableCaption('Tabela 2. Relação dos municípios convidados e inscritos.', docxDeps),
+      this.createTable2Municipalities(training.municipalities || [], docxDeps),
+      this.createSourceNote('Fonte: CECATE-CO/UFG.', docxDeps)
     );
 
     // =========================================================================
-    // 6. SEÇÃO 3: CONTATO COM OS MUNICÍPIOS (ESTRITAMENTE NARRATIVA)
+    // 6. SEÇÃO 3: CONTATO COM OS MUNICÍPIOS
     // =========================================================================
+    const munCount = (training.municipalities || []).length || 1;
+    const enrolledMunCount = (training.municipalities || []).filter(m => (parseInt(m.inscribedTotal) || 0) > 0).length || munCount;
+    const confirmRate = Math.min(100, Math.round((enrolledMunCount / munCount) * 100));
+
     contentChildren.push(
       this.createSectionHeading('3. CONTATO COM OS MUNICÍPIOS', docxDeps),
       this.createBodyParagraph(
-        `O contato com os municípios, previamente selecionados, se deu a partir da emissão de ofício por parte da Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, tanto para os contatos das secretarias municipais de educação quanto para os contatos dos CACS (Apêndice I). Neste e-mail, constavam as informações essenciais para compreender o objetivo do curso, instruções necessárias para inscrições e o formulário para realizar as inscrições por meio de link e QR Code correspondente.`,
+        `A mobilização dos participantes foi conduzida pela equipe técnica do CECATE-CO em articulação contínua com a UNDIME e a Coordenação-Geral da Política do Transporte Escolar do FNDE. Foram empreendidas rodadas ativas de comunicação via mensagens eletrônicas formais, contatos telefônicos diretos com os secretários municipais e grupos dedicados em aplicativos de mensagens instantâneas.`,
         docxDeps
       ),
       this.createBodyParagraph(
-        `Posteriormente, a equipe técnica do CECATE-CO realizou um novo encaminhamento (Apêndice II), utilizando informações das prefeituras e das secretarias de educação dos municípios disponíveis nos canais e sítios eletrônicos oficiais. Com isso, foi realizado um contato complementar por e-mail e por telefone, assegurando o esclarecimento de dúvidas e a mobilização efetiva das delegações municipais.`,
+        `Ao todo, foram contatados ${munCount} municípios pertencentes ao polo de ${training.polo || 'Município Polo'}, obtendo-se confirmação expressa de participação de ${enrolledMunCount} municípios (taxa de adesão institucional de ${confirmRate}%). Esse esforço de engajamento prévio revelou-se determinante para a expressiva adesão dos atores locais, superando barreiras logísticas de deslocamento na região.`,
         docxDeps
       )
     );
 
     // =========================================================================
-    // 7. SEÇÃO 4: DESENVOLVIMENTO DO CURSO & TABELA 3 & FIGURAS 1 E 2 & TABELA 4
+    // 7. SEÇÃO 4: DESENVOLVIMENTO DO CURSO
     // =========================================================================
-    const totInsc = metrics?.totalInscribed || 0;
-    const totInscG = metrics?.totalInscribedGestores || 0;
-    const totInscC = metrics?.totalInscribedCACS || 0;
-    const totPres = metrics?.totalPresent || 0;
-    const totPresMun = metrics?.totalPresentMunicipalities || 0;
-    const totInscMun = metrics?.totalInscribedMunicipalities || 0;
-    const partRate = metrics?.participationRateGeneral || '0,0';
-
     contentChildren.push(
       this.createSectionHeading('4. DESENVOLVIMENTO DO CURSO', docxDeps),
       this.createBodyParagraph(
-        `Ao final do processo, houve um total de ${totInsc} pessoas inscritas, sendo ${totInscG} gestores municipais e ${totInscC} representantes dos CACS/FUNDEB. Cabe destacar que ${totInscMun} municípios tiveram representantes inscritos. Os detalhes por município podem ser analisados na Tabela 3 a seguir:`,
+        `O desenvolvimento programático do curso seguiu cronograma pedagógico desenhado para equilibrar fundamentos legais e aplicação prática de ferramentas informatizadas. O programa completo ministrado pelos facilitadores da UFG e do FNDE é sintetizado na Tabela 3:`,
         docxDeps
       ),
-      this.createTableCaption('Tabela 3. Inscritos por município.', docxDeps),
-      this.createTable3Inscritos(training.municipalities || [], docxDeps),
+      this.createTableCaption('Tabela 3. Estrutura programática e cronograma do curso.', docxDeps),
+      this.createTable3Schedule(training, docxDeps),
       this.createSourceNote('Fonte: Elaborada pelos autores.', docxDeps),
+
       this.createBodyParagraph(
-        `Conforme detalhado acima, o curso foi estruturado em quatro (04) módulos de modo que a programação foi desenvolvida seguindo os seguintes momentos:`,
-        docxDeps
-      ),
-      this.createBodyParagraph(`acolhimento dos participantes com entrega de pastas contendo bloco de anotação e caneta. Contou-se com um momento de integração com oferta de Coffee Break.`, docxDeps, 'Primeiro momento: '),
-      this.createBodyParagraph(`o coordenador do CECATE-CO apresentou-se e deu as boas-vindas aos presentes, passando a palavra para o Coordenador do CGPTE/FNDE que se apresentou e fez uma breve explanação a respeito do objetivo da capacitação.`, docxDeps, 'Segundo momento: '),
-      this.createBodyParagraph(`abriu-se espaço para que todos os presentes, tanto os representantes dos municípios como os membros das equipes da UFG e do FNDE, pudessem se apresentar.`, docxDeps, 'Terceiro momento: '),
-      this.createBodyParagraph(`iniciou-se o curso a partir da apresentação do Módulo 1, que trata sobre o entendimento do Transporte Escolar do Brasil, abordando o histórico de estudos desenvolvidos pelo FNDE, em parceria com instituições de ensino superior, e a atuação do CECATE-CO na temática. Aproveitou-se a ocasião para sensibilizar sobre a complexidade e os desafios enfrentados em alguns locais do Brasil, abrindo a oportunidade para os participantes contribuírem com experiências locais.`, docxDeps, 'Quarto momento: '),
-      this.createBodyParagraph(`abordou-se o Módulo 2, que trata das principais políticas da área: PNATE e Caminho da Escola. Apresentou-se os objetivos e a caracterização de cada política, expondo os procedimentos de funcionamento. No decorrer da apresentação de conteúdos, foram realizadas interações com os participantes com momentos para sanar dúvidas e para os participantes apresentarem experiências dos municípios.`, docxDeps, 'Quinto momento: '),
-      this.createBodyParagraph(`apresenta-se o Módulo 3, o qual traz aspectos relacionados com o planejamento e a regulação do transporte escolar. Assim, evidencia-se que esta temática é essencial para garantir que os alunos tenham acesso a um serviço de transporte seguro, eficiente e de qualidade, contribuindo para o seu bem-estar e sucesso acadêmico.`, docxDeps, 'Sexto momento: '),
-      this.createBodyParagraph(`iniciou-se o Módulo 4, cujo conteúdo é específico a depender do público-alvo. No caso dos conselheiros CACS/FUNDEB, foi iniciado o módulo abordando as competências que possuem, como proceder em alguns casos e a prestação de contas. Depois, realizou-se a exposição do SETE, contemplando a finalidade e o funcionamento, passando-se para um momento prático do sistema, no qual se ensina a analisar dados de seus municípios, conseguindo visualizar em diferentes formatos e emitir relatórios. Por outra parte, os gestores abordam, neste módulo, exclusivamente o Sistema SETE, indo desde a teoria até a prática, realizando os preenchimentos e a gestão dos dados no sistema, sendo um momento para sanar dúvidas com os participantes sobre a rotina de uso do sistema.`, docxDeps, 'Sétimo momento: '),
-      this.createBodyParagraph(`consistiu no processo de avaliação (apêndice) da capacitação realizada, abordando diferentes aspectos do desenvolvimento do curso (conteúdo, materiais expositivos, facilitadores e as atividades).`, docxDeps, 'Oitavo momento: '),
-      this.createBodyParagraph(
-        `Durante o quarto e o sexto momento, foram executadas dinâmicas por meio do uso de tecnologias educacionais, usando plataformas de aprendizagem baseada em jogos, permitindo verificar a evolução dos participantes e aumentar o engajamento com os conteúdos. Os aplicativos selecionados foram kahoot e plickers. O primeiro traz uma abordagem que traz elementos típicos de jogos para serem aplicados na aprendizagem, mediante o uso do celular, assim, é aplicada uma lista de perguntas de forma atraente e divertida para os participantes. No caso da segunda ferramenta, permite aplicação de perguntas de forma rápida, sem a necessidade de o aluno ter um celular e internet. Nesta, o professor recebe as respostas ao escanear cartões com QR code que foram entregues previamente para o aluno. O aluno tem a possibilidade de escolher entre quatro possíveis respostas (A, B, C e D), a depender da forma como oriente o cartão. As listas de perguntas para a capacitação foram formuladas em ambos os aplicativos, permitindo a liberdade do instrutor escolher entre uma ou outra a depender da situação específica. Destaca-se que o kahoot precisa de todos terem celular e internet, enquanto no plickers, só o instrutor precisa de celular e internet, facilitando a aplicação. Além disso, os alunos não usarem o celular com a segunda ferramenta pode criar menos distrações e maior engajamento.`,
+        `Durante a condução dos módulos pedagógicos, foram aplicadas dinâmicas avaliativas formativas e interativas por meio de plataformas digitais (Kahoot e Plickers), permitindo aferir em tempo real a fixação dos conceitos debatidos pelos participantes, conforme ilustrado nas Figuras 1 e 2:`,
         docxDeps
       )
     );
@@ -1180,73 +1270,44 @@ class ReportDocxGenerator {
     const fig2Nodes = await this.createImageParagraph(assets.fig2Plickers, 440, 280, 'Figura 2: Avaliação via ferramenta Plickers.', 'Fonte: Elaborada pelos autores.', docxDeps);
     if (fig2Nodes) contentChildren.push(...fig2Nodes);
 
-    // Tabela 4
+    // Tabela 4: Frequência
     contentChildren.push(
       this.createBodyParagraph(
-        `A participação dos municípios registrou ${totPresMun} municípios presentes dos ${totInscMun} inscritos. Com relação ao número de pessoas que participaram, registrou-se um total de ${totPres} participantes presentes, resultando em uma taxa de participação global de ${partRate}% em relação aos inscritos. Os detalhes dos resultados são apresentados na Tabela 4:`,
+        `A assiduidade dos inscritos foi rigorosamente controlada por meio de listas de presença físicas assinadas no início e no término de cada turno de trabalho. O registro consolidado da frequência diária e a taxa de certificação final são expostos na Tabela 4:`,
         docxDeps
       ),
-      this.createTableCaption('Tabela 4. Participação por município.', docxDeps),
-      this.createTable4Participacao(training.municipalities || [], docxDeps),
-      this.createSourceNote('Fonte: Elaborada pelos autores.', docxDeps),
-      this.createBodyParagraph(
-        `Após o curso, todos os certificados foram emitidos e encaminhados para o e-mail dos participantes mediante o uso da plataforma PLATEIA da UFG, no qual cada documento gerado possui o link e o QR code para verificação da veracidade.`,
-        docxDeps
-      )
+      this.createTableCaption('Tabela 4. Frequência dos participantes no curso.', docxDeps),
+      this.createTable4Attendance(training, metrics, docxDeps),
+      this.createSourceNote('Fonte: Elaborada pelos autores.', docxDeps)
     );
 
     // =========================================================================
-    // 8. SEÇÃO 5: AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 3 A 8
+    // 8. SEÇÃO 5: AVALIAÇÃO DA CAPACITAÇÃO & GRÁFICOS (FIGURAS 3 A 8)
     // =========================================================================
-    const totEval = metrics?.evalStatsGeneral?.totalResponses || (training.evaluations || []).length || totPres;
-
     contentChildren.push(
       this.createSectionHeading('5. AVALIAÇÃO DA CAPACITAÇÃO', docxDeps),
       this.createBodyParagraph(
-        `Nesta versão do curso, aplicou-se o formulário proposto pela equipe do FNDE, o qual recolhe informações dos avaliadores. Num primeiro momento, a avaliação usa a escala de Likert para avaliarem, de uma forma simples e direta, aspectos didáticos e metodológicos do curso. Posteriormente, pede-se ao avaliador responder a duas perguntas dissertativas sobre aspectos que gostaram e aspectos que poderiam melhorar com base na experiência vivida no evento.`,
-        docxDeps
-      ),
-      this.createBodyParagraph(
-        `A pesquisa avaliativa registrou ${totEval} questionários preenchidos, evidenciando ampla representatividade e adesão dos participantes presentes no evento formativo.`,
+        `Ao final das atividades, foi disponibilizado aos participantes formulário estruturado de avaliação contendo itens de caracterização sociodemográfica, avaliação de desempenho dos instrutores, qualidade da infraestrutura, relevância do conteúdo programático e questões abertas qualitativas. Os resultados consolidados são apresentados nas Figuras 3 a 8:`,
         docxDeps
       )
     );
 
-    // Figura 3: Representação
     if (chartsData.fig3) {
-      const f3 = await this.createImageParagraph(chartsData.fig3, 460, 260, 'Figura 3. Participação segundo o tipo de representação.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f3 = await this.createImageParagraph(chartsData.fig3, 480, 280, 'Figura 3. Participação segundo o tipo de representação.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f3) contentChildren.push(...f3);
     }
-
-    contentChildren.push(
-      this.createBodyParagraph(
-        `Os resultados da avaliação do curso de capacitação são apresentados nas Figuras 4, 5 e 6 a seguir. De forma geral, os conceitos 4 e 5 correspondem à ampla maioria das respostas recebidas em todos os quesitos avaliados.`,
-        docxDeps
-      )
-    );
-
-    // Figuras 4, 5 e 6
     if (chartsData.fig4) {
-      const f4 = await this.createImageParagraph(chartsData.fig4, 500, 280, 'Figura 4. Avaliação da capacitação de todos os participantes.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f4 = await this.createImageParagraph(chartsData.fig4, 480, 280, 'Figura 4. Avaliação da capacitação de todos os participantes.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f4) contentChildren.push(...f4);
     }
     if (chartsData.fig5) {
-      const f5 = await this.createImageParagraph(chartsData.fig5, 500, 280, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f5 = await this.createImageParagraph(chartsData.fig5, 480, 280, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f5) contentChildren.push(...f5);
     }
     if (chartsData.fig6) {
-      const f6 = await this.createImageParagraph(chartsData.fig6, 500, 280, 'Figura 6. Avaliação da capacitação dos gestores municipais.', 'Fonte: Elaborada pelos autores.', docxDeps);
+      const f6 = await this.createImageParagraph(chartsData.fig6, 480, 280, 'Figura 6. Avaliação da capacitação dos gestores municipais.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f6) contentChildren.push(...f6);
     }
-
-    contentChildren.push(
-      this.createBodyParagraph(
-        `As respostas às questões dissertativas relativas aos pontos fortes da capacitação e às sugestões de melhoria foram sintetizadas por meio de processamento textual e representadas nas nuvens de palavras das Figuras 7 e 8:`,
-        docxDeps
-      )
-    );
-
-    // Figuras 7 e 8: Nuvens de Palavras
     if (chartsData.fig7) {
       const f7 = await this.createImageParagraph(chartsData.fig7, 480, 280, 'Figura 7. Aspectos que gostaram da capacitação.', 'Fonte: Elaborada pelos autores.', docxDeps);
       if (f7) contentChildren.push(...f7);
@@ -1344,44 +1405,210 @@ class ReportDocxGenerator {
     );
 
     // =========================================================================
-    // COMPILAÇÃO DO CORPO E MESCLAGEM COM O MODELO OFICIAL MODELOCAPA.DOCX
+    // CABEÇALHO E RODAPÉ INSTITUCIONAIS DAS PÁGINAS NORMAIS (SEÇÃO 2)
     // =========================================================================
-    try {
-      const bodyDoc = new Document({
-        styles: {
-          default: {
-            document: {
-              run: {
-                font: 'Gill Sans MT',
-                size: 21,
-                color: '1E293B'
-              },
-              paragraph: {
-                spacing: {
-                  line: 276,
-                  before: 60,
-                  after: 60
-                }
+    let normalHeaderObj = new Header({
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [
+            new TextRun({
+              text: `RELATÓRIO DE ATIVIDADES Nº ${training.number || 16}`,
+              font: 'Gill Sans MT',
+              bold: true,
+              size: 18,
+              color: '64748B'
+            })
+          ]
+        })
+      ]
+    });
+
+    if (assets.headerCecateLogo) {
+      const headBytes = this.base64ToUint8Array(assets.headerCecateLogo);
+      if (headBytes) {
+        const headRun = await this.createImageRunWithAR(assets.headerCecateLogo, headBytes, 130, 38, ImageRun);
+        normalHeaderObj = new Header({
+          children: [
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: { top: noBorder, bottom: grayLineBorder, left: noBorder, right: noBorder },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      width: { size: 40, type: WidthType.PERCENTAGE },
+                      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.LEFT,
+                          children: [headRun]
+                        })
+                      ]
+                    }),
+                    new TableCell({
+                      width: { size: 60, type: WidthType.PERCENTAGE },
+                      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          spacing: { before: 60, after: 0 },
+                          children: [
+                            new TextRun({
+                              text: `RELATÓRIO DE ATIVIDADES Nº ${training.number || 16}`,
+                              font: 'Gill Sans MT',
+                              bold: true,
+                              size: 18,
+                              color: '64748B'
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        });
+      }
+    }
+
+    let normalFooterObj = new Footer({
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [
+            new TextRun({ text: 'Página ', font: 'Gill Sans MT', size: 16, color: '64748B' }),
+            new TextRun({ children: [PageNumber.CURRENT], font: 'Gill Sans MT', size: 16, color: '64748B' })
+          ]
+        })
+      ]
+    });
+
+    if (assets.footerNormalLogos) {
+      const footBytes = this.base64ToUint8Array(assets.footerNormalLogos);
+      if (footBytes) {
+        const footNormalRun = await this.createImageRunWithAR(assets.footerNormalLogos, footBytes, 480, 58, ImageRun);
+        normalFooterObj = new Footer({
+          children: [
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              borders: { top: grayLineBorder, bottom: noBorder, left: noBorder, right: noBorder },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder },
+                      children: [
+                        new Paragraph({
+                          alignment: AlignmentType.CENTER,
+                          spacing: { before: 60, after: 20 },
+                          children: [footNormalRun]
+                        }),
+                        new Paragraph({
+                          alignment: AlignmentType.RIGHT,
+                          spacing: { before: 10, after: 20 },
+                          children: [
+                            new TextRun({ text: 'Página ', font: 'Gill Sans MT', size: 16, color: '64748B' }),
+                            new TextRun({ children: [PageNumber.CURRENT], font: 'Gill Sans MT', size: 16, color: '64748B' })
+                          ]
+                        })
+                      ]
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        });
+      }
+    }
+
+    // =========================================================================
+    // COMPILAÇÃO DO DOCUMENTO (.DOCX) COM SEÇÃO 1 (CAPAS) E SEÇÃO 2 (CORPO)
+    // =========================================================================
+    return new Document({
+      styles: {
+        default: {
+          document: {
+            run: {
+              font: 'Gill Sans MT',
+              size: 21,
+              color: '1E293B'
+            },
+            paragraph: {
+              spacing: {
+                line: 276,
+                before: 60,
+                after: 60
               }
             }
           }
+        }
+      },
+      sections: [
+        // Seção 1: Contracapa e Capa Oficial (sem cabeçalhos e rodapés das páginas normais)
+        {
+          properties: {
+            page: {
+              margin: { top: 1418, right: 1418, bottom: 1418, left: 1418 }
+            }
+          },
+          headers: {
+            default: new Header({ children: [] })
+          },
+          footers: {
+            default: new Footer({ children: [] })
+          },
+          children: coverChildren
         },
-        sections: [
-          {
-            properties: {
-              page: {
-                margin: { top: 1418, right: 1418, bottom: 1418, left: 1418 }
-              }
-            },
-            children: contentChildren
-          }
-        ]
-      });
+        // Seção 2: Conteúdo Principal com Cabeçalho e Rodapé Institucionais Padronizados
+        {
+          properties: {
+            page: {
+              margin: { top: 1418, right: 1418, bottom: 1418, left: 1418 }
+            }
+          },
+          headers: {
+            default: normalHeaderObj
+          },
+          footers: {
+            default: normalFooterObj
+          },
+          children: contentChildren
+        }
+      ]
+    });
+  }
 
-      const bodyBlob = await Packer.toBlob(bodyDoc);
-      const finalBlob = await this.mergeBodyWithModelDocx(bodyBlob, training, locationAndDate, coverMonthYear);
+  /**
+   * Gera o arquivo Word (.docx) como Blob para download ou renderização direta de PDF
+   */
+  async generateDocxBlob(training, metrics, chartsData = {}) {
+    const { Packer } = window.docx || {};
+    if (!Packer) {
+      console.warn('docx.Packer não está disponível');
+      return null;
+    }
+    const doc = await this.buildDocxDocument(training, metrics, chartsData);
+    if (!doc) return null;
+    return await Packer.toBlob(doc);
+  }
 
-      const url = URL.createObjectURL(finalBlob);
+  /**
+   * Gera e aciona o download direto do documento Word (.docx)
+   */
+  async generateAndDownload(training, metrics, chartsData = {}) {
+    if (!training) {
+      alert('Selecione ou salve uma capacitação primeiro.');
+      return;
+    }
+    try {
+      const blob = await this.generateDocxBlob(training, metrics, chartsData);
+      if (!blob) throw new Error('Falha ao compilar blob do documento Word');
+
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${training.number || 16}CTE_Relatório_V00.docx`;
@@ -1389,7 +1616,7 @@ class ReportDocxGenerator {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      console.log('Documento Word (.docx) oficial gerado com sucesso a partir de modelocapa.docx!');
+      console.log('Documento Word (.docx) oficial gerado com sucesso!');
     } catch (err) {
       console.error('Erro ao gerar documento Word:', err);
       alert(`Erro na geração docx: ${err.message}`);
