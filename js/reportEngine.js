@@ -1,5 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Automação de Escrita e Processamento de Relatórios
+ * Versão: v.2.9.6
  */
 
 class ReportEngine {

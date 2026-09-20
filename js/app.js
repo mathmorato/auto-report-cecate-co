@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.5
+ * Versão: v.2.9.6
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.5';
+    this.version = 'v.2.9.6';
   }
 
   /**
@@ -7125,6 +7125,30 @@ class AutoReportApp {
     `;
   }
 
+  formatCoverTrainingInfo(training) {
+    if (window.reportDocxGenerator && window.reportDocxGenerator.formatCoverTrainingInfo) {
+      return window.reportDocxGenerator.formatCoverTrainingInfo(training);
+    }
+    const ufMap = {
+      'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas', 'BA': 'Bahia',
+      'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo', 'GO': 'Goiás',
+      'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul', 'MG': 'Minas Gerais',
+      'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná', 'PE': 'Pernambuco', 'PI': 'Piauí',
+      'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte', 'RS': 'Rio Grande do Sul',
+      'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina', 'SP': 'São Paulo',
+      'SE': 'Sergipe', 'TO': 'Tocantins'
+    };
+    const rawNum = training?.number != null ? String(training.number).trim() : '05';
+    const numPadded = rawNum.length === 1 ? '0' + rawNum : rawNum;
+    const numText = `RELATÓRIO DE ATIVIDADES Nº ${numPadded}`;
+    const polo = (training?.polo || 'Goiânia').trim().toUpperCase();
+    const rawUf = (training?.uf || 'GO').trim();
+    const ufFull = (ufMap[rawUf.toUpperCase()] || rawUf).toUpperCase();
+    const dateStr = (training?.datesFormatted || training?.startDate || '15 de setembro de 2026').trim().toUpperCase();
+    const infoLine = `${polo} – ${ufFull} – ${dateStr}`;
+    return { numText, infoLine, numPadded, polo, ufFull, dateStr };
+  }
+
   /* ==========================================================================
      ETAPA 11: PRÉ-VISUALIZAÇÃO & GERAÇÃO FINAL DO RELATÓRIO
      ========================================================================== */
@@ -7135,6 +7159,44 @@ class AutoReportApp {
     const t = this.currentTraining;
     const metrics = window.statsEngine.calculateAllMetrics(t);
     this.metrics = metrics;
+
+    // 0. CAPA OFICIAL DO RELATÓRIO
+    const coverInfo = this.formatCoverTrainingInfo(t);
+    const coverHtml = `
+      <!-- CAPA OFICIAL DO RELATÓRIO -->
+      <div class="report-cover-page">
+        <!-- 1. PARTE SUPERIOR: IMAGEM TEMÁTICA E IDENTIFICAÇÃO -->
+        <div class="cover-top-section">
+          <div class="cover-image-container">
+            <img src="visualrelatorio/capa/figuradacapa.png" alt="Capacitação em Transporte Escolar" class="cover-main-illustration" onerror="if(window.coverAssets?.figuradacapa) this.src=window.coverAssets.figuradacapa">
+          </div>
+          
+          <div class="cover-report-id">
+            <h2>${coverInfo.numText}</h2>
+          </div>
+        </div>
+
+        <!-- 3 & 4. FAIXA CENTRAL (#E9C95C) -->
+        <div class="cover-central-stripe">
+          <h1 class="cover-main-title">CAPACITAÇÃO EM TRANSPORTE ESCOLAR</h1>
+          <p class="cover-training-details">${coverInfo.infoLine}</p>
+        </div>
+
+        <!-- 5. IDENTIFICAÇÃO DO PROJETO -->
+        <div class="cover-project-section">
+          <p class="cover-project-title">
+            Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS<br>PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL
+          </p>
+        </div>
+
+        <!-- 6. LOGOMARCAS INSTITUCIONAIS NA PARTE INFERIOR -->
+        <div class="cover-logos-banner">
+          <img src="visualrelatorio/capa/cecatefigura.svg" alt="CECATE Centro-Oeste" class="cover-logo-cecate" onerror="if(window.coverAssets?.cecate) this.src=window.coverAssets.cecate">
+          <img src="visualrelatorio/capa/ufgfigura.svg" alt="Universidade Federal de Goiás - UFG" class="cover-logo-ufg" onerror="if(window.coverAssets?.ufg) this.src=window.coverAssets.ufg">
+          <img src="visualrelatorio/capa/fndefigura.svg" alt="Fundo Nacional de Desenvolvimento da Educação - FNDE" class="cover-logo-fnde" onerror="if(window.coverAssets?.fnde) this.src=window.coverAssets.fnde">
+        </div>
+      </div>
+    `;
 
     // 1. Figuras fotográficas em ordem oficial
     const photos = (t.media || []).filter(m => m.type === 'photo');
@@ -7209,7 +7271,7 @@ class AutoReportApp {
         </div>
       `).join('');
 
-    container.innerHTML = `
+    container.innerHTML = coverHtml + `
       <div class="report-doc-page">
         <!-- CABEÇALHO OFICIAL -->
         <div style="text-align:center; border-bottom: 2px solid #1e3a8a; padding-bottom: 1.25rem; margin-bottom: 2rem;">
@@ -7492,6 +7554,18 @@ class AutoReportApp {
       el.style.boxShadow = 'none';
     });
 
+    // Garantir imagens da capa com Data URLs para impressão isolada no iframe
+    if (window.coverAssets) {
+      const coverFig = clone.querySelector('.cover-main-illustration');
+      if (coverFig && window.coverAssets.figuradacapa) coverFig.src = window.coverAssets.figuradacapa;
+      const logoCecate = clone.querySelector('.cover-logo-cecate');
+      if (logoCecate && window.coverAssets.cecate) logoCecate.src = window.coverAssets.cecate;
+      const logoUfg = clone.querySelector('.cover-logo-ufg');
+      if (logoUfg && window.coverAssets.ufg) logoUfg.src = window.coverAssets.ufg;
+      const logoFnde = clone.querySelector('.cover-logo-fnde');
+      if (logoFnde && window.coverAssets.fnde) logoFnde.src = window.coverAssets.fnde;
+    }
+
     // Iframe isolado para impressão exclusiva do relatório
     let printIframe = document.getElementById('report-pdf-print-iframe');
     if (printIframe) printIframe.remove();
@@ -7521,6 +7595,9 @@ class AutoReportApp {
       size: A4 portrait;
       margin: 15mm 15mm 15mm 15mm;
     }
+    @page:first {
+      margin: 0;
+    }
     * {
       box-sizing: border-box;
       -webkit-print-color-adjust: exact !important;
@@ -7535,6 +7612,114 @@ class AutoReportApp {
       font-size: 11pt;
       line-height: 1.6;
     }
+    .report-cover-page {
+      background-color: #4D4D4D !important;
+      color: #FFFFFF !important;
+      width: 100% !important;
+      min-height: 297mm !important;
+      height: 297mm !important;
+      max-height: 297mm !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      box-sizing: border-box !important;
+      page-break-after: always !important;
+      break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .cover-top-section {
+      padding-top: 3.5rem;
+      padding-left: 2rem;
+      padding-right: 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cover-image-container {
+      max-width: 650px;
+      width: 86%;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .cover-main-illustration {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .cover-report-id {
+      margin-top: 2.8rem;
+      margin-bottom: 0.8rem;
+      text-align: center;
+    }
+    .cover-report-id h2 {
+      color: #E9C95C !important;
+      font-size: 14.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .cover-central-stripe {
+      background-color: #E9C95C !important;
+      width: 100%;
+      padding: 1.4rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    }
+    .cover-main-title {
+      color: #000000 !important;
+      font-size: 19pt;
+      font-weight: 800;
+      margin: 0 0 0.4rem 0;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .cover-training-details {
+      color: #000000 !important;
+      font-size: 12.5pt;
+      font-weight: 600;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .cover-project-section {
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+    .cover-project-title {
+      color: #FFFFFF !important;
+      font-size: 12.5pt;
+      font-weight: 600;
+      line-height: 1.5;
+      margin: 0 auto;
+      max-width: 650px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .cover-logos-banner {
+      background-color: #E8ECEF !important;
+      width: 100%;
+      padding: 1.25rem 2.5rem;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 1.5rem;
+    }
+    .cover-logo-cecate { height: 52px; max-width: 220px; object-fit: contain; }
+    .cover-logo-ufg { height: 52px; max-width: 160px; object-fit: contain; }
+    .cover-logo-fnde { height: 52px; max-width: 200px; object-fit: contain; }
+
     .report-doc-page {
       background: #ffffff !important;
       color: #0f172a !important;

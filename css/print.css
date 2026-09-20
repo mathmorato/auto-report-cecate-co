@@ -45,6 +45,28 @@
     width: 100% !important;
   }
 
+  .report-cover-page {
+    background-color: #4D4D4D !important;
+    color: #FFFFFF !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .a4-sheet {
     max-width: 100% !important;
     min-height: auto !important;

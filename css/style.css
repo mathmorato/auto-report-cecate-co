@@ -2097,7 +2097,142 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
   display: flex;
   justify-content: center;
   overflow-y: auto;
-  max-height: 80vh;
+/* ==========================================================================
+   CAPA OFICIAL DO RELATÓRIO DE CAPACITAÇÃO (CECATE / UFG / FNDE)
+   ========================================================================== */
+.report-cover-page {
+  background-color: #4D4D4D !important;
+  color: #FFFFFF !important;
+  width: 100%;
+  max-width: 820px;
+  min-height: 1140px;
+  margin: 0 auto 3rem auto;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  page-break-after: always;
+  break-after: page;
+  font-family: 'Times New Roman', serif;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.cover-top-section {
+  padding-top: 3.5rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cover-image-container {
+  max-width: 680px;
+  width: 88%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.cover-main-illustration {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  display: inline-block;
+}
+
+.cover-report-id {
+  margin-top: 2.8rem;
+  margin-bottom: 0.8rem;
+  text-align: center;
+}
+
+.cover-report-id h2 {
+  color: #E9C95C !important;
+  font-size: 14.5pt;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0;
+  font-family: inherit;
+}
+
+.cover-central-stripe {
+  background-color: #E9C95C !important;
+  width: 100%;
+  padding: 1.4rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+}
+
+.cover-main-title {
+  color: #000000 !important;
+  font-size: 19pt;
+  font-weight: 800;
+  margin: 0 0 0.4rem 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-family: inherit;
+}
+
+.cover-training-details {
+  color: #000000 !important;
+  font-size: 12.5pt;
+  font-weight: 600;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-family: inherit;
+}
+
+.cover-project-section {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.cover-project-title {
+  color: #FFFFFF !important;
+  font-size: 12.5pt;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 650px;
+  text-transform: uppercase;
+  font-family: inherit;
+  letter-spacing: 0.3px;
+}
+
+.cover-logos-banner {
+  background-color: #E8ECEF !important;
+  width: 100%;
+  padding: 1.25rem 2.5rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 1.5rem;
+}
+
+.cover-logo-cecate {
+  height: 52px;
+  max-width: 220px;
+  object-fit: contain;
+}
+
+.cover-logo-ufg {
+  height: 52px;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+.cover-logo-fnde {
+  height: 52px;
+  max-width: 200px;
+  object-fit: contain;
 }
 
 .report-doc-page {
@@ -3010,6 +3145,24 @@ body.light-theme .team-member-editor-card .team-preview-name {
     overflow: visible !important;
     max-height: none !important;
     display: block !important;
+  }
+
+  .report-cover-page {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background-color: #4D4D4D !important;
+    color: #FFFFFF !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .report-doc-page {
