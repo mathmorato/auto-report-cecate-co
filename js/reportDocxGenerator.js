@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Oficial Word (.docx)
- * Versão: v.2.9.6
+ * Versão: v.2.9.7
  */
 
 class ReportDocxGenerator {
@@ -19,18 +19,28 @@ class ReportDocxGenerator {
       'SE': 'Sergipe', 'TO': 'Tocantins'
     };
 
-    const rawNum = training?.number != null ? String(training.number).trim() : '05';
+    const toTitleCase = (str) => {
+      if (!str) return '';
+      return str.toLowerCase().split(' ').map((word, idx) => {
+        if (idx > 0 && ['de', 'da', 'do', 'das', 'dos', 'e', 'em'].includes(word)) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }).join(' ');
+    };
+
+    const rawNum = training?.number != null ? String(training.number).trim() : '16';
     const numPadded = rawNum.length === 1 ? '0' + rawNum : rawNum;
-    const numText = `RELATÓRIO DE ATIVIDADES Nº ${numPadded}`;
+    const numText = `Relatório de Atividades  Nº ${numPadded}`;
 
-    const polo = (training?.polo || 'Goiânia').trim().toUpperCase();
+    const rawPolo = (training?.polo || 'Pontes e Lacerda').trim();
+    const polo = toTitleCase(rawPolo);
 
-    const rawUf = (training?.uf || 'GO').trim();
-    const ufFull = (ufMap[rawUf.toUpperCase()] || rawUf).toUpperCase();
+    const rawUf = (training?.uf || 'MT').trim();
+    const ufFull = ufMap[rawUf.toUpperCase()] || rawUf;
 
-    const dateStr = (training?.datesFormatted || training?.startDate || '15 de setembro de 2026').trim().toUpperCase();
+    const rawDate = (training?.datesFormatted || training?.startDate || '23 e 24 de junho de 2026').trim();
+    const dateStr = rawDate.toLowerCase();
 
-    const infoLine = `${polo} – ${ufFull} – ${dateStr}`;
+    const infoLine = `${polo}, ${ufFull}, ${dateStr}`;
 
     return { numText, infoLine, numPadded, polo, ufFull, dateStr };
   }
@@ -52,9 +62,56 @@ class ReportDocxGenerator {
     }
   }
 
-  createImageParagraph(dataUrl, width, height, captionText, docxDeps) {
+  /**
+   * Extrai dimensões naturais (largura e altura) dos bytes da imagem (PNG e JPEG)
+   */
+  getImageDimensionsFromBytes(bytes) {
+    if (!bytes || bytes.length < 24) return null;
+    try {
+      // PNG: cabeçalho 89 50 4E 47
+      if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+        const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+        const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+        if (width > 0 && height > 0) return { width, height };
+      }
+      // JPEG: cabeçalho FF D8
+      if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
+        let offset = 2;
+        while (offset < bytes.length - 8) {
+          if (bytes[offset] !== 0xFF) { offset++; continue; }
+          const marker = bytes[offset + 1];
+          if (marker === 0xC0 || marker === 0xC1 || marker === 0xC2) {
+            const height = (bytes[offset + 5] << 8) | bytes[offset + 6];
+            const width = (bytes[offset + 7] << 8) | bytes[offset + 8];
+            if (width > 0 && height > 0) return { width, height };
+          }
+          const length = (bytes[offset + 2] << 8) | bytes[offset + 3];
+          offset += 2 + length;
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao ler dimensões da imagem:', e);
+    }
+    return null;
+  }
+
+  /**
+   * Cria parágrafo de imagem no Word garantindo proporção e evitando deformações
+   */
+  createImageParagraph(dataUrl, maxTargetWidth, maxTargetHeight, captionText, docxDeps) {
     const bytes = this.base64ToUint8Array(dataUrl);
     if (!bytes) return null;
+
+    let width = maxTargetWidth || 500;
+    let height = maxTargetHeight || 300;
+
+    // Preservar aspect ratio proporcional natural da imagem
+    const dims = this.getImageDimensionsFromBytes(bytes);
+    if (dims && dims.width > 0 && dims.height > 0) {
+      const scale = Math.min(width / dims.width, height / dims.height, 1);
+      width = Math.round(dims.width * scale);
+      height = Math.round(dims.height * scale);
+    }
 
     const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps;
 
@@ -135,11 +192,11 @@ class ReportDocxGenerator {
         topChildren.push(
           new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 600, after: 350 },
+            spacing: { before: 550, after: 300 },
             children: [
               new ImageRun({
                 data: figBytes,
-                transformation: { width: 490, height: 275 }
+                transformation: { width: 520, height: 292 }
               })
             ]
           })
@@ -164,13 +221,14 @@ class ReportDocxGenerator {
       topChildren.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 200, after: 350 },
+          spacing: { before: 150, after: 300 },
           children: [
             new TextRun({
               text: coverInfo.numText,
+              font: 'Times New Roman',
               bold: true,
-              size: 28, // 14pt
-              color: 'E9C95C'
+              size: 32, // 16pt
+              color: 'F9DB61'
             })
           ]
         })
@@ -179,24 +237,26 @@ class ReportDocxGenerator {
       const stripeChildren = [
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 180, after: 70 },
+          spacing: { before: 140, after: 60 },
           children: [
             new TextRun({
               text: 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR',
+              font: 'Times New Roman',
               bold: true,
-              size: 34, // 17pt
+              size: 40, // 20pt
               color: '000000'
             })
           ]
         }),
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 60, after: 200 },
+          spacing: { before: 60, after: 140 },
           children: [
             new TextRun({
               text: coverInfo.infoLine,
+              font: 'Times New Roman',
               bold: true,
-              size: 22, // 11pt
+              size: 32, // 16pt
               color: '000000'
             })
           ]
@@ -206,14 +266,14 @@ class ReportDocxGenerator {
       const projectChildren = [
         new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 600, after: 750 },
+          spacing: { before: 600, after: 600 },
           children: [
             new TextRun({
-              text: 'Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS\nPÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+              text: 'Projeto:  FORTALECENDO E APRIMORANDO AS POLÍTICAS\n            PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL',
+              font: 'Times New Roman',
               bold: true,
-              italics: true,
-              size: 22,
-              color: 'FFFFFF'
+              size: 32, // 16pt
+              color: 'D9D9D9'
             })
           ]
         })
@@ -229,7 +289,7 @@ class ReportDocxGenerator {
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 60, after: 60 },
+                spacing: { before: 40, after: 40 },
                 children: [
                   new ImageRun({
                     data: cecateBytes,
@@ -249,7 +309,7 @@ class ReportDocxGenerator {
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 60, after: 60 },
+                spacing: { before: 40, after: 40 },
                 children: [
                   new ImageRun({
                     data: ufgBytes,
@@ -269,11 +329,11 @@ class ReportDocxGenerator {
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 60, after: 60 },
+                spacing: { before: 40, after: 40 },
                 children: [
                   new ImageRun({
                     data: fndeBytes,
-                    transformation: { width: 133, height: 37 }
+                    transformation: { width: 165, height: 37 }
                   })
                 ]
               })
@@ -338,9 +398,24 @@ class ReportDocxGenerator {
           new TableRow({
             children: [
               new TableCell({
-                shading: { fill: 'E8ECEF' },
+                shading: { fill: 'D8D8D8' },
                 borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-                children: [logosTable]
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { before: 80, after: 60 },
+                    children: [
+                      new TextRun({
+                        text: 'Realizado por:',
+                        font: 'Arial',
+                        bold: true,
+                        size: 20, // 10pt
+                        color: '4D4D4D'
+                      })
+                    ]
+                  }),
+                  logosTable
+                ]
               })
             ]
           })
@@ -699,38 +774,93 @@ class ReportDocxGenerator {
       const fndeDocs = (training.media || []).filter(m => m.type === 'doc_fnde');
       const cecateDocs = (training.media || []).filter(m => m.type === 'doc_cecate');
 
+      // APÊNDICE I: CONVOCAÇÕES DO FNDE
       docChildren.push(
         new Paragraph({
           spacing: { before: 500, after: 200 },
           heading: HeadingLevel.HEADING_1,
           children: [new TextRun({ text: 'APÊNDICE I: CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })]
-        }),
-        new Paragraph({
-          spacing: { after: 200 },
-          children: [
-            new TextRun({
-              text: fndeDocs.length > 0
-                ? `Relação de ofícios e documentos de convocação emitidos pelo FNDE referentes a esta capacitação: ${fndeDocs.map(d => d.fileName).join(', ')}.`
-                : 'Nenhum documento de convocação do FNDE anexado.'
+        })
+      );
+
+      if (fndeDocs.length === 0) {
+        docChildren.push(
+          new Paragraph({
+            spacing: { after: 200 },
+            children: [new TextRun({ text: 'Nenhum documento de convocação do FNDE anexado.', italics: true, color: '64748B' })]
+          })
+        );
+      } else {
+        fndeDocs.forEach((d) => {
+          const pages = (d.pageImages && d.pageImages.length > 0) ? d.pageImages : (d.blob?.startsWith('data:image/') ? [d.blob] : []);
+          docChildren.push(
+            new Paragraph({
+              spacing: { before: 200, after: 100 },
+              children: [
+                new TextRun({ text: `Documento: ${d.fileName || d.caption || 'Ofício de Convocação FNDE'}`, bold: true, size: 22, color: '0F172A' })
+              ]
             })
-          ]
-        }),
+          );
+          if (pages.length > 0) {
+            pages.forEach((pgImg, pgIdx) => {
+              const cap = pages.length > 1 ? `${d.fileName} - Página ${pgIdx + 1}` : d.fileName;
+              const imgNodes = this.createImageParagraph(pgImg, 500, 700, cap, docxDeps);
+              if (imgNodes) docChildren.push(...imgNodes);
+            });
+          } else {
+            docChildren.push(
+              new Paragraph({
+                spacing: { after: 150 },
+                children: [new TextRun({ text: `Arquivo anexado: ${d.fileName}`, italics: true, color: '475569' })]
+              })
+            );
+          }
+        });
+      }
+
+      // APÊNDICE II: CONVOCAÇÕES DO CECATE
+      docChildren.push(
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
           children: [new TextRun({ text: 'APÊNDICE II: CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })]
-        }),
-        new Paragraph({
-          spacing: { after: 200 },
-          children: [
-            new TextRun({
-              text: cecateDocs.length > 0
-                ? `Relação de convocações e comunicados emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação: ${cecateDocs.map(d => d.fileName).join(', ')}.`
-                : 'Nenhuma convocação do CECATE anexada.'
-            })
-          ]
         })
       );
+
+      if (cecateDocs.length === 0) {
+        docChildren.push(
+          new Paragraph({
+            spacing: { after: 200 },
+            children: [new TextRun({ text: 'Nenhuma convocação do CECATE anexada.', italics: true, color: '64748B' })]
+          })
+        );
+      } else {
+        cecateDocs.forEach((d) => {
+          const pages = (d.pageImages && d.pageImages.length > 0) ? d.pageImages : (d.blob?.startsWith('data:image/') ? [d.blob] : []);
+          docChildren.push(
+            new Paragraph({
+              spacing: { before: 200, after: 100 },
+              children: [
+                new TextRun({ text: `Documento: ${d.fileName || d.caption || 'Convocação CECATE-CO'}`, bold: true, size: 22, color: '0F172A' })
+              ]
+            })
+          );
+          if (pages.length > 0) {
+            pages.forEach((pgImg, pgIdx) => {
+              const cap = pages.length > 1 ? `${d.fileName} - Página ${pgIdx + 1}` : d.fileName;
+              const imgNodes = this.createImageParagraph(pgImg, 500, 700, cap, docxDeps);
+              if (imgNodes) docChildren.push(...imgNodes);
+            });
+          } else {
+            docChildren.push(
+              new Paragraph({
+                spacing: { after: 150 },
+                children: [new TextRun({ text: `Arquivo anexado: ${d.fileName}`, italics: true, color: '475569' })]
+              })
+            );
+          }
+        });
+      }
 
       // CRIAR DOCUMENTO DOCX COM DUAS SEÇÕES: CAPA OFICIAL E CONTEÚDO TÉCNICO
       const doc = new Document({
@@ -738,7 +868,7 @@ class ReportDocxGenerator {
           {
             properties: {
               page: {
-                margin: { top: 400, right: 400, bottom: 400, left: 400 }
+                margin: { top: 0, right: 0, bottom: 0, left: 0 }
               }
             },
             children: [coverTable]

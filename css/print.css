@@ -63,8 +63,133 @@
     break-after: page !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    font-family: 'Times New Roman', serif !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .cover-top-section {
+    padding-top: 3.5rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cover-image-container {
+    max-width: 650px;
+    width: 86%;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .cover-main-illustration {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .cover-report-id {
+    margin-top: 2.5rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+
+  .cover-report-id h2 {
+    color: #F9DB61 !important;
+    font-size: 16pt;
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Times New Roman', serif;
+  }
+
+  .cover-central-stripe {
+    background-color: #E9C95C !important;
+    width: 100%;
+    padding: 1.4rem 1.5rem;
+    text-align: center;
+  }
+
+  .cover-main-title {
+    color: #000000 !important;
+    font-size: 20pt;
+    font-weight: 800;
+    margin: 0 0 0.4rem 0;
+    text-transform: uppercase;
+    font-family: 'Times New Roman', serif;
+  }
+
+  .cover-training-details {
+    color: #000000 !important;
+    font-size: 16pt;
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Times New Roman', serif;
+  }
+
+  .cover-project-section {
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+
+  .cover-project-title {
+    color: #D9D9D9 !important;
+    font-size: 16pt;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 0 auto;
+    max-width: 700px;
+    font-family: 'Times New Roman', serif;
+  }
+
+  .cover-logos-banner {
+    background-color: #D8D8D8 !important;
+    width: 100%;
+    padding: 1rem 2.5rem 1.25rem 2.5rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+  }
+
+  .cover-realizado-por {
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    color: #4D4D4D !important;
+    margin: 0;
+    text-align: center;
+  }
+
+  .cover-logos-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+    gap: 1.5rem;
+  }
+
+  .cover-logo-cecate { height: 48px; max-width: 220px; object-fit: contain; }
+  .cover-logo-ufg { height: 48px; max-width: 160px; object-fit: contain; }
+  .cover-logo-fnde { height: 48px; max-width: 200px; object-fit: contain; }
+
+  .appendix-document-block {
+    page-break-inside: avoid;
+    margin-bottom: 2rem;
+  }
+
+  .appendix-document-block img {
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 250mm !important;
+    display: block !important;
+    margin: 0 auto 1.5rem auto !important;
+    object-fit: contain !important;
   }
 
   .a4-sheet {

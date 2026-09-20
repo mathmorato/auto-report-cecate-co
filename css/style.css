@@ -2152,13 +2152,12 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
 }
 
 .cover-report-id h2 {
-  color: #E9C95C !important;
-  font-size: 14.5pt;
+  color: #F9DB61 !important;
+  font-size: 16pt;
   font-weight: 700;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   margin: 0;
-  font-family: inherit;
+  font-family: 'Times New Roman', serif;
 }
 
 .cover-central-stripe {
@@ -2171,22 +2170,21 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
 
 .cover-main-title {
   color: #000000 !important;
-  font-size: 19pt;
+  font-size: 20pt;
   font-weight: 800;
   margin: 0 0 0.4rem 0;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  font-family: inherit;
+  font-family: 'Times New Roman', serif;
 }
 
 .cover-training-details {
   color: #000000 !important;
-  font-size: 12.5pt;
-  font-weight: 600;
+  font-size: 16pt;
+  font-weight: 700;
   margin: 0;
-  text-transform: uppercase;
   letter-spacing: 0.3px;
-  font-family: inherit;
+  font-family: 'Times New Roman', serif;
 }
 
 .cover-project-section {
@@ -2195,42 +2193,59 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
 }
 
 .cover-project-title {
-  color: #FFFFFF !important;
-  font-size: 12.5pt;
-  font-weight: 600;
+  color: #D9D9D9 !important;
+  font-size: 16pt;
+  font-weight: 700;
   line-height: 1.5;
   margin: 0 auto;
-  max-width: 650px;
-  text-transform: uppercase;
-  font-family: inherit;
+  max-width: 720px;
+  font-family: 'Times New Roman', serif;
   letter-spacing: 0.3px;
 }
 
 .cover-logos-banner {
-  background-color: #E8ECEF !important;
+  background-color: #D8D8D8 !important;
   width: 100%;
-  padding: 1.25rem 2.5rem;
+  padding: 1rem 2.5rem 1.25rem 2.5rem;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.cover-realizado-por {
+  font-family: Arial, sans-serif;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #4D4D4D !important;
+  margin: 0;
+  text-align: center;
+}
+
+.cover-logos-row {
   display: flex;
   align-items: center;
   justify-content: space-around;
+  width: 100%;
   gap: 1.5rem;
 }
 
 .cover-logo-cecate {
-  height: 52px;
+  height: 48px;
   max-width: 220px;
   object-fit: contain;
 }
 
 .cover-logo-ufg {
-  height: 52px;
+  height: 48px;
   max-width: 160px;
   object-fit: contain;
 }
 
 .cover-logo-fnde {
-  height: 52px;
+  height: 48px;
   max-width: 200px;
   object-fit: contain;
 }

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.6
+ * Versão: v.2.9.7
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.6';
+    this.version = 'v.2.9.7';
   }
 
   /**
@@ -50,6 +50,11 @@ class AutoReportApp {
    */
   async init() {
     console.log(`Inicializando AutoReport CECATE ${this.version}...`);
+
+    // Configurar PDF.js Worker localmente para extração offline de apêndices
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/vendor/pdf.worker.min.js';
+    }
 
     // Sincronizar versão em todos os rodapés (principal e lateral)
     const footerVerEl = document.getElementById('app-footer-version');
@@ -6918,6 +6923,46 @@ class AutoReportApp {
     await this.handleAppendixUpload(type, mockEvent);
   }
 
+  /**
+   * Extrai páginas de documentos (PDFs ou imagens) em formato Data URL PNG para exibição visual no relatório
+   */
+  async extractDocPageImages(dataUrl, fileType, fileName) {
+    if (!dataUrl) return [];
+    if (fileType?.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(fileName || '')) {
+      return [dataUrl];
+    }
+    if ((fileType === 'application/pdf' || /\.pdf$/i.test(fileName || '')) && window.pdfjsLib) {
+      try {
+        if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/vendor/pdf.worker.min.js';
+        }
+        const base64Data = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+        const binaryString = atob(base64Data);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let j = 0; j < len; j++) {
+          bytes[j] = binaryString.charCodeAt(j);
+        }
+        const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+        const pageImages = [];
+        for (let num = 1; num <= pdf.numPages; num++) {
+          const page = await pdf.getPage(num);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          pageImages.push(canvas.toDataURL('image/png'));
+        }
+        return pageImages;
+      } catch (err) {
+        console.warn('Erro ao converter páginas do PDF para imagens:', err);
+      }
+    }
+    return [];
+  }
+
   async handleAppendixUpload(type, event) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -6927,11 +6972,13 @@ class AutoReportApp {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const dataUrl = await this.fileToDataUrl(file);
+      const pageImages = await this.extractDocPageImages(dataUrl, file.type, file.name);
 
       this.currentTraining.media.push({
         id: `doc_${type}_${Date.now()}_${i}`,
         type: type, // 'doc_fnde' ou 'doc_cecate'
         blob: dataUrl,
+        pageImages: pageImages,
         caption: file.name,
         fileName: file.name,
         fileSize: file.size,
@@ -7138,25 +7185,50 @@ class AutoReportApp {
       'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina', 'SP': 'São Paulo',
       'SE': 'Sergipe', 'TO': 'Tocantins'
     };
-    const rawNum = training?.number != null ? String(training.number).trim() : '05';
+
+    const toTitleCase = (str) => {
+      if (!str) return '';
+      return str.toLowerCase().split(' ').map((word, idx) => {
+        if (idx > 0 && ['de', 'da', 'do', 'das', 'dos', 'e', 'em'].includes(word)) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }).join(' ');
+    };
+
+    const rawNum = training?.number != null ? String(training.number).trim() : '16';
     const numPadded = rawNum.length === 1 ? '0' + rawNum : rawNum;
-    const numText = `RELATÓRIO DE ATIVIDADES Nº ${numPadded}`;
-    const polo = (training?.polo || 'Goiânia').trim().toUpperCase();
-    const rawUf = (training?.uf || 'GO').trim();
-    const ufFull = (ufMap[rawUf.toUpperCase()] || rawUf).toUpperCase();
-    const dateStr = (training?.datesFormatted || training?.startDate || '15 de setembro de 2026').trim().toUpperCase();
-    const infoLine = `${polo} – ${ufFull} – ${dateStr}`;
+    const numText = `Relatório de Atividades  Nº ${numPadded}`;
+
+    const rawPolo = (training?.polo || 'Pontes e Lacerda').trim();
+    const polo = toTitleCase(rawPolo);
+
+    const rawUf = (training?.uf || 'MT').trim();
+    const ufFull = ufMap[rawUf.toUpperCase()] || rawUf;
+
+    const rawDate = (training?.datesFormatted || training?.startDate || '23 e 24 de junho de 2026').trim();
+    const dateStr = rawDate.toLowerCase();
+
+    const infoLine = `${polo}, ${ufFull}, ${dateStr}`;
+
     return { numText, infoLine, numPadded, polo, ufFull, dateStr };
   }
 
   /* ==========================================================================
      ETAPA 11: PRÉ-VISUALIZAÇÃO & GERAÇÃO FINAL DO RELATÓRIO
      ========================================================================== */
-  renderReportPreviewStep() {
+  async renderReportPreviewStep() {
     const container = document.getElementById('wizard-report-preview-document');
     if (!container || !this.currentTraining || !window.statsEngine) return;
 
     const t = this.currentTraining;
+
+    // Assegurar extração de páginas para documentos que ainda não tenham pageImages
+    const appendixDocs = (t.media || []).filter(m => (m.type === 'doc_fnde' || m.type === 'doc_cecate') && (!m.pageImages || m.pageImages.length === 0));
+    for (const doc of appendixDocs) {
+      if (doc.blob) {
+        doc.pageImages = await this.extractDocPageImages(doc.blob, doc.fileType, doc.fileName);
+      }
+    }
+
     const metrics = window.statsEngine.calculateAllMetrics(t);
     this.metrics = metrics;
 
@@ -7185,15 +7257,18 @@ class AutoReportApp {
         <!-- 5. IDENTIFICAÇÃO DO PROJETO -->
         <div class="cover-project-section">
           <p class="cover-project-title">
-            Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS<br>PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL
+            Projeto:  FORTALECENDO E APRIMORANDO AS POLÍTICAS<br>PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL
           </p>
         </div>
 
         <!-- 6. LOGOMARCAS INSTITUCIONAIS NA PARTE INFERIOR -->
         <div class="cover-logos-banner">
-          <img src="visualrelatorio/capa/cecatefigura.svg" alt="CECATE Centro-Oeste" class="cover-logo-cecate" onerror="if(window.coverAssets?.cecate) this.src=window.coverAssets.cecate">
-          <img src="visualrelatorio/capa/ufgfigura.svg" alt="Universidade Federal de Goiás - UFG" class="cover-logo-ufg" onerror="if(window.coverAssets?.ufg) this.src=window.coverAssets.ufg">
-          <img src="visualrelatorio/capa/fndefigura.svg" alt="Fundo Nacional de Desenvolvimento da Educação - FNDE" class="cover-logo-fnde" onerror="if(window.coverAssets?.fnde) this.src=window.coverAssets.fnde">
+          <div class="cover-realizado-por">Realizado por:</div>
+          <div class="cover-logos-row">
+            <img src="visualrelatorio/capa/cecatefigura.svg" alt="CECATE Centro-Oeste" class="cover-logo-cecate" onerror="if(window.coverAssets?.cecate) this.src=window.coverAssets.cecate">
+            <img src="visualrelatorio/capa/ufgfigura.svg" alt="Universidade Federal de Goiás - UFG" class="cover-logo-ufg" onerror="if(window.coverAssets?.ufg) this.src=window.coverAssets.ufg">
+            <img src="visualrelatorio/capa/fndefigura.svg" alt="Fundo Nacional de Desenvolvimento da Educação - FNDE" class="cover-logo-fnde" onerror="if(window.coverAssets?.fnde) this.src=window.coverAssets.fnde">
+          </div>
         </div>
       </div>
     `;
@@ -7243,33 +7318,42 @@ class AutoReportApp {
       photosHtml = `<p style="color:var(--text-muted); font-style:italic;">Nenhum registro fotográfico anexado no momento.</p>`;
     }
 
-    // 2. Apêndices (FNDE e CECATE)
+    // 2. Apêndices (FNDE e CECATE) com visualização das páginas dos documentos
     const fndeDocs = (t.media || []).filter(m => m.type === 'doc_fnde');
     const cecateDocs = (t.media || []).filter(m => m.type === 'doc_cecate');
 
+    const renderAppendixDocHtml = (d) => {
+      const pages = (d.pageImages && d.pageImages.length > 0) ? d.pageImages : (d.blob?.startsWith('data:image/') ? [d.blob] : []);
+      let visualHtml = '';
+      if (pages.length > 0) {
+        visualHtml = pages.map((pg, idx) => `
+          <div style="margin: 1.25rem 0; text-align: center; page-break-inside: avoid;">
+            <img src="${pg}" alt="${d.fileName} - Pág ${idx + 1}" style="max-width: 100%; height: auto; max-height: 850px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); box-shadow: 0 4px 14px rgba(0,0,0,0.08); display: inline-block;">
+            ${pages.length > 1 ? `<p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem; font-style: italic;">Página ${idx + 1} de ${pages.length}</p>` : ''}
+          </div>
+        `).join('');
+      }
+      return `
+        <div class="appendix-document-block" style="margin-bottom: 2rem; page-break-inside: avoid;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.75rem;">
+            <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span style="font-weight:700; font-size:0.9rem; color:var(--text-primary);">${d.fileName}</span>
+            </div>
+            ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Baixar Arquivo</a>` : ''}
+          </div>
+          ${visualHtml}
+        </div>
+      `;
+    };
+
     const fndeHtml = fndeDocs.length === 0
       ? `<p style="color:var(--text-muted); font-style:italic;">Nenhum documento de convocação do FNDE anexado.</p>`
-      : fndeDocs.map(d => `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.4rem;">
-          <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary);">${d.fileName}</span>
-          </div>
-          ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Visualizar / Baixar</a>` : ''}
-        </div>
-      `).join('');
+      : fndeDocs.map(d => renderAppendixDocHtml(d)).join('');
 
     const cecateHtml = cecateDocs.length === 0
       ? `<p style="color:var(--text-muted); font-style:italic;">Nenhuma convocação ou comunicado do CECATE anexado.</p>`
-      : cecateDocs.map(d => `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.4rem;">
-          <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary);">${d.fileName}</span>
-          </div>
-          ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Visualizar / Baixar</a>` : ''}
-        </div>
-      `).join('');
+      : cecateDocs.map(d => renderAppendixDocHtml(d)).join('');
 
     container.innerHTML = coverHtml + `
       <div class="report-doc-page">
@@ -7494,6 +7578,14 @@ class AutoReportApp {
       }
     });
 
+    // Garantir conversão de PDFs de apêndices para imagens antes de gerar o Word
+    const appendixDocs = (this.currentTraining.media || []).filter(m => (m.type === 'doc_fnde' || m.type === 'doc_cecate') && (!m.pageImages || m.pageImages.length === 0));
+    for (const doc of appendixDocs) {
+      if (doc.blob) {
+        doc.pageImages = await this.extractDocPageImages(doc.blob, doc.fileType, doc.fileName);
+      }
+    }
+
     await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics, imagesData);
     this.showToast('Documento Word (.docx) baixado com sucesso!', 'success');
   }
@@ -7707,18 +7799,34 @@ class AutoReportApp {
       letter-spacing: 0.3px;
     }
     .cover-logos-banner {
-      background-color: #E8ECEF !important;
+      background-color: #D8D8D8 !important;
       width: 100%;
-      padding: 1.25rem 2.5rem;
+      padding: 1rem 2.5rem 1.25rem 2.5rem;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+    }
+    .cover-realizado-por {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #4D4D4D !important;
+      margin: 0;
+      text-align: center;
+    }
+    .cover-logos-row {
       display: flex;
       align-items: center;
       justify-content: space-around;
+      width: 100%;
       gap: 1.5rem;
     }
-    .cover-logo-cecate { height: 52px; max-width: 220px; object-fit: contain; }
-    .cover-logo-ufg { height: 52px; max-width: 160px; object-fit: contain; }
-    .cover-logo-fnde { height: 52px; max-width: 200px; object-fit: contain; }
+    .cover-logo-cecate { height: 48px; max-width: 220px; object-fit: contain; }
+    .cover-logo-ufg { height: 48px; max-width: 160px; object-fit: contain; }
+    .cover-logo-fnde { height: 48px; max-width: 200px; object-fit: contain; }
 
     .report-doc-page {
       background: #ffffff !important;
@@ -7795,6 +7903,12 @@ class AutoReportApp {
   async directDownloadDocx(trainingId) {
     const full = await window.db.getTrainingFull(trainingId);
     if (full && window.reportDocxGenerator && window.statsEngine) {
+      const appendixDocs = (full.media || []).filter(m => (m.type === 'doc_fnde' || m.type === 'doc_cecate') && (!m.pageImages || m.pageImages.length === 0));
+      for (const doc of appendixDocs) {
+        if (doc.blob) {
+          doc.pageImages = await this.extractDocPageImages(doc.blob, doc.fileType, doc.fileName);
+        }
+      }
       const metrics = window.statsEngine.calculateAllMetrics(full);
       this.showToast('Gerando arquivo Word (.docx)...');
       await window.reportDocxGenerator.generateAndDownload(full, metrics);
