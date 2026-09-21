@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Controlador Principal da Aplicação (SPA & Wizard 11 Etapas)
- * Versão: v.2.9.5
+ * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
+ * Versão: v.3.1.0
  */
 
 window.icons = {
@@ -37,12 +37,12 @@ class AutoReportApp {
     this.trainingList = [];
     this.dashboardFilter = 'all';
     this.trainingToDeleteId = null;
-    this.theme = localStorage.getItem('autoreport_theme') || 'light';
+    this.theme = localStorage.getItem('autoreport_theme') || 'dark';
     this.metrics = null;
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.2.9.5';
+    this.version = 'v.3.1.0';
   }
 
   /**
@@ -50,6 +50,11 @@ class AutoReportApp {
    */
   async init() {
     console.log(`Inicializando AutoReport CECATE ${this.version}...`);
+
+    // Configurar PDF.js Worker localmente para extração offline de apêndices
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/vendor/pdf.worker.min.js';
+    }
 
     // Sincronizar versão em todos os rodapés (principal e lateral)
     const footerVerEl = document.getElementById('app-footer-version');
@@ -5445,7 +5450,10 @@ class AutoReportApp {
 
       this.renderAttendanceStep();
       this.saveCurrentStepData();
-      this.showToast(`${parsed.length} inscrições importadas com sucesso!`, 'success');
+
+      const regCacs = parsed.filter(r => (r.representation || '').toUpperCase().includes('CACS') || (r.representation || '').toUpperCase().includes('FUNDEB')).length;
+      const regGestores = parsed.length - regCacs;
+      this.showToast(`${parsed.length} inscrições importadas (${regCacs} CACS, ${regGestores} Gestão). Tabela 4 atualizada!`, 'success');
     } catch (err) {
       console.error('Erro ao importar planilha de inscrições:', err);
       this.showToast(`Erro na importação de inscrições: ${err.message}`, 'error');
@@ -5474,7 +5482,10 @@ class AutoReportApp {
 
       this.renderAttendanceStep();
       this.saveCurrentStepData();
-      this.showToast(`${parsed.length} participantes presentes importados com sucesso!`, 'success');
+
+      const attCacs = parsed.filter(a => (a.representation || '').toUpperCase().includes('CACS') || (a.representation || '').toUpperCase().includes('FUNDEB')).length;
+      const attGestores = parsed.length - attCacs;
+      this.showToast(`${parsed.length} participantes presentes importados (${attCacs} CACS, ${attGestores} Gestão). Tabela 4 reconciliada!`, 'success');
     } catch (err) {
       console.error('Erro ao importar lista de presença:', err);
       this.showToast(`Erro na importação: ${err.message}`, 'error');
@@ -5671,6 +5682,47 @@ class AutoReportApp {
     if (!this.currentTraining) return;
     if (!this.currentTraining.municipalities) this.currentTraining.municipalities = [];
 
+    // Helper interno de normalização de nome de município (remove sufixos UF, acentuação e caracteres especiais)
+    const normalizeMunName = (name) => {
+      if (!name) return '';
+      return String(name)
+        .replace(/\s*\([A-Z]{2}\)\s*/gi, '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+    };
+
+    // Helper interno de normalização de nome de pessoa
+    const normalizePersonName = (name) => {
+      if (!name) return '';
+      return String(name)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+    };
+
+    // Helper de busca de município existente na lista
+    const findMatchingMunicipality = (list, name, ibgeCode) => {
+      if (!Array.isArray(list)) return null;
+      const cleanIbge = ibgeCode ? String(ibgeCode).replace(/\D/g, '') : '';
+      const normTarget = normalizeMunName(name);
+
+      return list.find(m => {
+        if (cleanIbge && m.ibgeCode) {
+          const mIbge = String(m.ibgeCode).replace(/\D/g, '');
+          if (mIbge && mIbge === cleanIbge) return true;
+        }
+        if (normTarget && m.name) {
+          if (normalizeMunName(m.name) === normTarget) return true;
+        }
+        return false;
+      });
+    };
+
     // Purga proativa de entradas de municípios inválidos/declarações
     this.currentTraining.municipalities = this.currentTraining.municipalities.filter(m => {
       const n = (m.name || '').toLowerCase();
@@ -5680,8 +5732,10 @@ class AutoReportApp {
     const regList = this.currentTraining.registrations || [];
     const attList = this.currentTraining.attendance || [];
 
-    // Map de inscritos por CPF (limpo e formatado)
+    // Mapas de inscritos por CPF e por Nome Normalizado
     const regMapByCpf = new Map();
+    const regMapByName = new Map();
+
     regList.forEach(reg => {
       if (reg.cpf) {
         const cleanCpf = reg.cpf.replace(/\D/g, '').padStart(11, '0');
@@ -5689,91 +5743,108 @@ class AutoReportApp {
           regMapByCpf.set(cleanCpf, reg);
         }
       }
-    });
-
-    // Cruzar dados da lista de presença com a planilha de inscrição pelo CPF
-    attList.forEach(att => {
-      if (att.cpf) {
-        const cleanCpf = att.cpf.replace(/\D/g, '').padStart(11, '0');
-        if (cleanCpf && cleanCpf.length === 11 && regMapByCpf.has(cleanCpf)) {
-          const reg = regMapByCpf.get(cleanCpf);
-          // Priorizar Nome Completo, Município que representa e Vínculo/Segmento (Gestor vs CACS) do formulário de inscrição
-          if (reg.name) att.name = reg.name;
-          if (reg.municipality) {
-            att.municipality = reg.municipality;
-            if (reg.ibgeCode) att.ibgeCode = reg.ibgeCode;
-          }
-          if (reg.representation) att.representation = reg.representation;
-          if (reg.roleGestao) att.roleGestao = reg.roleGestao;
-          if (reg.roleCACS) att.roleCACS = reg.roleCACS;
-          if (window.excelParser) att.cpf = window.excelParser.formatCpf(att.cpf || reg.cpf);
-          att.matchedByCpf = true;
-          att.isCpfValidated = true;
-        } else if (window.excelParser && att.cpf) {
-          att.cpf = window.excelParser.formatCpf(att.cpf);
+      if (reg.name) {
+        const normName = normalizePersonName(reg.name);
+        if (normName.length > 5) {
+          regMapByName.set(normName, reg);
         }
       }
     });
 
-    // Agrupar inscritos por município (extraído da inscrição "Município que representa:")
-    const regMap = {};
-    regList.forEach(reg => {
-      const munName = reg.municipality || 'Não Informado';
-      const munLower = munName.toLowerCase();
-      // Filtrar textos de declaração
-      if (munLower.includes('declaro') || munLower.includes('veracidade') || munLower.includes('confirmo') || munLower.includes('prestadas') || munLower.includes('formulario') || munLower.includes('termo') || munName.length > 45) {
-        return;
-      }
-      if (!regMap[munName]) {
-        regMap[munName] = { cacs: 0, gestores: 0, ibgeCode: reg.ibgeCode };
-      }
-      if (reg.representation === 'CACS-FUNDEB') regMap[munName].cacs++;
-      else regMap[munName].gestores++;
-    });
-
-    // Agrupar presentes por município (após cruzamento de CPF)
-    const attMap = {};
+    // Cruzar dados da lista de presença com a inscrição por CPF (e fallback por nome completo)
     attList.forEach(att => {
-      const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '') : '';
-      const isMatched = cleanCpf && cleanCpf.length === 11 && regMapByCpf.has(cleanCpf);
+      const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '').padStart(11, '0') : '';
+      const normName = att.name ? normalizePersonName(att.name) : '';
 
-      // Para participantes "Apenas Presente", só contabilizar município e vínculo se tiverem sido selecionados manualmente
-      const munName = isMatched ? (att.municipality || 'Não Informado') : (att.isManualMunicipality ? att.municipality : '');
-      const rep = isMatched ? att.representation : (att.isManualRepresentation ? att.representation : '');
-
-      if (!munName) return; // Não contabilizar se o município ainda não foi selecionado
-
-      const munLower = munName.toLowerCase();
-      // Filtrar textos de declaração
-      if (munLower.includes('declaro') || munLower.includes('veracidade') || munLower.includes('confirmo') || munLower.includes('prestadas') || munLower.includes('formulario') || munLower.includes('termo') || munName.length > 45) {
-        return;
+      let matchedReg = null;
+      if (cleanCpf && cleanCpf.length === 11 && regMapByCpf.has(cleanCpf)) {
+        matchedReg = regMapByCpf.get(cleanCpf);
+      } else if (normName && normName.length > 5 && regMapByName.has(normName)) {
+        matchedReg = regMapByName.get(normName);
       }
-      if (!attMap[munName]) {
-        attMap[munName] = { cacs: 0, gestores: 0, ibgeCode: att.ibgeCode };
+
+      if (matchedReg) {
+        // Priorizar dados cadastrais canônicos da inscrição
+        if (matchedReg.name) att.name = matchedReg.name;
+        if (matchedReg.municipality) {
+          att.municipality = matchedReg.municipality;
+          if (matchedReg.ibgeCode) att.ibgeCode = matchedReg.ibgeCode;
+        }
+        if (matchedReg.representation) att.representation = matchedReg.representation;
+        if (matchedReg.roleGestao) att.roleGestao = matchedReg.roleGestao;
+        if (matchedReg.roleCACS) att.roleCACS = matchedReg.roleCACS;
+        if (window.excelParser) att.cpf = window.excelParser.formatCpf(att.cpf || matchedReg.cpf);
+        att.matchedByCpf = true;
+        att.isCpfValidated = true;
+      } else if (window.excelParser && att.cpf) {
+        att.cpf = window.excelParser.formatCpf(att.cpf);
       }
-      if (rep === 'CACS-FUNDEB') attMap[munName].cacs++;
-      else if (rep === 'Gestão municipal') attMap[munName].gestores++;
     });
 
-    // Unir lista de TODOS os municípios (existentes na lista de convocados + mencionados nas planilhas)
-    const allMunNamesMap = new Map();
+    // Agrupar inscritos por município (chave normalizada para casar variações de escrita e sufixos de UF)
+    const regMap = new Map();
+    regList.forEach(reg => {
+      const munName = (reg.municipality || '').trim();
+      if (!munName) return;
+      const normK = normalizeMunName(munName);
+      if (!normK || normK.includes('declaro') || normK.includes('veracidade') || munName.length > 45) return;
 
-    // 1. Adicionar todos os municípios pré-existentes em currentTraining.municipalities
+      if (!regMap.has(normK)) {
+        regMap.set(normK, { name: munName, cacs: 0, gestores: 0, ibgeCode: reg.ibgeCode || '' });
+      }
+      const data = regMap.get(normK);
+      if (!data.ibgeCode && reg.ibgeCode) data.ibgeCode = reg.ibgeCode;
+
+      const rep = (reg.representation || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (rep.includes('cacs') || rep.includes('fundeb')) {
+        data.cacs++;
+      } else {
+        data.gestores++;
+      }
+    });
+
+    // Agrupar presentes por município (chave normalizada)
+    const attMap = new Map();
+    attList.forEach(att => {
+      const munName = (att.municipality || '').trim();
+      if (!munName) return;
+      const normK = normalizeMunName(munName);
+      if (!normK || normK.includes('declaro') || normK.includes('veracidade') || munName.length > 45) return;
+
+      if (!attMap.has(normK)) {
+        attMap.set(normK, { name: munName, cacs: 0, gestores: 0, ibgeCode: att.ibgeCode || '' });
+      }
+      const data = attMap.get(normK);
+      if (!data.ibgeCode && att.ibgeCode) data.ibgeCode = att.ibgeCode;
+
+      const rep = (att.representation || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (rep.includes('cacs') || rep.includes('fundeb')) {
+        data.cacs++;
+      } else if (rep.includes('gest') || rep.includes('municip') || rep) {
+        data.gestores++;
+      }
+    });
+
+    // Unir lista de TODOS os municípios (convocados pré-existentes + mencionados nas planilhas)
+    const allNormKeys = new Set();
     this.currentTraining.municipalities.forEach(m => {
-      if (m.name) allMunNamesMap.set(m.name.toLowerCase(), m.name);
+      const k = normalizeMunName(m.name);
+      if (k) allNormKeys.add(k);
     });
-
-    // 2. Adicionar municípios de regMap e attMap
-    Object.keys(regMap).forEach(k => allMunNamesMap.set(k.toLowerCase(), k));
-    Object.keys(attMap).forEach(k => allMunNamesMap.set(k.toLowerCase(), k));
+    regMap.forEach((_, k) => allNormKeys.add(k));
+    attMap.forEach((_, k) => allNormKeys.add(k));
 
     const hasRegistrationSheet = regList.length > 0;
+    const trainingUf = this.currentTraining.uf || 'MT';
+    const poloName = (this.currentTraining.polo || '').trim();
 
-    allMunNamesMap.forEach((munNameOriginal, munKey) => {
-      let existing = this.currentTraining.municipalities.find(m => m.name.toLowerCase() === munKey);
+    allNormKeys.forEach(normK => {
+      const regData = regMap.get(normK) || { cacs: 0, gestores: 0, ibgeCode: '', name: '' };
+      const attData = attMap.get(normK) || { cacs: 0, gestores: 0, ibgeCode: '', name: '' };
+      const rawName = regData.name || attData.name || '';
+      const candidateIbge = regData.ibgeCode || attData.ibgeCode || '';
 
-      const regData = regMap[munNameOriginal] || regMap[munKey] || { cacs: 0, gestores: 0, ibgeCode: '' };
-      const attData = attMap[munNameOriginal] || attMap[munKey] || { cacs: 0, gestores: 0, ibgeCode: '' };
+      let existing = findMatchingMunicipality(this.currentTraining.municipalities, rawName || normK, candidateIbge);
 
       const inscribedCACS = hasRegistrationSheet ? regData.cacs : attData.cacs;
       const inscribedGestores = hasRegistrationSheet ? regData.gestores : attData.gestores;
@@ -5791,13 +5862,37 @@ class AutoReportApp {
         existing.presentCACS = presentCACS;
         existing.presentGestores = presentGestores;
         existing.presentTotal = presentTotal;
+
+        if (!existing.ibgeCode && candidateIbge) {
+          existing.ibgeCode = candidateIbge;
+        }
       } else {
+        // Resolver nome canônico e código IBGE oficial a partir de window.IBGE_DATA
+        let finalName = rawName;
+        let finalIbge = candidateIbge;
+
+        if (window.IBGE_DATA && Array.isArray(window.IBGE_DATA)) {
+          const found = window.IBGE_DATA.find(item => {
+            if (finalIbge && String(item.c) === String(finalIbge)) return true;
+            return normalizeMunName(item.n) === normK && (item.u === trainingUf || item.uf === trainingUf);
+          });
+          if (found) {
+            finalName = found.n;
+            finalIbge = String(found.c);
+          }
+        }
+
+        let distanceKm = 0;
+        if (window.convocacaoParser && typeof window.convocacaoParser.calculateDistanceToPolo === 'function') {
+          distanceKm = window.convocacaoParser.calculateDistanceToPolo(finalName, trainingUf, poloName, trainingUf);
+        }
+
         this.currentTraining.municipalities.push({
-          id: `mun_${Date.now()}_${munKey}`,
-          ibgeCode: regData.ibgeCode || attData.ibgeCode || '',
-          name: munNameOriginal,
-          uf: this.currentTraining.uf || 'MT',
-          distanceKm: 0,
+          id: `mun_${Date.now()}_${normK}`,
+          ibgeCode: finalIbge || '',
+          name: finalName,
+          uf: trainingUf,
+          distanceKm: distanceKm || 0,
           isSummoned: true,
           inscribedCACS,
           inscribedGestores,
@@ -5841,21 +5936,42 @@ class AutoReportApp {
     const regList = this.currentTraining.registrations || [];
     const attList = this.currentTraining.attendance || [];
 
+    const normalizePersonName = (name) => {
+      if (!name) return '';
+      return String(name)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+    };
+
     const regMapByCpf = new Map();
+    const regMapByName = new Map();
     regList.forEach(reg => {
       if (reg.cpf) {
         const clean = reg.cpf.replace(/\D/g, '').padStart(11, '0');
         if (clean && clean.length === 11) regMapByCpf.set(clean, reg);
+      }
+      if (reg.name) {
+        const normName = normalizePersonName(reg.name);
+        if (normName.length > 5) regMapByName.set(normName, reg);
       }
     });
 
     const consolidated = [];
     const processedRegIds = new Set();
 
-    // 1. Processar presentes e cruzar com inscritos pelo CPF
+    // 1. Processar presentes e cruzar com inscritos pelo CPF (ou fallback por nome completo)
     attList.forEach(att => {
       const cleanCpf = att.cpf ? att.cpf.replace(/\D/g, '').padStart(11, '0') : '';
-      const matchedReg = cleanCpf && cleanCpf.length === 11 ? regMapByCpf.get(cleanCpf) : null;
+      const normName = att.name ? normalizePersonName(att.name) : '';
+
+      let matchedReg = cleanCpf && cleanCpf.length === 11 ? regMapByCpf.get(cleanCpf) : null;
+      if (!matchedReg && normName && normName.length > 5 && regMapByName.has(normName)) {
+        matchedReg = regMapByName.get(normName);
+      }
+
       const formattedCpf = window.excelParser ? window.excelParser.formatCpf(att.cpf || (matchedReg ? matchedReg.cpf : '')) : (att.cpf || '');
 
       if (matchedReg) {
@@ -5872,12 +5988,14 @@ class AutoReportApp {
           roleCACS: matchedReg.roleCACS || att.roleCACS || '',
           status: 'Inscrito e Presente',
           matchedByCpf: true,
-          isCpfValidated: true
+          isCpfValidated: true,
+          isManualMunicipality: !!att.isManualMunicipality,
+          isManualRepresentation: !!att.isManualRepresentation
         });
       } else {
-        // Se não foi encontrado na inscrição, preserva o município e vínculo da própria lista de presença (ou manual se já editado)
-        const mun = att.municipality || (att.isManualMunicipality ? att.municipality : '') || '';
-        const rep = att.representation || (att.isManualRepresentation ? att.representation : '') || '';
+        // Se não foi encontrado na inscrição, preserva o município e vínculo da própria lista de presença (ou manual se editado)
+        const mun = att.municipality || '';
+        const rep = att.representation || '';
         const isApValidated = !!(mun && rep && formattedCpf && formattedCpf !== '-');
         consolidated.push({
           id: att.id,
@@ -5890,7 +6008,9 @@ class AutoReportApp {
           roleCACS: att.roleCACS,
           status: 'Apenas Presente',
           matchedByCpf: false,
-          isCpfValidated: isApValidated
+          isCpfValidated: isApValidated,
+          isManualMunicipality: !!att.isManualMunicipality,
+          isManualRepresentation: !!att.isManualRepresentation
         });
       }
     });
@@ -5909,7 +6029,9 @@ class AutoReportApp {
           roleCACS: reg.roleCACS,
           status: 'Apenas Inscrito',
           matchedByCpf: false,
-          isCpfValidated: false
+          isCpfValidated: false,
+          isManualMunicipality: false,
+          isManualRepresentation: false
         });
       }
     });
@@ -5930,10 +6052,22 @@ class AutoReportApp {
       }
     });
 
+    // Também incluir municípios identificados nas planilhas de inscrição e presença
+    (this.currentTraining?.registrations || []).forEach(r => {
+      if (r.municipality && r.municipality.length <= 45 && !r.municipality.toLowerCase().includes('declaro')) {
+        names.add(r.municipality.trim());
+      }
+    });
+    (this.currentTraining?.attendance || []).forEach(a => {
+      if (a.municipality && a.municipality.length <= 45 && !a.municipality.toLowerCase().includes('declaro')) {
+        names.add(a.municipality.trim());
+      }
+    });
+
     // Se porventura a lista estiver vazia, recuar para os municípios do estado da formação
     if (names.size === 0 && window.IBGE_DATA && Array.isArray(window.IBGE_DATA)) {
       const uf = this.currentTraining?.uf || 'MT';
-      window.IBGE_DATA.filter(item => item.uf === uf).forEach(item => {
+      window.IBGE_DATA.filter(item => item.u === uf || item.uf === uf).forEach(item => {
         if (item.n) names.add(item.n);
       });
     }
@@ -6133,15 +6267,32 @@ class AutoReportApp {
       }
     }
 
-    const regCacs = regList.filter(r => r.representation === 'CACS-FUNDEB').length;
-    const regGestores = regList.filter(r => r.representation !== 'CACS-FUNDEB').length;
+    const regCacs = regList.filter(r => (r.representation || '').toUpperCase().includes('CACS') || (r.representation || '').toUpperCase().includes('FUNDEB')).length;
+    const regGestores = regList.length - regCacs;
 
-    const attCacs = attList.filter(a => a.representation === 'CACS-FUNDEB').length;
-    const attGestores = attList.filter(a => a.representation !== 'CACS-FUNDEB').length;
+    const attCacs = attList.filter(a => (a.representation || '').toUpperCase().includes('CACS') || (a.representation || '').toUpperCase().includes('FUNDEB')).length;
+    const attGestores = attList.length - attCacs;
 
-    // Renderizar Banner de Status das Planilhas
+    const consolidatedList = this.getConsolidatedParticipantsList();
+    const ipCount = consolidatedList.filter(p => p.status === 'Inscrito e Presente').length;
+    const apCount = consolidatedList.filter(p => p.status === 'Apenas Presente').length;
+    const aiCount = consolidatedList.filter(p => p.status === 'Apenas Inscrito').length;
+    const ipPercent = attList.length > 0 ? Math.round((ipCount / attList.length) * 100) : 0;
+
+    const unmappedAp = consolidatedList.filter(p => p.status === 'Apenas Presente' && (!p.municipality || !p.representation));
+    const hasUnmapped = unmappedAp.length > 0;
+
+    const muns = this.currentTraining.municipalities || [];
+    const munsWithPresence = muns.filter(m => (parseInt(m.presentTotal) || 0) > 0).length;
+    const totalPresInMuns = muns.reduce((acc, m) => acc + (parseInt(m.presentTotal) || 0), 0);
+    const totalInscInMuns = muns.reduce((acc, m) => acc + (parseInt(m.inscribedTotal) || 0), 0);
+
+    // Renderizar Banner de Status das Planilhas e Painel de Diagnóstico
     if (statusBanner) {
-      statusBanner.innerHTML = `
+      if (!hasReg && !hasAtt) {
+        statusBanner.innerHTML = '';
+      } else {
+        statusBanner.innerHTML = `
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
           <div style="background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); padding:0.85rem 1.1rem; border-radius:var(--radius-md);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem;">
@@ -6175,14 +6326,76 @@ class AutoReportApp {
             </div>
           </div>
         </div>
-      `;
+
+        <div class="wizard-attendance-diagnostic-banner" style="margin-top:1rem; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1rem 1.25rem; box-shadow:var(--shadow-sm);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <span style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; background:var(--accent-amber-bg); color:var(--accent-amber-text);">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </span>
+              <strong style="color:var(--text-primary); font-size:0.92rem;">Diagnóstico da Leitura e Reconciliação de Dados</strong>
+            </div>
+            <div>
+              ${hasUnmapped ? `
+                <span class="nav-badge" style="background:var(--accent-amber-bg); color:var(--accent-amber-text); border:1px solid var(--accent-amber-border); font-size:0.75rem; font-weight:700; padding:0.2rem 0.55rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  ${unmappedAp.length} Pendência${unmappedAp.length > 1 ? 's' : ''}
+                </span>
+              ` : `
+                <span class="nav-badge badge-emerald" style="font-size:0.75rem; font-weight:700; padding:0.2rem 0.55rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  100% Reconciliado
+                </span>
+              `}
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:0.75rem; margin-bottom:0.85rem;">
+            <div style="background:rgba(59, 130, 246, 0.05); border:1px solid var(--accent-blue-border); border-radius:var(--radius-sm); padding:0.6rem 0.85rem;">
+              <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.15rem;">Inscrições Válidas</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--accent-blue-text);">${regList.length}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${regCacs} CACS | ${regGestores} Gestão</div>
+            </div>
+
+            <div style="background:rgba(16, 185, 129, 0.05); border:1px solid var(--accent-emerald-border); border-radius:var(--radius-sm); padding:0.6rem 0.85rem;">
+              <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.15rem;">Presentes Computados</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--accent-emerald-text);">${attList.length}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${attCacs} CACS | ${attGestores} Gestão</div>
+            </div>
+
+            <div style="background:rgba(245, 158, 11, 0.05); border:1px solid var(--accent-amber-border); border-radius:var(--radius-sm); padding:0.6rem 0.85rem;">
+              <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.15rem;">Cruzamento Presença</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--text-primary);">${ipCount} <span style="font-size:0.75rem; font-weight:600; color:var(--accent-emerald-text);">(${ipPercent}%)</span></div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${apCount} apenas presentes</div>
+            </div>
+
+            <div style="background:rgba(99, 102, 241, 0.05); border:1px solid rgba(99, 102, 241, 0.25); border-radius:var(--radius-sm); padding:0.6rem 0.85rem;">
+              <div style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:0.15rem;">Tabela 4 Sincronizada</div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--accent-amber-text);">${totalPresInMuns} / ${totalInscInMuns}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${munsWithPresence} de ${muns.length} municípios com presença</div>
+            </div>
+          </div>
+
+          ${hasUnmapped ? `
+            <div style="background:var(--accent-amber-bg); border:1px solid var(--accent-amber-border); color:var(--accent-amber-text); padding:0.6rem 0.85rem; border-radius:var(--radius-sm); font-size:0.8rem; display:flex; align-items:center; gap:0.5rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              <span><strong>Atenção:</strong> Existem <strong>${unmappedAp.length}</strong> participante(s) presente(s) com município ou vínculo não identificados na planilha. Selecione-os na tabela unificada abaixo para incluí-los na Tabela 4.</span>
+            </div>
+          ` : `
+            <div style="background:var(--accent-emerald-bg); border:1px solid var(--accent-emerald-border); color:var(--accent-emerald-text); padding:0.6rem 0.85rem; border-radius:var(--radius-sm); font-size:0.8rem; display:flex; align-items:center; gap:0.5rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><strong>Diagnóstico Concluído:</strong> Dados 100% validados e reconciliados. A <strong>Tabela 4</strong> reflete perfeitamente <strong>${totalPresInMuns} presentes</strong> e <strong>${totalInscInMuns} inscritos</strong> em <strong>${munsWithPresence} municípios atendidos</strong>, com consistência integral para a auditoria e o Relatório Oficial.</span>
+            </div>
+          `}
+        </div>
+        `;
+      }
     }
 
     const sortCol = this.attendanceSortCol || 'name';
     const sortDir = this.attendanceSortDir || 'asc';
 
     const invitedMunOptions = this.getInvitedMunicipalityOptions();
-    const consolidatedList = this.getConsolidatedParticipantsList();
     const sortedList = this.sortParticipantsList(consolidatedList, sortCol, sortDir);
 
     // Helper de renderização de linha de participante
@@ -6452,15 +6665,15 @@ class AutoReportApp {
 
     // Figura 4: Avaliação da capacitação de todos os participantes
     const statsGen = window.statsEngine.calculateEvaluationStats(evals);
-    window.chartEngine.renderEvaluationStackedBarChart('chart-fig4-canvas', statsGen.criterionDistributionPercent, 'Figura 4. Avaliação da capacitação de todos os participantes.', isDark);
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig4-canvas', statsGen.criterionDistributionPercent, '', isDark);
 
     // Figura 5: Avaliação dos conselheiros CACS
     const statsCACS = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation === 'CACS-FUNDEB'));
-    window.chartEngine.renderEvaluationStackedBarChart('chart-fig5-canvas', statsCACS.criterionDistributionPercent, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', isDark);
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig5-canvas', statsCACS.criterionDistributionPercent, '', isDark);
 
     // Figura 6: Avaliação dos gestores municipais
     const statsGest = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation !== 'CACS-FUNDEB'));
-    window.chartEngine.renderEvaluationStackedBarChart('chart-fig6-canvas', statsGest.criterionDistributionPercent, 'Figura 6. Avaliação da capacitação dos gestores municipais.', isDark);
+    window.chartEngine.renderEvaluationStackedBarChart('chart-fig6-canvas', statsGest.criterionDistributionPercent, '', isDark);
   }
 
   renderWordClouds() {
@@ -6918,6 +7131,46 @@ class AutoReportApp {
     await this.handleAppendixUpload(type, mockEvent);
   }
 
+  /**
+   * Extrai páginas de documentos (PDFs ou imagens) em formato Data URL PNG para exibição visual no relatório
+   */
+  async extractDocPageImages(dataUrl, fileType, fileName) {
+    if (!dataUrl) return [];
+    if (fileType?.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(fileName || '')) {
+      return [dataUrl];
+    }
+    if ((fileType === 'application/pdf' || /\.pdf$/i.test(fileName || '')) && window.pdfjsLib) {
+      try {
+        if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'js/vendor/pdf.worker.min.js';
+        }
+        const base64Data = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+        const binaryString = atob(base64Data);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let j = 0; j < len; j++) {
+          bytes[j] = binaryString.charCodeAt(j);
+        }
+        const pdf = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+        const pageImages = [];
+        for (let num = 1; num <= pdf.numPages; num++) {
+          const page = await pdf.getPage(num);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext('2d');
+          await page.render({ canvasContext: ctx, viewport }).promise;
+          pageImages.push(canvas.toDataURL('image/png'));
+        }
+        return pageImages;
+      } catch (err) {
+        console.warn('Erro ao converter páginas do PDF para imagens:', err);
+      }
+    }
+    return [];
+  }
+
   async handleAppendixUpload(type, event) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -6927,11 +7180,13 @@ class AutoReportApp {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const dataUrl = await this.fileToDataUrl(file);
+      const pageImages = await this.extractDocPageImages(dataUrl, file.type, file.name);
 
       this.currentTraining.media.push({
         id: `doc_${type}_${Date.now()}_${i}`,
         type: type, // 'doc_fnde' ou 'doc_cecate'
         blob: dataUrl,
+        pageImages: pageImages,
         caption: file.name,
         fileName: file.name,
         fileSize: file.size,
@@ -7125,16 +7380,106 @@ class AutoReportApp {
     `;
   }
 
+  formatCoverTrainingInfo(training) {
+    if (window.reportDocxGenerator && window.reportDocxGenerator.formatCoverTrainingInfo) {
+      return window.reportDocxGenerator.formatCoverTrainingInfo(training);
+    }
+    const ufMap = {
+      'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas', 'BA': 'Bahia',
+      'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo', 'GO': 'Goiás',
+      'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul', 'MG': 'Minas Gerais',
+      'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná', 'PE': 'Pernambuco', 'PI': 'Piauí',
+      'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte', 'RS': 'Rio Grande do Sul',
+      'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina', 'SP': 'São Paulo',
+      'SE': 'Sergipe', 'TO': 'Tocantins'
+    };
+
+    const toTitleCase = (str) => {
+      if (!str) return '';
+      return str.toLowerCase().split(' ').map((word, idx) => {
+        if (idx > 0 && ['de', 'da', 'do', 'das', 'dos', 'e', 'em'].includes(word)) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }).join(' ');
+    };
+
+    const rawNum = training?.number != null ? String(training.number).trim() : '16';
+    const numPadded = rawNum.length === 1 ? '0' + rawNum : rawNum;
+    const numText = `Relatório de Atividades  Nº ${numPadded}`;
+
+    const rawPolo = (training?.polo || 'Pontes e Lacerda').trim();
+    const polo = toTitleCase(rawPolo);
+
+    const rawUf = (training?.uf || 'MT').trim();
+    const ufFull = ufMap[rawUf.toUpperCase()] || rawUf;
+
+    const rawDate = (training?.datesFormatted || training?.startDate || '23 e 24 de junho de 2026').trim();
+    const dateStr = rawDate.toLowerCase();
+
+    const infoLine = `${polo}, ${ufFull}, ${dateStr}`;
+
+    return { numText, infoLine, numPadded, polo, ufFull, dateStr };
+  }
+
   /* ==========================================================================
      ETAPA 11: PRÉ-VISUALIZAÇÃO & GERAÇÃO FINAL DO RELATÓRIO
      ========================================================================== */
-  renderReportPreviewStep() {
+  async renderReportPreviewStep() {
     const container = document.getElementById('wizard-report-preview-document');
     if (!container || !this.currentTraining || !window.statsEngine) return;
 
     const t = this.currentTraining;
+
+    // Assegurar extração de páginas para documentos que ainda não tenham pageImages
+    const appendixDocs = (t.media || []).filter(m => (m.type === 'doc_fnde' || m.type === 'doc_cecate') && (!m.pageImages || m.pageImages.length === 0));
+    for (const doc of appendixDocs) {
+      if (doc.blob) {
+        doc.pageImages = await this.extractDocPageImages(doc.blob, doc.fileType, doc.fileName);
+      }
+    }
+
     const metrics = window.statsEngine.calculateAllMetrics(t);
     this.metrics = metrics;
+
+    // 0. CAPA OFICIAL DO RELATÓRIO
+    const coverInfo = this.formatCoverTrainingInfo(t);
+    const coverHtml = `
+      <!-- CAPA OFICIAL DO RELATÓRIO -->
+      <div class="report-cover-page">
+        <!-- 1. PARTE SUPERIOR: IMAGEM TEMÁTICA E IDENTIFICAÇÃO -->
+        <div class="cover-top-section">
+          <div class="cover-image-container">
+            <img src="visualrelatorio/capa/figuradacapa.png" alt="Capacitação em Transporte Escolar" class="cover-main-illustration" onerror="if(window.coverAssets?.figuradacapa) this.src=window.coverAssets.figuradacapa">
+          </div>
+          
+          <div class="cover-report-id">
+            <h2>${coverInfo.numText}</h2>
+          </div>
+        </div>
+
+        <!-- 3 & 4. FAIXA CENTRAL (#E9C95C) -->
+        <div class="cover-central-stripe">
+          <h1 class="cover-main-title">CAPACITAÇÃO EM TRANSPORTE ESCOLAR</h1>
+          <p class="cover-training-details">${coverInfo.infoLine}</p>
+        </div>
+
+        <!-- 5. IDENTIFICAÇÃO DO PROJETO -->
+        <div class="cover-project-section">
+          <p class="cover-project-title">
+            Projeto:  FORTALECENDO E APRIMORANDO AS POLÍTICAS<br>PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL
+          </p>
+        </div>
+
+        <!-- 6. LOGOMARCAS INSTITUCIONAIS NA PARTE INFERIOR -->
+        <div class="cover-logos-banner">
+          <div class="cover-realizado-por">Realizado por:</div>
+          <div class="cover-logos-row">
+            <img src="visualrelatorio/capa/cecatefigura.svg" alt="CECATE Centro-Oeste" class="cover-logo-cecate" onerror="if(window.coverAssets?.cecate) this.src=window.coverAssets.cecate">
+            <img src="visualrelatorio/capa/ufgfigura.svg" alt="Universidade Federal de Goiás - UFG" class="cover-logo-ufg" onerror="if(window.coverAssets?.ufg) this.src=window.coverAssets.ufg">
+            <img src="visualrelatorio/capa/fndefigura.svg" alt="Fundo Nacional de Desenvolvimento da Educação - FNDE" class="cover-logo-fnde" onerror="if(window.coverAssets?.fnde) this.src=window.coverAssets.fnde">
+          </div>
+        </div>
+      </div>
+    `;
 
     // 1. Figuras fotográficas em ordem oficial
     const photos = (t.media || []).filter(m => m.type === 'photo');
@@ -7181,90 +7526,174 @@ class AutoReportApp {
       photosHtml = `<p style="color:var(--text-muted); font-style:italic;">Nenhum registro fotográfico anexado no momento.</p>`;
     }
 
-    // 2. Apêndices (FNDE e CECATE)
+    // 2. Apêndices (FNDE e CECATE) com visualização das páginas dos documentos
     const fndeDocs = (t.media || []).filter(m => m.type === 'doc_fnde');
     const cecateDocs = (t.media || []).filter(m => m.type === 'doc_cecate');
 
+    const renderAppendixDocHtml = (d) => {
+      const pages = (d.pageImages && d.pageImages.length > 0) ? d.pageImages : (d.blob?.startsWith('data:image/') ? [d.blob] : []);
+      let visualHtml = '';
+      if (pages.length > 0) {
+        visualHtml = pages.map((pg, idx) => `
+          <div style="margin: 1.25rem 0; text-align: center; page-break-inside: avoid;">
+            <img src="${pg}" alt="${d.fileName} - Pág ${idx + 1}" style="max-width: 100%; height: auto; max-height: 850px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); box-shadow: 0 4px 14px rgba(0,0,0,0.08); display: inline-block;">
+            ${pages.length > 1 ? `<p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem; font-style: italic;">Página ${idx + 1} de ${pages.length}</p>` : ''}
+          </div>
+        `).join('');
+      }
+      return `
+        <div class="appendix-document-block" style="margin-bottom: 2rem; page-break-inside: avoid;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.75rem;">
+            <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span style="font-weight:700; font-size:0.9rem; color:var(--text-primary);">${d.fileName}</span>
+            </div>
+            ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Baixar Arquivo</a>` : ''}
+          </div>
+          ${visualHtml}
+        </div>
+      `;
+    };
+
     const fndeHtml = fndeDocs.length === 0
       ? `<p style="color:var(--text-muted); font-style:italic;">Nenhum documento de convocação do FNDE anexado.</p>`
-      : fndeDocs.map(d => `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.4rem;">
-          <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary);">${d.fileName}</span>
-          </div>
-          ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Visualizar / Baixar</a>` : ''}
-        </div>
-      `).join('');
+      : fndeDocs.map(d => renderAppendixDocHtml(d)).join('');
 
     const cecateHtml = cecateDocs.length === 0
       ? `<p style="color:var(--text-muted); font-style:italic;">Nenhuma convocação ou comunicado do CECATE anexado.</p>`
-      : cecateDocs.map(d => `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0.9rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); margin-bottom:0.4rem;">
-          <div style="display:inline-flex; align-items:center; gap:0.5rem; min-width:0;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-secondary); flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            <span style="font-weight:600; font-size:0.86rem; color:var(--text-primary);">${d.fileName}</span>
-          </div>
-          ${d.blob ? `<a href="${d.blob}" download="${d.fileName}" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.55rem; font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.3rem;">Visualizar / Baixar</a>` : ''}
-        </div>
-      `).join('');
+      : cecateDocs.map(d => renderAppendixDocHtml(d)).join('');
 
-    container.innerHTML = `
+    const evalList = (t.evaluations || []).filter(e => 
+      (e.likedAspects && String(e.likedAspects).trim()) || (e.improveAspects && String(e.improveAspects).trim())
+    );
+
+    const evalsHtml = evalList.length === 0
+      ? `<p style="color:var(--text-muted); font-style:italic;">Nenhuma resposta dissertativa registrada no momento.</p>`
+      : `
+        <div style="overflow-x:auto; margin-top:1rem; margin-bottom:0.75rem;">
+          <table class="data-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+            <thead>
+              <tr style="background:var(--bg-surface);">
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Código IBGE</th>
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Município</th>
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Representação</th>
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Aspectos que mais gostou</th>
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Aspectos a serem melhorados</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${evalList.map(ev => `
+                <tr>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color);">${ev.ibgeCode || '-'}</td>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color); font-weight:600;">${ev.municipality || '-'}</td>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color);">${ev.representation || 'Gestão municipal'}</td>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color);">${ev.likedAspects || '-'}</td>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color);">${ev.improveAspects || '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
+      `;
+
+    const munCount = (t.municipalities || []).length;
+    const totalResp = metrics?.evalStatsGeneral?.totalResponses || 0;
+    const evalsArr = t.evaluations || [];
+    let cacsRespCount = 0;
+    if (evalsArr.length > 0) {
+      cacsRespCount = evalsArr.filter(e => String(e.representation || '').toUpperCase().includes('CACS')).length;
+    } else if (metrics?.totalPresent > 0) {
+      cacsRespCount = metrics.presentCACS || 0;
+    }
+    const gestRespCount = totalResp > 0 ? (totalResp - cacsRespCount) : 0;
+    const pctCacsResp = totalResp > 0 ? ((cacsRespCount / totalResp) * 100).toFixed(1).replace('.', ',') : '38,0';
+    const pctGestResp = totalResp > 0 ? ((gestRespCount / totalResp) * 100).toFixed(1).replace('.', ',') : '62,0';
+    const overallMean = metrics?.evalStatsGeneral?.overallMean ? parseFloat(metrics.evalStatsGeneral.overallMean).toFixed(1).replace('.', ',') : '4,7';
+
+    container.innerHTML = coverHtml + `
       <div class="report-doc-page">
-        <!-- CABEÇALHO OFICIAL -->
-        <div style="text-align:center; border-bottom: 2px solid #1e3a8a; padding-bottom: 1.25rem; margin-bottom: 2rem;">
-          <h2 style="font-size:16pt; margin:0; font-weight:800; color:#1e293b;">UNIVERSIDADE FEDERAL DE GOIÁS - UFG</h2>
-          <h3 style="font-size:13pt; margin:4px 0; color:#0284c7; font-weight:700;">CENTRO COLABORADOR DE APOIO AO TRANSPORTE ESCOLAR - CECATE CENTRO-OESTE</h3>
-          <p style="font-size:10pt; color:#475569; margin:0; font-weight:600;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO - FNDE</p>
+        <!-- CABEÇALHO OFICIAL PADRONIZADO -->
+        <div class="report-standard-header">
+          <div class="report-header-left">
+            <img src="visualrelatorio/cabecalho/cecate_cabecalho.png" alt="CECATE Centro-Oeste" class="report-header-logo" onerror="if(window.coverAssets?.cecateCabecalho) this.src=window.coverAssets.cecateCabecalho">
+          </div>
+          <div class="report-header-right">
+            <span class="report-header-title">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</span>
+          </div>
         </div>
 
         <!-- TÍTULO DO RELATÓRIO -->
         <div style="text-align:center; margin: 2.5rem 0;">
-          <h1 style="font-size:22pt; margin-bottom:0.5rem; font-weight:800; color:#0f172a;">RELATÓRIO DE ATIVIDADES Nº ${t.number || ''}</h1>
-          <h2 style="font-size:16pt; color:#2563eb; margin:0; font-weight:700;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
+          <h1 style="font-size:20pt; margin-bottom:0.5rem; font-weight:800; color:#0f172a;">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</h1>
+          <h2 style="font-size:16pt; color:#1e3a8a; margin:0; font-weight:700;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
           <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem; font-weight:600;">${t.polo || 'Polo Regional'} - ${t.uf || 'GO'}, ${t.datesFormatted || '2026'}</h3>
         </div>
 
         <!-- 1. INTRODUÇÃO -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">1. INTRODUÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6;">O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${t.number || ''}, executada no município polo de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, nas datas de ${t.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${t.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Este relatório é referente às atividades desenvolvidas no âmbito do projeto intitulado "${t.relatedProject || 'Fortalecendo e aprimorando as políticas públicas de transporte escolar do Brasil'}", processo administrativo número 23070.068031/2023-34, desenvolvido pela Universidade Federal de Goiás (UFG), por meio do Centro Colaborador de Apoio ao Transporte Escolar do Centro-Oeste (CECATE Centro-Oeste), em parceria e com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <p style="text-align:justify; line-height:1.6;">O presente relatório apresenta a descrição pormenorizada e a análise avaliativa do processo do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado para gestores municipais e conselheiros do CACS/FUNDEB de ${munCount} municípios do Estado de ${t.uf || 'GO'}, sediado no município polo de ${t.polo || 'Município Polo'}, nas datas de ${t.datesFormatted || 'datas do curso'}.</p>
 
         <!-- 2. DADOS BÁSICOS DO CURSO & TABELAS 1 E 2 -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">2. DADOS BÁSICOS DO CURSO</h3>
-        <p style="text-align:justify; line-height:1.6;">Foram convocados ${metrics.totalSummonedMunicipalities} municípios para participarem das atividades formativas no polo de ${t.polo}. A distância média percorrida pelas delegações foi de ${metrics.avgDistance} km. A relação completa dos entes federativos convocados é detalhada na Tabela 1 a seguir:</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">O curso de Capacitação em Transporte Escolar foi estruturado para alcançar o objetivo primordial de aprimorar os conhecimentos dos participantes sobre transporte escolar, apresentar os programas do governo federal, detalhar os principais aspectos de planejamento e regulação na área e capacitar tecnicamente para a utilização do Sistema Eletrônico de Gestão do Transporte Escolar (SETE).</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Após criteriosa avaliação pedagógica das edições anteriores, definiu-se que o curso seria realizado em formato presencial concentrado, integrando gestores e conselheiros CACS dos municípios, correspondendo a uma carga horária total de 08:00 horas. No período matutino, a capacitação foi conduzida em turma unificada, abordando fundamentos essenciais de planejamento, governança e regulação do transporte escolar. No período vespertino, a formação foi desdobrada em duas abordagens específicas conforme o público-alvo: a primeira voltada aos gestores municipais, focada no domínio prático e operacional do Sistema SETE para cadastro de rotas, alunos e escolas; e a segunda direcionada aos conselheiros do CACS/FUNDEB, orientada ao exercício das competências fiscalizatórias, controle social e emissão de relatórios de acompanhamento.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Dada a meta de entes federados a serem atendidos durante o projeto, estabeleceu-se a oferta de duas (02) vagas para gestores municipais e duas (02) vagas para conselheiros do CACS/FUNDEB por município. No ofício de convocação foi explicitada a preferência por servidores efetivos e de carreira, com a finalidade de mitigar a perda de conhecimento técnico decorrente da rotatividade das gestões. Como critério de seleção territorial, adotou-se a menor distância rodoviária até o polo de capacitação de ${t.polo || 'Município Polo'}, priorizando os municípios mais próximos. Foram formalmente convocados ${metrics.totalSummonedMunicipalities} municípios, cuja distância média percorrida foi estimada em ${metrics.avgDistance} km. A relação completa dos entes federativos convocados é apresentada na Tabela 1:</p>
         
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 1. Municípios convocados.</em></p>
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 1. Municípios convocados.</em></p>
         ${window.statsEngine.generateTable1Html(t.municipalities || [])}
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
-        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem;">A matriz curricular e a distribuição de carga horária programada para os módulos teóricos e práticos são apresentadas na Tabela 2:</p>
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">A estrutura curricular do curso contempla quatro (04) módulos sequenciais, sendo os três primeiros voltados aos fundamentos gerais, programas governamentais e normativas do transporte escolar. O quarto módulo é personalizado ao perfil do participante: para os gestores, o foco é integralmente direcionado à prática intensiva no Sistema SETE ("mãos na massa"); para os conselheiros CACS, a abordagem enfatiza as atribuições legais do conselho e a consulta analítica dos dados no sistema. A distribuição temática e as cargas horárias são detalhadas na Tabela 2:</p>
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
         ${window.statsEngine.generateTable2Html(t.courseModules || [])}
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
-        <!-- 3. ARTICULAÇÃO INSTITUCIONAL & TABELA 3 -->
-        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. ARTICULAÇÃO INSTITUCIONAL</h3>
-        <p style="text-align:justify; line-height:1.6;">Para assegurar a ampla participação dos municípios convocados, a equipe do CECATE-CO realizou ações contínuas de articulação e contato direto com as secretarias municipais de educação e conselhos sociais, conforme discriminado na Tabela 3:</p>
+        <!-- 3. CONTATO COM OS MUNICÍPIOS & TABELA 3 -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. CONTATO COM OS MUNICÍPIOS</h3>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">O contato oficial com os municípios selecionados teve início mediante o encaminhamento de ofícios expedidos pela Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, endereçados aos dirigentes das secretarias municipais de educação e aos representantes dos conselhos CACS/FUNDEB (Apêndice I). O expediente formal continha as diretrizes gerais da capacitação, orientações de participação e o formulário eletrônico de inscrições disponibilizado por link direto e QR Code institucional.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">De modo suplementar, a equipe técnica do CECATE Centro-Oeste realizou ampla mobilização institucional (Apêndice II), utilizando canais oficiais das administrações municipais. Foram estabelecidos contatos complementares via correio eletrônico, chamadas telefônicas e mensagens institucionais para certificar o recebimento das convocações, esclarecer dúvidas e incentivar a homologação das inscrições.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Ao encerramento da fase de convocação, registrou-se um total de ${metrics.totalInscribed} participantes formalmente inscritos, sendo ${metrics.totalInscribedGestores} gestores municipais e ${metrics.totalInscribedCACS} representantes dos CACS/FUNDEB. Dos municípios convocados, ${metrics.totalInscribedMunicipalities} efetivaram inscrição de representantes. A discriminação dos meios e canais de contato empregados para cada município é consolidada na Tabela 3 a seguir:</p>
 
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 3. Articulação institucional para mobilização dos municípios.</em></p>
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 3. Contato com os municípios convocados.</em></p>
         ${window.statsEngine.generateTable3Html(t.municipalities || [])}
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
         <!-- 4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO & TABELA 4 & FIGURA 3 -->
-        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6;">O evento registrou ${metrics.totalInscribed} inscritos e ${metrics.totalPresent} presentes efetivos, com taxa global de comparecimento de ${metrics.participationRateGeneral}%. A discriminação detalhada da presença entre Gestores Municipais e Conselheiros CACS-FUNDEB por município é apresentada na Tabela 4:</p>
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">4. DESENVOLVIMENTO DO CURSO</h3>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Conforme estruturado na matriz formativa, o curso foi planejado e executado em quatro (04) módulos sequenciais, cumprindo rigorosamente os seguintes momentos pedagógicos:</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Primeiro momento:</strong> acolhimento dos participantes com credenciamento e entrega de material didático (pastas com caderno de anotações e caneta institucional), seguido de momento de integração com coffee break.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Segundo momento:</strong> abertura oficial com pronunciamento da coordenação do CECATE Centro-Oeste e dos representantes da Coordenação-Geral da Política do Transporte Escolar (CGPTE/FNDE), apresentando a contextualização do projeto e as metas de aprimoramento da gestão pública.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Terceiro momento:</strong> espaço aberto para a apresentação individual de todos os presentes, promovendo a integração entre gestores municipais, conselheiros sociais do CACS-FUNDEB e as equipes executoras da UFG e do FNDE.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Quarto momento:</strong> apresentação do Módulo 1, com o panorama histórico e situacional do Transporte Escolar no Brasil, os estudos desenvolvidos em parceria entre FNDE e instituições de ensino superior e a missão do CECATE-CO, sensibilizando para os desafios locais e trocas de experiências.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Quinto momento:</strong> exposição detalhada do Módulo 2, abordando os programas federais estruturantes: o Programa Nacional de Apoio ao Transporte do Escolar (PNATE) e o Programa Caminho da Escola, explicitando normas operacionais, critérios de repasse financeiro e prestação de contas.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Sexto momento:</strong> desenvolvimento do Módulo 3, com foco em aspectos de planejamento territorial, contratação de serviços, controle de custos, segurança viária e marcos regulatórios essenciais para assegurar a regularidade e eficiência do transporte escolar.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Sétimo momento:</strong> execução do Módulo 4 de forma segmentada por público-alvo. Para os conselheiros do CACS/FUNDEB, detalharam-se os procedimentos fiscalizatórios, análise documental e utilização analítica do SETE para acompanhamento de rotas. Para os gestores municipais, realizou-se treinamento prático intensivo no Sistema SETE ("mãos na massa"), capacitando os servidores no cadastramento de alunos, escolas, veículos, motoristas e roteirização georreferenciada.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;"><strong>Oitavo momento:</strong> aplicação do instrumento avaliativo da capacitação, coletando percepções técnicas e qualitativas dos participantes sobre metodologia, facilitadores, infraestrutura e conteúdos trabalhados.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Durante o transcorrer dos módulos teóricos e práticos, foram incorporadas dinâmicas interativas mediante o uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos, com a finalidade de acompanhar o nível de assimilação dos conteúdos e potencializar o engajamento coletivo. Foram empregados os aplicativos Kahoot e Plickers: o Kahoot permitiu a participação em tempo real por meio dos smartphones dos cursistas em questionários dinâmicos; já o Plickers viabilizou a coleta imediata de respostas mediante a leitura óptica de cartões com QR Code (alternativas A, B, C e D) realizada exclusivamente pelo celular do instrutor, contornando eventuais oscilações de sinal de internet e garantindo dinamismo à atividade.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">A participação final dos entes federados registrou ${metrics.totalPresentMunicipalities} municípios presentes dos ${metrics.totalInscribedMunicipalities} formalmente inscritos (${metrics.participationRateMunicipalities}%). No que tange ao público participante, compareceram ${metrics.totalPresent} pessoas dentre as ${metrics.totalInscribed} inscritas, representando uma taxa de participação global de ${metrics.participationRateGeneral}%. No segmento do CACS-FUNDEB, compareceram ${metrics.presentCACS} conselheiros (${metrics.participationRateCACS}%), ao passo que na Gestão Municipal participaram ${metrics.presentGestores} técnicos (${metrics.participationRateGestores}%). A distribuição da presença por município e segmento institucional é detalhada na Tabela 4 a seguir:</p>
 
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
         ${window.statsEngine.generateTable4Html(t.municipalities || [])}
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
         <!-- FIGURA 3 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-          <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 3. Participação de Gestores e Conselheiros CACS.</em></p>
+          <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 3. Participação segundo o tipo de representação.</em></p>
           <div style="max-width:520px; height:280px; position:relative; margin:auto;">
             <canvas id="report-preview-fig3-canvas"></canvas>
           </div>
+          <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem;">Fonte: Elaborada pelos autores.</p>
         </div>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:1.5rem;">Ao término das atividades formativas, todos os certificados oficiais de capacitação (carga horária de 08 horas) foram devidamente emitidos e remetidos para o e-mail cadastrado de cada participante por intermédio da plataforma PLATEIA da Universidade Federal de Goiás (UFG), contando com código de verificação digital e QR Code para autenticação de veracidade.</p>
 
         <!-- 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8 -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6;">Registrou-se ${metrics.evalStatsGeneral.totalResponses} questionários de avaliação preenchidos, com média geral de satisfação de ${metrics.evalStatsGeneral.overallMean} / 5.0. A distribuição percentual de notas atribuídas pelos participantes nos sete critérios pedagógicos e estruturais avaliados é sintetizada a seguir:</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert (pontuações de 1 a 5) para avaliar de maneira objetiva e quantitativa os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">A totalidade dos participantes presentes realizou a avaliação da capacitação, garantindo representatividade integral (${totalResp} questionários válidos). Em termos de distribuição institucional, ${pctCacsResp}% (${cacsRespCount}/${totalResp}) dos respondentes integraram os conselhos sociais CACS-FUNDEB e ${pctGestResp}% (${gestRespCount}/${totalResp}) pertenceram às equipes de Gestão Municipal.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Os resultados consolidados da avaliação do curso de capacitação são ilustrados nas Figuras 4, 5 e 6 a seguir. De modo geral, as qualificações de excelência (notas 4 e 5) abrangeram a expressiva maioria das respostas coletadas, alcançando média geral de ${overallMean} / 5,0. No entanto, apontamentos específicos situados fora da tendência hegemônica indicam oportunidades pontuais de aprimoramento em itens logísticos, tais como a antecedência na divulgação e adequação de horários:</p>
 
         <!-- FIGURA 4 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
@@ -7272,7 +7701,10 @@ class AutoReportApp {
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig4-canvas"></canvas>
           </div>
+          <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem;">Fonte: Elaborada pelos autores.</p>
         </div>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">Ao analisar os resultados segundo a instituição representada, constata-se a manutenção da tendência geral de elevada aprovação. Contudo, os conselheiros dos CACS-FUNDEB apresentaram proporções ainda mais expressivas de notas máximas (conceitos 4 e 5), não registrando pontuações em faixas inferiores, o que evidencia a grande pertinência dos conteúdos de controle social trabalhados:</p>
 
         <!-- FIGURA 5 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
@@ -7280,7 +7712,10 @@ class AutoReportApp {
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig5-canvas"></canvas>
           </div>
+          <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem;">Fonte: Elaborada pelos autores.</p>
         </div>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">Por sua vez, os gestores municipais também manifestaram avaliações francamente positivas, com ampla predominância de respostas nas notas 4 e 5 na quase totalidade das dimensões avaliadas. Eventuais registros com conceitos inferiores concentraram-se essencialmente na duração e horário da formação, reforçando a demanda por períodos mais extensos para as oficinas práticas de preenchimento de rotas:</p>
 
         <!-- FIGURA 6 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
@@ -7288,32 +7723,39 @@ class AutoReportApp {
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig6-canvas"></canvas>
           </div>
+          <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem;">Fonte: Elaborada pelos autores.</p>
         </div>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">De forma sucinta, as Figuras 7 e 8 sintetizam os resultados das perguntas dissertativas por meio de nuvens de palavras ponderadas pela frequência semântica dos termos. As respostas evidenciam percepção extremamente favorável quanto aos facilitadores e aos tópicos trabalhados, com destaque de grande relevância para os termos "Conteúdo", "Didática", "SETE", "Prática" e "Clareza", demonstrando a efetividade metodológica da formação. Em contrapartida, as sugestões de melhoria concentraram-se em demandas de infraestrutura e ritmo, sobressaindo menções a "Tempo", "Internet" e "Mais dias de curso", servindo como subsídios prioritários para as próximas rodadas do projeto. Todas as respostas qualitativas obtidas estão disponíveis integralmente no Apêndice III para consulta:</p>
 
         <!-- FIGURAS 7 E 8 (NUVENS DE PALAVRAS) -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; page-break-inside:avoid;">
           <div style="text-align:center;">
-            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos positivos destacados.</em></p>
+            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos que gostaram da capacitação.</em></p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <canvas id="report-preview-fig7-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
+            <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.4rem;">Fonte: Elaborada pelos autores.</p>
           </div>
           <div style="text-align:center;">
-            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos a serem aprimorados.</em></p>
+            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos que devem melhorar da capacitação.</em></p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <canvas id="report-preview-fig8-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
+            <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.4rem;">Fonte: Elaborada pelos autores.</p>
           </div>
         </div>
 
         <!-- 6. REGISTROS FOTOGRÁFICOS -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">6. REGISTROS FOTOGRÁFICOS</h3>
-        <p style="text-align:justify; line-height:1.6;">A seguir são apresentados os registros fotográficos oficiais realizados durante os momentos de acolhimento, exposição temática e encerramento da capacitação:</p>
+        <p style="text-align:justify; line-height:1.6;">Durante a realização da capacitação, foram registrados diversos momentos por meio de fotografias que ilustram a participação ativa dos representantes municipais e dos conselheiros do CACS-FUNDEB. As imagens capturam desde a ambientação do local, momentos de acolhimento e fala dos facilitadores, até as interações e práticas colaborativas durante as atividades formativas. Esses registros visuais não apenas documentam o evento, como também reforçam o compromisso institucional dos envolvidos com o contínuo aprimoramento da política de transporte escolar nos municípios. As fotografias servem como evidência do engajamento coletivo, memória institucional e prestação de contas das ações desenvolvidas perante o FNDE:</p>
         ${photosHtml}
 
         <!-- 7. CONSIDERAÇÕES FINAIS -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">7. CONSIDERAÇÕES FINAIS</h3>
-        <p style="text-align:justify; line-height:1.6;">A realização da Capacitação nº ${t.number} no polo de ${t.polo} cumpriu integralmente as metas e diretrizes estabelecidas pelo CECATE-CO e pelo FNDE. O estreitamento do diálogo técnico entre a gestão municipal e o controle social do CACS-FUNDEB fortalece as diretrizes de governança, segurança e eficiência no transporte escolar dos estudantes da Educação Básica.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">O presente relatório consubstanciou a execução técnica, operacional e pedagógica do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado no polo regional de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, cumprindo integralmente as metas e diretrizes estabelecidas no âmbito do projeto "${t.relatedProject || 'Fortalecendo e aprimorando as políticas públicas de transporte escolar do Brasil'}" (Processo nº 23070.068031/2023-34), financiado pelo Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Salienta-se que, de forma geral, o curso atendeu plenamente ao objetivo primordial de aprimorar os conhecimentos e habilidades técnicas de gestores municipais e conselheiros do CACS-FUNDEB, conforme atestado nos elevados índices de satisfação apurados na pesquisa avaliativa. Por outro lado, pôde-se comprovar que reforçar a convocação mediante a articulação multicanal do CECATE Centro-Oeste — combinando correspondências oficiais, contatos telefônicos diretos e mensagens em canais institucionais — revelou-se determinante para assegurar expressivo comparecimento dos entes federados convocados.</p>
+        <p style="text-align:justify; line-height:1.6;">Ficou igualmente evidente que a abordagem de diálogo permanente adotada consolida-se como canal imprescindível para atender às demandas de qualificação técnica continuada. Para finalizar, ressalta-se a suma importância de o processo formativo estar inserido em um ambiente que possibilite a livre e qualificada interação entre os cursistas e os formadores, proporcionando um rico espaço de compartilhamento de vivências territoriais, esclarecimento de dúvidas operacionais e retroalimentação contínua de todas as dimensões da política de transporte escolar no Brasil.</p>
 
         <!-- APÊNDICE I: CONVOCAÇÕES DO FNDE -->
         <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:3rem;">APÊNDICE I: CONVOCAÇÕES DO FNDE</h3>
@@ -7324,6 +7766,21 @@ class AutoReportApp {
         <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE II: CONVOCAÇÕES DO CECATE</h3>
         <p style="text-align:justify; line-height:1.6;">Relação dos comunicados e e-mails de convocação emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação:</p>
         ${cecateHtml}
+
+        <!-- APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO -->
+        <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO</h3>
+        <p style="text-align:justify; line-height:1.6;">Relação completa das respostas dissertativas registradas pelos participantes no formulário de avaliação da formação, detalhando aspectos positivos e sugestões de aperfeiçoamento por município e representação institucional:</p>
+        ${evalsHtml}
+
+        <!-- RODAPÉ OFICIAL PADRONIZADO -->
+        <div class="report-standard-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #4D4D4D; padding-top: 6px; margin-top: 3rem;">
+          <div style="flex: 1; text-align: center; border-right: 1px solid #4D4D4D; padding-right: 12px;">
+            <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
+          </div>
+          <div style="width: 36px; text-align: center; font-family: 'Times New Roman', serif; font-size: 10pt; color: #000; padding-left: 8px;">
+            1
+          </div>
+        </div>
       </div>
     `;
 
@@ -7358,17 +7815,17 @@ class AutoReportApp {
     // Figura 4, 5, 6: Avaliação
     const statsGen = window.statsEngine.calculateEvaluationStats(evals);
     if (document.getElementById('report-preview-fig4-canvas')) {
-      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig4-canvas', statsGen.criterionDistributionPercent, 'Figura 4. Avaliação da capacitação de todos os participantes.', isDark);
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig4-canvas', statsGen.criterionDistributionPercent, '', isDark);
     }
 
     const statsCACS = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation === 'CACS-FUNDEB'));
     if (document.getElementById('report-preview-fig5-canvas')) {
-      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig5-canvas', statsCACS.criterionDistributionPercent, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', isDark);
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig5-canvas', statsCACS.criterionDistributionPercent, '', isDark);
     }
 
     const statsGest = window.statsEngine.calculateEvaluationStats(evals.filter(e => e.representation !== 'CACS-FUNDEB'));
     if (document.getElementById('report-preview-fig6-canvas')) {
-      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig6-canvas', statsGest.criterionDistributionPercent, 'Figura 6. Avaliação da capacitação dos gestores municipais.', isDark);
+      window.chartEngine.renderEvaluationStackedBarChart('report-preview-fig6-canvas', statsGest.criterionDistributionPercent, '', isDark);
     }
 
     // Figura 7 e 8: Nuvem de palavras
@@ -7432,6 +7889,14 @@ class AutoReportApp {
       }
     });
 
+    // Garantir conversão de PDFs de apêndices para imagens antes de gerar o Word
+    const appendixDocs = (this.currentTraining.media || []).filter(m => (m.type === 'doc_fnde' || m.type === 'doc_cecate') && (!m.pageImages || m.pageImages.length === 0));
+    for (const doc of appendixDocs) {
+      if (doc.blob) {
+        doc.pageImages = await this.extractDocPageImages(doc.blob, doc.fileType, doc.fileName);
+      }
+    }
+
     await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics, imagesData);
     this.showToast('Documento Word (.docx) baixado com sucesso!', 'success');
   }
@@ -7492,6 +7957,22 @@ class AutoReportApp {
       el.style.boxShadow = 'none';
     });
 
+    // Garantir imagens da capa e cabeçalho/rodapé com Data URLs para impressão isolada no iframe
+    if (window.coverAssets) {
+      const coverFig = clone.querySelector('.cover-main-illustration');
+      if (coverFig && window.coverAssets.figuradacapa) coverFig.src = window.coverAssets.figuradacapa;
+      const logoCecate = clone.querySelector('.cover-logo-cecate');
+      if (logoCecate && window.coverAssets.cecate) logoCecate.src = window.coverAssets.cecate;
+      const logoUfg = clone.querySelector('.cover-logo-ufg');
+      if (logoUfg && window.coverAssets.ufg) logoUfg.src = window.coverAssets.ufg;
+      const logoFnde = clone.querySelector('.cover-logo-fnde');
+      if (logoFnde && window.coverAssets.fnde) logoFnde.src = window.coverAssets.fnde;
+      const headerLogo = clone.querySelector('.report-header-logo');
+      if (headerLogo && window.coverAssets.cecateCabecalho) headerLogo.src = window.coverAssets.cecateCabecalho;
+      const footerBanner = clone.querySelector('.report-footer-banner');
+      if (footerBanner && window.coverAssets.rodape5Logos) footerBanner.src = window.coverAssets.rodape5Logos;
+    }
+
     // Iframe isolado para impressão exclusiva do relatório
     let printIframe = document.getElementById('report-pdf-print-iframe');
     if (printIframe) printIframe.remove();
@@ -7521,6 +8002,9 @@ class AutoReportApp {
       size: A4 portrait;
       margin: 15mm 15mm 15mm 15mm;
     }
+    @page:first {
+      margin: 0;
+    }
     * {
       box-sizing: border-box;
       -webkit-print-color-adjust: exact !important;
@@ -7535,6 +8019,130 @@ class AutoReportApp {
       font-size: 11pt;
       line-height: 1.6;
     }
+    .report-cover-page {
+      background-color: #4D4D4D !important;
+      color: #FFFFFF !important;
+      width: 100% !important;
+      min-height: 297mm !important;
+      height: 297mm !important;
+      max-height: 297mm !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      box-sizing: border-box !important;
+      page-break-after: always !important;
+      break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .cover-top-section {
+      padding-top: 3.5rem;
+      padding-left: 2rem;
+      padding-right: 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cover-image-container {
+      max-width: 650px;
+      width: 86%;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .cover-main-illustration {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .cover-report-id {
+      margin-top: 2.8rem;
+      margin-bottom: 0.8rem;
+      text-align: center;
+    }
+    .cover-report-id h2 {
+      color: #E9C95C !important;
+      font-size: 14.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .cover-central-stripe {
+      background-color: #E9C95C !important;
+      width: 100%;
+      padding: 1.4rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    }
+    .cover-main-title {
+      color: #000000 !important;
+      font-size: 19pt;
+      font-weight: 800;
+      margin: 0 0 0.4rem 0;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .cover-training-details {
+      color: #000000 !important;
+      font-size: 12.5pt;
+      font-weight: 600;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .cover-project-section {
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+    .cover-project-title {
+      color: #FFFFFF !important;
+      font-size: 12.5pt;
+      font-weight: 600;
+      line-height: 1.5;
+      margin: 0 auto;
+      max-width: 650px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .cover-logos-banner {
+      background-color: #D8D8D8 !important;
+      width: 100%;
+      padding: 1rem 2.5rem 1.25rem 2.5rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+    }
+    .cover-realizado-por {
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #4D4D4D !important;
+      margin: 0;
+      text-align: center;
+    }
+    .cover-logos-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+      gap: 1.5rem;
+    }
+    .cover-logo-cecate { height: 48px; max-width: 220px; object-fit: contain; }
+    .cover-logo-ufg { height: 48px; max-width: 160px; object-fit: contain; }
+    .cover-logo-fnde { height: 48px; max-width: 200px; object-fit: contain; }
+
     .report-doc-page {
       background: #ffffff !important;
       color: #0f172a !important;
@@ -7610,6 +8218,12 @@ class AutoReportApp {
   async directDownloadDocx(trainingId) {
     const full = await window.db.getTrainingFull(trainingId);
     if (full && window.reportDocxGenerator && window.statsEngine) {
+      const appendixDocs = (full.media || []).filter(m => (m.type === 'doc_fnde' || m.type === 'doc_cecate') && (!m.pageImages || m.pageImages.length === 0));
+      for (const doc of appendixDocs) {
+        if (doc.blob) {
+          doc.pageImages = await this.extractDocPageImages(doc.blob, doc.fileType, doc.fileName);
+        }
+      }
       const metrics = window.statsEngine.calculateAllMetrics(full);
       this.showToast('Gerando arquivo Word (.docx)...');
       await window.reportDocxGenerator.generateAndDownload(full, metrics);

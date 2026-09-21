@@ -45,6 +45,154 @@
     width: 100% !important;
   }
 
+  .report-cover-page {
+    background-color: #4D4D4D !important;
+    color: #FFFFFF !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    font-family: 'Times New Roman', serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .cover-top-section {
+    padding-top: 3.5rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cover-image-container {
+    max-width: 650px;
+    width: 86%;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .cover-main-illustration {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .cover-report-id {
+    margin-top: 2.5rem;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+
+  .cover-report-id h2 {
+    color: #F9DB61 !important;
+    font-size: 16pt;
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Times New Roman', serif;
+  }
+
+  .cover-central-stripe {
+    background-color: #E9C95C !important;
+    width: 100%;
+    padding: 1.4rem 1.5rem;
+    text-align: center;
+  }
+
+  .cover-main-title {
+    color: #000000 !important;
+    font-size: 20pt;
+    font-weight: 800;
+    margin: 0 0 0.4rem 0;
+    text-transform: uppercase;
+    font-family: 'Times New Roman', serif;
+  }
+
+  .cover-training-details {
+    color: #000000 !important;
+    font-size: 16pt;
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Times New Roman', serif;
+  }
+
+  .cover-project-section {
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+
+  .cover-project-title {
+    color: #D9D9D9 !important;
+    font-size: 16pt;
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 0 auto;
+    max-width: 700px;
+    font-family: 'Times New Roman', serif;
+  }
+
+  .cover-logos-banner {
+    background-color: #D8D8D8 !important;
+    width: 100%;
+    padding: 1rem 2.5rem 1.25rem 2.5rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border-top: 1pt solid #4D4D4D !important;
+  }
+
+  .cover-realizado-por {
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    color: #4D4D4D !important;
+    margin: 0;
+    text-align: center;
+  }
+
+  .cover-logos-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+    gap: 1.5rem;
+  }
+
+  .cover-logo-cecate { height: 48px; max-width: 220px; object-fit: contain; }
+  .cover-logo-ufg { height: 48px; max-width: 160px; object-fit: contain; }
+  .cover-logo-fnde { height: 48px; max-width: 200px; object-fit: contain; }
+
+  .appendix-document-block {
+    page-break-inside: avoid;
+    margin-bottom: 2rem;
+  }
+
+  .appendix-document-block img {
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 250mm !important;
+    display: block !important;
+    margin: 0 auto 1.5rem auto !important;
+    object-fit: contain !important;
+  }
+
   .a4-sheet {
     max-width: 100% !important;
     min-height: auto !important;
@@ -55,6 +203,69 @@
     border-radius: 0 !important;
     page-break-after: always;
     font-size: 11pt;
+  }
+
+  /* Cabeçalho e Rodapé Padronizados dos Relatórios Oficiais */
+  .report-standard-header {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    border-bottom: 1pt solid #4D4D4D !important;
+    padding-bottom: 4pt !important;
+    margin-bottom: 16pt !important;
+    width: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .report-header-left {
+    display: flex !important;
+    align-items: flex-end !important;
+  }
+
+  .report-header-logo {
+    height: 24pt !important;
+    max-width: 120pt !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+
+  .report-header-right {
+    display: flex !important;
+    align-items: flex-end !important;
+  }
+
+  .report-header-title {
+    font-family: 'Times New Roman', serif !important;
+    font-size: 9pt !important;
+    font-weight: 700 !important;
+    color: #595959 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  .report-standard-footer {
+    border-top: 1pt solid #4D4D4D !important;
+    padding-top: 6pt !important;
+    margin-top: 24pt !important;
+    width: 100% !important;
+    text-align: center !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .report-footer-banner {
+    height: 22pt !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+    display: inline-block !important;
   }
 
   .report-doc-header {
