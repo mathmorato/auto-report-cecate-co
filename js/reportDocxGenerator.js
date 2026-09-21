@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.0.8
+ * Versão: v.3.0.9
  */
 
 class ReportDocxGenerator {
@@ -177,6 +177,152 @@ class ReportDocxGenerator {
       );
     }
     return nodes;
+  }
+
+  /**
+   * Constrói dinamicamente os tópicos do sumário, índice de figuras e índice de tabelas
+   * com os títulos exatos do presente relatório e suas páginas correspondentes
+   */
+  buildReportIndices(training, metrics, chartsData = {}) {
+    let page = 1;
+    let dxa = 0;
+    const MAX_PAGE_DXA = 13800; // Capacidade utilizável por folha A4 com margens padrão
+
+    function addDxa(amount, forceNewPage = false) {
+      if (forceNewPage || (dxa + amount > MAX_PAGE_DXA && dxa > 1000)) {
+        page++;
+        dxa = 0;
+      }
+      dxa += amount;
+      return page;
+    }
+
+    const munCount = (training?.municipalities || []).length;
+    const modCount = (training?.courseModules || []).length;
+    const photos = (training?.media || []).filter(m => m.type === 'photo' && m.blob);
+    const fndeDocs = (training?.media || []).filter(m => m.type === 'doc_fnde');
+    const cecateDocs = (training?.media || []).filter(m => m.type === 'doc_cecate');
+
+    // 1. INTRODUÇÃO
+    const pIntro = page;
+    addDxa(1200);
+
+    // 2. DADOS BÁSICOS DO CURSO & TABELAS 1 E 2
+    const pDadosBasicos = page;
+    addDxa(600);
+    const pTab1 = page;
+    addDxa(500 + munCount * 360);
+    const pTab2 = page;
+    addDxa(500 + Math.max(modCount, 3) * 450);
+
+    // 3. CONTATO COM OS MUNICÍPIOS & TABELA 3
+    const pContato = page;
+    addDxa(600);
+    const pTab3 = page;
+    addDxa(500 + munCount * 360);
+
+    // 4. DESENVOLVIMENTO DO CURSO & TABELA 4 & FIGURA 3
+    // O título da Seção 4 quebra junto com a Tabela 4 (keepWithNext)
+    const tab4Dxa = 500 + munCount * 360;
+    if (dxa + 800 + tab4Dxa > MAX_PAGE_DXA) {
+      page++;
+      dxa = 0;
+    }
+    const pDesenv = page;
+    addDxa(800);
+    const pTab4 = page;
+    addDxa(tab4Dxa);
+    let pFig3 = null;
+    if (chartsData?.fig3) {
+      pFig3 = addDxa(4800);
+    }
+
+    // 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7, 8
+    const pAvaliacao = page;
+    addDxa(800);
+    let pFig4 = null, pFig5 = null, pFig6 = null, pFig7 = null, pFig8 = null;
+    if (chartsData?.fig4) pFig4 = addDxa(4000);
+    if (chartsData?.fig5) pFig5 = addDxa(4000);
+    if (chartsData?.fig6) pFig6 = addDxa(4000);
+    if (chartsData?.fig7) pFig7 = addDxa(5000);
+    if (chartsData?.fig8) pFig8 = addDxa(5000);
+
+    // 6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO
+    const pFotos = page;
+    addDxa(700);
+    const photoPages = [];
+    photos.forEach(() => {
+      photoPages.push(addDxa(6000));
+    });
+
+    // 7. CONSIDERAÇÕES FINAIS
+    const pConsideracoes = page;
+    addDxa(1200);
+
+    // APÊNDICES
+    let pApendice1 = null;
+    if (fndeDocs.length > 0) {
+      pApendice1 = page;
+      fndeDocs.forEach(() => addDxa(4000));
+    }
+    let pApendice2 = null;
+    if (cecateDocs.length > 0) {
+      pApendice2 = page;
+      cecateDocs.forEach(() => addDxa(4000));
+    }
+
+    // MONTAGEM DE sumarioList (Tópicos exatos do relatório e suas páginas)
+    const sumarioList = [
+      { label: '1.   INTRODUÇÃO', page: String(pIntro) },
+      { label: '2.   DADOS BÁSICOS DO CURSO', page: String(pDadosBasicos) },
+      { label: '3.   CONTATO COM OS MUNICÍPIOS', page: String(pContato) },
+      { label: '4.   DESENVOLVIMENTO DO CURSO', page: String(pDesenv) },
+      { label: '5.   AVALIAÇÃO DA CAPACITAÇÃO', page: String(pAvaliacao) },
+      { label: '6.   REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', page: String(pFotos) },
+      { label: '7.   CONSIDERAÇÕES FINAIS', page: String(pConsideracoes) }
+    ];
+    if (pApendice1 != null) {
+      sumarioList.push({ label: 'Apêndice I – Convocações do FNDE', page: String(pApendice1) });
+    }
+    if (pApendice2 != null) {
+      sumarioList.push({ label: 'Apêndice II – Convocações do CECATE', page: String(pApendice2) });
+    }
+
+    // MONTAGEM DE tablesList (Títulos exatos das tabelas e suas páginas)
+    const tablesList = [
+      { label: 'Tabela 1. Municípios convocados.', page: String(pTab1) },
+      { label: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', page: String(pTab2) },
+      { label: 'Tabela 3. Contato com os municípios convocados.', page: String(pTab3) },
+      { label: 'Tabela 4. Participação por município (Presentes / Inscritos).', page: String(pTab4) }
+    ];
+
+    // MONTAGEM DE figuresList (Títulos exatos das figuras e suas páginas)
+    const figuresList = [];
+    if (pFig3 != null) {
+      figuresList.push({ label: 'Figura 3. Participação segundo o tipo de representação.', page: String(pFig3) });
+    }
+    if (pFig4 != null) {
+      figuresList.push({ label: 'Figura 4. Avaliação da capacitação de todos os participantes.', page: String(pFig4) });
+    }
+    if (pFig5 != null) {
+      figuresList.push({ label: 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', page: String(pFig5) });
+    }
+    if (pFig6 != null) {
+      figuresList.push({ label: 'Figura 6. Avaliação da capacitação dos gestores municipais.', page: String(pFig6) });
+    }
+    if (pFig7 != null) {
+      figuresList.push({ label: 'Figura 7. Aspectos que gostaram da capacitação.', page: String(pFig7) });
+    }
+    if (pFig8 != null) {
+      figuresList.push({ label: 'Figura 8. Aspectos que devem melhorar da capacitação.', page: String(pFig8) });
+    }
+    photos.forEach((ph, idx) => {
+      const cap = ph.caption || `Figura ${idx + 9}. Registro fotográfico oficial da capacitação.`;
+      const pNum = photoPages[idx] || pFotos;
+      figuresList.push({ label: cap, page: String(pNum) });
+    });
+
+    return { sumarioList, tablesList, figuresList };
   }
 
   /**
@@ -680,12 +826,12 @@ class ReportDocxGenerator {
 
       docChildren.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: modRows }));
 
-      // 4. SEÇÃO 3: ARTICULAÇÃO INSTITUCIONAL & TABELA 3
+      // 4. SEÇÃO 3: CONTATO COM OS MUNICÍPIOS & TABELA 3
       docChildren.push(
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
-          children: [new TextRun({ text: '3. ARTICULAÇÃO INSTITUCIONAL', bold: true, size: 28, color: '1E3A8A' })]
+          children: [new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
           spacing: { after: 150 },
@@ -697,7 +843,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           spacing: { before: 200, after: 100 },
-          children: [new TextRun({ text: 'Tabela 3. Articulação institucional para mobilização dos municípios.', bold: true, italics: true })]
+          children: [new TextRun({ text: 'Tabela 3. Contato com os municípios convocados.', bold: true, italics: true })]
         })
       );
 
@@ -729,7 +875,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
-          children: [new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+          children: [new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
           spacing: { after: 150 },
@@ -778,7 +924,7 @@ class ReportDocxGenerator {
       // Figura 3: Gráfico de Participação
       const docxDeps = { Paragraph, ImageRun, TextRun, AlignmentType };
       if (chartsData.fig3) {
-        const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação de Gestores e Conselheiros CACS.', docxDeps);
+        const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação segundo o tipo de representação.', docxDeps);
         if (fig3Nodes) docChildren.push(...fig3Nodes);
       }
 
@@ -812,20 +958,20 @@ class ReportDocxGenerator {
         if (fig6Nodes) docChildren.push(...fig6Nodes);
       }
       if (chartsData.fig7) {
-        const fig7Nodes = this.createImageParagraph(chartsData.fig7, 480, 260, 'Figura 7. Aspectos positivos destacados.', docxDeps);
+        const fig7Nodes = this.createImageParagraph(chartsData.fig7, 480, 260, 'Figura 7. Aspectos que gostaram da capacitação.', docxDeps);
         if (fig7Nodes) docChildren.push(...fig7Nodes);
       }
       if (chartsData.fig8) {
-        const fig8Nodes = this.createImageParagraph(chartsData.fig8, 480, 260, 'Figura 8. Aspectos a serem aprimorados.', docxDeps);
+        const fig8Nodes = this.createImageParagraph(chartsData.fig8, 480, 260, 'Figura 8. Aspectos que devem melhorar da capacitação.', docxDeps);
         if (fig8Nodes) docChildren.push(...fig8Nodes);
       }
 
-      // 7. SEÇÃO 6: REGISTROS FOTOGRÁFICOS
+      // 7. SEÇÃO 6: REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO
       docChildren.push(
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
-          children: [new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS', bold: true, size: 28, color: '1E3A8A' })]
+          children: [new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
           spacing: { after: 150 },
@@ -879,7 +1025,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 500, after: 200 },
           heading: HeadingLevel.HEADING_1,
-          children: [new TextRun({ text: 'APÊNDICE I: CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })]
+          children: [new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })]
         })
       );
 
@@ -923,7 +1069,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
-          children: [new TextRun({ text: 'APÊNDICE II: CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })]
+          children: [new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })]
         })
       );
 
@@ -1574,28 +1720,8 @@ class ReportDocxGenerator {
       }
 
       // 1.3 MONTAGEM DA PÁGINA 4: ÍNDICE DE FIGURAS E ÍNDICE DE TABELAS (Seção 4 Oficial)
-      const figuresList = [
-        { label: 'Figura 1: Avaliação via ferramenta ', italicWord: 'kahoot', afterWord: '.', page: '6' },
-        { label: 'Figura 2: Avaliação via ferramenta ', italicWord: 'Plickers', afterWord: '.', page: '6' },
-        { label: 'Figura 3. Participação segundo o tipo de representação.', page: '8' },
-        { label: 'Figura 4. Avaliação da capacitação de todos os participantes.', page: '8' },
-        { label: 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', page: '9' },
-        { label: 'Figura 6. Avaliação da capacitação dos gestores municipais.', page: '9' },
-        { label: 'Figura 7. Aspectos que gostaram da capacitação.', page: '10' },
-        { label: 'Figura 8. Aspectos que devem melhorar da capacitação', page: '10' },
-        { label: 'Figura 9. Acomodação dos participantes.', page: '11' },
-        { label: 'Figura 10. Apresentação inicial do curso', page: '12' },
-        { label: 'Figura 11. Apresentação dos módulos teóricos.', page: '12' },
-        { label: 'Figura 12. Apresentação do Software SETE.', page: '13' },
-        { label: 'Figura 13. Final da capacitação.', page: '14' }
-      ];
-
-      const tablesList = [
-        { label: 'Tabela 1. Municípios convocados.', page: '2' },
-        { label: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', page: '3' },
-        { label: 'Tabela 3. Inscritos por município.', page: '4' },
-        { label: 'Tabela 4. Participação por município.', page: '7' }
-      ];
+      // Constrói dinamicamente os tópicos, tabelas e figuras do presente relatório e suas páginas
+      const { sumarioList, tablesList, figuresList } = this.buildReportIndices(training, metrics, chartsData);
 
       const indicesChildren = [];
       indicesChildren.push(
@@ -1666,19 +1792,6 @@ class ReportDocxGenerator {
       });
 
       // 1.4 MONTAGEM DA PÁGINA 5: SUMÁRIO
-      const sumarioList = [
-        { label: '1.   INTRODUÇÃO', page: '1' },
-        { label: '2.   DADOS DOS BÁSICOS DO CURSO', page: '1' },
-        { label: '3.   CONTATO COM OS MUNICÍPIOS', page: '3' },
-        { label: '4.   DESENVOLVIMENTO DO CURSO', page: '4' },
-        { label: '5.   AVALIAÇÃO DA CAPACITAÇÃO', page: '8' },
-        { label: '6.   REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', page: '11' },
-        { label: '7.   CONSIDERAÇÕES FINAIS', page: '14' },
-        { label: 'Apêndice I', page: '15' },
-        { label: 'Apêndice II', page: '17' },
-        { label: 'Apêndice III', page: '19' }
-      ];
-
       const sumarioChildren = [];
       sumarioChildren.push(
         new Paragraph({
@@ -1716,6 +1829,9 @@ class ReportDocxGenerator {
       // SEÇÃO 4: ÍNDICE DE FIGURAS, ÍNDICE DE TABELAS E SUMÁRIO (PÁGS 4 E 5)
       // SEÇÃO 5: CONTEÚDO TÉCNICO COM CABEÇALHO E RODAPÉ INSTITUCIONAIS (PÁG 6+)
       const doc = new Document({
+        features: {
+          updateFields: true
+        },
         sections: [
           // SEÇÃO 1: CAPA OFICIAL INTEGRAL
           {
@@ -1831,8 +1947,9 @@ class ReportDocxGenerator {
     }
   }
 
-  downloadHtmlReportFallback(training, metrics) {
+  downloadHtmlReportFallback(training, metrics, chartsData = {}) {
     const coverInfo = this.formatCoverTrainingInfo(training);
+    const { sumarioList, tablesList, figuresList } = this.buildReportIndices(training, metrics, chartsData);
     const htmlContent = `
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -1975,26 +2092,11 @@ class ReportDocxGenerator {
           <div>
             <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.2rem;">ÍNDICE DE FIGURAS</h2>
             <div style="font-size: 12pt; line-height: 1.8;">
-              <div style="display: flex; justify-content: space-between;"><span>Figura 1: Avaliação via ferramenta <em>kahoot</em>.</span><span>6</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 2: Avaliação via ferramenta <em>Plickers</em>.</span><span>6</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 3. Participação segundo o tipo de representação.</span><span>8</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 4. Avaliação da capacitação de todos os participantes.</span><span>8</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 5. Avaliação da capacitação dos conselheiros CACS.</span><span>9</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 6. Avaliação da capacitação dos gestores municipais.</span><span>9</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 7. Aspectos que gostaram da capacitação.</span><span>10</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 8. Aspectos que devem melhorar da capacitação</span><span>10</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 9. Acomodação dos participantes.</span><span>11</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 10. Apresentação inicial do curso</span><span>12</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 11. Apresentação dos módulos teóricos.</span><span>12</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 12. Apresentação do Software SETE.</span><span>13</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Figura 13. Final da capacitação.</span><span>14</span></div>
+              ${figuresList.map(fig => `<div style="display: flex; justify-content: space-between;"><span>${fig.label}</span><span>${fig.page}</span></div>`).join('')}
             </div>
             <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1.2rem;">ÍNDICE DE TABELAS</h2>
             <div style="font-size: 12pt; line-height: 1.8;">
-              <div style="display: flex; justify-content: space-between;"><span>Tabela 1. Municípios convocados.</span><span>2</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</span><span>3</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Tabela 3. Inscritos por município.</span><span>4</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Tabela 4. Participação por município.</span><span>7</span></div>
+              ${tablesList.map(tab => `<div style="display: flex; justify-content: space-between;"><span>${tab.label}</span><span>${tab.page}</span></div>`).join('')}
             </div>
           </div>
           <div style="border-top: 1.5px solid #4D4D4D; padding-top: 0.8rem; text-align: center;">
@@ -2009,16 +2111,7 @@ class ReportDocxGenerator {
           <div>
             <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem;">SUMÁRIO</h2>
             <div style="font-size: 12pt; line-height: 2;">
-              <div style="display: flex; justify-content: space-between;"><span>1.   INTRODUÇÃO</span><span>1</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>2.   DADOS DOS BÁSICOS DO CURSO</span><span>1</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>3.   CONTATO COM OS MUNICÍPIOS</span><span>3</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>4.   DESENVOLVIMENTO DO CURSO</span><span>4</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>5.   AVALIAÇÃO DA CAPACITAÇÃO</span><span>8</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>6.   REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO</span><span>11</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>7.   CONSIDERAÇÕES FINAIS</span><span>14</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Apêndice I</span><span>15</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Apêndice II</span><span>17</span></div>
-              <div style="display: flex; justify-content: space-between;"><span>Apêndice III</span><span>19</span></div>
+              ${sumarioList.map(item => `<div style="display: flex; justify-content: space-between;"><span>${item.label}</span><span>${item.page}</span></div>`).join('')}
             </div>
           </div>
           <div style="border-top: 1.5px solid #4D4D4D; padding-top: 0.8rem; text-align: center;">
