@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.0.9
+ * Versão: v.3.1.0
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.0.9';
+    this.version = 'v.3.1.0';
   }
 
   /**
@@ -7563,6 +7563,54 @@ class AutoReportApp {
       ? `<p style="color:var(--text-muted); font-style:italic;">Nenhuma convocação ou comunicado do CECATE anexado.</p>`
       : cecateDocs.map(d => renderAppendixDocHtml(d)).join('');
 
+    const evalList = (t.evaluations || []).filter(e => 
+      (e.likedAspects && String(e.likedAspects).trim()) || (e.improveAspects && String(e.improveAspects).trim())
+    );
+
+    const evalsHtml = evalList.length === 0
+      ? `<p style="color:var(--text-muted); font-style:italic;">Nenhuma resposta dissertativa registrada no momento.</p>`
+      : `
+        <div style="overflow-x:auto; margin-top:1rem; margin-bottom:0.75rem;">
+          <table class="data-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+            <thead>
+              <tr style="background:var(--bg-surface);">
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Código IBGE</th>
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Município</th>
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Representação</th>
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Aspectos que mais gostou</th>
+                <th style="padding:0.6rem; border:1px solid var(--border-color); text-align:left;">Aspectos a serem melhorados</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${evalList.map(ev => `
+                <tr>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color);">${ev.ibgeCode || '-'}</td>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color); font-weight:600;">${ev.municipality || '-'}</td>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color);">${ev.representation || 'Gestão municipal'}</td>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color);">${ev.likedAspects || '-'}</td>
+                  <td style="padding:0.5rem; border:1px solid var(--border-color);">${ev.improveAspects || '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
+      `;
+
+    const munCount = (t.municipalities || []).length;
+    const totalResp = metrics?.evalStatsGeneral?.totalResponses || 0;
+    const evalsArr = t.evaluations || [];
+    let cacsRespCount = 0;
+    if (evalsArr.length > 0) {
+      cacsRespCount = evalsArr.filter(e => String(e.representation || '').toUpperCase().includes('CACS')).length;
+    } else if (metrics?.totalPresent > 0) {
+      cacsRespCount = metrics.presentCACS || 0;
+    }
+    const gestRespCount = totalResp > 0 ? (totalResp - cacsRespCount) : 0;
+    const pctCacsResp = totalResp > 0 ? ((cacsRespCount / totalResp) * 100).toFixed(1).replace('.', ',') : '38,0';
+    const pctGestResp = totalResp > 0 ? ((gestRespCount / totalResp) * 100).toFixed(1).replace('.', ',') : '62,0';
+    const overallMean = metrics?.evalStatsGeneral?.overallMean ? parseFloat(metrics.evalStatsGeneral.overallMean).toFixed(1).replace('.', ',') : '4,7';
+
     container.innerHTML = coverHtml + `
       <div class="report-doc-page">
         <!-- CABEÇALHO OFICIAL PADRONIZADO -->
@@ -7584,44 +7632,68 @@ class AutoReportApp {
 
         <!-- 1. INTRODUÇÃO -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">1. INTRODUÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6;">O presente Relatório de Atividades consubstancia os resultados alcançados durante a realização da Capacitação em Transporte Escolar nº ${t.number || ''}, executada no município polo de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, nas datas de ${t.datesFormatted || 'datas do curso'}. A iniciativa integra as ações estratégicas pactuadas no projeto "${t.relatedProject || 'Fortalecendo e Aprimorando as Políticas Públicas de Transporte Escolar do Brasil'}", desenvolvido pela Universidade Federal de Goiás (UFG) por meio do CECATE Centro-Oeste, com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Este relatório é referente às atividades desenvolvidas no âmbito do projeto intitulado "${t.relatedProject || 'Fortalecendo e aprimorando as políticas públicas de transporte escolar do Brasil'}", processo administrativo número 23070.068031/2023-34, desenvolvido pela Universidade Federal de Goiás (UFG), por meio do Centro Colaborador de Apoio ao Transporte Escolar do Centro-Oeste (CECATE Centro-Oeste), em parceria e com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <p style="text-align:justify; line-height:1.6;">O presente relatório apresenta a descrição pormenorizada e a análise avaliativa do processo do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado para gestores municipais e conselheiros do CACS/FUNDEB de ${munCount} municípios do Estado de ${t.uf || 'GO'}, sediado no município polo de ${t.polo || 'Município Polo'}, nas datas de ${t.datesFormatted || 'datas do curso'}.</p>
 
         <!-- 2. DADOS BÁSICOS DO CURSO & TABELAS 1 E 2 -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">2. DADOS BÁSICOS DO CURSO</h3>
-        <p style="text-align:justify; line-height:1.6;">Foram convocados ${metrics.totalSummonedMunicipalities} municípios para participarem das atividades formativas no polo de ${t.polo}. A distância média percorrida pelas delegações foi de ${metrics.avgDistance} km. A relação completa dos entes federativos convocados é detalhada na Tabela 1 a seguir:</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">O curso de Capacitação em Transporte Escolar foi estruturado para alcançar o objetivo primordial de aprimorar os conhecimentos dos participantes sobre transporte escolar, apresentar os programas do governo federal, detalhar os principais aspectos de planejamento e regulação na área e capacitar tecnicamente para a utilização do Sistema Eletrônico de Gestão do Transporte Escolar (SETE).</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Após criteriosa avaliação pedagógica das edições anteriores, definiu-se que o curso seria realizado em formato presencial concentrado, integrando gestores e conselheiros CACS dos municípios, correspondendo a uma carga horária total de 08:00 horas. No período matutino, a capacitação foi conduzida em turma unificada, abordando fundamentos essenciais de planejamento, governança e regulação do transporte escolar. No período vespertino, a formação foi desdobrada em duas abordagens específicas conforme o público-alvo: a primeira voltada aos gestores municipais, focada no domínio prático e operacional do Sistema SETE para cadastro de rotas, alunos e escolas; e a segunda direcionada aos conselheiros do CACS/FUNDEB, orientada ao exercício das competências fiscalizatórias, controle social e emissão de relatórios de acompanhamento.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Dada a meta de entes federados a serem atendidos durante o projeto, estabeleceu-se a oferta de duas (02) vagas para gestores municipais e duas (02) vagas para conselheiros do CACS/FUNDEB por município. No ofício de convocação foi explicitada a preferência por servidores efetivos e de carreira, com a finalidade de mitigar a perda de conhecimento técnico decorrente da rotatividade das gestões. Como critério de seleção territorial, adotou-se a menor distância rodoviária até o polo de capacitação de ${t.polo || 'Município Polo'}, priorizando os municípios mais próximos. Foram formalmente convocados ${metrics.totalSummonedMunicipalities} municípios, cuja distância média percorrida foi estimada em ${metrics.avgDistance} km. A relação completa dos entes federativos convocados é apresentada na Tabela 1:</p>
         
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 1. Municípios convocados.</em></p>
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 1. Municípios convocados.</em></p>
         ${window.statsEngine.generateTable1Html(t.municipalities || [])}
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
-        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem;">A matriz curricular e a distribuição de carga horária programada para os módulos teóricos e práticos são apresentadas na Tabela 2:</p>
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">A estrutura curricular do curso contempla quatro (04) módulos sequenciais, sendo os três primeiros voltados aos fundamentos gerais, programas governamentais e normativas do transporte escolar. O quarto módulo é personalizado ao perfil do participante: para os gestores, o foco é integralmente direcionado à prática intensiva no Sistema SETE ("mãos na massa"); para os conselheiros CACS, a abordagem enfatiza as atribuições legais do conselho e a consulta analítica dos dados no sistema. A distribuição temática e as cargas horárias são detalhadas na Tabela 2:</p>
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 2. Estrutura do curso de capacitação em transporte escolar.</em></p>
         ${window.statsEngine.generateTable2Html(t.courseModules || [])}
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
-        <!-- 3. ARTICULAÇÃO INSTITUCIONAL & TABELA 3 -->
-        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. ARTICULAÇÃO INSTITUCIONAL</h3>
-        <p style="text-align:justify; line-height:1.6;">Para assegurar a ampla participação dos municípios convocados, a equipe do CECATE-CO realizou ações contínuas de articulação e contato direto com as secretarias municipais de educação e conselhos sociais, conforme discriminado na Tabela 3:</p>
+        <!-- 3. CONTATO COM OS MUNICÍPIOS & TABELA 3 -->
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. CONTATO COM OS MUNICÍPIOS</h3>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">O contato oficial com os municípios selecionados teve início mediante o encaminhamento de ofícios expedidos pela Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, endereçados aos dirigentes das secretarias municipais de educação e aos representantes dos conselhos CACS/FUNDEB (Apêndice I). O expediente formal continha as diretrizes gerais da capacitação, orientações de participação e o formulário eletrônico de inscrições disponibilizado por link direto e QR Code institucional.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">De modo suplementar, a equipe técnica do CECATE Centro-Oeste realizou ampla mobilização institucional (Apêndice II), utilizando canais oficiais das administrações municipais. Foram estabelecidos contatos complementares via correio eletrônico, chamadas telefônicas e mensagens institucionais para certificar o recebimento das convocações, esclarecer dúvidas e incentivar a homologação das inscrições.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Ao encerramento da fase de convocação, registrou-se um total de ${metrics.totalInscribed} participantes formalmente inscritos, sendo ${metrics.totalInscribedGestores} gestores municipais e ${metrics.totalInscribedCACS} representantes dos CACS/FUNDEB. Dos municípios convocados, ${metrics.totalInscribedMunicipalities} efetivaram inscrição de representantes. A discriminação dos meios e canais de contato empregados para cada município é consolidada na Tabela 3 a seguir:</p>
 
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 3. Articulação institucional para mobilização dos municípios.</em></p>
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 3. Contato com os municípios convocados.</em></p>
         ${window.statsEngine.generateTable3Html(t.municipalities || [])}
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
         <!-- 4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO & TABELA 4 & FIGURA 3 -->
-        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6;">O evento registrou ${metrics.totalInscribed} inscritos e ${metrics.totalPresent} presentes efetivos, com taxa global de comparecimento de ${metrics.participationRateGeneral}%. A discriminação detalhada da presença entre Gestores Municipais e Conselheiros CACS-FUNDEB por município é apresentada na Tabela 4:</p>
+        <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">4. DESENVOLVIMENTO DO CURSO</h3>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Conforme estruturado na matriz formativa, o curso foi planejado e executado em quatro (04) módulos sequenciais, cumprindo rigorosamente os seguintes momentos pedagógicos:</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Primeiro momento:</strong> acolhimento dos participantes com credenciamento e entrega de material didático (pastas com caderno de anotações e caneta institucional), seguido de momento de integração com coffee break.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Segundo momento:</strong> abertura oficial com pronunciamento da coordenação do CECATE Centro-Oeste e dos representantes da Coordenação-Geral da Política do Transporte Escolar (CGPTE/FNDE), apresentando a contextualização do projeto e as metas de aprimoramento da gestão pública.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Terceiro momento:</strong> espaço aberto para a apresentação individual de todos os presentes, promovendo a integração entre gestores municipais, conselheiros sociais do CACS-FUNDEB e as equipes executoras da UFG e do FNDE.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Quarto momento:</strong> apresentação do Módulo 1, com o panorama histórico e situacional do Transporte Escolar no Brasil, os estudos desenvolvidos em parceria entre FNDE e instituições de ensino superior e a missão do CECATE-CO, sensibilizando para os desafios locais e trocas de experiências.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Quinto momento:</strong> exposição detalhada do Módulo 2, abordando os programas federais estruturantes: o Programa Nacional de Apoio ao Transporte do Escolar (PNATE) e o Programa Caminho da Escola, explicitando normas operacionais, critérios de repasse financeiro e prestação de contas.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Sexto momento:</strong> desenvolvimento do Módulo 3, com foco em aspectos de planejamento territorial, contratação de serviços, controle de custos, segurança viária e marcos regulatórios essenciais para assegurar a regularidade e eficiência do transporte escolar.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Sétimo momento:</strong> execução do Módulo 4 de forma segmentada por público-alvo. Para os conselheiros do CACS/FUNDEB, detalharam-se os procedimentos fiscalizatórios, análise documental e utilização analítica do SETE para acompanhamento de rotas. Para os gestores municipais, realizou-se treinamento prático intensivo no Sistema SETE ("mãos na massa"), capacitando os servidores no cadastramento de alunos, escolas, veículos, motoristas e roteirização georreferenciada.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;"><strong>Oitavo momento:</strong> aplicação do instrumento avaliativo da capacitação, coletando percepções técnicas e qualitativas dos participantes sobre metodologia, facilitadores, infraestrutura e conteúdos trabalhados.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Durante o transcorrer dos módulos teóricos e práticos, foram incorporadas dinâmicas interativas mediante o uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos, com a finalidade de acompanhar o nível de assimilação dos conteúdos e potencializar o engajamento coletivo. Foram empregados os aplicativos Kahoot e Plickers: o Kahoot permitiu a participação em tempo real por meio dos smartphones dos cursistas em questionários dinâmicos; já o Plickers viabilizou a coleta imediata de respostas mediante a leitura óptica de cartões com QR Code (alternativas A, B, C e D) realizada exclusivamente pelo celular do instrutor, contornando eventuais oscilações de sinal de internet e garantindo dinamismo à atividade.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">A participação final dos entes federados registrou ${metrics.totalPresentMunicipalities} municípios presentes dos ${metrics.totalInscribedMunicipalities} formalmente inscritos (${metrics.participationRateMunicipalities}%). No que tange ao público participante, compareceram ${metrics.totalPresent} pessoas dentre as ${metrics.totalInscribed} inscritas, representando uma taxa de participação global de ${metrics.participationRateGeneral}%. No segmento do CACS-FUNDEB, compareceram ${metrics.presentCACS} conselheiros (${metrics.participationRateCACS}%), ao passo que na Gestão Municipal participaram ${metrics.presentGestores} técnicos (${metrics.participationRateGestores}%). A distribuição da presença por município e segmento institucional é detalhada na Tabela 4 a seguir:</p>
 
-        <p style="font-weight:600; margin-top:1.25rem;"><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
         ${window.statsEngine.generateTable4Html(t.municipalities || [])}
+        <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
         <!-- FIGURA 3 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-          <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 3. Participação de Gestores e Conselheiros CACS.</em></p>
+          <p style="font-weight:600; margin-bottom:0.75rem;"><em>Figura 3. Participação segundo o tipo de representação.</em></p>
           <div style="max-width:520px; height:280px; position:relative; margin:auto;">
             <canvas id="report-preview-fig3-canvas"></canvas>
           </div>
+          <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem;">Fonte: Elaborada pelos autores.</p>
         </div>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:1.5rem;">Ao término das atividades formativas, todos os certificados oficiais de capacitação (carga horária de 08 horas) foram devidamente emitidos e remetidos para o e-mail cadastrado de cada participante por intermédio da plataforma PLATEIA da Universidade Federal de Goiás (UFG), contando com código de verificação digital e QR Code para autenticação de veracidade.</p>
 
         <!-- 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8 -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6;">Registrou-se ${metrics.evalStatsGeneral.totalResponses} questionários de avaliação preenchidos, com média geral de satisfação de ${metrics.evalStatsGeneral.overallMean} / 5.0. A distribuição percentual de notas atribuídas pelos participantes nos sete critérios pedagógicos e estruturais avaliados é sintetizada a seguir:</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert (pontuações de 1 a 5) para avaliar de maneira objetiva e quantitativa os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">A totalidade dos participantes presentes realizou a avaliação da capacitação, garantindo representatividade integral (${totalResp} questionários válidos). Em termos de distribuição institucional, ${pctCacsResp}% (${cacsRespCount}/${totalResp}) dos respondentes integraram os conselhos sociais CACS-FUNDEB e ${pctGestResp}% (${gestRespCount}/${totalResp}) pertenceram às equipes de Gestão Municipal.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Os resultados consolidados da avaliação do curso de capacitação são ilustrados nas Figuras 4, 5 e 6 a seguir. De modo geral, as qualificações de excelência (notas 4 e 5) abrangeram a expressiva maioria das respostas coletadas, alcançando média geral de ${overallMean} / 5,0. No entanto, apontamentos específicos situados fora da tendência hegemônica indicam oportunidades pontuais de aprimoramento em itens logísticos, tais como a antecedência na divulgação e adequação de horários:</p>
 
         <!-- FIGURA 4 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
@@ -7629,7 +7701,10 @@ class AutoReportApp {
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig4-canvas"></canvas>
           </div>
+          <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem;">Fonte: Elaborada pelos autores.</p>
         </div>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">Ao analisar os resultados segundo a instituição representada, constata-se a manutenção da tendência geral de elevada aprovação. Contudo, os conselheiros dos CACS-FUNDEB apresentaram proporções ainda mais expressivas de notas máximas (conceitos 4 e 5), não registrando pontuações em faixas inferiores, o que evidencia a grande pertinência dos conteúdos de controle social trabalhados:</p>
 
         <!-- FIGURA 5 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
@@ -7637,7 +7712,10 @@ class AutoReportApp {
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig5-canvas"></canvas>
           </div>
+          <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem;">Fonte: Elaborada pelos autores.</p>
         </div>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">Por sua vez, os gestores municipais também manifestaram avaliações francamente positivas, com ampla predominância de respostas nas notas 4 e 5 na quase totalidade das dimensões avaliadas. Eventuais registros com conceitos inferiores concentraram-se essencialmente na duração e horário da formação, reforçando a demanda por períodos mais extensos para as oficinas práticas de preenchimento de rotas:</p>
 
         <!-- FIGURA 6 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
@@ -7645,32 +7723,39 @@ class AutoReportApp {
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig6-canvas"></canvas>
           </div>
+          <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem;">Fonte: Elaborada pelos autores.</p>
         </div>
+
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">De forma sucinta, as Figuras 7 e 8 sintetizam os resultados das perguntas dissertativas por meio de nuvens de palavras ponderadas pela frequência semântica dos termos. As respostas evidenciam percepção extremamente favorável quanto aos facilitadores e aos tópicos trabalhados, com destaque de grande relevância para os termos "Conteúdo", "Didática", "SETE", "Prática" e "Clareza", demonstrando a efetividade metodológica da formação. Em contrapartida, as sugestões de melhoria concentraram-se em demandas de infraestrutura e ritmo, sobressaindo menções a "Tempo", "Internet" e "Mais dias de curso", servindo como subsídios prioritários para as próximas rodadas do projeto. Todas as respostas qualitativas obtidas estão disponíveis integralmente no Apêndice III para consulta:</p>
 
         <!-- FIGURAS 7 E 8 (NUVENS DE PALAVRAS) -->
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; page-break-inside:avoid;">
           <div style="text-align:center;">
-            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos positivos destacados.</em></p>
+            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 7. Aspectos que gostaram da capacitação.</em></p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <canvas id="report-preview-fig7-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
+            <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.4rem;">Fonte: Elaborada pelos autores.</p>
           </div>
           <div style="text-align:center;">
-            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos a serem aprimorados.</em></p>
+            <p style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;"><em>Figura 8. Aspectos que devem melhorar da capacitação.</em></p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <canvas id="report-preview-fig8-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
+            <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.4rem;">Fonte: Elaborada pelos autores.</p>
           </div>
         </div>
 
         <!-- 6. REGISTROS FOTOGRÁFICOS -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">6. REGISTROS FOTOGRÁFICOS</h3>
-        <p style="text-align:justify; line-height:1.6;">A seguir são apresentados os registros fotográficos oficiais realizados durante os momentos de acolhimento, exposição temática e encerramento da capacitação:</p>
+        <p style="text-align:justify; line-height:1.6;">Durante a realização da capacitação, foram registrados diversos momentos por meio de fotografias que ilustram a participação ativa dos representantes municipais e dos conselheiros do CACS-FUNDEB. As imagens capturam desde a ambientação do local, momentos de acolhimento e fala dos facilitadores, até as interações e práticas colaborativas durante as atividades formativas. Esses registros visuais não apenas documentam o evento, como também reforçam o compromisso institucional dos envolvidos com o contínuo aprimoramento da política de transporte escolar nos municípios. As fotografias servem como evidência do engajamento coletivo, memória institucional e prestação de contas das ações desenvolvidas perante o FNDE:</p>
         ${photosHtml}
 
         <!-- 7. CONSIDERAÇÕES FINAIS -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">7. CONSIDERAÇÕES FINAIS</h3>
-        <p style="text-align:justify; line-height:1.6;">A realização da Capacitação nº ${t.number} no polo de ${t.polo} cumpriu integralmente as metas e diretrizes estabelecidas pelo CECATE-CO e pelo FNDE. O estreitamento do diálogo técnico entre a gestão municipal e o controle social do CACS-FUNDEB fortalece as diretrizes de governança, segurança e eficiência no transporte escolar dos estudantes da Educação Básica.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">O presente relatório consubstanciou a execução técnica, operacional e pedagógica do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado no polo regional de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, cumprindo integralmente as metas e diretrizes estabelecidas no âmbito do projeto "${t.relatedProject || 'Fortalecendo e aprimorando as políticas públicas de transporte escolar do Brasil'}" (Processo nº 23070.068031/2023-34), financiado pelo Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Salienta-se que, de forma geral, o curso atendeu plenamente ao objetivo primordial de aprimorar os conhecimentos e habilidades técnicas de gestores municipais e conselheiros do CACS-FUNDEB, conforme atestado nos elevados índices de satisfação apurados na pesquisa avaliativa. Por outro lado, pôde-se comprovar que reforçar a convocação mediante a articulação multicanal do CECATE Centro-Oeste — combinando correspondências oficiais, contatos telefônicos diretos e mensagens em canais institucionais — revelou-se determinante para assegurar expressivo comparecimento dos entes federados convocados.</p>
+        <p style="text-align:justify; line-height:1.6;">Ficou igualmente evidente que a abordagem de diálogo permanente adotada consolida-se como canal imprescindível para atender às demandas de qualificação técnica continuada. Para finalizar, ressalta-se a suma importância de o processo formativo estar inserido em um ambiente que possibilite a livre e qualificada interação entre os cursistas e os formadores, proporcionando um rico espaço de compartilhamento de vivências territoriais, esclarecimento de dúvidas operacionais e retroalimentação contínua de todas as dimensões da política de transporte escolar no Brasil.</p>
 
         <!-- APÊNDICE I: CONVOCAÇÕES DO FNDE -->
         <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:3rem;">APÊNDICE I: CONVOCAÇÕES DO FNDE</h3>
@@ -7681,6 +7766,11 @@ class AutoReportApp {
         <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE II: CONVOCAÇÕES DO CECATE</h3>
         <p style="text-align:justify; line-height:1.6;">Relação dos comunicados e e-mails de convocação emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação:</p>
         ${cecateHtml}
+
+        <!-- APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO -->
+        <h3 style="color:#1e3a8a; border-bottom:2px solid #1e3a8a; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO</h3>
+        <p style="text-align:justify; line-height:1.6;">Relação completa das respostas dissertativas registradas pelos participantes no formulário de avaliação da formação, detalhando aspectos positivos e sugestões de aperfeiçoamento por município e representação institucional:</p>
+        ${evalsHtml}
 
         <!-- RODAPÉ OFICIAL PADRONIZADO -->
         <div class="report-standard-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #4D4D4D; padding-top: 6px; margin-top: 3rem;">

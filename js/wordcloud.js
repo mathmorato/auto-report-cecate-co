@@ -1,6 +1,6 @@
 /**
- * AutoReport CECATE - Motor Nativo de Nuvem de Palavras (Word Cloud Engine)
- * Versão: v.3.0.9
+ * AutoReport CECATE - Gerador de Nuvens de Palavras Qualitativas
+ * Versão: v.3.1.0
  */
 
 class WordCloudEngine {
