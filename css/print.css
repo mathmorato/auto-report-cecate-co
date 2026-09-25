@@ -291,16 +291,30 @@
     page-break-after: avoid;
   }
 
-  .report-table th {
+  .report-table, table {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .report-table tr, table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .report-table th, table th {
     background-color: #f1f5f9 !important;
     color: #0f172a !important;
     border: 1pt solid #cbd5e1 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
-  .report-table td {
+  .report-table td, table td {
     border: 1pt solid #e2e8f0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   .report-kpi-box {

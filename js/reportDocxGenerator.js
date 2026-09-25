@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.0
+ * Versão: v.3.1.1
  */
 
 class ReportDocxGenerator {
@@ -182,6 +182,8 @@ class ReportDocxGenerator {
       new Paragraph({
         alignment: AlignmentType.CENTER,
         spacing: { before: 200, after: 80 },
+        keepNext: true,
+        keepLines: true,
         children: [
           new ImageRun({
             data: bytes,
@@ -196,6 +198,8 @@ class ReportDocxGenerator {
         new Paragraph({
           alignment: AlignmentType.CENTER,
           spacing: { after: 40 },
+          keepNext: true,
+          keepLines: true,
           children: [
             new TextRun({ text: captionText, bold: true, italics: true, size: 20, color: '334155' })
           ]
@@ -203,6 +207,7 @@ class ReportDocxGenerator {
         new Paragraph({
           alignment: AlignmentType.CENTER,
           spacing: { after: 180 },
+          keepLines: true,
           children: [
             new TextRun({ text: 'Fonte: Elaborada pelos autores.', italics: true, size: 18, color: '64748B' })
           ]
@@ -760,6 +765,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: '1. INTRODUÇÃO', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
@@ -787,6 +794,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: '2. DADOS BÁSICOS DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
@@ -818,6 +827,8 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           spacing: { before: 200, after: 100 },
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: 'Tabela 1. Municípios convocados.', bold: true, italics: true })]
         })
       );
@@ -826,11 +837,12 @@ class ReportDocxGenerator {
       const munRows = [
         new TableRow({
           tableHeader: true,
+          cantSplit: true,
           children: [
-            new TableCell({ width: { size: 20, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Código IBGE', bold: true })] })] }),
-            new TableCell({ width: { size: 45, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Nome do Município', bold: true })] })] }),
-            new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'UF', bold: true })] })] }),
-            new TableCell({ width: { size: 20, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Distância (km)', bold: true })] })] })
+            new TableCell({ width: { size: 20, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Código IBGE', bold: true })] })] }),
+            new TableCell({ width: { size: 45, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Nome do Município', bold: true })] })] }),
+            new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'UF', bold: true })] })] }),
+            new TableCell({ width: { size: 20, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Distância (km)', bold: true })] })] })
           ]
         })
       ];
@@ -838,11 +850,12 @@ class ReportDocxGenerator {
       (training.municipalities || []).forEach(m => {
         munRows.push(
           new TableRow({
+            cantSplit: true,
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(m.ibgeCode || '-') })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: m.name || '', bold: true })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(m.uf || training.uf || 'GO') })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: m.isSede ? '0,0 km' : `${parseFloat(m.distanceKm || 0).toFixed(1).replace('.', ',')} km` })] })] })
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: String(m.ibgeCode || '-') })] })] }),
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: m.name || '', bold: true })] })] }),
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: String(m.uf || training.uf || 'GO') })] })] }),
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: m.isSede ? '0,0 km' : `${parseFloat(m.distanceKm || 0).toFixed(1).replace('.', ',')} km` })] })] })
             ]
           })
         );
@@ -852,6 +865,7 @@ class ReportDocxGenerator {
         new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: munRows }),
         new Paragraph({
           spacing: { before: 60, after: 180 },
+          keepLines: true,
           children: [new TextRun({ text: 'Fonte: Elaborada pelos autores.', italics: true, size: 18, color: '64748B' })]
         })
       );
@@ -869,6 +883,8 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           spacing: { before: 150, after: 100 },
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', bold: true, italics: true })]
         })
       );
@@ -876,11 +892,12 @@ class ReportDocxGenerator {
       const modRows = [
         new TableRow({
           tableHeader: true,
+          cantSplit: true,
           children: [
-            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Módulo', bold: true })] })] }),
-            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Temática Gestor', bold: true })] })] }),
-            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Temática CACS', bold: true })] })] }),
-            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Carga Horária', bold: true })] })] })
+            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Módulo', bold: true })] })] }),
+            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Temática Gestor', bold: true })] })] }),
+            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Temática CACS', bold: true })] })] }),
+            new TableCell({ width: { size: 12, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Carga Horária', bold: true })] })] })
           ]
         })
       ];
@@ -903,11 +920,12 @@ class ReportDocxGenerator {
 
           modRows.push(
             new TableRow({
+              cantSplit: true,
               children: [
-                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: i === 0 ? (mod.moduleNumber || '01') : '', bold: true })] })] }),
-                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: g ? (g.topic || '-') : '' })] })] }),
-                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: c ? (c.topic || '-') : '' })] })] }),
-                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: hText.join(' | ') || '-' })] })] })
+                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: i === 0 ? (mod.moduleNumber || '01') : '', bold: true })] })] }),
+                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: g ? (g.topic || '-') : '' })] })] }),
+                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: c ? (c.topic || '-') : '' })] })] }),
+                new TableCell({ children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: hText.join(' | ') || '-' })] })] })
               ]
             })
           );
@@ -918,6 +936,7 @@ class ReportDocxGenerator {
         new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: modRows }),
         new Paragraph({
           spacing: { before: 60, after: 180 },
+          keepLines: true,
           children: [new TextRun({ text: 'Fonte: Elaborada pelos autores.', italics: true, size: 18, color: '64748B' })]
         })
       );
@@ -927,6 +946,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
@@ -958,6 +979,8 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           spacing: { before: 200, after: 100 },
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: 'Tabela 3. Contato com os municípios convocados.', bold: true, italics: true })]
         })
       );
@@ -965,9 +988,10 @@ class ReportDocxGenerator {
       const tab3Rows = [
         new TableRow({
           tableHeader: true,
+          cantSplit: true,
           children: [
-            new TableCell({ width: { size: 35, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Município', bold: true })] })] }),
-            new TableCell({ width: { size: 65, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Forma e Meios de Contato', bold: true })] })] })
+            new TableCell({ width: { size: 35, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Município', bold: true })] })] }),
+            new TableCell({ width: { size: 65, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Forma e Meios de Contato', bold: true })] })] })
           ]
         })
       ];
@@ -976,9 +1000,10 @@ class ReportDocxGenerator {
       (training.municipalities || []).forEach(m => {
         tab3Rows.push(
           new TableRow({
+            cantSplit: true,
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${m.name} (${m.uf || training.uf || 'GO'})`, bold: true })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: contactMethods })] })] })
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.name} (${m.uf || training.uf || 'GO'})`, bold: true })] })] }),
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: contactMethods })] })] })
             ]
           })
         );
@@ -987,6 +1012,7 @@ class ReportDocxGenerator {
         new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: tab3Rows }),
         new Paragraph({
           spacing: { before: 60, after: 180 },
+          keepLines: true,
           children: [new TextRun({ text: 'Fonte: Elaborada pelos autores.', italics: true, size: 18, color: '64748B' })]
         })
       );
@@ -996,6 +1022,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
@@ -1091,6 +1119,8 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           spacing: { before: 200, after: 100 },
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: 'Tabela 4. Participação por município (Presentes / Inscritos).', bold: true, italics: true })]
         })
       );
@@ -1099,12 +1129,13 @@ class ReportDocxGenerator {
       const tab4Rows = [
         new TableRow({
           tableHeader: true,
+          cantSplit: true,
           children: [
-            new TableCell({ width: { size: 25, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Código IBGE', bold: true })] })] }),
-            new TableCell({ width: { size: 35, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Município', bold: true })] })] }),
-            new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'CACS (P/I)', bold: true })] })] }),
-            new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Gestor (P/I)', bold: true })] })] }),
-            new TableCell({ width: { size: 10, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Total', bold: true })] })] })
+            new TableCell({ width: { size: 25, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Código IBGE', bold: true })] })] }),
+            new TableCell({ width: { size: 35, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Município', bold: true })] })] }),
+            new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'CACS (P/I)', bold: true })] })] }),
+            new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Gestor (P/I)', bold: true })] })] }),
+            new TableCell({ width: { size: 10, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Total', bold: true })] })] })
           ]
         })
       ];
@@ -1112,12 +1143,13 @@ class ReportDocxGenerator {
       (training.municipalities || []).forEach(m => {
         tab4Rows.push(
           new TableRow({
+            cantSplit: true,
             children: [
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(m.ibgeCode || '-') })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${m.name} (${m.uf || 'MT'})`, bold: true })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${m.presentCACS || 0}/${m.inscribedCACS || 0}` })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${m.presentGestores || 0}/${m.inscribedGestores || 0}` })] })] }),
-              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${m.presentTotal || 0}/${m.inscribedTotal || 0}`, bold: true })] })] })
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: String(m.ibgeCode || '-') })] })] }),
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.name} (${m.uf || 'MT'})`, bold: true })] })] }),
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.presentCACS || 0}/${m.inscribedCACS || 0}` })] })] }),
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.presentGestores || 0}/${m.inscribedGestores || 0}` })] })] }),
+              new TableCell({ children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.presentTotal || 0}/${m.inscribedTotal || 0}`, bold: true })] })] })
             ]
           })
         );
@@ -1127,6 +1159,7 @@ class ReportDocxGenerator {
         new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: tab4Rows }),
         new Paragraph({
           spacing: { before: 60, after: 180 },
+          keepLines: true,
           children: [new TextRun({ text: 'Fonte: Elaborada pelos autores.', italics: true, size: 18, color: '64748B' })]
         })
       );
@@ -1169,6 +1202,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: '5. AVALIAÇÃO DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
@@ -1265,6 +1300,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
@@ -1299,6 +1336,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: '7. CONSIDERAÇÕES FINAIS', bold: true, size: 28, color: '1E3A8A' })]
         }),
         new Paragraph({
@@ -1339,6 +1378,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 500, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })]
         })
       );
@@ -1356,6 +1397,8 @@ class ReportDocxGenerator {
           docChildren.push(
             new Paragraph({
               spacing: { before: 200, after: 100 },
+              keepNext: true,
+              keepLines: true,
               children: [
                 new TextRun({ text: `Documento: ${d.fileName || d.caption || 'Ofício de Convocação FNDE'}`, bold: true, size: 22, color: '0F172A' })
               ]
@@ -1383,6 +1426,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 400, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })]
         })
       );
@@ -1400,6 +1445,8 @@ class ReportDocxGenerator {
           docChildren.push(
             new Paragraph({
               spacing: { before: 200, after: 100 },
+              keepNext: true,
+              keepLines: true,
               children: [
                 new TextRun({ text: `Documento: ${d.fileName || d.caption || 'Convocação CECATE-CO'}`, bold: true, size: 22, color: '0F172A' })
               ]
@@ -1427,6 +1474,8 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 500, after: 200 },
           heading: HeadingLevel.HEADING_1,
+          keepNext: true,
+          keepLines: true,
           children: [new TextRun({ text: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', bold: true, size: 26, color: '1E3A8A' })]
         }),
         new Paragraph({
@@ -1455,25 +1504,28 @@ class ReportDocxGenerator {
         const ap3Rows = [
           new TableRow({
             tableHeader: true,
+            cantSplit: true,
             children: [
-              new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Código IBGE', bold: true })] })] }),
-              new TableCell({ width: { size: 22, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Município', bold: true })] })] }),
-              new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Representação', bold: true })] })] }),
-              new TableCell({ width: { size: 24, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Aspectos que mais gostou', bold: true })] })] }),
-              new TableCell({ width: { size: 24, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'Aspectos a serem melhorados', bold: true })] })] })
+              new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Código IBGE', bold: true })] })] }),
+              new TableCell({ width: { size: 22, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Município', bold: true })] })] }),
+              new TableCell({ width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Representação', bold: true })] })] }),
+              new TableCell({ width: { size: 24, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Aspectos que mais gostou', bold: true })] })] }),
+              new TableCell({ width: { size: 24, type: WidthType.PERCENTAGE }, children: [new Paragraph({ keepNext: true, keepLines: true, children: [new TextRun({ text: 'Aspectos a serem melhorados', bold: true })] })] })
             ]
           })
         ];
 
-        evalRespList.forEach(ev => {
+        evalRespList.forEach((ev, idx) => {
+          const isNotLast = idx < evalRespList.length - 1;
           ap3Rows.push(
             new TableRow({
+              cantSplit: true,
               children: [
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(ev.ibgeCode || '-') })] })] }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(ev.municipality || '-') })] })] }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(ev.representation || 'Gestão municipal') })] })] }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(ev.likedAspects || '-') })] })] }),
-                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(ev.improveAspects || '-') })] })] })
+                new TableCell({ children: [new Paragraph({ keepNext: isNotLast && evalRespList.length <= 25, keepLines: true, children: [new TextRun({ text: String(ev.ibgeCode || '-') })] })] }),
+                new TableCell({ children: [new Paragraph({ keepNext: isNotLast && evalRespList.length <= 25, keepLines: true, children: [new TextRun({ text: String(ev.municipality || '-') })] })] }),
+                new TableCell({ children: [new Paragraph({ keepNext: isNotLast && evalRespList.length <= 25, keepLines: true, children: [new TextRun({ text: String(ev.representation || 'Gestão municipal') })] })] }),
+                new TableCell({ children: [new Paragraph({ keepNext: isNotLast && evalRespList.length <= 25, keepLines: true, children: [new TextRun({ text: String(ev.likedAspects || '-') })] })] }),
+                new TableCell({ children: [new Paragraph({ keepNext: isNotLast && evalRespList.length <= 25, keepLines: true, children: [new TextRun({ text: String(ev.improveAspects || '-') })] })] })
               ]
             })
           );
@@ -1483,6 +1535,7 @@ class ReportDocxGenerator {
           new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: ap3Rows }),
           new Paragraph({
             spacing: { before: 60, after: 180 },
+            keepLines: true,
             children: [new TextRun({ text: 'Fonte: Elaborada pelos autores.', italics: true, size: 18, color: '64748B' })]
           })
         );
@@ -1502,6 +1555,7 @@ class ReportDocxGenerator {
         },
         rows: [
           new TableRow({
+            cantSplit: true,
             children: [
               new TableCell({
                 width: { size: 45, type: WidthType.PERCENTAGE },
@@ -1580,6 +1634,7 @@ class ReportDocxGenerator {
         },
         rows: [
           new TableRow({
+            cantSplit: true,
             children: [
               new TableCell({
                 width: { size: 100, type: WidthType.PERCENTAGE },
@@ -1630,6 +1685,7 @@ class ReportDocxGenerator {
         },
         rows: [
           new TableRow({
+            cantSplit: true,
             children: [
               new TableCell({
                 width: { size: 95, type: WidthType.PERCENTAGE },
@@ -1706,6 +1762,7 @@ class ReportDocxGenerator {
         },
         rows: [
           new TableRow({
+            cantSplit: true,
             children: [
               new TableCell({
                 width: { size: 100, type: WidthType.PERCENTAGE },
@@ -1828,6 +1885,7 @@ class ReportDocxGenerator {
         },
         rows: [
           new TableRow({
+            cantSplit: true,
             children: [
               new TableCell({
                 width: { size: 38, type: WidthType.PERCENTAGE },
