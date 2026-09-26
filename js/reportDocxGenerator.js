@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.3
+ * Versão: v.3.1.4
  */
 
 class ReportDocxGenerator {
@@ -2061,7 +2061,7 @@ class ReportDocxGenerator {
           spacing: { after: 150, line: 276 },
           children: [
             new TextRun({
-              text: 'Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert (pontuações de 1 a 5) para avaliar de maneira objetiva e quantitativa os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.'
+              text: 'Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert com cinco níveis qualitativos de percepção (1 - Ruim, 2 - Regular, 3 - Neutro, 4 - Muito Bom e 5 - Excelente) para avaliar os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.'
             })
           ]
         }),
@@ -2079,7 +2079,7 @@ class ReportDocxGenerator {
           spacing: { after: 150, line: 276 },
           children: [
             new TextRun({
-              text: `Os resultados consolidados da avaliação do curso de capacitação são ilustrados nas Figuras 4, 5 e 6 a seguir. De modo geral, as qualificações de excelência (notas 4 e 5) abrangeram a expressiva maioria das respostas coletadas, alcançando média geral de ${overallMean} / 5,0. No entanto, apontamentos específicos situados fora da tendência hegemônica indicam oportunidades pontuais de aprimoramento em itens logísticos, tais como a antecedência na divulgação e adequação de horários:`
+              text: 'Os resultados consolidados da avaliação do curso de capacitação são ilustrados nas Figuras 4, 5 e 6 a seguir. De modo geral, as escolhas dos participantes concentraram-se predominantemente entre os conceitos 4 e 5 (Muito Bom e Excelente), que correspondem às notas qualitativas superiores e abrangeram a expressiva maioria das respostas recebidas. No entanto, apontamentos específicos situados fora da tendência hegemônica indicam oportunidades pontuais de aprimoramento em itens logísticos, tais como a antecedência na divulgação e adequação de horários:'
             })
           ]
         })

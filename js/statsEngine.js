@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Análise de Dados
- * Versão: v.3.1.3
+ * Versão: v.3.1.4
  */
 
 class StatsEngine {
@@ -195,6 +195,8 @@ class StatsEngine {
 
     const totalRatingsCount = distribution.reduce((a, b) => a + b, 0);
     const distributionPercent = distribution.map(count => totalRatingsCount > 0 ? parseFloat(((count / totalRatingsCount) * 100).toFixed(1)) : 0);
+    const highRatingsCount = (distribution[3] || 0) + (distribution[4] || 0);
+    const highRatingPercent = totalRatingsCount > 0 ? parseFloat(((highRatingsCount / totalRatingsCount) * 100).toFixed(1)) : 0;
 
     // Matriz de porcentagem 7 critérios x 5 notas (1 a 5)
     const criterionDistributionPercent = criterionCounts.map(countsRow => {
@@ -207,6 +209,8 @@ class StatsEngine {
       totalResponses: n,
       averages,
       overallMean,
+      highRatingPercent,
+      highRatingsCount,
       distribution,
       distributionPercent,
       criterionCounts,

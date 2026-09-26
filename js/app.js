@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.1.3
+ * Versão: v.3.1.4
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.1.3';
+    this.version = 'v.3.1.4';
   }
 
   /**
@@ -6576,10 +6576,10 @@ class AutoReportApp {
 
     this.openConfirmModal({
       title: 'Remover Planilha de Avaliação',
-      msg: 'Tem certeza que deseja remover a Planilha de Avaliação e limpar todos os dados de gráficos, médias e nuvens de palavras?',
+      msg: 'Tem certeza que deseja remover a Planilha de Avaliação e limpar todos os dados de gráficos, distribuições de respostas e nuvens de palavras?',
       btnText: 'Sim, Remover',
       successTitle: 'Avaliações Removidas!',
-      successMsg: 'A planilha de avaliações e todos os gráficos e médias foram excluídos com sucesso.',
+      successMsg: 'A planilha de avaliações e todos os gráficos e nuvens de palavras foram excluídos com sucesso.',
       onConfirm: () => this.executeClearEvaluationData()
     });
   }
@@ -6625,7 +6625,10 @@ class AutoReportApp {
     if (countEl) countEl.textContent = `${evals.length} Avaliações Registradas`;
 
     const meanEl = document.getElementById('wiz-eval-overall-mean');
-    if (meanEl) meanEl.textContent = `${stats.overallMean} / 5.0`;
+    if (meanEl) {
+      const highPct = stats.highRatingPercent ? `${stats.highRatingPercent}%`.replace('.', ',') : (evals.length > 0 ? 'Predomínio 4 e 5' : '0,0% Conceitos 4 e 5');
+      meanEl.textContent = highPct.includes('Conceitos') ? highPct : `${highPct} Conceitos 4 e 5`;
+    }
 
     const statusBanner = document.getElementById('wizard-evaluation-status-banner');
     if (statusBanner) {
@@ -7340,9 +7343,9 @@ class AutoReportApp {
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
           </div>
           <div class="metric-info">
-            <h4>Média Geral de Avaliação</h4>
-            <div class="metric-value" style="color:var(--accent-success);">${metrics.evalStatsGeneral.overallMean} / 5.0</div>
-            <div class="metric-trend">${metrics.evalStatsGeneral.totalResponses} respostas computadas</div>
+            <h4>Conceitos 4 e 5 (Likert)</h4>
+            <div class="metric-value" style="color:var(--accent-success);">${metrics.evalStatsGeneral?.highRatingPercent ? `${String(metrics.evalStatsGeneral.highRatingPercent).replace('.', ',')}%` : (metrics.evalStatsGeneral?.totalResponses > 0 ? 'Predominante' : '0,0%')}</div>
+            <div class="metric-trend">${metrics.evalStatsGeneral?.totalResponses || 0} questionários avaliados</div>
           </div>
         </div>
       </div>
@@ -7369,7 +7372,7 @@ class AutoReportApp {
           </div>
 
           <div class="audit-item ${metrics.evalStatsGeneral.totalResponses > 0 ? 'valid' : 'warning'}">
-            <div><strong>Pesquisa Avaliativa:</strong> ${metrics.evalStatsGeneral.totalResponses} respostas com médias calculadas.</div>
+            <div><strong>Pesquisa Avaliativa:</strong> ${metrics.evalStatsGeneral.totalResponses} avaliações processadas na escala Likert.</div>
             <span class="nav-badge" style="${metrics.evalStatsGeneral.totalResponses > 0 ? 'background:rgba(16, 185, 129, 0.15); color:#10b981;' : 'background:rgba(245, 158, 11, 0.15); color:#f59e0b;'} display:inline-flex; align-items:center; gap:0.25rem;">
               ${metrics.evalStatsGeneral.totalResponses > 0 ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Validado</span>' : '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg><span>Pendência</span>'}
             </span>
@@ -7697,9 +7700,9 @@ class AutoReportApp {
 
         <!-- 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8 -->
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert (pontuações de 1 a 5) para avaliar de maneira objetiva e quantitativa os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert com cinco níveis qualitativos de percepção (1 - Ruim, 2 - Regular, 3 - Neutro, 4 - Muito Bom e 5 - Excelente) para avaliar os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.</p>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">A totalidade dos participantes presentes realizou a avaliação da capacitação, garantindo representatividade integral (${totalResp} questionários válidos). Em termos de distribuição institucional, ${pctCacsResp}% (${cacsRespCount}/${totalResp}) dos respondentes integraram os conselhos sociais CACS-FUNDEB e ${pctGestResp}% (${gestRespCount}/${totalResp}) pertenceram às equipes de Gestão Municipal.</p>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Os resultados consolidados da avaliação do curso de capacitação são ilustrados nas Figuras 4, 5 e 6 a seguir. De modo geral, as qualificações de excelência (notas 4 e 5) abrangeram a expressiva maioria das respostas coletadas, alcançando média geral de ${overallMean} / 5,0. No entanto, apontamentos específicos situados fora da tendência hegemônica indicam oportunidades pontuais de aprimoramento em itens logísticos, tais como a antecedência na divulgação e adequação de horários:</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Os resultados consolidados da avaliação do curso de capacitação são ilustrados nas Figuras 4, 5 e 6 a seguir. De modo geral, as escolhas dos participantes concentraram-se predominantemente entre os conceitos 4 e 5 (Muito Bom e Excelente), que correspondem às notas qualitativas superiores e abrangeram a expressiva maioria das respostas recebidas. No entanto, apontamentos específicos situados fora da tendência hegemônica indicam oportunidades pontuais de aprimoramento em itens logísticos, tais como a antecedência na divulgação e adequação de horários:</p>
 
         <!-- FIGURA 4 -->
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
