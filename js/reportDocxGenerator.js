@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.2
+ * Versão: v.3.1.3
  */
 
 class ReportDocxGenerator {
@@ -257,10 +257,10 @@ class ReportDocxGenerator {
     const pContato = page;
     addDxa(1800);
     const pTab3 = page;
-    addDxa(600 + munCount * 360);
+    addDxa(600 + Math.ceil(munCount / 2) * 360);
 
     // 4. DESENVOLVIMENTO DO CURSO & TABELA 4 & FIGURA 3
-    const tab4Dxa = 600 + munCount * 360;
+    const tab4Dxa = 600 + Math.ceil(munCount / 2) * 360;
     const pDesenv = page;
     addDxa(3600);
     if (dxa + tab4Dxa > MAX_PAGE_DXA) {
@@ -338,8 +338,8 @@ class ReportDocxGenerator {
     const tablesList = [
       { label: 'Tabela 1. Municípios convocados.', page: String(pTab1) },
       { label: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', page: String(pTab2) },
-      { label: 'Tabela 3. Contato com os municípios convocados.', page: String(pTab3) },
-      { label: 'Tabela 4. Participação por município (Presentes / Inscritos).', page: String(pTab4) }
+      { label: 'Tabela 3. Inscritos por município.', page: String(pTab3) },
+      { label: 'Tabela 4. Participação por município.', page: String(pTab4) }
     ];
 
     // MONTAGEM DE figuresList (Títulos exatos das figuras e suas páginas)
@@ -1240,7 +1240,16 @@ class ReportDocxGenerator {
         })
       );
 
-      // 4. SEÇÃO 3: CONTATO COM OS MUNICÍPIOS & TABELA 3
+      // 4. SEÇÃO 3: CONTATO COM OS MUNICÍPIOS & TABELA 3 (MODELO OFICIAL DE REFERÊNCIA)
+      const tab3Sorted = [...(training.municipalities || [])].sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' })
+      );
+      const tab3Half = Math.ceil(tab3Sorted.length / 2);
+      const tab3Left = tab3Sorted.slice(0, tab3Half);
+      const tab3Right = tab3Sorted.slice(tab3Half);
+
+      const convocationStartDateFormatted = training.convocationStartDateFormatted || training.contactStartDateFormatted || (training.contactsData?.startDate ? new Date(training.contactsData.startDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }) : 'data do início das convocações');
+
       docChildren.push(
         new Paragraph({
           spacing: { before: 400, after: 200 },
@@ -1254,7 +1263,7 @@ class ReportDocxGenerator {
           spacing: { after: 150, line: 276 },
           children: [
             new TextRun({
-              text: 'O contato oficial com os municípios selecionados teve início mediante o encaminhamento de ofícios expedidos pela Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, endereçados aos dirigentes das secretarias municipais de educação e aos representantes dos conselhos CACS/FUNDEB (Apêndice I). O expediente formal continha as diretrizes gerais da capacitação, orientações de participação e o formulário eletrônico de inscrições disponibilizado por link direto e QR Code institucional.'
+              text: `O contato com os municípios, previamente selecionados, se deu a partir de ${convocationStartDateFormatted}, mediante o encaminhamento de ofício por parte da Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, tanto para os contatos das secretarias municipais de educação, como para os contatos dos CACS (Apêndice I). Neste e-mail, continha as informações essenciais para compreender o objetivo do curso, instruções necessárias para inscrições, e o formulário para a realizar as inscrições por meio de link ou QR Code correspondente.`
             })
           ]
         }),
@@ -1263,7 +1272,7 @@ class ReportDocxGenerator {
           spacing: { after: 150, line: 276 },
           children: [
             new TextRun({
-              text: 'De modo suplementar, a equipe técnica do CECATE Centro-Oeste realizou ampla mobilização institucional (Apêndice II), utilizando canais oficiais das administrações municipais. Foram estabelecidos contatos complementares via correio eletrônico, chamadas telefônicas e mensagens institucionais para certificar o recebimento das convocações, esclarecer dúvidas e incentivar a homologação das inscrições.'
+              text: 'A equipe do CECATE-CO realizou um novo encaminhamento (Apêndice II), usando informações das prefeituras e das secretarias de educação dos municípios, disponíveis nos sites oficiais das entidades. Com isso, foi realizado um novo contato, por e-mail e por telefone, sendo parcialmente exitoso (com alguns municípios não foi possível o contato).'
             })
           ]
         }),
@@ -1272,7 +1281,7 @@ class ReportDocxGenerator {
           spacing: { after: 150, line: 276 },
           children: [
             new TextRun({
-              text: `Ao encerramento da fase de convocação, registrou-se um total de ${metrics?.totalInscribed || 0} participantes formalmente inscritos, sendo ${metrics?.totalInscribedGestores || 0} gestores municipais e ${metrics?.totalInscribedCACS || 0} representantes dos CACS/FUNDEB. Dos municípios convocados, ${metrics?.totalInscribedMunicipalities || 0} efetivaram inscrição de representantes. A discriminação dos meios e canais de contato empregados para cada município é consolidada na Tabela 3 a seguir:`
+              text: `Ao final do processo, houve um total de ${metrics?.totalInscribed || 0} pessoas inscritas, ${metrics?.totalInscribedGestores || 0} gestores municipais e ${metrics?.totalInscribedCACS || 0} representantes dos CACS/FUNDEB. Cabe destacar que ${metrics?.totalInscribedMunicipalities || 0} municípios tiveram representantes inscritos, dos quais ${metrics?.bothCategoriesInscribedMunicipalities != null ? String(metrics.bothCategoriesInscribedMunicipalities).padStart(2, '0') : '05'} tiveram pelo menos um inscrito em cada uma das categorias (CACS e Gestores). Os detalhes por município podem ser analisados na Tabela 3.`
             })
           ]
         }),
@@ -1281,53 +1290,296 @@ class ReportDocxGenerator {
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: 'Tabela 3. Contato com os municípios convocados.', font: 'Times New Roman', size: 22, color: '000000' })]
+          children: [new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, color: '000000' })]
         })
       );
 
       const tab3Rows = [
+        // Linha 0 do Cabeçalho
         new TableRow({
           tableHeader: true,
           cantSplit: true,
           children: [
+            // Bloco Esquerdo
             new TableCell({
-              width: { size: 35, type: WidthType.PERCENTAGE },
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              verticalMerge: 'restart',
               shading: tableHeaderShading,
               borders: abntHeaderBorders,
               verticalAlign: VerticalAlign.CENTER,
-              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Município', font: 'Times New Roman', bold: true, size: 20 })] })]
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Código IBGE', font: 'Times New Roman', bold: true, size: 20 })] })]
             }),
             new TableCell({
-              width: { size: 65, type: WidthType.PERCENTAGE },
+              width: { size: 22, type: WidthType.PERCENTAGE },
+              verticalMerge: 'restart',
               shading: tableHeaderShading,
               borders: abntHeaderBorders,
               verticalAlign: VerticalAlign.CENTER,
-              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Forma e Meios de Contato', font: 'Times New Roman', bold: true, size: 20 })] })]
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Nome do Município', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              columnSpan: 3,
+              width: { size: 18, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Número de Inscritos', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            // Espaçador Central
+            new TableCell({
+              width: { size: 2, type: WidthType.PERCENTAGE },
+              borders: spacerBorders,
+              children: [new Paragraph({ keepNext: true, keepLines: true, children: [] })]
+            }),
+            // Bloco Direito
+            new TableCell({
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              verticalMerge: 'restart',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Código IBGE', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 22, type: WidthType.PERCENTAGE },
+              verticalMerge: 'restart',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Nome do Município', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              columnSpan: 3,
+              width: { size: 18, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Número de Inscritos', font: 'Times New Roman', bold: true, size: 20 })] })]
+            })
+          ]
+        }),
+        // Linha 1 do Cabeçalho
+        new TableRow({
+          tableHeader: true,
+          cantSplit: true,
+          children: [
+            // Bloco Esquerdo (vMerge continues)
+            new TableCell({
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              verticalMerge: 'continue',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              children: []
+            }),
+            new TableCell({
+              width: { size: 22, type: WidthType.PERCENTAGE },
+              verticalMerge: 'continue',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              children: []
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'CACS', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Gestor', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Total', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            // Espaçador Central
+            new TableCell({
+              width: { size: 2, type: WidthType.PERCENTAGE },
+              borders: spacerBorders,
+              children: []
+            }),
+            // Bloco Direito (vMerge continues)
+            new TableCell({
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              verticalMerge: 'continue',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              children: []
+            }),
+            new TableCell({
+              width: { size: 22, type: WidthType.PERCENTAGE },
+              verticalMerge: 'continue',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              children: []
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'CACS', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Gestor', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Total', font: 'Times New Roman', bold: true, size: 20 })] })]
             })
           ]
         })
       ];
 
-      const contactMethods = training.contactsData?.methods || 'Ofícios, E-mails, Telefones e WhatsApp';
-      (training.municipalities || []).forEach(m => {
+      // Linhas de Dados da Tabela 3
+      for (let i = 0; i < tab3Half; i++) {
+        const leftM = tab3Left[i];
+        const rightM = tab3Right[i] || null;
+
+        const leftCacs = String(leftM.inscribedCACS || 0);
+        const leftGestor = String(leftM.inscribedGestores || 0);
+        const leftTotal = String(leftM.inscribedTotal || ((parseInt(leftM.inscribedCACS) || 0) + (parseInt(leftM.inscribedGestores) || 0)));
+
+        const rightCacs = rightM ? String(rightM.inscribedCACS || 0) : '';
+        const rightGestor = rightM ? String(rightM.inscribedGestores || 0) : '';
+        const rightTotal = rightM ? String(rightM.inscribedTotal || ((parseInt(rightM.inscribedCACS) || 0) + (parseInt(rightM.inscribedGestores) || 0))) : '';
+
         tab3Rows.push(
           new TableRow({
             cantSplit: true,
             children: [
+              // Bloco Esquerdo
               new TableCell({
+                width: { size: 9, type: WidthType.PERCENTAGE },
                 borders: abntDataBorders,
                 verticalAlign: VerticalAlign.CENTER,
-                children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.name} (${m.uf || training.uf || 'GO'})`, font: 'Times New Roman', bold: true, size: 20 })] })]
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: String(leftM.ibgeCode || '-'), font: 'Times New Roman', size: 20 })] })]
               }),
               new TableCell({
+                width: { size: 22, type: WidthType.PERCENTAGE },
                 borders: abntDataBorders,
                 verticalAlign: VerticalAlign.CENTER,
-                children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: contactMethods, font: 'Times New Roman', size: 20 })] })]
+                children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: leftM.name || '', font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: leftCacs, font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: leftGestor, font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: leftTotal, font: 'Times New Roman', size: 20 })] })]
+              }),
+              // Espaçador Central
+              new TableCell({
+                width: { size: 2, type: WidthType.PERCENTAGE },
+                borders: spacerBorders,
+                children: [new Paragraph({ keepNext: true, keepLines: true, children: [] })]
+              }),
+              // Bloco Direito
+              new TableCell({
+                width: { size: 9, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: rightM ? String(rightM.ibgeCode || '-') : '', font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 22, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: rightM ? (rightM.name || '') : '', font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: rightCacs, font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: rightGestor, font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: rightTotal, font: 'Times New Roman', size: 20 })] })]
               })
             ]
           })
         );
-      });
+      }
+
+      // Linhas de Rodapé da Tabela 3 (conforme modelo oficial da referência 16CTE)
+      const tab3FooterBorderTop = { top: singleBorder, bottom: noBorder, left: noBorder, right: noBorder };
+      const tab3FooterBorderBottom = { top: noBorder, bottom: singleBorder, left: noBorder, right: noBorder };
+
+      tab3Rows.push(
+        new TableRow({
+          cantSplit: true,
+          children: [
+            new TableCell({
+              columnSpan: 3,
+              width: { size: 37, type: WidthType.PERCENTAGE },
+              borders: tab3FooterBorderTop,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Total de municípios com inscritos', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              columnSpan: 8,
+              width: { size: 63, type: WidthType.PERCENTAGE },
+              borders: tab3FooterBorderTop,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: String(metrics?.totalInscribedMunicipalities || 0), font: 'Times New Roman', bold: true, size: 20 })] })]
+            })
+          ]
+        }),
+        new TableRow({
+          cantSplit: true,
+          children: [
+            new TableCell({
+              columnSpan: 3,
+              width: { size: 37, type: WidthType.PERCENTAGE },
+              borders: tab3FooterBorderBottom,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Total de pessoas', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              columnSpan: 8,
+              width: { size: 63, type: WidthType.PERCENTAGE },
+              borders: tab3FooterBorderBottom,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: `${metrics?.totalInscribed || 0} (${metrics?.totalInscribedCACS || 0} CACS + ${metrics?.totalInscribedGestores || 0} Gestores)`, font: 'Times New Roman', bold: true, size: 20 })] })]
+            })
+          ]
+        })
+      );
+
       docChildren.push(
         new Table({
           width: { size: 100, type: WidthType.PERCENTAGE },
@@ -1441,7 +1693,7 @@ class ReportDocxGenerator {
           spacing: { after: 150, line: 276 },
           children: [
             new TextRun({
-              text: `A participação final dos entes federados registrou ${metrics?.totalPresentMunicipalities || 0} municípios presentes dos ${metrics?.totalInscribedMunicipalities || metrics?.totalSummonedMunicipalities || 0} formalmente inscritos (${metrics?.participationRateMunicipalities || 0}%). No que tange ao público participante, compareceram ${metrics?.totalPresent || 0} pessoas dentre as ${metrics?.totalInscribed || 0} inscritas, representando uma taxa de participação global de ${metrics?.participationRateGeneral || 0}%. No segmento do CACS-FUNDEB, registraram-se ${metrics?.presentCACS || 0} conselheiros (${metrics?.participationRateCACS || 0}%), ao passo que na Gestão Municipal participaram ${metrics?.presentGestores || 0} técnicos (${metrics?.participationRateGestores || 0}%). A distribuição da presença por município e segmento institucional é detalhada na Tabela 4 a seguir:`
+              text: `A participação dos municípios registrou ${metrics?.totalPresentMunicipalities || 0} municípios presentes dos ${metrics?.totalInscribedMunicipalities || metrics?.totalSummonedMunicipalities || 0} inscritos (${metrics?.participationRateMunicipalities || 0}%). Ressalta-se que ${metrics?.bothCategoriesPresentMunicipalities != null ? String(metrics.bothCategoriesPresentMunicipalities).padStart(2, '0') : '06'} municípios levaram representantes tanto do CACS-FUNDEB como da Gestão, enquanto, ${metrics?.onlyGestoresPresentMunicipalities != null ? String(metrics.onlyGestoresPresentMunicipalities).padStart(2, '0') : '03'} municípios levaram só gestores e ${metrics?.onlyCACSPresentMunicipalities === 1 ? 'um único município foi representado só pelo CACS-FUNDEB' : (metrics?.onlyCACSPresentMunicipalities > 0 ? `${metrics.onlyCACSPresentMunicipalities} municípios foram representados só pelo CACS-FUNDEB` : 'nenhum município foi representado exclusivamente por conselheiros CACS')}. Com relação ao número de pessoas que participaram, registraram-se ${metrics?.totalPresent || 0} participantes dentre os ${metrics?.totalInscribed || 0} inscritos (taxa de participação global de ${metrics?.participationRateGeneral || 0}%), sendo ${metrics?.presentCACS || 0} conselheiros do CACS-FUNDEB (${metrics?.participationRateCACS || 0}%) e ${metrics?.presentGestores || 0} gestores municipais (${metrics?.participationRateGestores || 0}%). Os detalhes dos resultados são apresentados na Tabela 4.`
             })
           ]
         }),
@@ -1450,46 +1702,160 @@ class ReportDocxGenerator {
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: 'Tabela 4. Participação por município (Presentes / Inscritos).', font: 'Times New Roman', size: 22, color: '000000' })]
+          children: [new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, color: '000000' })]
         })
       );
 
-      // Tabela 4 - Modelo Oficial de Referência
+      // Tabela 4 - Modelo Oficial de Referência (Lado a Lado, 11 colunas)
+      const tab4Sorted = [...(training.municipalities || [])].sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' })
+      );
+      const tab4Half = Math.ceil(tab4Sorted.length / 2);
+      const tab4Left = tab4Sorted.slice(0, tab4Half);
+      const tab4Right = tab4Sorted.slice(tab4Half);
+
       const tab4Rows = [
+        // Linha 0 do Cabeçalho
         new TableRow({
           tableHeader: true,
           cantSplit: true,
           children: [
+            // Bloco Esquerdo
             new TableCell({
-              width: { size: 20, type: WidthType.PERCENTAGE },
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              verticalMerge: 'restart',
               shading: tableHeaderShading,
               borders: abntHeaderBorders,
               verticalAlign: VerticalAlign.CENTER,
               children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Código IBGE', font: 'Times New Roman', bold: true, size: 20 })] })]
             }),
             new TableCell({
-              width: { size: 38, type: WidthType.PERCENTAGE },
+              width: { size: 22, type: WidthType.PERCENTAGE },
+              verticalMerge: 'restart',
               shading: tableHeaderShading,
               borders: abntHeaderBorders,
               verticalAlign: VerticalAlign.CENTER,
-              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Município', font: 'Times New Roman', bold: true, size: 20 })] })]
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Nome do Município', font: 'Times New Roman', bold: true, size: 20 })] })]
             }),
             new TableCell({
-              width: { size: 14, type: WidthType.PERCENTAGE },
+              columnSpan: 3,
+              width: { size: 18, type: WidthType.PERCENTAGE },
               shading: tableHeaderShading,
               borders: abntHeaderBorders,
               verticalAlign: VerticalAlign.CENTER,
-              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'CACS (P/I)', font: 'Times New Roman', bold: true, size: 20 })] })]
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Nº de Participantes\nNº de Inscritos', font: 'Times New Roman', bold: true, size: 20 })] })]
             }),
+            // Espaçador Central
             new TableCell({
-              width: { size: 14, type: WidthType.PERCENTAGE },
+              width: { size: 2, type: WidthType.PERCENTAGE },
+              borders: spacerBorders,
+              children: [new Paragraph({ keepNext: true, keepLines: true, children: [] })]
+            }),
+            // Bloco Direito
+            new TableCell({
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              verticalMerge: 'restart',
               shading: tableHeaderShading,
               borders: abntHeaderBorders,
               verticalAlign: VerticalAlign.CENTER,
-              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Gestor (P/I)', font: 'Times New Roman', bold: true, size: 20 })] })]
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Código IBGE', font: 'Times New Roman', bold: true, size: 20 })] })]
             }),
             new TableCell({
-              width: { size: 14, type: WidthType.PERCENTAGE },
+              width: { size: 22, type: WidthType.PERCENTAGE },
+              verticalMerge: 'restart',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Nome do Município', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              columnSpan: 3,
+              width: { size: 18, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Nº de Participantes\nNº de Inscritos', font: 'Times New Roman', bold: true, size: 20 })] })]
+            })
+          ]
+        }),
+        // Linha 1 do Cabeçalho
+        new TableRow({
+          tableHeader: true,
+          cantSplit: true,
+          children: [
+            // Bloco Esquerdo (vMerge continues)
+            new TableCell({
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              verticalMerge: 'continue',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              children: []
+            }),
+            new TableCell({
+              width: { size: 22, type: WidthType.PERCENTAGE },
+              verticalMerge: 'continue',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              children: []
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'CACS', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Gestor', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Total', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            // Espaçador Central
+            new TableCell({
+              width: { size: 2, type: WidthType.PERCENTAGE },
+              borders: spacerBorders,
+              children: []
+            }),
+            // Bloco Direito (vMerge continues)
+            new TableCell({
+              width: { size: 9, type: WidthType.PERCENTAGE },
+              verticalMerge: 'continue',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              children: []
+            }),
+            new TableCell({
+              width: { size: 22, type: WidthType.PERCENTAGE },
+              verticalMerge: 'continue',
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              children: []
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'CACS', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
+              shading: tableHeaderShading,
+              borders: abntHeaderBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Gestor', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              width: { size: 6, type: WidthType.PERCENTAGE },
               shading: tableHeaderShading,
               borders: abntHeaderBorders,
               verticalAlign: VerticalAlign.CENTER,
@@ -1499,40 +1865,137 @@ class ReportDocxGenerator {
         })
       ];
 
-      (training.municipalities || []).forEach(m => {
+      // Linhas de Dados da Tabela 4 (formato Presentes / Inscritos)
+      for (let i = 0; i < tab4Half; i++) {
+        const leftM = tab4Left[i];
+        const rightM = tab4Right[i] || null;
+
+        const leftC = `${leftM.presentCACS || 0}/${leftM.inscribedCACS || 0}`;
+        const leftG = `${leftM.presentGestores || 0}/${leftM.inscribedGestores || 0}`;
+        const leftT = `${leftM.presentTotal || 0}/${leftM.inscribedTotal || 0}`;
+
+        const rightC = rightM ? `${rightM.presentCACS || 0}/${rightM.inscribedCACS || 0}` : '';
+        const rightG = rightM ? `${rightM.presentGestores || 0}/${rightM.inscribedGestores || 0}` : '';
+        const rightT = rightM ? `${rightM.presentTotal || 0}/${rightM.inscribedTotal || 0}` : '';
+
         tab4Rows.push(
           new TableRow({
             cantSplit: true,
             children: [
+              // Bloco Esquerdo
               new TableCell({
+                width: { size: 9, type: WidthType.PERCENTAGE },
                 borders: abntDataBorders,
                 verticalAlign: VerticalAlign.CENTER,
-                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: String(m.ibgeCode || '-'), font: 'Times New Roman', size: 20 })] })]
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: String(leftM.ibgeCode || '-'), font: 'Times New Roman', size: 20 })] })]
               }),
               new TableCell({
+                width: { size: 22, type: WidthType.PERCENTAGE },
                 borders: abntDataBorders,
                 verticalAlign: VerticalAlign.CENTER,
-                children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.name} (${m.uf || training.uf || 'MT'})`, font: 'Times New Roman', bold: true, size: 20 })] })]
+                children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: leftM.name || '', font: 'Times New Roman', size: 20 })] })]
               }),
               new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
                 borders: abntDataBorders,
                 verticalAlign: VerticalAlign.CENTER,
-                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.presentCACS || 0}/${m.inscribedCACS || 0}`, font: 'Times New Roman', size: 20 })] })]
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: leftC, font: 'Times New Roman', size: 20 })] })]
               }),
               new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
                 borders: abntDataBorders,
                 verticalAlign: VerticalAlign.CENTER,
-                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.presentGestores || 0}/${m.inscribedGestores || 0}`, font: 'Times New Roman', size: 20 })] })]
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: leftG, font: 'Times New Roman', size: 20 })] })]
               }),
               new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
                 borders: abntDataBorders,
                 verticalAlign: VerticalAlign.CENTER,
-                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: `${m.presentTotal || 0}/${m.inscribedTotal || 0}`, font: 'Times New Roman', bold: true, size: 20 })] })]
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: leftT, font: 'Times New Roman', size: 20 })] })]
+              }),
+              // Espaçador Central
+              new TableCell({
+                width: { size: 2, type: WidthType.PERCENTAGE },
+                borders: spacerBorders,
+                children: [new Paragraph({ keepNext: true, keepLines: true, children: [] })]
+              }),
+              // Bloco Direito
+              new TableCell({
+                width: { size: 9, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: rightM ? String(rightM.ibgeCode || '-') : '', font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 22, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: rightM ? (rightM.name || '') : '', font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: rightC, font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: rightG, font: 'Times New Roman', size: 20 })] })]
+              }),
+              new TableCell({
+                width: { size: 6, type: WidthType.PERCENTAGE },
+                borders: abntDataBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.CENTER, keepNext: true, keepLines: true, children: [new TextRun({ text: rightT, font: 'Times New Roman', size: 20 })] })]
               })
             ]
           })
         );
-      });
+      }
+
+      // Linhas de Rodapé da Tabela 4 (conforme modelo oficial da referência 16CTE)
+      tab4Rows.push(
+        new TableRow({
+          cantSplit: true,
+          children: [
+            new TableCell({
+              columnSpan: 3,
+              width: { size: 37, type: WidthType.PERCENTAGE },
+              borders: tab3FooterBorderTop,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Total de municípios presentes', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              columnSpan: 8,
+              width: { size: 63, type: WidthType.PERCENTAGE },
+              borders: tab3FooterBorderTop,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: String(metrics?.totalPresentMunicipalities || 0), font: 'Times New Roman', bold: true, size: 20 })] })]
+            })
+          ]
+        }),
+        new TableRow({
+          cantSplit: true,
+          children: [
+            new TableCell({
+              columnSpan: 3,
+              width: { size: 37, type: WidthType.PERCENTAGE },
+              borders: tab3FooterBorderBottom,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.RIGHT, keepNext: true, keepLines: true, children: [new TextRun({ text: 'Total de pessoas presentes', font: 'Times New Roman', bold: true, size: 20 })] })]
+            }),
+            new TableCell({
+              columnSpan: 8,
+              width: { size: 63, type: WidthType.PERCENTAGE },
+              borders: tab3FooterBorderBottom,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, keepLines: true, children: [new TextRun({ text: `${metrics?.totalPresent || 0} (${metrics?.presentCACS || 0} CACS + ${metrics?.presentGestores || 0} Gestores)`, font: 'Times New Roman', bold: true, size: 20 })] })]
+            })
+          ]
+        })
+      );
 
       docChildren.push(
         new Table({

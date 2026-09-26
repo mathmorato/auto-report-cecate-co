@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.1.2
+ * Versão: v.3.1.3
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.1.2';
+    this.version = 'v.3.1.3';
   }
 
   /**
@@ -6221,6 +6221,7 @@ class AutoReportApp {
   renderAttendanceStep() {
     const statusBanner = document.getElementById('wizard-attendance-status-banner');
     const attContainer = document.getElementById('wizard-attendance-table-container');
+    const table3Container = document.getElementById('wizard-table3-preview');
     const table4Container = document.getElementById('wizard-table4-preview');
     if (!this.currentTraining) return;
 
@@ -6527,6 +6528,11 @@ class AutoReportApp {
           </div>
         `;
       }
+    }
+
+    // Renderizar Tabela 3 (Inscritos por Município)
+    if (table3Container && window.statsEngine) {
+      table3Container.innerHTML = window.statsEngine.generateTable3Html(this.currentTraining.municipalities || []);
     }
 
     // Renderizar Tabela 4 (Participação por Município - Presentes / Convocados)
@@ -7654,10 +7660,10 @@ class AutoReportApp {
         <h3 style="color:#1e3a8a; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">3. CONTATO COM OS MUNICÍPIOS</h3>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">O contato oficial com os municípios selecionados teve início mediante o encaminhamento de ofícios expedidos pela Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, endereçados aos dirigentes das secretarias municipais de educação e aos representantes dos conselhos CACS/FUNDEB (Apêndice I). O expediente formal continha as diretrizes gerais da capacitação, orientações de participação e o formulário eletrônico de inscrições disponibilizado por link direto e QR Code institucional.</p>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">De modo suplementar, a equipe técnica do CECATE Centro-Oeste realizou ampla mobilização institucional (Apêndice II), utilizando canais oficiais das administrações municipais. Foram estabelecidos contatos complementares via correio eletrônico, chamadas telefônicas e mensagens institucionais para certificar o recebimento das convocações, esclarecer dúvidas e incentivar a homologação das inscrições.</p>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Ao encerramento da fase de convocação, registrou-se um total de ${metrics.totalInscribed} participantes formalmente inscritos, sendo ${metrics.totalInscribedGestores} gestores municipais e ${metrics.totalInscribedCACS} representantes dos CACS/FUNDEB. Dos municípios convocados, ${metrics.totalInscribedMunicipalities} efetivaram inscrição de representantes. A discriminação dos meios e canais de contato empregados para cada município é consolidada na Tabela 3 a seguir:</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Ao todo, foram convocados ${metrics.totalSummonedMunicipalities} municípios com vistas a atingir a meta de ${metrics.targetParticipants || (metrics.totalSummonedMunicipalities * 4)} participantes, sendo ${metrics.targetGestores || (metrics.totalSummonedMunicipalities * 2)} gestores municipais e ${metrics.targetCACS || (metrics.totalSummonedMunicipalities * 2)} representantes do CACS. Destes, ${metrics.totalInscribedMunicipalities} municípios tiveram participantes inscritos no curso, dos quais ${metrics.bothCategoriesInscribedMunicipalities || 0} municípios inscreveram representantes de ambas as categorias, ${metrics.onlyCACSInscribedMunicipalities || 0} município(s) apenas CACS e ${metrics.onlyGestoresInscribedMunicipalities || 0} apenas gestores. No que se refere ao quantitativo de pessoas, foram inscritas ${metrics.totalInscribed} pessoas, sendo ${metrics.totalInscribedGestores} gestores e ${metrics.totalInscribedCACS} representantes do CACS. A relação dos municípios com o respectivo número de inscritos por categoria é apresentada na Tabela 3.</p>
 
-        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 3. Contato com os municípios convocados.</em></p>
-        ${window.statsEngine.generateTable3Html(t.municipalities || [])}
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 3. Inscritos por município.</em></p>
+        ${window.statsEngine.generateTable3Html(t.municipalities || [], metrics)}
         <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
         <!-- 4. DESENVOLVIMENTO DO CURSO E PARTICIPAÇÃO & TABELA 4 & FIGURA 3 -->
@@ -7674,8 +7680,8 @@ class AutoReportApp {
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Durante o transcorrer dos módulos teóricos e práticos, foram incorporadas dinâmicas interativas mediante o uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos, com a finalidade de acompanhar o nível de assimilação dos conteúdos e potencializar o engajamento coletivo. Foram empregados os aplicativos Kahoot e Plickers: o Kahoot permitiu a participação em tempo real por meio dos smartphones dos cursistas em questionários dinâmicos; já o Plickers viabilizou a coleta imediata de respostas mediante a leitura óptica de cartões com QR Code (alternativas A, B, C e D) realizada exclusivamente pelo celular do instrutor, contornando eventuais oscilações de sinal de internet e garantindo dinamismo à atividade.</p>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">A participação final dos entes federados registrou ${metrics.totalPresentMunicipalities} municípios presentes dos ${metrics.totalInscribedMunicipalities} formalmente inscritos (${metrics.participationRateMunicipalities}%). No que tange ao público participante, compareceram ${metrics.totalPresent} pessoas dentre as ${metrics.totalInscribed} inscritas, representando uma taxa de participação global de ${metrics.participationRateGeneral}%. No segmento do CACS-FUNDEB, compareceram ${metrics.presentCACS} conselheiros (${metrics.participationRateCACS}%), ao passo que na Gestão Municipal participaram ${metrics.presentGestores} técnicos (${metrics.participationRateGestores}%). A distribuição da presença por município e segmento institucional é detalhada na Tabela 4 a seguir:</p>
 
-        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 4. Participação por município (Presentes / Inscritos).</em></p>
-        ${window.statsEngine.generateTable4Html(t.municipalities || [])}
+        <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 4. Participação por município.</em></p>
+        ${window.statsEngine.generateTable4Html(t.municipalities || [], metrics)}
         <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem;">Fonte: Elaborada pelos autores.</p>
 
         <!-- FIGURA 3 -->

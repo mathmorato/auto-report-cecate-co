@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Análise de Dados
- * Versão: v.3.1.2
+ * Versão: v.3.1.3
  */
 
 class StatsEngine {
@@ -41,9 +41,16 @@ class StatsEngine {
     let totalPresentGestores = 0;
     let totalPresent = 0;
 
-    // Municípios presentes
+    // Municípios presentes e inscritos
     const presentMunSet = new Set();
     const inscribedMunSet = new Set();
+
+    let bothCategoriesInscribedMunicipalities = 0;
+    let bothCategoriesPresentMunicipalities = 0;
+    let onlyGestoresInscribedMunicipalities = 0;
+    let onlyCACSInscribedMunicipalities = 0;
+    let onlyGestoresPresentMunicipalities = 0;
+    let onlyCACSPresentMunicipalities = 0;
 
     municipalities.forEach(m => {
       const insC = parseInt(m.inscribedCACS) || 0;
@@ -61,6 +68,14 @@ class StatsEngine {
 
       if ((insC + insG) > 0) inscribedMunSet.add(m.name);
       if ((preC + preG) > 0) presentMunSet.add(m.name);
+
+      if (insC > 0 && insG > 0) bothCategoriesInscribedMunicipalities++;
+      else if (insG > 0 && insC === 0) onlyGestoresInscribedMunicipalities++;
+      else if (insC > 0 && insG === 0) onlyCACSInscribedMunicipalities++;
+
+      if (preC > 0 && preG > 0) bothCategoriesPresentMunicipalities++;
+      else if (preG > 0 && preC === 0) onlyGestoresPresentMunicipalities++;
+      else if (preC > 0 && preG === 0) onlyCACSPresentMunicipalities++;
     });
 
     // Se attendance list tiver dados detalhados e município tiver 0, sincronizar
@@ -79,6 +94,7 @@ class StatsEngine {
     const participationRateGeneral = totalInscribed > 0 ? ((totalPresent / totalInscribed) * 100).toFixed(1) : (totalPresent > 0 ? 100 : 0);
     const participationRateCACS = totalInscribedCACS > 0 ? ((totalPresentCACS / totalInscribedCACS) * 100).toFixed(1) : (totalPresentCACS > 0 ? 100 : 0);
     const participationRateGestores = totalInscribedGestores > 0 ? ((totalPresentGestores / totalInscribedGestores) * 100).toFixed(1) : (totalPresentGestores > 0 ? 100 : 0);
+    const participationRateMunicipalities = inscribedMunSet.size > 0 ? ((presentMunSet.size / inscribedMunSet.size) * 100).toFixed(1) : (presentMunSet.size > 0 ? 100 : 0);
 
     // 2. Análise de Avaliação
     const evalStatsGeneral = this.calculateEvaluationStats(evaluations);
@@ -114,9 +130,16 @@ class StatsEngine {
       totalPresentCACS,
       totalPresentGestores,
       totalPresent,
+      bothCategoriesInscribedMunicipalities,
+      bothCategoriesPresentMunicipalities,
+      onlyGestoresInscribedMunicipalities,
+      onlyCACSInscribedMunicipalities,
+      onlyGestoresPresentMunicipalities,
+      onlyCACSPresentMunicipalities,
       participationRateGeneral,
       participationRateCACS,
       participationRateGestores,
+      participationRateMunicipalities,
       evalStatsGeneral,
       evalStatsCACS,
       evalStatsGestores,
@@ -387,59 +410,112 @@ class StatsEngine {
   }
 
   /**
-   * Gera o HTML da Tabela 3: Inscritos por Município
+   * Gera o HTML da Tabela 3: Inscritos por Município (Modelo Oficial de Referência - Lado a Lado)
    */
-  generateTable3Html(municipalities = []) {
-    const sorted = [...municipalities].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    let rowsHtml = '';
+  generateTable3Html(municipalities = [], metrics = {}) {
+    const sorted = [...municipalities].sort((a, b) =>
+      (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' })
+    );
+
+    if (sorted.length === 0) {
+      return `
+        <div class="table-responsive-wrapper">
+          <table class="report-data-table">
+            <tbody>
+              <tr><td style="text-align:center; padding:1.5rem; color:var(--text-muted);">Nenhum município cadastrado na lista de inscritos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    const half = Math.ceil(sorted.length / 2);
+    const leftList = sorted.slice(0, half);
+    const rightList = sorted.slice(half);
+
     let sumCACS = 0;
     let sumGestor = 0;
     let sumTotal = 0;
+    let munsWithInsc = 0;
 
     sorted.forEach(m => {
-      const cacs = parseInt(m.inscribedCACS) || 0;
-      const gestor = parseInt(m.inscribedGestores) || 0;
-      const total = parseInt(m.inscribedTotal) || (cacs + gestor);
+      const c = parseInt(m.inscribedCACS) || 0;
+      const g = parseInt(m.inscribedGestores) || 0;
+      const tot = parseInt(m.inscribedTotal) || (c + g);
+      sumCACS += c;
+      sumGestor += g;
+      sumTotal += tot;
+      if (tot > 0) munsWithInsc++;
+    });
 
-      sumCACS += cacs;
-      sumGestor += gestor;
-      sumTotal += total;
+    const totalInscMuns = metrics.totalInscribedMunicipalities ?? munsWithInsc;
+    const totalInscPersons = metrics.totalInscribed ?? sumTotal;
+    const totalCacs = metrics.totalInscribedCACS ?? sumCACS;
+    const totalGest = metrics.totalInscribedGestores ?? sumGestor;
+
+    let rowsHtml = '';
+    for (let i = 0; i < half; i++) {
+      const leftM = leftList[i];
+      const rightM = rightList[i] || null;
+
+      const lCacs = parseInt(leftM.inscribedCACS) || 0;
+      const lGest = parseInt(leftM.inscribedGestores) || 0;
+      const lTot = parseInt(leftM.inscribedTotal) || (lCacs + lGest);
+
+      const rCacs = rightM ? (parseInt(rightM.inscribedCACS) || 0) : '';
+      const rGest = rightM ? (parseInt(rightM.inscribedGestores) || 0) : '';
+      const rTot = rightM ? (parseInt(rightM.inscribedTotal) || ((parseInt(rightM.inscribedCACS) || 0) + (parseInt(rightM.inscribedGestores) || 0))) : '';
 
       rowsHtml += `
         <tr>
-          <td style="text-align:center; font-family:monospace;">${m.ibgeCode || '-'}</td>
-          <td><strong>${m.name}</strong> (${m.uf || 'MT'})</td>
-          <td style="text-align:center;">${cacs}</td>
-          <td style="text-align:center;">${gestor}</td>
-          <td style="text-align:center; font-weight:700;">${total}</td>
+          <td style="text-align:center; font-family:monospace; font-weight:600;">${leftM.ibgeCode || '-'}</td>
+          <td style="text-align:left; font-weight:600;">${leftM.name || ''}</td>
+          <td style="text-align:center;">${lCacs}</td>
+          <td style="text-align:center;">${lGest}</td>
+          <td style="text-align:center; font-weight:700;">${lTot}</td>
+          <td style="width:8px; padding:0; background:transparent; border-left:none; border-right:1px solid var(--border-color, #cbd5e1);"></td>
+          <td style="text-align:center; font-family:monospace; font-weight:600;">${rightM ? (rightM.ibgeCode || '-') : ''}</td>
+          <td style="text-align:left; font-weight:600;">${rightM ? (rightM.name || '') : ''}</td>
+          <td style="text-align:center;">${rCacs}</td>
+          <td style="text-align:center;">${rGest}</td>
+          <td style="text-align:center; font-weight:700;">${rTot}</td>
         </tr>
       `;
-    });
+    }
 
     return `
       <div class="table-responsive-wrapper">
-        <table class="report-data-table">
+        <table class="report-data-table" style="font-size:0.82rem;">
           <thead>
             <tr>
-              <th rowspan="2" style="width: 140px; text-align:center;">Código IBGE</th>
-              <th rowspan="2">Nome do Município</th>
-              <th colspan="3" style="text-align:center;">Número de Inscritos</th>
+              <th rowspan="2" style="width:11%; text-align:center;">Código IBGE</th>
+              <th rowspan="2" style="text-align:left;">Nome do Município</th>
+              <th colspan="3" style="width:21%; text-align:center;">Número de Inscritos</th>
+              <th rowspan="2" style="width:8px; padding:0; background:transparent; border-left:none; border-right:1px solid var(--border-color, #cbd5e1);"></th>
+              <th rowspan="2" style="width:11%; text-align:center;">Código IBGE</th>
+              <th rowspan="2" style="text-align:left;">Nome do Município</th>
+              <th colspan="3" style="width:21%; text-align:center;">Número de Inscritos</th>
             </tr>
             <tr>
-              <th style="width: 100px; text-align:center;">CACS</th>
-              <th style="width: 100px; text-align:center;">Gestor</th>
-              <th style="width: 100px; text-align:center;">Total</th>
+              <th style="width:7%; text-align:center;">CACS</th>
+              <th style="width:7%; text-align:center;">Gestor</th>
+              <th style="width:7%; text-align:center;">Total</th>
+              <th style="width:7%; text-align:center;">CACS</th>
+              <th style="width:7%; text-align:center;">Gestor</th>
+              <th style="width:7%; text-align:center;">Total</th>
             </tr>
           </thead>
           <tbody>
             ${rowsHtml}
           </tbody>
           <tfoot>
-            <tr style="font-weight:700; background:rgba(99, 102, 241, 0.08);">
-              <td colspan="2" style="text-align:right;">Totais Gerais:</td>
-              <td style="text-align:center;">${sumCACS}</td>
-              <td style="text-align:center;">${sumGestor}</td>
-              <td style="text-align:center; color:var(--accent-secondary);">${sumTotal}</td>
+            <tr style="font-weight:700; background:rgba(99, 102, 241, 0.06); border-top:2px solid var(--border-color);">
+              <td colspan="2" style="text-align:right; font-weight:700; padding:0.5rem 0.75rem;">Total de municípios com inscritos:</td>
+              <td colspan="9" style="text-align:left; font-weight:700; padding:0.5rem 0.75rem;">${totalInscMuns}</td>
+            </tr>
+            <tr style="font-weight:700; background:rgba(99, 102, 241, 0.06);">
+              <td colspan="2" style="text-align:right; font-weight:700; padding:0.5rem 0.75rem;">Total de pessoas:</td>
+              <td colspan="9" style="text-align:left; font-weight:700; padding:0.5rem 0.75rem;">${totalInscPersons} (${totalCacs} CACS + ${totalGest} Gestores)</td>
             </tr>
           </tfoot>
         </table>
@@ -448,15 +524,36 @@ class StatsEngine {
   }
 
   /**
-   * Gera o HTML da Tabela 4: Participação por Município (Presentes / Inscritos - P/I)
+   * Gera o HTML da Tabela 4: Participação por Município (Modelo Oficial de Referência - Lado a Lado)
    */
-  generateTable4Html(municipalities = []) {
-    const sorted = [...municipalities].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    let rowsHtml = '';
-    let sumInscCACS = 0;
+  generateTable4Html(municipalities = [], metrics = {}) {
+    const sorted = [...municipalities].sort((a, b) =>
+      (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' })
+    );
+
+    if (sorted.length === 0) {
+      return `
+        <div class="table-responsive-wrapper">
+          <table class="report-data-table">
+            <tbody>
+              <tr><td style="text-align:center; padding:1.5rem; color:var(--text-muted);">Nenhum município cadastrado na lista de presença.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    const half = Math.ceil(sorted.length / 2);
+    const leftList = sorted.slice(0, half);
+    const rightList = sorted.slice(half);
+
     let sumPresCACS = 0;
-    let sumInscGestor = 0;
-    let sumPresGestor = 0;
+    let sumInscCACS = 0;
+    let sumPresGest = 0;
+    let sumInscGest = 0;
+    let sumPresTotal = 0;
+    let sumInscTotal = 0;
+    let munsWithPres = 0;
 
     sorted.forEach(m => {
       const insC = parseInt(m.inscribedCACS) || 0;
@@ -468,60 +565,87 @@ class StatsEngine {
 
       sumInscCACS += insC;
       sumPresCACS += preC;
-      sumInscGestor += insG;
-      sumPresGestor += preG;
+      sumInscGest += insG;
+      sumPresGest += preG;
+      sumInscTotal += insTot;
+      sumPresTotal += preTot;
+      if (preTot > 0) munsWithPres++;
+    });
 
-      let statusClass = 'status-count-zero';
-      if (preTot >= 2) {
-        statusClass = 'status-count-many';
-      } else if (preTot === 1) {
-        statusClass = 'status-count-one';
-      }
+    const totalPresMuns = metrics.totalPresentMunicipalities ?? munsWithPres;
+    const totalPresPersons = metrics.totalPresent ?? sumPresTotal;
+    const totalPresC = metrics.totalPresentCACS ?? sumPresCACS;
+    const totalPresG = metrics.totalPresentGestores ?? sumPresGest;
 
-      let displayName = m.name || '';
-      const ufSuffix = `(${m.uf || 'MT'})`;
-      if (!displayName.endsWith(ufSuffix) && !displayName.match(/\([A-Z]{2}\)$/)) {
-        displayName = `${displayName} ${ufSuffix}`;
-      }
+    let rowsHtml = '';
+    for (let i = 0; i < half; i++) {
+      const leftM = leftList[i];
+      const rightM = rightList[i] || null;
+
+      const lInsC = parseInt(leftM.inscribedCACS) || 0;
+      const lPreC = parseInt(leftM.presentCACS) || 0;
+      const lInsG = parseInt(leftM.inscribedGestores) || 0;
+      const lPreG = parseInt(leftM.presentGestores) || 0;
+      const lInsTot = lInsC + lInsG;
+      const lPreTot = lPreC + lPreG;
+
+      const rInsC = rightM ? (parseInt(rightM.inscribedCACS) || 0) : 0;
+      const rPreC = rightM ? (parseInt(rightM.presentCACS) || 0) : 0;
+      const rInsG = rightM ? (parseInt(rightM.inscribedGestores) || 0) : 0;
+      const rPreG = rightM ? (parseInt(rightM.presentGestores) || 0) : 0;
+      const rInsTot = rInsC + rInsG;
+      const rPreTot = rPreC + rPreG;
 
       rowsHtml += `
         <tr>
-          <td style="text-align:center; font-family:monospace;">${m.ibgeCode || '-'}</td>
-          <td><strong>${displayName}</strong></td>
-          <td style="text-align:center;">${preC}/${insC}</td>
-          <td style="text-align:center;">${preG}/${insG}</td>
-          <td style="text-align:center;"><span class="attendance-status-count ${statusClass}">${preTot}/${insTot}</span></td>
+          <td style="text-align:center; font-family:monospace; font-weight:600;">${leftM.ibgeCode || '-'}</td>
+          <td style="text-align:left; font-weight:600;">${leftM.name || ''}</td>
+          <td style="text-align:center;">${lPreC}/${lInsC}</td>
+          <td style="text-align:center;">${lPreG}/${lInsG}</td>
+          <td style="text-align:center; font-weight:700;">${lPreTot}/${lInsTot}</td>
+          <td style="width:8px; padding:0; background:transparent; border-left:none; border-right:1px solid var(--border-color, #cbd5e1);"></td>
+          <td style="text-align:center; font-family:monospace; font-weight:600;">${rightM ? (rightM.ibgeCode || '-') : ''}</td>
+          <td style="text-align:left; font-weight:600;">${rightM ? (rightM.name || '') : ''}</td>
+          <td style="text-align:center;">${rightM ? `${rPreC}/${rInsC}` : ''}</td>
+          <td style="text-align:center;">${rightM ? `${rPreG}/${rInsG}` : ''}</td>
+          <td style="text-align:center; font-weight:700;">${rightM ? `${rPreTot}/${rInsTot}` : ''}</td>
         </tr>
       `;
-    });
-
-    const totalInsc = sumInscCACS + sumInscGestor;
-    const totalPres = sumPresCACS + sumPresGestor;
+    }
 
     return `
       <div class="table-responsive-wrapper">
-        <table class="report-data-table">
+        <table class="report-data-table" style="font-size:0.82rem;">
           <thead>
             <tr>
-              <th rowspan="2" style="width: 140px; text-align:center;">Código IBGE</th>
-              <th rowspan="2">Nome do Município</th>
-              <th colspan="3" style="text-align:center;">Participação (Presentes / Inscritos)</th>
+              <th rowspan="2" style="width:11%; text-align:center;">Código IBGE</th>
+              <th rowspan="2" style="text-align:left;">Nome do Município</th>
+              <th colspan="3" style="width:21%; text-align:center;">Nº de Participantes / Nº de Inscritos</th>
+              <th rowspan="2" style="width:8px; padding:0; background:transparent; border-left:none; border-right:1px solid var(--border-color, #cbd5e1);"></th>
+              <th rowspan="2" style="width:11%; text-align:center;">Código IBGE</th>
+              <th rowspan="2" style="text-align:left;">Nome do Município</th>
+              <th colspan="3" style="width:21%; text-align:center;">Nº de Participantes / Nº de Inscritos</th>
             </tr>
             <tr>
-              <th style="width: 120px; text-align:center;">CACS (P/I)</th>
-              <th style="width: 120px; text-align:center;">Gestor (P/I)</th>
-              <th style="width: 120px; text-align:center;">Total (P/I)</th>
+              <th style="width:7%; text-align:center;">CACS</th>
+              <th style="width:7%; text-align:center;">Gestor</th>
+              <th style="width:7%; text-align:center;">Total</th>
+              <th style="width:7%; text-align:center;">CACS</th>
+              <th style="width:7%; text-align:center;">Gestor</th>
+              <th style="width:7%; text-align:center;">Total</th>
             </tr>
           </thead>
           <tbody>
             ${rowsHtml}
           </tbody>
           <tfoot>
-            <tr style="font-weight:700; background:rgba(99, 102, 241, 0.08);">
-              <td colspan="2" style="text-align:right;">Totais Consolidados:</td>
-              <td style="text-align:center;">${sumPresCACS}/${sumInscCACS}</td>
-              <td style="text-align:center;">${sumPresGestor}/${sumInscGestor}</td>
-              <td style="text-align:center;"><span class="attendance-status-count ${totalPres >= 2 ? 'status-count-many' : (totalPres === 1 ? 'status-count-one' : 'status-count-zero')}">${totalPres}/${totalInsc}</span></td>
+            <tr style="font-weight:700; background:rgba(99, 102, 241, 0.06); border-top:2px solid var(--border-color);">
+              <td colspan="2" style="text-align:right; font-weight:700; padding:0.5rem 0.75rem;">Total de municípios presentes:</td>
+              <td colspan="9" style="text-align:left; font-weight:700; padding:0.5rem 0.75rem;">${totalPresMuns}</td>
+            </tr>
+            <tr style="font-weight:700; background:rgba(99, 102, 241, 0.06);">
+              <td colspan="2" style="text-align:right; font-weight:700; padding:0.5rem 0.75rem;">Total de pessoas presentes:</td>
+              <td colspan="9" style="text-align:left; font-weight:700; padding:0.5rem 0.75rem;">${totalPresPersons} (${totalPresC} CACS + ${totalPresG} Gestores)</td>
             </tr>
           </tfoot>
         </table>
