@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.7
+ * Versão: v.3.1.8
  */
 
 class ReportDocxGenerator {
@@ -161,7 +161,7 @@ class ReportDocxGenerator {
   /**
    * Cria parágrafo de imagem no Word garantindo proporção e evitando deformações
    */
-  createImageParagraph(dataUrl, maxTargetWidth, maxTargetHeight, captionText, docxDeps) {
+  createImageParagraph(dataUrl, maxTargetWidth, maxTargetHeight, captionText, docxDeps, bookmarkId = null) {
     const bytes = this.base64ToUint8Array(dataUrl);
     if (!bytes) return null;
 
@@ -176,7 +176,7 @@ class ReportDocxGenerator {
       height = Math.round(dims.height * scale);
     }
 
-    const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps || window.docx || {};
+    const { Paragraph, ImageRun, TextRun, AlignmentType, Bookmark } = docxDeps || window.docx || {};
 
     const nodes = [
       new Paragraph({
@@ -194,15 +194,18 @@ class ReportDocxGenerator {
     ];
 
     if (captionText) {
+      const captionRun = new TextRun({ text: captionText, bold: true, italics: true, size: 20, color: '334155' });
+      const captionChild = (bookmarkId && Bookmark)
+        ? new Bookmark({ id: bookmarkId, children: [captionRun] })
+        : captionRun;
+
       nodes.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
           spacing: { after: 40 },
           keepNext: true,
           keepLines: true,
-          children: [
-            new TextRun({ text: captionText, bold: true, italics: true, size: 20, color: '334155' })
-          ]
+          children: [captionChild]
         }),
         new Paragraph({
           alignment: AlignmentType.CENTER,
@@ -221,7 +224,7 @@ class ReportDocxGenerator {
    * Constrói os nós de parágrafo de uma figura conforme o padrão oficial ABNT de referência:
    * Legenda/Título centralizado ACIMA da imagem, imagem centralizada, e Fonte centralizada ABAIXO.
    */
-  createFigureWithCaptionAbove(dataUrl, maxTargetWidth, maxTargetHeight, captionText, sourceText, docxDeps) {
+  createFigureWithCaptionAbove(dataUrl, maxTargetWidth, maxTargetHeight, captionText, sourceText, docxDeps, bookmarkId = null) {
     const bytes = this.base64ToUint8Array(dataUrl);
     if (!bytes) return [];
 
@@ -236,27 +239,30 @@ class ReportDocxGenerator {
       height = Math.round(dims.height * scale);
     }
 
-    const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps || window.docx || {};
+    const { Paragraph, ImageRun, TextRun, AlignmentType, Bookmark } = docxDeps || window.docx || {};
 
     const nodes = [];
 
     // 1. Título / Legenda da Figura (Centralizada, Acima da Imagem - Modelo Oficial de Referência)
     if (captionText) {
+      const captionRun = new TextRun({
+        text: captionText,
+        font: 'Times New Roman',
+        size: 22,
+        bold: true,
+        color: '000000'
+      });
+      const captionChild = (bookmarkId && Bookmark)
+        ? new Bookmark({ id: bookmarkId, children: [captionRun] })
+        : captionRun;
+
       nodes.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
           spacing: { before: 200, after: 80 },
           keepNext: true,
           keepLines: true,
-          children: [
-            new TextRun({
-              text: captionText,
-              font: 'Times New Roman',
-              size: 22,
-              bold: true,
-              color: '000000'
-            })
-          ]
+          children: [captionChild]
         })
       );
     }
@@ -415,68 +421,68 @@ class ReportDocxGenerator {
 
     // MONTAGEM DE sumarioList (Tópicos exatos do relatório e suas páginas)
     const sumarioList = [
-      { label: '1.   INTRODUÇÃO', page: String(pIntro) },
-      { label: '2.   DADOS BÁSICOS DO CURSO', page: String(pDadosBasicos) },
-      { label: '3.   CONTATO COM OS MUNICÍPIOS', page: String(pContato) },
-      { label: '4.   DESENVOLVIMENTO DO CURSO', page: String(pDesenv) },
-      { label: '5.   AVALIAÇÃO DA CAPACITAÇÃO', page: String(pAvaliacao) },
-      { label: '6.   REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', page: String(pFotos) },
-      { label: '7.   CONSIDERAÇÕES FINAIS', page: String(pConsideracoes) }
+      { label: '1.   INTRODUÇÃO', page: String(pIntro), bookmarkId: 'sec_intro' },
+      { label: '2.   DADOS BÁSICOS DO CURSO', page: String(pDadosBasicos), bookmarkId: 'sec_dados_basicos' },
+      { label: '3.   CONTATO COM OS MUNICÍPIOS', page: String(pContato), bookmarkId: 'sec_contato' },
+      { label: '4.   DESENVOLVIMENTO DO CURSO', page: String(pDesenv), bookmarkId: 'sec_desenv' },
+      { label: '5.   AVALIAÇÃO DA CAPACITAÇÃO', page: String(pAvaliacao), bookmarkId: 'sec_avaliacao' },
+      { label: '6.   REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', page: String(pFotos), bookmarkId: 'sec_fotos' },
+      { label: '7.   CONSIDERAÇÕES FINAIS', page: String(pConsideracoes), bookmarkId: 'sec_consideracoes' }
     ];
     if (pApendice1 != null) {
-      sumarioList.push({ label: 'Apêndice I – Convocações do FNDE', page: String(pApendice1) });
+      sumarioList.push({ label: 'Apêndice I – Convocações do FNDE', page: String(pApendice1), bookmarkId: 'sec_apendice_1' });
     }
     if (pApendice2 != null) {
-      sumarioList.push({ label: 'Apêndice II – Convocações do CECATE', page: String(pApendice2) });
+      sumarioList.push({ label: 'Apêndice II – Convocações do CECATE', page: String(pApendice2), bookmarkId: 'sec_apendice_2' });
     }
     if (pApendice3 != null) {
-      sumarioList.push({ label: 'Apêndice III – Respostas Dissertativas da Avaliação', page: String(pApendice3) });
+      sumarioList.push({ label: 'Apêndice III – Respostas Dissertativas da Avaliação', page: String(pApendice3), bookmarkId: 'sec_apendice_3' });
     }
 
     // MONTAGEM DE tablesList (Títulos exatos das tabelas e suas páginas)
     const tablesList = [
-      { label: 'Tabela 1. Municípios convocados.', page: String(pTab1) },
-      { label: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', page: String(pTab2) },
-      { label: 'Tabela 3. Inscritos por município.', page: String(pTab3) },
-      { label: 'Tabela 4. Participação por município.', page: String(pTab4) }
+      { label: 'Tabela 1. Municípios convocados.', page: String(pTab1), bookmarkId: 'tab_1' },
+      { label: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', page: String(pTab2), bookmarkId: 'tab_2' },
+      { label: 'Tabela 3. Inscritos por município.', page: String(pTab3), bookmarkId: 'tab_3' },
+      { label: 'Tabela 4. Participação por município.', page: String(pTab4), bookmarkId: 'tab_4' }
     ];
 
     // MONTAGEM DE figuresList (Títulos exatos das figuras e suas páginas)
     const figuresList = [];
     if (pFig1 != null) {
-      figuresList.push({ label: f1Data.caption || 'Figura 1: Avaliação via ferramenta kahoot.', page: String(pFig1) });
+      figuresList.push({ label: f1Data.caption || 'Figura 1: Avaliação via ferramenta kahoot.', page: String(pFig1), bookmarkId: 'fig_1' });
     }
     if (pFig2 != null) {
-      figuresList.push({ label: f2Data.caption || 'Figura 2: Avaliação via ferramenta Plickers.', page: String(pFig2) });
+      figuresList.push({ label: f2Data.caption || 'Figura 2: Avaliação via ferramenta Plickers.', page: String(pFig2), bookmarkId: 'fig_2' });
     }
     (eduTechData.extraFigures || []).forEach((ef, idx) => {
       if (ef.image) {
         const extraLabel = ef.caption || `Figura ${3 + idx}. Avaliação via ${ef.title || 'tecnologia educacional'}.`;
-        figuresList.push({ label: extraLabel, page: String(pDesenv) });
+        figuresList.push({ label: extraLabel, page: String(pDesenv), bookmarkId: `fig_extra_${idx}` });
       }
     });
     if (pFig3 != null) {
-      figuresList.push({ label: 'Figura 3. Participação segundo o tipo de representação.', page: String(pFig3) });
+      figuresList.push({ label: 'Figura 3. Participação segundo o tipo de representação.', page: String(pFig3), bookmarkId: 'fig_3' });
     }
     if (pFig4 != null) {
-      figuresList.push({ label: 'Figura 4. Avaliação da capacitação de todos os participantes.', page: String(pFig4) });
+      figuresList.push({ label: 'Figura 4. Avaliação da capacitação de todos os participantes.', page: String(pFig4), bookmarkId: 'fig_4' });
     }
     if (pFig5 != null) {
-      figuresList.push({ label: 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', page: String(pFig5) });
+      figuresList.push({ label: 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', page: String(pFig5), bookmarkId: 'fig_5' });
     }
     if (pFig6 != null) {
-      figuresList.push({ label: 'Figura 6. Avaliação da capacitação dos gestores municipais.', page: String(pFig6) });
+      figuresList.push({ label: 'Figura 6. Avaliação da capacitação dos gestores municipais.', page: String(pFig6), bookmarkId: 'fig_6' });
     }
     if (pFig7 != null) {
-      figuresList.push({ label: 'Figura 7. Aspectos que gostaram da capacitação.', page: String(pFig7) });
+      figuresList.push({ label: 'Figura 7. Aspectos que gostaram da capacitação.', page: String(pFig7), bookmarkId: 'fig_7' });
     }
     if (pFig8 != null) {
-      figuresList.push({ label: 'Figura 8. Aspectos que devem melhorar da capacitação.', page: String(pFig8) });
+      figuresList.push({ label: 'Figura 8. Aspectos que devem melhorar da capacitação.', page: String(pFig8), bookmarkId: 'fig_8' });
     }
     photos.forEach((ph, idx) => {
       const cap = ph.caption || `Figura ${idx + 9}. Registro fotográfico oficial da capacitação.`;
       const pNum = photoPages[idx] || pFotos;
-      figuresList.push({ label: cap, page: String(pNum) });
+      figuresList.push({ label: cap, page: String(pNum), bookmarkId: `fig_photo_${idx}` });
     });
 
     return { sumarioList, tablesList, figuresList };
@@ -508,6 +514,10 @@ class ReportDocxGenerator {
       Footer,
       PageNumber,
       PageBreak,
+      Bookmark,
+      InternalHyperlink,
+      SimpleField,
+      PageReference,
       HeightRule: DocxHeightRule,
       TableLayoutType: DocxTableLayoutType,
       LineRuleType: DocxLineRuleType,
@@ -544,7 +554,7 @@ class ReportDocxGenerator {
       return;
     }
 
-    const docxDeps = { Paragraph, ImageRun, TextRun, AlignmentType };
+    const docxDeps = { Paragraph, ImageRun, TextRun, AlignmentType, Bookmark, InternalHyperlink, SimpleField, PageReference };
 
     try {
       const docChildren = [];
@@ -880,7 +890,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: '1. INTRODUÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_intro',
+                  children: [new TextRun({ text: '1. INTRODUÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: '1. INTRODUÇÃO', bold: true, size: 28, color: '1E3A8A' })
+          ]
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -909,7 +926,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: '2. DADOS BÁSICOS DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_dados_basicos',
+                  children: [new TextRun({ text: '2. DADOS BÁSICOS DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: '2. DADOS BÁSICOS DO CURSO', bold: true, size: 28, color: '1E3A8A' })
+          ]
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -944,12 +968,24 @@ class ReportDocxGenerator {
           keepNext: true,
           keepLines: true,
           children: [
-            new TextRun({
-              text: 'Tabela 1. Municípios convocados.',
-              font: 'Times New Roman',
-              size: 22,
-              color: '000000'
-            })
+            Bookmark
+              ? new Bookmark({
+                  id: 'tab_1',
+                  children: [
+                    new TextRun({
+                      text: 'Tabela 1. Municípios convocados.',
+                      font: 'Times New Roman',
+                      size: 22,
+                      color: '000000'
+                    })
+                  ]
+                })
+              : new TextRun({
+                  text: 'Tabela 1. Municípios convocados.',
+                  font: 'Times New Roman',
+                  size: 22,
+                  color: '000000'
+                })
           ]
         })
       );
@@ -1138,7 +1174,16 @@ class ReportDocxGenerator {
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, color: '000000' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'tab_2',
+                  children: [
+                    new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, color: '000000' })
+                  ]
+                })
+              : new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, color: '000000' })
+          ]
         })
       );
 
@@ -1369,7 +1414,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', bold: true, size: 28, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_contato',
+                  children: [new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', bold: true, size: 28, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', bold: true, size: 28, color: '1E3A8A' })
+          ]
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -1403,7 +1455,16 @@ class ReportDocxGenerator {
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, color: '000000' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'tab_3',
+                  children: [
+                    new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, color: '000000' })
+                  ]
+                })
+              : new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, color: '000000' })
+          ]
         })
       );
 
@@ -1717,7 +1778,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_desenv',
+                  children: [new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', bold: true, size: 28, color: '1E3A8A' })
+          ]
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -1832,7 +1900,8 @@ class ReportDocxGenerator {
           270,
           fig1.caption || 'Figura 1: Avaliação via ferramenta kahoot.',
           fig1.source || 'Fonte: Elaborada pelos autores.',
-          docxDeps
+          docxDeps,
+          'fig_1'
         );
         docChildren.push(...fig1Nodes);
       }
@@ -1845,7 +1914,8 @@ class ReportDocxGenerator {
           270,
           fig2.caption || 'Figura 2: Avaliação via ferramenta Plickers.',
           fig2.source || 'Fonte: Elaborada pelos autores.',
-          docxDeps
+          docxDeps,
+          'fig_2'
         );
         docChildren.push(...fig2Nodes);
       }
@@ -1859,7 +1929,8 @@ class ReportDocxGenerator {
             270,
             ef.caption || `Figura ${3 + idx}: Avaliação via ${ef.title || 'ferramenta educacional'}.`,
             ef.source || 'Fonte: Elaborada pelos autores.',
-            docxDeps
+            docxDeps,
+            `fig_extra_${idx}`
           );
           docChildren.push(...efNodes);
         }
@@ -1880,7 +1951,16 @@ class ReportDocxGenerator {
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, color: '000000' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'tab_4',
+                  children: [
+                    new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, color: '000000' })
+                  ]
+                })
+              : new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, color: '000000' })
+          ]
         })
       );
 
@@ -2195,7 +2275,7 @@ class ReportDocxGenerator {
       // Figura 3: Gráfico de Participação
       // docxDeps já inicializado no topo do método generateAndDownload
       if (chartsData.fig3) {
-        const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação segundo o tipo de representação.', docxDeps);
+        const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação segundo o tipo de representação.', docxDeps, 'fig_3');
         if (fig3Nodes) docChildren.push(...fig3Nodes);
       }
 
@@ -2232,7 +2312,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: '5. AVALIAÇÃO DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_avaliacao',
+                  children: [new TextRun({ text: '5. AVALIAÇÃO DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: '5. AVALIAÇÃO DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })
+          ]
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -2264,7 +2351,7 @@ class ReportDocxGenerator {
       );
 
       if (chartsData.fig4) {
-        const fig4Nodes = this.createImageParagraph(chartsData.fig4, 520, 250, 'Figura 4. Avaliação da capacitação de todos os participantes.', docxDeps);
+        const fig4Nodes = this.createImageParagraph(chartsData.fig4, 520, 250, 'Figura 4. Avaliação da capacitação de todos os participantes.', docxDeps, 'fig_4');
         if (fig4Nodes) docChildren.push(...fig4Nodes);
       }
 
@@ -2281,7 +2368,7 @@ class ReportDocxGenerator {
       );
 
       if (chartsData.fig5) {
-        const fig5Nodes = this.createImageParagraph(chartsData.fig5, 520, 250, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', docxDeps);
+        const fig5Nodes = this.createImageParagraph(chartsData.fig5, 520, 250, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', docxDeps, 'fig_5');
         if (fig5Nodes) docChildren.push(...fig5Nodes);
       }
 
@@ -2298,7 +2385,7 @@ class ReportDocxGenerator {
       );
 
       if (chartsData.fig6) {
-        const fig6Nodes = this.createImageParagraph(chartsData.fig6, 520, 250, 'Figura 6. Avaliação da capacitação dos gestores municipais.', docxDeps);
+        const fig6Nodes = this.createImageParagraph(chartsData.fig6, 520, 250, 'Figura 6. Avaliação da capacitação dos gestores municipais.', docxDeps, 'fig_6');
         if (fig6Nodes) docChildren.push(...fig6Nodes);
       }
 
@@ -2315,11 +2402,11 @@ class ReportDocxGenerator {
       );
 
       if (chartsData.fig7) {
-        const fig7Nodes = this.createImageParagraph(chartsData.fig7, 480, 260, 'Figura 7. Aspectos que gostaram da capacitação.', docxDeps);
+        const fig7Nodes = this.createImageParagraph(chartsData.fig7, 480, 260, 'Figura 7. Aspectos que gostaram da capacitação.', docxDeps, 'fig_7');
         if (fig7Nodes) docChildren.push(...fig7Nodes);
       }
       if (chartsData.fig8) {
-        const fig8Nodes = this.createImageParagraph(chartsData.fig8, 480, 260, 'Figura 8. Aspectos que devem melhorar da capacitação.', docxDeps);
+        const fig8Nodes = this.createImageParagraph(chartsData.fig8, 480, 260, 'Figura 8. Aspectos que devem melhorar da capacitação.', docxDeps, 'fig_8');
         if (fig8Nodes) docChildren.push(...fig8Nodes);
       }
 
@@ -2330,7 +2417,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_fotos',
+                  children: [new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })
+          ]
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -2354,7 +2448,7 @@ class ReportDocxGenerator {
       } else {
         photos.forEach((ph, idx) => {
           const caption = ph.caption || `Figura ${idx + 9}. Registro fotográfico oficial da capacitação.`;
-          const photoNodes = this.createImageParagraph(ph.blob, 500, 300, caption, docxDeps);
+          const photoNodes = this.createImageParagraph(ph.blob, 500, 300, caption, docxDeps, `fig_photo_${idx}`);
           if (photoNodes) docChildren.push(...photoNodes);
         });
       }
@@ -2366,7 +2460,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: '7. CONSIDERAÇÕES FINAIS', bold: true, size: 28, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_consideracoes',
+                  children: [new TextRun({ text: '7. CONSIDERAÇÕES FINAIS', bold: true, size: 28, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: '7. CONSIDERAÇÕES FINAIS', bold: true, size: 28, color: '1E3A8A' })
+          ]
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -2408,7 +2509,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_apendice_1',
+                  children: [new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })
+          ]
         })
       );
 
@@ -2456,7 +2564,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_apendice_2',
+                  children: [new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })
+          ]
         })
       );
 
@@ -2504,7 +2619,14 @@ class ReportDocxGenerator {
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
-          children: [new TextRun({ text: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', bold: true, size: 26, color: '1E3A8A' })]
+          children: [
+            Bookmark
+              ? new Bookmark({
+                  id: 'sec_apendice_3',
+                  children: [new TextRun({ text: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', bold: true, size: 26, color: '1E3A8A' })]
+                })
+              : new TextRun({ text: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', bold: true, size: 26, color: '1E3A8A' })
+          ]
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -3275,13 +3397,36 @@ class ReportDocxGenerator {
         } else {
           textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
         }
-        textRuns.push(new TextRun({ text: '\t' + fig.page, font: 'Times New Roman', size: 24, color: '000000' }));
+
+        const figChildren = [];
+        if (fig.bookmarkId && InternalHyperlink) {
+          figChildren.push(
+            new InternalHyperlink({
+              anchor: fig.bookmarkId,
+              children: textRuns
+            })
+          );
+        } else {
+          figChildren.push(...textRuns);
+        }
+
+        figChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+        if (fig.bookmarkId && SimpleField) {
+          figChildren.push(
+            new SimpleField(`PAGEREF ${fig.bookmarkId} \\h`, String(fig.page))
+          );
+        } else {
+          figChildren.push(
+            new TextRun({ text: String(fig.page), font: 'Times New Roman', size: 24, color: '000000' })
+          );
+        }
 
         indicesChildren.push(
           new Paragraph({
             spacing: { before: 0, after: 40 },
             tabStops: [{ type: 'right', position: 9628 }],
-            children: textRuns
+            children: figChildren
           })
         );
       });
@@ -3303,14 +3448,39 @@ class ReportDocxGenerator {
       );
 
       tablesList.forEach(tab => {
+        const tabChildren = [];
+        if (tab.bookmarkId && InternalHyperlink) {
+          tabChildren.push(
+            new InternalHyperlink({
+              anchor: tab.bookmarkId,
+              children: [
+                new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' })
+              ]
+            })
+          );
+        } else {
+          tabChildren.push(
+            new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' })
+          );
+        }
+
+        tabChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+        if (tab.bookmarkId && SimpleField) {
+          tabChildren.push(
+            new SimpleField(`PAGEREF ${tab.bookmarkId} \\h`, String(tab.page))
+          );
+        } else {
+          tabChildren.push(
+            new TextRun({ text: String(tab.page), font: 'Times New Roman', size: 24, color: '000000' })
+          );
+        }
+
         indicesChildren.push(
           new Paragraph({
             spacing: { before: 0, after: 40 },
             tabStops: [{ type: 'right', position: 9628 }],
-            children: [
-              new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' }),
-              new TextRun({ text: '\t' + tab.page, font: 'Times New Roman', size: 24, color: '000000' })
-            ]
+            children: tabChildren
           })
         );
       });
@@ -3334,14 +3504,39 @@ class ReportDocxGenerator {
       );
 
       sumarioList.forEach(item => {
+        const itemChildren = [];
+        if (item.bookmarkId && InternalHyperlink) {
+          itemChildren.push(
+            new InternalHyperlink({
+              anchor: item.bookmarkId,
+              children: [
+                new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
+              ]
+            })
+          );
+        } else {
+          itemChildren.push(
+            new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
+          );
+        }
+
+        itemChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+        if (item.bookmarkId && SimpleField) {
+          itemChildren.push(
+            new SimpleField(`PAGEREF ${item.bookmarkId} \\h`, String(item.page))
+          );
+        } else {
+          itemChildren.push(
+            new TextRun({ text: String(item.page), font: 'Times New Roman', size: 24, color: '000000' })
+          );
+        }
+
         sumarioChildren.push(
           new Paragraph({
             spacing: { before: 0, after: 100 },
             tabStops: [{ type: 'right', position: 9628 }],
-            children: [
-              new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' }),
-              new TextRun({ text: '\t' + item.page, font: 'Times New Roman', size: 24, color: '000000' })
-            ]
+            children: itemChildren
           })
         );
       });
@@ -3355,6 +3550,17 @@ class ReportDocxGenerator {
       const doc = new Document({
         features: {
           updateFields: true
+        },
+        styles: {
+          default: {
+            document: {
+              run: {
+                font: 'Times New Roman',
+                size: 24,
+                color: '000000'
+              }
+            }
+          }
         },
         sections: [
           // SEÇÃO 1: CAPA OFICIAL INTEGRAL
