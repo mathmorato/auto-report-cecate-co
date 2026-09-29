@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.6
+ * Versão: v.3.1.7
  */
 
 class ReportDocxGenerator {
@@ -176,7 +176,7 @@ class ReportDocxGenerator {
       height = Math.round(dims.height * scale);
     }
 
-    const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps;
+    const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps || window.docx || {};
 
     const nodes = [
       new Paragraph({
@@ -236,7 +236,7 @@ class ReportDocxGenerator {
       height = Math.round(dims.height * scale);
     }
 
-    const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps;
+    const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps || window.docx || {};
 
     const nodes = [];
 
@@ -543,6 +543,8 @@ class ReportDocxGenerator {
       this.downloadHtmlReportFallback(training, metrics);
       return;
     }
+
+    const docxDeps = { Paragraph, ImageRun, TextRun, AlignmentType };
 
     try {
       const docChildren = [];
@@ -2191,7 +2193,7 @@ class ReportDocxGenerator {
       );
 
       // Figura 3: Gráfico de Participação
-      const docxDeps = { Paragraph, ImageRun, TextRun, AlignmentType };
+      // docxDeps já inicializado no topo do método generateAndDownload
       if (chartsData.fig3) {
         const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação segundo o tipo de representação.', docxDeps);
         if (fig3Nodes) docChildren.push(...fig3Nodes);
