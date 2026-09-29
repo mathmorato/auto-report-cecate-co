@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.1.5
+ * Versão: v.3.1.6
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.1.5';
+    this.version = 'v.3.1.6';
   }
 
   /**
@@ -8413,47 +8413,60 @@ class AutoReportApp {
   }
 
   async downloadDocxReport() {
-    if (!this.currentTraining || !window.reportDocxGenerator) return;
-    this.showToast('Preparando dados e gráficos para o documento Word (.docx)...', 'info');
-    if (!this.metrics) {
-      this.metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
+    if (!this.currentTraining) {
+      this.showToast('Nenhuma capacitação selecionada para gerar o relatório.', 'warning');
+      return;
+    }
+    if (!window.reportDocxGenerator) {
+      this.showToast('O gerador de relatório Word (.docx) não está disponível.', 'error');
+      return;
     }
 
-    // Renderizar gráficos prévios para garantir canvases populados
-    this.renderReportPreviewCharts();
+    try {
+      this.showToast('Preparando dados e gráficos para o documento Word (.docx)...', 'info');
+      if (!this.metrics) {
+        this.metrics = window.statsEngine.calculateAllMetrics(this.currentTraining);
+      }
 
-    // Capturar imagens dos gráficos e nuvens a partir dos canvases
-    const imagesData = {};
-    const canvasMap = [
-      { key: 'fig3', id: 'report-preview-fig3-canvas' },
-      { key: 'fig4', id: 'report-preview-fig4-canvas' },
-      { key: 'fig5', id: 'report-preview-fig5-canvas' },
-      { key: 'fig6', id: 'report-preview-fig6-canvas' },
-      { key: 'fig7', id: 'report-preview-fig7-canvas' },
-      { key: 'fig8', id: 'report-preview-fig8-canvas' }
-    ];
+      // Renderizar gráficos prévios para garantir canvases populados
+      this.renderReportPreviewCharts();
 
-    canvasMap.forEach(item => {
-      const cv = document.getElementById(item.id);
-      if (cv) {
-        try {
-          imagesData[item.key] = cv.toDataURL('image/png');
-        } catch (e) {
-          console.warn('Erro ao extrair imagem do canvas:', item.id, e);
+      // Capturar imagens dos gráficos e nuvens a partir dos canvases
+      const imagesData = {};
+      const canvasMap = [
+        { key: 'fig3', id: 'report-preview-fig3-canvas' },
+        { key: 'fig4', id: 'report-preview-fig4-canvas' },
+        { key: 'fig5', id: 'report-preview-fig5-canvas' },
+        { key: 'fig6', id: 'report-preview-fig6-canvas' },
+        { key: 'fig7', id: 'report-preview-fig7-canvas' },
+        { key: 'fig8', id: 'report-preview-fig8-canvas' }
+      ];
+
+      canvasMap.forEach(item => {
+        const cv = document.getElementById(item.id);
+        if (cv) {
+          try {
+            imagesData[item.key] = cv.toDataURL('image/png');
+          } catch (e) {
+            console.warn('Erro ao extrair imagem do canvas:', item.id, e);
+          }
+        }
+      });
+
+      // Garantir conversão de PDFs de apêndices para imagens antes de gerar o Word
+      const appendixDocs = (this.currentTraining.media || []).filter(m => (m.type === 'doc_fnde' || m.type === 'doc_cecate') && (!m.pageImages || m.pageImages.length === 0));
+      for (const doc of appendixDocs) {
+        if (doc.blob) {
+          doc.pageImages = await this.extractDocPageImages(doc.blob, doc.fileType, doc.fileName);
         }
       }
-    });
 
-    // Garantir conversão de PDFs de apêndices para imagens antes de gerar o Word
-    const appendixDocs = (this.currentTraining.media || []).filter(m => (m.type === 'doc_fnde' || m.type === 'doc_cecate') && (!m.pageImages || m.pageImages.length === 0));
-    for (const doc of appendixDocs) {
-      if (doc.blob) {
-        doc.pageImages = await this.extractDocPageImages(doc.blob, doc.fileType, doc.fileName);
-      }
+      await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics, imagesData);
+      this.showToast('Documento Word (.docx) baixado com sucesso!', 'success');
+    } catch (err) {
+      console.error('Erro ao gerar documento Word (.docx):', err);
+      this.showToast('Erro ao gerar documento Word: ' + (err.message || 'Falha inesperada'), 'error');
     }
-
-    await window.reportDocxGenerator.generateAndDownload(this.currentTraining, this.metrics, imagesData);
-    this.showToast('Documento Word (.docx) baixado com sucesso!', 'success');
   }
 
   printReportPDF() {

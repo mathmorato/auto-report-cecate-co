@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.5
+ * Versão: v.3.1.6
  */
 
 class ReportDocxGenerator {
@@ -1789,7 +1789,9 @@ class ReportDocxGenerator {
             new TextRun({ text: 'Oitavo momento: ', bold: true }),
             new TextRun({ text: 'aplicação do instrumento avaliativo da capacitação, coletando percepções técnicas e qualitativas dos participantes sobre metodologia, facilitadores, infraestrutura e conteúdos trabalhados.' })
           ]
-        }),
+        })
+      );
+
       // Texto descritivo das Tecnologias Educacionais (editável pelo usuário no Wizard)
       const eduTech = training.educationalTech || {};
       const eduText = (eduTech.text && eduTech.text.trim()) ? eduTech.text.trim() :
@@ -1860,6 +1862,8 @@ class ReportDocxGenerator {
           docChildren.push(...efNodes);
         }
       });
+
+      docChildren.push(
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
           spacing: { after: 150, line: 276 },
