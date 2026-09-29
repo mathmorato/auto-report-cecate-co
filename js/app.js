@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.1.4
+ * Versão: v.3.1.5
  */
 
 window.icons = {
@@ -32,7 +32,7 @@ class AutoReportApp {
   constructor() {
     this.currentTraining = null;
     this.currentStep = 1;
-    this.totalSteps = 11;
+    this.totalSteps = 12;
     this.activeView = 'dashboard';
     this.trainingList = [];
     this.dashboardFilter = 'all';
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.1.4';
+    this.version = 'v.3.1.5';
   }
 
   /**
@@ -189,8 +189,8 @@ class AutoReportApp {
       if (themeBtn) themeBtn.innerHTML = `${moonIcon} Modo Escuro`;
     }
 
-    // Atualizar gráficos se estiver na etapa de gráficos
-    if (this.currentStep === 7 || this.currentStep === 10) {
+    // Atualizar gráficos se estiver na etapa de avaliação ou relatório final
+    if (this.currentStep === 8 || this.currentStep === 11 || this.currentStep === 12) {
       this.renderEvaluationCharts();
       this.renderWordClouds();
     }
@@ -1231,7 +1231,7 @@ class AutoReportApp {
       }
     }
 
-    if (stepNumber === 5) {
+    if (stepNumber === 6) {
       const contactDateVal = this.getVal('wiz-contact-start-date');
       if (contactDateVal && !this.validateContactStartDate(contactDateVal, true)) {
         const cInput = document.getElementById('wiz-contact-start-date');
@@ -1282,19 +1282,20 @@ class AutoReportApp {
     // Ações ao entrar em etapas específicas
     if (this.currentStep === 3) this.renderMunicipalitiesStep();
     if (this.currentStep === 4) this.renderCourseStructureStep();
-    if (this.currentStep === 5) this.renderContactsStep();
-    if (this.currentStep === 6) this.renderAttendanceStep();
-    if (this.currentStep === 7) {
+    if (this.currentStep === 5) this.renderEducationalTechStep();
+    if (this.currentStep === 6) this.renderContactsStep();
+    if (this.currentStep === 7) this.renderAttendanceStep();
+    if (this.currentStep === 8) {
       this.renderEvaluationStep();
       setTimeout(() => {
         this.renderEvaluationCharts();
         this.renderWordClouds();
       }, 100);
     }
-    if (this.currentStep === 8) this.renderPhotosStep();
-    if (this.currentStep === 9) this.renderAppendicesStep();
-    if (this.currentStep === 10) this.renderConferenceStep();
-    if (this.currentStep === 11) this.renderReportPreviewStep();
+    if (this.currentStep === 9) this.renderPhotosStep();
+    if (this.currentStep === 10) this.renderAppendicesStep();
+    if (this.currentStep === 11) this.renderConferenceStep();
+    if (this.currentStep === 12) this.renderReportPreviewStep();
 
     // Sempre rolar para o topo absoluto da página ao alternar etapas
     this.scrollToTop();
@@ -1376,14 +1377,15 @@ class AutoReportApp {
     if (t.team && t.team.length > 0) completedSteps++;
     if (t.municipalities && t.municipalities.length > 0) completedSteps++;
     if (t.courseModules && t.courseModules.length > 0) completedSteps++;
+    if (t.educationalTech && (t.educationalTech.figures?.length > 0 || t.educationalTech.text)) completedSteps++;
     if (t.contactsData?.startDate || t.contactsData?.methods) completedSteps++;
     if (t.attendance && t.attendance.length > 0) completedSteps++;
     if (t.evaluations && t.evaluations.length > 0) completedSteps++;
     if (t.media && t.media.filter(m => m.type === 'photo').length > 0) completedSteps++;
     if (t.media && t.media.filter(m => m.type !== 'photo').length > 0) completedSteps++;
-    if (completedSteps >= 8) completedSteps += 2; // Conferência e Geração
+    if (completedSteps >= 9) completedSteps += 2; // Conferência e Geração
 
-    const percent = Math.min(100, Math.round((completedSteps / 11) * 100));
+    const percent = Math.min(100, Math.round((completedSteps / 12) * 100));
     t.progressPercent = percent;
 
     const barEl = document.getElementById('wizard-header-progressbar');
@@ -1391,7 +1393,7 @@ class AutoReportApp {
 
     const statusTextEl = document.getElementById('wizard-header-progress-text');
     if (statusTextEl) {
-      statusTextEl.textContent = `${percent}% Concluído (${completedSteps} de 11 Etapas)`;
+      statusTextEl.textContent = `${percent}% Concluído (${completedSteps} de 12 Etapas)`;
     }
   }
 
@@ -1459,11 +1461,481 @@ class AutoReportApp {
     // Etapa 2: Equipe
     this.renderTeamList();
 
-    // Etapa 5: Contatos
+    // Etapa 5: Tecnologias Educacionais
+    this.renderEducationalTechStep();
+
+    // Etapa 6: Contatos
     this.renderContactsStep();
 
-    // Etapa 6: Inscrições & Presença
+    // Etapa 7: Inscrições & Presença
     this.renderAttendanceStep();
+  }
+
+  /* ==========================================================================
+     ETAPA 5: TECNOLOGIAS EDUCACIONAIS (KAHOOT & PLICKERS)
+     ========================================================================== */
+  getDefaultEducationalTechData() {
+    return {
+      text: 'Durante o transcorrer dos módulos teóricos e práticos, foram incorporadas dinâmicas interativas mediante o uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos, com a finalidade de acompanhar o nível de assimilação dos conteúdos e potencializar o engajamento coletivo. Foram empregados os aplicativos Kahoot e Plickers: o Kahoot permitiu a participação em tempo real por meio dos smartphones dos cursistas em questionários dinâmicos; já o Plickers viabilizou a coleta imediata de respostas mediante a leitura óptica de cartões com QR Code (alternativas A, B, C e D) realizada exclusivamente pelo celular do instrutor, contornando eventuais oscilações de sinal de internet e garantindo dinamismo à atividade.',
+      figures: [
+        {
+          id: 'fig_1',
+          tool: 'kahoot',
+          title: 'Kahoot (Questionário Interativo em Tempo Real)',
+          caption: 'Figura 1: Avaliação via ferramenta kahoot.',
+          source: 'Fonte: Elaborada pelos autores.',
+          image: window.educationalTechAssets?.kahoot || ''
+        },
+        {
+          id: 'fig_2',
+          tool: 'plickers',
+          title: 'Plickers (Cartões de Leitura Óptica QR Code)',
+          caption: 'Figura 2: Avaliação via ferramenta Plickers.',
+          source: 'Fonte: Elaborada pelos autores.',
+          image: window.educationalTechAssets?.plickers || ''
+        }
+      ],
+      extraFigures: []
+    };
+  }
+
+  ensureEducationalTechInitialized() {
+    if (!this.currentTraining) return;
+    if (!this.currentTraining.educationalTech) {
+      this.currentTraining.educationalTech = this.getDefaultEducationalTechData();
+    }
+    const et = this.currentTraining.educationalTech;
+    if (!Array.isArray(et.figures) || et.figures.length === 0) {
+      const def = this.getDefaultEducationalTechData();
+      et.figures = def.figures;
+    }
+    const f1 = et.figures.find(f => f.id === 'fig_1');
+    if (!f1) {
+      et.figures.unshift({
+        id: 'fig_1',
+        tool: 'kahoot',
+        title: 'Kahoot (Questionário Interativo em Tempo Real)',
+        caption: 'Figura 1: Avaliação via ferramenta kahoot.',
+        source: 'Fonte: Elaborada pelos autores.',
+        image: window.educationalTechAssets?.kahoot || ''
+      });
+    } else if (!f1.image && window.educationalTechAssets?.kahoot) {
+      f1.image = window.educationalTechAssets.kahoot;
+    }
+
+    const f2 = et.figures.find(f => f.id === 'fig_2');
+    if (!f2) {
+      et.figures.push({
+        id: 'fig_2',
+        tool: 'plickers',
+        title: 'Plickers (Cartões de Leitura Óptica QR Code)',
+        caption: 'Figura 2: Avaliação via ferramenta Plickers.',
+        source: 'Fonte: Elaborada pelos autores.',
+        image: window.educationalTechAssets?.plickers || ''
+      });
+    } else if (!f2.image && window.educationalTechAssets?.plickers) {
+      f2.image = window.educationalTechAssets.plickers;
+    }
+
+    if (!Array.isArray(et.extraFigures)) {
+      et.extraFigures = [];
+    }
+  }
+
+  renderEducationalTechStep() {
+    if (!this.currentTraining) return;
+    this.ensureEducationalTechInitialized();
+
+    const et = this.currentTraining.educationalTech;
+
+    // 1. Preencher textarea do texto de contextualização
+    const textEl = document.getElementById('wiz-edutech-text');
+    if (textEl) {
+      textEl.value = et.text || this.getDefaultEducationalTechData().text;
+    }
+
+    // 2. Renderizar os cards de Figura 1 e 2 no grid
+    const gridEl = document.getElementById('wizard-edutech-figures-grid');
+    if (gridEl) {
+      gridEl.innerHTML = et.figures.map(fig => this.renderEduTechFigureCardHtml(fig)).join('');
+    }
+
+    // 3. Renderizar cards de figuras extras
+    const extraGridEl = document.getElementById('wizard-edutech-extra-grid');
+    if (extraGridEl) {
+      extraGridEl.innerHTML = (et.extraFigures || []).map((fig, idx) => this.renderExtraEduTechFigureCardHtml(fig, idx)).join('');
+    }
+
+    // 4. Renderizar a pré-visualização ao vivo
+    this.renderEduTechLivePreview();
+  }
+
+  renderEduTechFigureCardHtml(fig) {
+    const hasImage = !!fig.image;
+    const isKahoot = fig.id === 'fig_1';
+    const toolBadge = isKahoot ? 'badge-blue' : 'badge-green';
+    const toolName = isKahoot ? 'Kahoot' : 'Plickers';
+
+    return `
+      <div class="glass-card" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.9rem; border:1px solid var(--border-color); background:var(--bg-card); position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.25rem;">
+              <span class="nav-badge ${toolBadge}" style="font-weight:700; font-size:0.75rem;">${toolName}</span>
+              <strong style="font-size:0.92rem; color:var(--text-primary);">${fig.title}</strong>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">
+              ${isKahoot ? 'Questionários dinâmicos com smartphones dos participantes.' : 'Leitura óptica de cartões com QR Code.'}
+            </div>
+          </div>
+        </div>
+
+        <div style="position:relative; min-height:180px; background:var(--bg-input); border:2px dashed ${hasImage ? 'var(--border-color)' : 'rgba(59,130,246,0.4)'}; border-radius:var(--radius-sm); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.75rem; overflow:hidden;">
+          ${hasImage ? `
+            <div style="width:100%; text-align:center;">
+              <img src="${fig.image}" alt="${fig.caption}" style="max-width:100%; max-height:160px; object-fit:contain; border-radius:var(--radius-sm); border:1px solid var(--border-color); box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+            </div>
+            <div style="display:flex; gap:0.4rem; margin-top:0.6rem; flex-wrap:wrap; justify-content:center;">
+              <label class="btn btn-secondary btn-sm" style="cursor:pointer; font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Trocar Imagem
+                <input type="file" accept="image/*" style="display:none;" onchange="app.handleEduTechSingleUpload('${fig.id}', this)">
+              </label>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.useDefaultEduTechImage('${fig.id}')" style="font-size:0.75rem; padding:0.25rem 0.55rem; display:inline-flex; align-items:center; gap:0.3rem;" title="Usar imagem oficial de referência">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                Restaurar Imagem Padrão
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeEduTechImage('${fig.id}')" style="font-size:0.75rem; padding:0.25rem 0.55rem; color:var(--accent-rose, #ef4444); display:inline-flex; align-items:center; gap:0.3rem;" title="Remover imagem desta figura">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Remover
+              </button>
+            </div>
+          ` : `
+            <div style="text-align:center; padding:1rem;">
+              <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); margin-bottom:0.5rem;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              <div style="font-size:0.85rem; font-weight:600; color:var(--text-primary); margin-bottom:0.25rem;">Nenhuma imagem anexada</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">Clique para selecionar ou use a imagem oficial de exemplo</div>
+              <div style="display:flex; gap:0.4rem; justify-content:center; flex-wrap:wrap;">
+                <label class="btn btn-primary btn-sm" style="cursor:pointer; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  Selecionar Imagem
+                  <input type="file" accept="image/*" style="display:none;" onchange="app.handleEduTechSingleUpload('${fig.id}', this)">
+                </label>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="app.useDefaultEduTechImage('${fig.id}')" style="font-size:0.78rem; display:inline-flex; align-items:center; gap:0.3rem;">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                  Usar Imagem Oficial de Exemplo
+                </button>
+              </div>
+            </div>
+          `}
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.6rem;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.78rem; font-weight:700;">
+              Nome / Título da Legenda (Exibido ACIMA da figura):
+            </label>
+            <input type="text" class="form-control form-control-sm" value="${fig.caption || ''}" placeholder="Ex: Figura 1: Avaliação via ferramenta kahoot." oninput="app.updateEduTechCaption('${fig.id}', this.value)">
+          </div>
+
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.78rem; font-weight:700;">
+              Fonte da Imagem (Exibido ABAIXO da figura):
+            </label>
+            <input type="text" class="form-control form-control-sm" value="${fig.source || 'Fonte: Elaborada pelos autores.'}" placeholder="Ex: Fonte: Elaborada pelos autores." oninput="app.updateEduTechSource('${fig.id}', this.value)">
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderExtraEduTechFigureCardHtml(fig, idx) {
+    const hasImage = !!fig.image;
+    return `
+      <div class="glass-card" style="padding:1.25rem; display:flex; flex-direction:column; gap:0.9rem; border:1px solid var(--border-color); background:var(--bg-card); position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="font-size:0.92rem; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
+            <span class="nav-badge badge-blue">Figura Extra ${idx + 1}</span>
+            <span>${fig.title || 'Ferramenta Adicional'}</span>
+          </strong>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.removeExtraEduTechFigure('${fig.id}')" style="color:var(--accent-rose, #ef4444); padding:0.2rem 0.5rem; font-size:0.75rem;" title="Excluir esta figura">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            Excluir
+          </button>
+        </div>
+
+        <div style="position:relative; min-height:160px; background:var(--bg-input); border:2px dashed var(--border-color); border-radius:var(--radius-sm); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.75rem; overflow:hidden;">
+          ${hasImage ? `
+            <img src="${fig.image}" alt="${fig.caption}" style="max-width:100%; max-height:150px; object-fit:contain; border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer; font-size:0.75rem; margin-top:0.5rem; display:inline-flex; align-items:center; gap:0.3rem;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Trocar Imagem
+              <input type="file" accept="image/*" style="display:none;" onchange="app.handleExtraEduTechUpload('${fig.id}', this)">
+            </label>
+          ` : `
+            <label class="btn btn-primary btn-sm" style="cursor:pointer; font-size:0.78rem; display:inline-flex; align-items:center; gap:0.3rem;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Anexar Imagem
+              <input type="file" accept="image/*" style="display:none;" onchange="app.handleExtraEduTechUpload('${fig.id}', this)">
+            </label>
+          `}
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.78rem;">Nome da Ferramenta:</label>
+            <input type="text" class="form-control form-control-sm" value="${fig.title || ''}" placeholder="Ex: Mentimeter, Padlet..." oninput="app.updateExtraEduTechTitle('${fig.id}', this.value)">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.78rem;">Legenda (Acima da Imagem):</label>
+            <input type="text" class="form-control form-control-sm" value="${fig.caption || ''}" placeholder="Ex: Figura: Avaliação via ferramenta..." oninput="app.updateExtraEduTechCaption('${fig.id}', this.value)">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-size:0.78rem;">Fonte (Abaixo da Imagem):</label>
+            <input type="text" class="form-control form-control-sm" value="${fig.source || 'Fonte: Elaborada pelos autores.'}" oninput="app.updateExtraEduTechSource('${fig.id}', this.value)">
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderEduTechLivePreview() {
+    const previewEl = document.getElementById('edutech-report-live-preview');
+    if (!previewEl || !this.currentTraining) return;
+
+    this.ensureEducationalTechInitialized();
+    const et = this.currentTraining.educationalTech;
+    const text = et.text || this.getDefaultEducationalTechData().text;
+
+    let figuresHtml = '';
+    (et.figures || []).forEach(fig => {
+      if (fig.image) {
+        figuresHtml += `
+          <div style="margin: 1.5rem 0; text-align: center; page-break-inside: avoid;">
+            <p style="font-family:'Times New Roman', Times, serif; font-size:11pt; font-weight:bold; color:var(--text-primary); margin-bottom:6px; text-align:center;">
+              ${fig.caption || 'Figura. Avaliação via ferramenta pedagógica.'}
+            </p>
+            <div style="text-align:center;">
+              <img src="${fig.image}" alt="${fig.caption}" style="max-width:92%; max-height:260px; object-fit:contain; border-radius:2px; border:1px solid var(--border-color); box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            </div>
+            <p style="font-family:'Times New Roman', Times, serif; font-size:10pt; color:var(--text-muted); margin-top:4px; margin-bottom:1.5rem; text-align:center;">
+              ${fig.source || 'Fonte: Elaborada pelos autores.'}
+            </p>
+          </div>
+        `;
+      }
+    });
+
+    (et.extraFigures || []).forEach(fig => {
+      if (fig.image) {
+        figuresHtml += `
+          <div style="margin: 1.5rem 0; text-align: center; page-break-inside: avoid;">
+            <p style="font-family:'Times New Roman', Times, serif; font-size:11pt; font-weight:bold; color:var(--text-primary); margin-bottom:6px; text-align:center;">
+              ${fig.caption || 'Figura. Atividade com tecnologia educacional.'}
+            </p>
+            <div style="text-align:center;">
+              <img src="${fig.image}" alt="${fig.caption}" style="max-width:92%; max-height:260px; object-fit:contain; border-radius:2px; border:1px solid var(--border-color); box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            </div>
+            <p style="font-family:'Times New Roman', Times, serif; font-size:10pt; color:var(--text-muted); margin-top:4px; margin-bottom:1.5rem; text-align:center;">
+              ${fig.source || 'Fonte: Elaborada pelos autores.'}
+            </p>
+          </div>
+        `;
+      }
+    });
+
+    if (!figuresHtml) {
+      figuresHtml = `
+        <div style="padding:1.5rem; text-align:center; color:var(--text-muted); font-style:italic; border:1px dashed var(--border-color); border-radius:var(--radius-sm); margin:1rem 0;">
+          Nenhuma imagem vinculada no momento. Anexe uma imagem ou clique em "Preencher com Imagens de Exemplo".
+        </div>
+      `;
+    }
+
+    previewEl.innerHTML = `
+      <div style="font-family:'Times New Roman', Times, serif; color:var(--text-primary); font-size:12pt; line-height:1.5;">
+        <p style="text-align:justify; margin-bottom:1rem; text-indent:1.25cm;">
+          ${text}
+        </p>
+        ${figuresHtml}
+      </div>
+    `;
+  }
+
+  onEduTechTextInput() {
+    const textEl = document.getElementById('wiz-edutech-text');
+    if (!textEl || !this.currentTraining) return;
+    this.ensureEducationalTechInitialized();
+    this.currentTraining.educationalTech.text = textEl.value;
+    this.renderEduTechLivePreview();
+    this.saveCurrentStepData();
+  }
+
+  restoreDefaultEduTechText() {
+    const textEl = document.getElementById('wiz-edutech-text');
+    const def = this.getDefaultEducationalTechData().text;
+    if (textEl) textEl.value = def;
+    if (this.currentTraining) {
+      this.ensureEducationalTechInitialized();
+      this.currentTraining.educationalTech.text = def;
+    }
+    this.renderEduTechLivePreview();
+    this.saveCurrentStepData();
+    this.showToast('Texto padrão das tecnologias educacionais restaurado com sucesso!', 'success');
+  }
+
+  handleEduTechSingleUpload(figId, inputEl) {
+    if (!inputEl || !inputEl.files || !inputEl.files[0]) return;
+    const file = inputEl.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      this.ensureEducationalTechInitialized();
+      const fig = this.currentTraining.educationalTech.figures.find(f => f.id === figId);
+      if (fig) {
+        fig.image = e.target.result;
+        this.renderEducationalTechStep();
+        this.saveCurrentStepData();
+        this.showToast(`Imagem da ${fig.caption ? fig.caption.split(':')[0] : 'figura'} atualizada com sucesso!`, 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  useDefaultEduTechImage(figId) {
+    this.ensureEducationalTechInitialized();
+    const fig = this.currentTraining.educationalTech.figures.find(f => f.id === figId);
+    if (!fig) return;
+
+    if (figId === 'fig_1' && window.educationalTechAssets?.kahoot) {
+      fig.image = window.educationalTechAssets.kahoot;
+    } else if (figId === 'fig_2' && window.educationalTechAssets?.plickers) {
+      fig.image = window.educationalTechAssets.plickers;
+    }
+    this.renderEducationalTechStep();
+    this.saveCurrentStepData();
+    this.showToast(`Imagem oficial de exemplo carregada para ${fig.caption ? fig.caption.split(':')[0] : 'a figura'}!`, 'success');
+  }
+
+  preloadAllDefaultEduTechExamples() {
+    this.ensureEducationalTechInitialized();
+    const et = this.currentTraining.educationalTech;
+    const f1 = et.figures.find(f => f.id === 'fig_1');
+    const f2 = et.figures.find(f => f.id === 'fig_2');
+
+    if (f1 && window.educationalTechAssets?.kahoot) {
+      f1.image = window.educationalTechAssets.kahoot;
+    }
+    if (f2 && window.educationalTechAssets?.plickers) {
+      f2.image = window.educationalTechAssets.plickers;
+    }
+    this.renderEducationalTechStep();
+    this.saveCurrentStepData();
+    this.showToast('Imagens oficiais de referência carregadas com sucesso para Kahoot e Plickers!', 'success');
+  }
+
+  removeEduTechImage(figId) {
+    this.ensureEducationalTechInitialized();
+    const fig = this.currentTraining.educationalTech.figures.find(f => f.id === figId);
+    if (fig) {
+      fig.image = '';
+      this.renderEducationalTechStep();
+      this.saveCurrentStepData();
+      this.showToast('Imagem removida.', 'info');
+    }
+  }
+
+  updateEduTechCaption(figId, val) {
+    this.ensureEducationalTechInitialized();
+    const fig = this.currentTraining.educationalTech.figures.find(f => f.id === figId);
+    if (fig) {
+      fig.caption = val;
+      this.renderEduTechLivePreview();
+      this.saveCurrentStepData();
+    }
+  }
+
+  updateEduTechSource(figId, val) {
+    this.ensureEducationalTechInitialized();
+    const fig = this.currentTraining.educationalTech.figures.find(f => f.id === figId);
+    if (fig) {
+      fig.source = val;
+      this.renderEduTechLivePreview();
+      this.saveCurrentStepData();
+    }
+  }
+
+  addExtraEduTechFigure() {
+    this.ensureEducationalTechInitialized();
+    const et = this.currentTraining.educationalTech;
+    const count = (et.extraFigures || []).length;
+    const newFig = {
+      id: `extra_edutech_${Date.now()}`,
+      title: `Ferramenta Educacional ${count + 1}`,
+      caption: `Figura ${count + 3}: Atividade pedagógica via tecnologia educacional.`,
+      source: 'Fonte: Elaborada pelos autores.',
+      image: ''
+    };
+    et.extraFigures.push(newFig);
+    this.renderEducationalTechStep();
+    this.saveCurrentStepData();
+    this.showToast('Novo espaço para figura/ferramenta adicionado!', 'success');
+  }
+
+  removeExtraEduTechFigure(extraId) {
+    this.ensureEducationalTechInitialized();
+    const et = this.currentTraining.educationalTech;
+    et.extraFigures = (et.extraFigures || []).filter(f => f.id !== extraId);
+    this.renderEducationalTechStep();
+    this.saveCurrentStepData();
+    this.showToast('Figura extra removida.', 'info');
+  }
+
+  updateExtraEduTechTitle(extraId, val) {
+    this.ensureEducationalTechInitialized();
+    const fig = (this.currentTraining.educationalTech.extraFigures || []).find(f => f.id === extraId);
+    if (fig) {
+      fig.title = val;
+      this.saveCurrentStepData();
+    }
+  }
+
+  updateExtraEduTechCaption(extraId, val) {
+    this.ensureEducationalTechInitialized();
+    const fig = (this.currentTraining.educationalTech.extraFigures || []).find(f => f.id === extraId);
+    if (fig) {
+      fig.caption = val;
+      this.renderEduTechLivePreview();
+      this.saveCurrentStepData();
+    }
+  }
+
+  updateExtraEduTechSource(extraId, val) {
+    this.ensureEducationalTechInitialized();
+    const fig = (this.currentTraining.educationalTech.extraFigures || []).find(f => f.id === extraId);
+    if (fig) {
+      fig.source = val;
+      this.renderEduTechLivePreview();
+      this.saveCurrentStepData();
+    }
+  }
+
+  handleExtraEduTechUpload(extraId, inputEl) {
+    if (!inputEl || !inputEl.files || !inputEl.files[0]) return;
+    const file = inputEl.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      this.ensureEducationalTechInitialized();
+      const fig = (this.currentTraining.educationalTech.extraFigures || []).find(f => f.id === extraId);
+      if (fig) {
+        fig.image = e.target.result;
+        this.renderEducationalTechStep();
+        this.saveCurrentStepData();
+        this.showToast('Imagem anexada com sucesso!', 'success');
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   renderContactsStep() {
@@ -1599,7 +2071,16 @@ class AutoReportApp {
     t.fundingOrg = this.getVal('wiz-train-funding') || localStorage.getItem('autoreport_setting_funding') || 'Fundo Nacional de Desenvolvimento da Educação - FNDE';
     t.partnerOrgs = this.getVal('wiz-train-partners');
 
-    // Sincronizar dados da Etapa 5
+    // Sincronizar dados da Etapa 5 (Tecnologias Educacionais)
+    if (!t.educationalTech) {
+      t.educationalTech = this.getDefaultEducationalTechData();
+    }
+    const eduTextEl = document.getElementById('wiz-edutech-text');
+    if (eduTextEl) {
+      t.educationalTech.text = eduTextEl.value;
+    }
+
+    // Sincronizar dados da Etapa 6 (Contatos)
     const checkedBoxes = document.querySelectorAll('.contact-method-checkbox:checked');
     const selectedChannels = Array.from(checkedBoxes).map(cb => cb.value);
     t.contactsData = {
@@ -7378,6 +7859,14 @@ class AutoReportApp {
             </span>
           </div>
 
+          <div class="audit-item valid">
+            <div><strong>Tecnologias Educacionais:</strong> Figuras pedagógicas configuradas (Kahoot e Plickers).</div>
+            <span class="nav-badge" style="background:rgba(16, 185, 129, 0.15); color:#10b981; display:inline-flex; align-items:center; gap:0.25rem;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Validado</span>
+            </span>
+          </div>
+
           ${metrics.auditIssues.map(issue => `
             <div class="audit-item ${issue.type}">
               <div><strong>Alerta do Sistema:</strong> ${issue.message}</div>
@@ -7620,6 +8109,62 @@ class AutoReportApp {
     const pctGestResp = totalResp > 0 ? ((gestRespCount / totalResp) * 100).toFixed(1).replace('.', ',') : '62,0';
     const overallMean = metrics?.evalStatsGeneral?.overallMean ? parseFloat(metrics.evalStatsGeneral.overallMean).toFixed(1).replace('.', ',') : '4,7';
 
+    // Tecnologias Educacionais (Figuras 1 e 2 e extras para o preview)
+    const eduTech = t.educationalTech || {};
+    const eduText = (eduTech.text && eduTech.text.trim()) ? eduTech.text.trim() :
+      'Durante o transcorrer dos módulos teóricos e práticos, foram incorporadas dinâmicas interativas mediante o uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos, com a finalidade de acompanhar o nível de assimilação dos conteúdos e potencializar o engajamento coletivo. Foram empregados os aplicativos Kahoot e Plickers: o Kahoot permitiu a participação em tempo real por meio dos smartphones dos cursistas em questionários dinâmicos; já o Plickers viabilizou a coleta imediata de respostas mediante a leitura óptica de cartões com QR Code (alternativas A, B, C e D) realizada exclusivamente pelo celular do instrutor, contornando eventuais oscilações de sinal de internet e garantindo dinamismo à atividade.';
+
+    const eduFigures = eduTech.figures || [];
+    const fig1 = eduFigures.find(f => f.id === 'fig_1') || {
+      caption: 'Figura 1: Avaliação via ferramenta kahoot.',
+      source: 'Fonte: Elaborada pelos autores.',
+      image: window.educationalTechAssets?.kahoot
+    };
+    const fig2 = eduFigures.find(f => f.id === 'fig_2') || {
+      caption: 'Figura 2: Avaliação via ferramenta Plickers.',
+      source: 'Fonte: Elaborada pelos autores.',
+      image: window.educationalTechAssets?.plickers
+    };
+
+    let eduTechFiguresHtml = '';
+    const fig1Img = fig1.image || window.educationalTechAssets?.kahoot;
+    if (fig1Img) {
+      eduTechFiguresHtml += `
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+          <p style="font-weight:700; font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${fig1.caption || 'Figura 1: Avaliação via ferramenta kahoot.'}</p>
+          <div style="text-align:center;">
+            <img src="${fig1Img}" alt="${fig1.caption || 'Kahoot'}" style="max-width:100%; max-height:280px; border-radius:var(--radius-sm); border:1px solid var(--border-color); object-fit:contain; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          </div>
+          <p style="font-size:10pt; font-family:'Times New Roman', serif; color:var(--text-muted); margin-top:0.4rem; text-align:center;">${fig1.source || 'Fonte: Elaborada pelos autores.'}</p>
+        </div>
+      `;
+    }
+    const fig2Img = fig2.image || window.educationalTechAssets?.plickers;
+    if (fig2Img) {
+      eduTechFiguresHtml += `
+        <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+          <p style="font-weight:700; font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${fig2.caption || 'Figura 2: Avaliação via ferramenta Plickers.'}</p>
+          <div style="text-align:center;">
+            <img src="${fig2Img}" alt="${fig2.caption || 'Plickers'}" style="max-width:100%; max-height:280px; border-radius:var(--radius-sm); border:1px solid var(--border-color); object-fit:contain; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          </div>
+          <p style="font-size:10pt; font-family:'Times New Roman', serif; color:var(--text-muted); margin-top:0.4rem; text-align:center;">${fig2.source || 'Fonte: Elaborada pelos autores.'}</p>
+        </div>
+      `;
+    }
+    (eduTech.extraFigures || []).forEach((ef, idx) => {
+      if (ef.image) {
+        eduTechFiguresHtml += `
+          <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
+            <p style="font-weight:700; font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${ef.caption || `Figura ${3 + idx}: Avaliação via ${ef.title || 'ferramenta educacional'}.`}</p>
+            <div style="text-align:center;">
+              <img src="${ef.image}" alt="${ef.title || 'Ferramenta'}" style="max-width:100%; max-height:280px; border-radius:var(--radius-sm); border:1px solid var(--border-color); object-fit:contain; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            </div>
+            <p style="font-size:10pt; font-family:'Times New Roman', serif; color:var(--text-muted); margin-top:0.4rem; text-align:center;">${ef.source || 'Fonte: Elaborada pelos autores.'}</p>
+          </div>
+        `;
+      }
+    });
+
     container.innerHTML = coverHtml + `
       <div class="report-doc-page">
         <!-- CABEÇALHO OFICIAL PADRONIZADO -->
@@ -7680,7 +8225,8 @@ class AutoReportApp {
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Sexto momento:</strong> desenvolvimento do Módulo 3, com foco em aspectos de planejamento territorial, contratação de serviços, controle de custos, segurança viária e marcos regulatórios essenciais para assegurar a regularidade e eficiência do transporte escolar.</p>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.5rem;"><strong>Sétimo momento:</strong> execução do Módulo 4 de forma segmentada por público-alvo. Para os conselheiros do CACS/FUNDEB, detalharam-se os procedimentos fiscalizatórios, análise documental e utilização analítica do SETE para acompanhamento de rotas. Para os gestores municipais, realizou-se treinamento prático intensivo no Sistema SETE ("mãos na massa"), capacitando os servidores no cadastramento de alunos, escolas, veículos, motoristas e roteirização georreferenciada.</p>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;"><strong>Oitavo momento:</strong> aplicação do instrumento avaliativo da capacitação, coletando percepções técnicas e qualitativas dos participantes sobre metodologia, facilitadores, infraestrutura e conteúdos trabalhados.</p>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Durante o transcorrer dos módulos teóricos e práticos, foram incorporadas dinâmicas interativas mediante o uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos, com a finalidade de acompanhar o nível de assimilação dos conteúdos e potencializar o engajamento coletivo. Foram empregados os aplicativos Kahoot e Plickers: o Kahoot permitiu a participação em tempo real por meio dos smartphones dos cursistas em questionários dinâmicos; já o Plickers viabilizou a coleta imediata de respostas mediante a leitura óptica de cartões com QR Code (alternativas A, B, C e D) realizada exclusivamente pelo celular do instrutor, contornando eventuais oscilações de sinal de internet e garantindo dinamismo à atividade.</p>
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">${eduText}</p>
+        ${eduTechFiguresHtml}
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">A participação final dos entes federados registrou ${metrics.totalPresentMunicipalities} municípios presentes dos ${metrics.totalInscribedMunicipalities} formalmente inscritos (${metrics.participationRateMunicipalities}%). No que tange ao público participante, compareceram ${metrics.totalPresent} pessoas dentre as ${metrics.totalInscribed} inscritas, representando uma taxa de participação global de ${metrics.participationRateGeneral}%. No segmento do CACS-FUNDEB, compareceram ${metrics.presentCACS} conselheiros (${metrics.participationRateCACS}%), ao passo que na Gestão Municipal participaram ${metrics.presentGestores} técnicos (${metrics.participationRateGestores}%). A distribuição da presença por município e segmento institucional é detalhada na Tabela 4 a seguir:</p>
 
         <p style="font-weight:600; margin-top:1.25rem; margin-bottom:0.5rem;"><em>Tabela 4. Participação por município.</em></p>

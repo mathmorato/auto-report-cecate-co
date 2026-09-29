@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.4
+ * Versão: v.3.1.5
  */
 
 class ReportDocxGenerator {
@@ -218,6 +218,86 @@ class ReportDocxGenerator {
   }
 
   /**
+   * Constrói os nós de parágrafo de uma figura conforme o padrão oficial ABNT de referência:
+   * Legenda/Título centralizado ACIMA da imagem, imagem centralizada, e Fonte centralizada ABAIXO.
+   */
+  createFigureWithCaptionAbove(dataUrl, maxTargetWidth, maxTargetHeight, captionText, sourceText, docxDeps) {
+    const bytes = this.base64ToUint8Array(dataUrl);
+    if (!bytes) return [];
+
+    let width = maxTargetWidth || 520;
+    let height = maxTargetHeight || 270;
+
+    // Preservar aspect ratio proporcional natural da imagem
+    const dims = this.getImageDimensionsFromBytes(bytes);
+    if (dims && dims.width > 0 && dims.height > 0) {
+      const scale = Math.min(width / dims.width, height / dims.height, 1);
+      width = Math.round(dims.width * scale);
+      height = Math.round(dims.height * scale);
+    }
+
+    const { Paragraph, ImageRun, TextRun, AlignmentType } = docxDeps;
+
+    const nodes = [];
+
+    // 1. Título / Legenda da Figura (Centralizada, Acima da Imagem - Modelo Oficial de Referência)
+    if (captionText) {
+      nodes.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 200, after: 80 },
+          keepNext: true,
+          keepLines: true,
+          children: [
+            new TextRun({
+              text: captionText,
+              font: 'Times New Roman',
+              size: 22,
+              bold: true,
+              color: '000000'
+            })
+          ]
+        })
+      );
+    }
+
+    // 2. Imagem (Centralizada)
+    nodes.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 60, after: 60 },
+        keepNext: true,
+        keepLines: true,
+        children: [
+          new ImageRun({
+            data: bytes,
+            transformation: { width, height }
+          })
+        ]
+      })
+    );
+
+    // 3. Fonte (Centralizada, Abaixo da Imagem)
+    nodes.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 40, after: 180 },
+        keepLines: true,
+        children: [
+          new TextRun({
+            text: sourceText || 'Fonte: Elaborada pelos autores.',
+            font: 'Times New Roman',
+            size: 20,
+            color: '000000'
+          })
+        ]
+      })
+    );
+
+    return nodes;
+  }
+
+  /**
    * Constrói dinamicamente os tópicos do sumário, índice de figuras e índice de tabelas
    * com os títulos exatos do presente relatório e suas páginas correspondentes
    */
@@ -259,10 +339,29 @@ class ReportDocxGenerator {
     const pTab3 = page;
     addDxa(600 + Math.ceil(munCount / 2) * 360);
 
-    // 4. DESENVOLVIMENTO DO CURSO & TABELA 4 & FIGURA 3
-    const tab4Dxa = 600 + Math.ceil(munCount / 2) * 360;
+    // 4. DESENVOLVIMENTO DO CURSO & TECNOLOGIAS EDUCACIONAIS & TABELA 4 & FIGURA 3
     const pDesenv = page;
-    addDxa(3600);
+    addDxa(3600); // 8 momentos
+    addDxa(1200); // Parágrafo descritivo de tecnologias educacionais
+
+    let pFig1 = null;
+    let pFig2 = null;
+    const eduTechData = training.educationalTech || {};
+    const eduFiguresData = eduTechData.figures || [];
+    const f1Data = eduFiguresData.find(f => f.id === 'fig_1') || { caption: 'Figura 1: Avaliação via ferramenta kahoot.', image: window.educationalTechAssets?.kahoot };
+    const f2Data = eduFiguresData.find(f => f.id === 'fig_2') || { caption: 'Figura 2: Avaliação via ferramenta Plickers.', image: window.educationalTechAssets?.plickers };
+
+    if (f1Data && (f1Data.image || window.educationalTechAssets?.kahoot)) {
+      pFig1 = addDxa(4600);
+    }
+    if (f2Data && (f2Data.image || window.educationalTechAssets?.plickers)) {
+      pFig2 = addDxa(4600);
+    }
+    (eduTechData.extraFigures || []).forEach(ef => {
+      if (ef.image) addDxa(4600);
+    });
+
+    const tab4Dxa = 600 + Math.ceil(munCount / 2) * 360;
     if (dxa + tab4Dxa > MAX_PAGE_DXA) {
       page++;
       dxa = 0;
@@ -344,6 +443,18 @@ class ReportDocxGenerator {
 
     // MONTAGEM DE figuresList (Títulos exatos das figuras e suas páginas)
     const figuresList = [];
+    if (pFig1 != null) {
+      figuresList.push({ label: f1Data.caption || 'Figura 1: Avaliação via ferramenta kahoot.', page: String(pFig1) });
+    }
+    if (pFig2 != null) {
+      figuresList.push({ label: f2Data.caption || 'Figura 2: Avaliação via ferramenta Plickers.', page: String(pFig2) });
+    }
+    (eduTechData.extraFigures || []).forEach((ef, idx) => {
+      if (ef.image) {
+        const extraLabel = ef.caption || `Figura ${3 + idx}. Avaliação via ${ef.title || 'tecnologia educacional'}.`;
+        figuresList.push({ label: extraLabel, page: String(pDesenv) });
+      }
+    });
     if (pFig3 != null) {
       figuresList.push({ label: 'Figura 3. Participação segundo o tipo de representação.', page: String(pFig3) });
     }
@@ -1679,15 +1790,76 @@ class ReportDocxGenerator {
             new TextRun({ text: 'aplicação do instrumento avaliativo da capacitação, coletando percepções técnicas e qualitativas dos participantes sobre metodologia, facilitadores, infraestrutura e conteúdos trabalhados.' })
           ]
         }),
+      // Texto descritivo das Tecnologias Educacionais (editável pelo usuário no Wizard)
+      const eduTech = training.educationalTech || {};
+      const eduText = (eduTech.text && eduTech.text.trim()) ? eduTech.text.trim() :
+        'Durante o transcorrer dos módulos teóricos e práticos, foram incorporadas dinâmicas interativas mediante o uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos, com a finalidade de acompanhar o nível de assimilação dos conteúdos e potencializar o engajamento coletivo. Foram empregados os aplicativos Kahoot e Plickers: o Kahoot permitiu a participação em tempo real por meio dos smartphones dos cursistas em questionários dinâmicos; já o Plickers viabilizou a coleta imediata de respostas mediante a leitura óptica de cartões com QR Code (alternativas A, B, C e D) realizada exclusivamente pelo celular do instrutor, contornando eventuais oscilações de sinal de internet e garantindo dinamismo à atividade.';
+
+      docChildren.push(
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
           spacing: { after: 150, line: 276 },
           children: [
             new TextRun({
-              text: 'Durante o transcorrer dos módulos teóricos e práticos, foram incorporadas dinâmicas interativas mediante o uso de tecnologias educacionais e plataformas de aprendizagem baseada em jogos, com a finalidade de acompanhar o nível de assimilação dos conteúdos e potencializar o engajamento coletivo. Foram empregados os aplicativos Kahoot e Plickers: o Kahoot permitiu a participação em tempo real por meio dos smartphones dos cursistas em questionários dinâmicos; já o Plickers viabilizou a coleta imediata de respostas mediante a leitura óptica de cartões com QR Code (alternativas A, B, C e D) realizada exclusivamente pelo celular do instrutor, contornando eventuais oscilações de sinal de internet e garantindo dinamismo à atividade.'
+              text: eduText
             })
           ]
-        }),
+        })
+      );
+
+      // Figuras de Tecnologias Educacionais (Kahoot e Plickers - Padrão ABNT: Legenda acima, Fonte abaixo)
+      const eduFigures = eduTech.figures || [];
+      const fig1 = eduFigures.find(f => f.id === 'fig_1') || {
+        caption: 'Figura 1: Avaliação via ferramenta kahoot.',
+        source: 'Fonte: Elaborada pelos autores.',
+        image: window.educationalTechAssets?.kahoot
+      };
+      const fig2 = eduFigures.find(f => f.id === 'fig_2') || {
+        caption: 'Figura 2: Avaliação via ferramenta Plickers.',
+        source: 'Fonte: Elaborada pelos autores.',
+        image: window.educationalTechAssets?.plickers
+      };
+
+      const fig1Img = fig1.image || window.educationalTechAssets?.kahoot;
+      if (fig1Img) {
+        const fig1Nodes = this.createFigureWithCaptionAbove(
+          fig1Img,
+          520,
+          270,
+          fig1.caption || 'Figura 1: Avaliação via ferramenta kahoot.',
+          fig1.source || 'Fonte: Elaborada pelos autores.',
+          docxDeps
+        );
+        docChildren.push(...fig1Nodes);
+      }
+
+      const fig2Img = fig2.image || window.educationalTechAssets?.plickers;
+      if (fig2Img) {
+        const fig2Nodes = this.createFigureWithCaptionAbove(
+          fig2Img,
+          520,
+          270,
+          fig2.caption || 'Figura 2: Avaliação via ferramenta Plickers.',
+          fig2.source || 'Fonte: Elaborada pelos autores.',
+          docxDeps
+        );
+        docChildren.push(...fig2Nodes);
+      }
+
+      // Figuras adicionais se houver
+      (eduTech.extraFigures || []).forEach((ef, idx) => {
+        if (ef.image) {
+          const efNodes = this.createFigureWithCaptionAbove(
+            ef.image,
+            520,
+            270,
+            ef.caption || `Figura ${3 + idx}: Avaliação via ${ef.title || 'ferramenta educacional'}.`,
+            ef.source || 'Fonte: Elaborada pelos autores.',
+            docxDeps
+          );
+          docChildren.push(...efNodes);
+        }
+      });
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
           spacing: { after: 150, line: 276 },

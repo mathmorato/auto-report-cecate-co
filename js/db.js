@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerenciador de Banco de Dados Local (IndexedDB) & Sincronização em Nuvem (Supabase)
- * Versão: v.3.1.4
+ * Versão: v.3.1.5
  */
 
 const SUPABASE_CONFIG = {
@@ -448,6 +448,7 @@ class TrainingDB {
         responsible: 'Equipe de Articulação Institucional CECATE-CO',
         notes: ''
       },
+      educationalTech: data.educationalTech || null,
       texts: data.texts || {
         intro: '',
         development: '',
@@ -713,6 +714,7 @@ class TrainingDB {
         responsible: source.contactsData?.responsible || 'Equipe de Articulação Institucional CECATE-CO',
         notes: ''
       },
+      educationalTech: source.educationalTech ? JSON.parse(JSON.stringify(source.educationalTech)) : null,
       texts: opts.copyTexts ? { ...source.texts } : {},
       status: 'in_progress',
       isHistorical: false, // Novo registro em andamento, nunca histórico
