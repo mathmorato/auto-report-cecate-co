@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Processador e Analisador de Planilhas Excel
- * Versão: v.3.1.8
+ * Versão: v.3.1.9
  */
 
 class ExcelParser {

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.8
+ * Versão: v.3.1.9
  */
 
 class ReportDocxGenerator {
@@ -194,7 +194,13 @@ class ReportDocxGenerator {
     ];
 
     if (captionText) {
-      const captionRun = new TextRun({ text: captionText, bold: true, italics: true, size: 20, color: '334155' });
+      const captionRun = new TextRun({
+        text: captionText,
+        font: 'Times New Roman',
+        size: 22,
+        bold: true,
+        color: '000000'
+      });
       const captionChild = (bookmarkId && Bookmark)
         ? new Bookmark({ id: bookmarkId, children: [captionRun] })
         : captionRun;
@@ -212,7 +218,12 @@ class ReportDocxGenerator {
           spacing: { after: 180 },
           keepLines: true,
           children: [
-            new TextRun({ text: 'Fonte: Elaborada pelos autores.', italics: true, size: 18, color: '64748B' })
+            new TextRun({
+              text: 'Fonte: Elaborada pelos autores.',
+              font: 'Times New Roman',
+              size: 20,
+              color: '000000'
+            })
           ]
         })
       );
@@ -305,121 +316,174 @@ class ReportDocxGenerator {
 
   /**
    * Constrói dinamicamente os tópicos do sumário, índice de figuras e índice de tabelas
-   * com os títulos exatos do presente relatório e suas páginas correspondentes
+   * com os títulos exatos do presente relatório e suas páginas correspondentes de forma precisa
    */
   buildReportIndices(training, metrics, chartsData = {}) {
     let page = 1;
-    let dxa = 0;
-    const MAX_PAGE_DXA = 13800; // Capacidade utilizável por folha A4 com margens padrão
+    let currentDxa = 0;
+    // Capacidade útil padrão de página A4 no Word (297mm - margens 2.54cm - cabeçalho - rodapé)
+    const MAX_PAGE_DXA = 12600;
 
-    function addDxa(amount, forceNewPage = false) {
-      if (forceNewPage || (dxa + amount > MAX_PAGE_DXA && dxa > 1000)) {
-        page++;
-        dxa = 0;
+    function addElement(height, canSplit = false, isCaption = false) {
+      if (isCaption) {
+        // Legenda com keepNext: true: se a legenda e pelo menos o cabeçalho do item seguinte não couberem, quebra
+        if (currentDxa + height + 900 > MAX_PAGE_DXA && currentDxa > 1000) {
+          page++;
+          currentDxa = 0;
+        }
+        const assignedPage = page;
+        currentDxa += height;
+        return assignedPage;
       }
-      dxa += amount;
-      return page;
+
+      if (!canSplit) {
+        if (currentDxa + height > MAX_PAGE_DXA && currentDxa > 800) {
+          page++;
+          currentDxa = 0;
+        }
+        const assignedPage = page;
+        currentDxa += height;
+        return assignedPage;
+      } else {
+        const assignedPage = page;
+        let remaining = height;
+        while (currentDxa + remaining > MAX_PAGE_DXA) {
+          const space = Math.max(0, MAX_PAGE_DXA - currentDxa);
+          remaining -= space;
+          page++;
+          currentDxa = 0;
+        }
+        currentDxa += remaining;
+        return assignedPage;
+      }
     }
 
-    const munCount = (training?.municipalities || []).length;
-    const modCount = (training?.courseModules || []).length;
+    function textBlockHeight(charCount, before = 0, after = 150) {
+      const lines = Math.max(1, Math.ceil(charCount / 90));
+      return lines * 276 + before + after;
+    }
+
+    const munCount = (training?.municipalities || []).length || 12;
+    const modCount = (training?.courseModules || []).length || 4;
     const photos = (training?.media || []).filter(m => m.type === 'photo' && m.blob);
     const fndeDocs = (training?.media || []).filter(m => m.type === 'doc_fnde');
     const cecateDocs = (training?.media || []).filter(m => m.type === 'doc_cecate');
 
     // 1. INTRODUÇÃO
-    const pIntro = page;
-    addDxa(1400);
+    const pIntro = addElement(880, false);
+    addElement(textBlockHeight(340) + textBlockHeight(440) + textBlockHeight(400), true);
 
-    // 2. DADOS BÁSICOS DO CURSO & TABELAS 1 E 2
-    const pDadosBasicos = page;
-    addDxa(2200);
-    const pTab1 = page;
-    addDxa(600 + munCount * 360);
-    const pTab2 = page;
-    addDxa(1200 + Math.max(modCount, 3) * 450);
+    // 2. DADOS BÁSICOS DO CURSO
+    const pDadosBasicos = addElement(880, false);
+    addElement(textBlockHeight(520) + textBlockHeight(480), true);
 
-    // 3. CONTATO COM OS MUNICÍPIOS & TABELA 3
-    const pContato = page;
-    addDxa(1800);
-    const pTab3 = page;
-    addDxa(600 + Math.ceil(munCount / 2) * 360);
+    // Tabela 1: Municípios convocados (2 colunas lado a lado)
+    const t1Half = Math.ceil(munCount / 2);
+    const pTab1 = addElement(540, false, true);
+    addElement(500 + t1Half * 360 + 460, true);
 
-    // 4. DESENVOLVIMENTO DO CURSO & TECNOLOGIAS EDUCACIONAIS & TABELA 4 & FIGURA 3
-    const pDesenv = page;
-    addDxa(3600); // 8 momentos
-    addDxa(1200); // Parágrafo descritivo de tecnologias educacionais
+    // Tabela 2: Estrutura do curso
+    addElement(textBlockHeight(460, 200, 150), true);
+    const pTab2 = addElement(540, false, true);
+    addElement(900 + modCount * 650 + 460, true);
 
-    let pFig1 = null;
-    let pFig2 = null;
+    // 3. CONTATO COM OS MUNICÍPIOS
+    const pContato = addElement(880, false);
+    addElement(textBlockHeight(340) + textBlockHeight(380) + textBlockHeight(320), true);
+
+    // Tabela 3: Inscritos por município (2 colunas lado a lado)
+    const t3Half = Math.ceil(munCount / 2);
+    const pTab3 = addElement(540, false, true);
+    addElement(1000 + t3Half * 360 + 720 + 460, true);
+
+    // 4. DESENVOLVIMENTO DO CURSO
+    const pDesenv = addElement(880, false);
+    const momentosHeight = textBlockHeight(195) + (6 * textBlockHeight(220) + 2 * textBlockHeight(300));
+    addElement(momentosHeight, true);
+
+    // Tecnologias Educacionais
     const eduTechData = training.educationalTech || {};
     const eduFiguresData = eduTechData.figures || [];
     const f1Data = eduFiguresData.find(f => f.id === 'fig_1') || { caption: 'Figura 1: Avaliação via ferramenta kahoot.', image: window.educationalTechAssets?.kahoot };
     const f2Data = eduFiguresData.find(f => f.id === 'fig_2') || { caption: 'Figura 2: Avaliação via ferramenta Plickers.', image: window.educationalTechAssets?.plickers };
 
+    addElement(textBlockHeight(550), true);
+
+    let pFig1 = null;
     if (f1Data && (f1Data.image || window.educationalTechAssets?.kahoot)) {
-      pFig1 = addDxa(4600);
+      pFig1 = addElement(6600, false, true);
     }
+    let pFig2 = null;
     if (f2Data && (f2Data.image || window.educationalTechAssets?.plickers)) {
-      pFig2 = addDxa(4600);
+      pFig2 = addElement(6600, false, true);
     }
     (eduTechData.extraFigures || []).forEach(ef => {
-      if (ef.image) addDxa(4600);
+      if (ef.image) addElement(6600, false, true);
     });
 
-    const tab4Dxa = 600 + Math.ceil(munCount / 2) * 360;
-    if (dxa + tab4Dxa > MAX_PAGE_DXA) {
-      page++;
-      dxa = 0;
-    }
-    const pTab4 = page;
-    addDxa(tab4Dxa);
+    // Tabela 4: Participação por município (2 colunas lado a lado)
+    addElement(textBlockHeight(700), true);
+    const t4Half = Math.ceil(munCount / 2);
+    const pTab4 = addElement(540, false, true);
+    addElement(1000 + t4Half * 360 + 720 + 460, true);
+
+    // Figura 3: Gráfico de Participação
     let pFig3 = null;
     if (chartsData?.fig3) {
-      pFig3 = addDxa(4800);
+      pFig3 = addElement(5800, false, true);
     }
+    addElement(textBlockHeight(250, 150, 200), true); // PLATEIA
 
-    // 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7, 8
-    const pAvaliacao = page;
-    addDxa(2200);
-    let pFig4 = null, pFig5 = null, pFig6 = null, pFig7 = null, pFig8 = null;
-    if (chartsData?.fig4) pFig4 = addDxa(4200);
-    if (chartsData?.fig5) pFig5 = addDxa(4200);
-    if (chartsData?.fig6) pFig6 = addDxa(4200);
-    if (chartsData?.fig7) pFig7 = addDxa(5200);
-    if (chartsData?.fig8) pFig8 = addDxa(5200);
+    // 5. AVALIAÇÃO DA CAPACITAÇÃO
+    const pAvaliacao = addElement(880, false);
+    addElement(textBlockHeight(500) + textBlockHeight(300), true);
+
+    let pFig4 = null;
+    if (chartsData?.fig4) pFig4 = addElement(6200, false, true);
+    let pFig5 = null;
+    if (chartsData?.fig5) pFig5 = addElement(6200, false, true);
+    let pFig6 = null;
+    if (chartsData?.fig6) pFig6 = addElement(6200, false, true);
+
+    addElement(textBlockHeight(350), true); // intro nuvens
+
+    let pFig7 = null;
+    if (chartsData?.fig7) pFig7 = addElement(6200, false, true);
+    let pFig8 = null;
+    if (chartsData?.fig8) pFig8 = addElement(6200, false, true);
 
     // 6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO
-    const pFotos = page;
-    addDxa(1000);
+    const pFotos = addElement(880, false);
+    addElement(textBlockHeight(500), true);
+
     const photoPages = [];
-    photos.forEach(() => {
-      photoPages.push(addDxa(6000));
+    photos.forEach((ph, idx) => {
+      const phPage = addElement(7000, false, true);
+      photoPages.push(phPage);
     });
 
     // 7. CONSIDERAÇÕES FINAIS
-    const pConsideracoes = page;
-    addDxa(1800);
+    const pConsideracoes = addElement(880, false);
+    addElement(textBlockHeight(1000), true);
 
     // APÊNDICES
     let pApendice1 = null;
     if (fndeDocs.length > 0) {
-      pApendice1 = page;
-      fndeDocs.forEach(() => addDxa(4000));
+      pApendice1 = addElement(880, false);
+      fndeDocs.forEach(() => addElement(7500, false));
     }
     let pApendice2 = null;
     if (cecateDocs.length > 0) {
-      pApendice2 = page;
-      cecateDocs.forEach(() => addDxa(4000));
+      pApendice2 = addElement(880, false);
+      cecateDocs.forEach(() => addElement(7500, false));
     }
     let pApendice3 = null;
     const evalList = (training?.evaluations || []).filter(e => (e.likedAspects && e.likedAspects.trim()) || (e.improveAspects && e.improveAspects.trim()));
     if (evalList.length > 0) {
-      pApendice3 = page;
-      evalList.forEach(() => addDxa(380));
+      pApendice3 = addElement(880, false);
+      addElement(1000 + evalList.length * 600, true);
     }
 
-    // MONTAGEM DE sumarioList (Tópicos exatos do relatório e suas páginas)
     const sumarioList = [
       { label: '1.   INTRODUÇÃO', page: String(pIntro), bookmarkId: 'sec_intro' },
       { label: '2.   DADOS BÁSICOS DO CURSO', page: String(pDadosBasicos), bookmarkId: 'sec_dados_basicos' },
@@ -439,7 +503,6 @@ class ReportDocxGenerator {
       sumarioList.push({ label: 'Apêndice III – Respostas Dissertativas da Avaliação', page: String(pApendice3), bookmarkId: 'sec_apendice_3' });
     }
 
-    // MONTAGEM DE tablesList (Títulos exatos das tabelas e suas páginas)
     const tablesList = [
       { label: 'Tabela 1. Municípios convocados.', page: String(pTab1), bookmarkId: 'tab_1' },
       { label: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', page: String(pTab2), bookmarkId: 'tab_2' },
@@ -447,7 +510,6 @@ class ReportDocxGenerator {
       { label: 'Tabela 4. Participação por município.', page: String(pTab4), bookmarkId: 'tab_4' }
     ];
 
-    // MONTAGEM DE figuresList (Títulos exatos das figuras e suas páginas)
     const figuresList = [];
     if (pFig1 != null) {
       figuresList.push({ label: f1Data.caption || 'Figura 1: Avaliação via ferramenta kahoot.', page: String(pFig1), bookmarkId: 'fig_1' });
