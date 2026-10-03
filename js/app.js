@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.2.2
+ * Versão: v.3.2.3
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.2.2';
+    this.version = 'v.3.2.3';
   }
 
   /**
@@ -8025,8 +8025,44 @@ class AutoReportApp {
     return { numText, infoLine, numPadded, polo, ufFull, dateStr };
   }
 
+  formatContraCapaMonthYear(training) {
+    if (window.reportDocxGenerator && typeof window.reportDocxGenerator.formatContraCapaMonthYear === 'function') {
+      return window.reportDocxGenerator.formatContraCapaMonthYear(training);
+    }
+    if (training?.monthYear) return String(training.monthYear).trim();
+    if (training?.reportMonthYear) return String(training.reportMonthYear).trim();
+
+    const dateStr = (training?.datesFormatted || '').toLowerCase();
+    const months = {
+      'janeiro': '01', 'fevereiro': '02', 'março': '03', 'marco': '03',
+      'abril': '04', 'maio': '05', 'junho': '06', 'julho': '07',
+      'agosto': '08', 'setembro': '09', 'outubro': '10', 'novembro': '11', 'dezembro': '12'
+    };
+
+    for (const [mName, mNum] of Object.entries(months)) {
+      if (dateStr.includes(mName)) {
+        const yearMatch = dateStr.match(/\b(20\d{2})\b/);
+        const year = yearMatch ? yearMatch[1] : '2026';
+        if (String(training?.number).trim() === '16' && mNum === '06') {
+          return `07/${year}`;
+        }
+        return `${mNum}/${year}`;
+      }
+    }
+
+    const dateCandidate = training?.endDate || training?.startDate;
+    if (dateCandidate && /^\d{4}-\d{2}-\d{2}/.test(dateCandidate)) {
+      const parts = dateCandidate.split('-');
+      return `${parts[1]}/${parts[0]}`;
+    }
+
+    const now = new Date();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    return `${m}/${now.getFullYear()}`;
+  }
+
   /* ==========================================================================
-     ETAPA 11: PRÉ-VISUALIZAÇÃO & GERAÇÃO FINAL DO RELATÓRIO
+     ETAPA 12: PRÉ-VISUALIZAÇÃO & GERAÇÃO FINAL DO RELATÓRIO
      ========================================================================== */
   async renderReportPreviewStep() {
     const container = document.getElementById('wizard-report-preview-document');
@@ -8045,10 +8081,10 @@ class AutoReportApp {
     const metrics = window.statsEngine.calculateAllMetrics(t);
     this.metrics = metrics;
 
-    // 0. CAPA OFICIAL DO RELATÓRIO
+    // 1. CAPA OFICIAL INTEGRAL DO RELATÓRIO (PÁGINA 1)
     const coverInfo = this.formatCoverTrainingInfo(t);
     const coverHtml = `
-      <!-- CAPA OFICIAL DO RELATÓRIO -->
+      <!-- PÁGINA 1: CAPA OFICIAL INTEGRAL -->
       <div class="report-cover-page">
         <!-- 1. PARTE SUPERIOR: IMAGEM TEMÁTICA E IDENTIFICAÇÃO -->
         <div class="cover-top-section">
@@ -8086,7 +8122,252 @@ class AutoReportApp {
       </div>
     `;
 
-    // 1. Figuras fotográficas em ordem oficial
+    // 2. CONTRA-CAPA OFICIAL DO RELATÓRIO (PÁGINA 2)
+    const contraCapaMonthYear = this.formatContraCapaMonthYear(t);
+    const contraCapaHtml = `
+      <!-- PÁGINA 2: CONTRA-CAPA OFICIAL -->
+      <div class="report-doc-page report-contra-capa-page">
+        <!-- TOPO: IDENTIFICAÇÃO DO PROJETO COM BORDA SUPERIOR -->
+        <div style="border-top: 1.5px solid #595959; padding-top: 0.8rem; text-align: center;">
+          <p style="font-family: 'Times New Roman', serif; font-size: 11pt; color: #000000; margin: 0; line-height: 1.4; text-transform: uppercase;">
+            Projeto: FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS<br>DE TRANSPORTE ESCOLAR DO BRASIL
+          </p>
+        </div>
+
+        <!-- CENTRO: IDENTIFICAÇÃO DO RELATÓRIO E TÍTULO -->
+        <div style="margin: auto 0; text-align: center; padding: 2rem 0;">
+          <p style="font-family: 'Times New Roman', serif; font-size: 14pt; color: #000000; margin: 0 0 1rem 0;">
+            Relatório de Atividades Nº ${coverInfo.numPadded}
+          </p>
+          <h2 style="font-family: 'Times New Roman', serif; font-size: 18pt; font-weight: bold; color: #000000; margin: 0 0 1rem 0; letter-spacing: 0.5px;">
+            CAPACITAÇÃO EM TRANSPORTE ESCOLAR
+          </h2>
+          <p style="font-family: 'Times New Roman', serif; font-size: 14pt; font-weight: bold; color: #000000; margin: 0;">
+            ${coverInfo.infoLine}
+          </p>
+        </div>
+
+        <!-- BASE: LOCALIZAÇÃO, DATA E LOGOMARCAS COM BORDA SUPERIOR -->
+        <div style="text-align: center;">
+          <p style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; margin: 0 0 0.35rem 0;">
+            Aparecida de Goiânia
+          </p>
+          <p style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; margin: 0 0 1.75rem 0;">
+            ${contraCapaMonthYear}
+          </p>
+          <div style="border-top: 1.5px solid #595959; padding-top: 1rem; display: flex; justify-content: space-around; align-items: center;">
+            <img src="visualrelatorio/capa/cecatefigura.svg" style="height: 38px; max-width: 140px; object-fit: contain;" alt="CECATE" class="cover-logo-cecate" onerror="if(window.coverAssets?.cecate) this.src=window.coverAssets.cecate">
+            <img src="visualrelatorio/capa/ufgfigura.svg" style="height: 38px; max-width: 140px; object-fit: contain;" alt="UFG" class="cover-logo-ufg" onerror="if(window.coverAssets?.ufg) this.src=window.coverAssets.ufg">
+            <img src="visualrelatorio/capa/fndefigura.svg" style="height: 38px; max-width: 140px; object-fit: contain;" alt="FNDE" class="cover-logo-fnde" onerror="if(window.coverAssets?.fnde) this.src=window.coverAssets.fnde">
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 3. EQUIPE PARTICIPANTE (PÁGINA 3)
+    const teamList = (t.team && t.team.length > 0)
+      ? t.team
+      : (window.getMasterTeam ? window.getMasterTeam() : (window.DEFAULT_OFFICIAL_TEAM || []));
+
+    const ufgMembers = teamList.filter(m => (m.institutionGroup === 'UFG' || m.institution === 'UFG' || m.type === 'coordenacao' || m.type === 'tecnica' || !m.institution || m.institution !== 'FNDE'));
+    const fndeMembers = teamList.filter(m => (m.institutionGroup === 'FNDE' || m.institution === 'FNDE' || m.type === 'fnde'));
+
+    let equipeMembersHtml = '';
+
+    if (ufgMembers.length > 0) {
+      equipeMembersHtml += `
+        <div style="margin-left: 1.25cm; margin-bottom: 1.5rem;">
+          <h4 style="font-family: 'Times New Roman', serif; font-size: 12pt; font-weight: bold; color: #000000; margin: 0.5rem 0;">UNIVERSIDADE FEDERAL DE GOIÁS – UFG</h4>
+          <div style="margin-left: 1.25cm;">
+      `;
+      const ufgCoords = ufgMembers.filter(m => (m.role && m.role.toLowerCase().includes('coordenador')) || m.type === 'coordenacao');
+      const ufgTech = ufgMembers.filter(m => !ufgCoords.includes(m));
+
+      if (ufgCoords.length > 0) {
+        equipeMembersHtml += `<p style="font-family: 'Times New Roman', serif; font-size: 11pt; font-weight: bold; margin: 0.5rem 0 0.15rem 0; color: #000000;">Coordenador do Projeto</p>`;
+        ufgCoords.forEach(m => {
+          const name = (window.formatTeamMemberFullName ? window.formatTeamMemberFullName(m) : m.fullName) || m.name || '';
+          equipeMembersHtml += `<p style="font-family: 'Times New Roman', serif; font-size: 11pt; margin: 0 0 0.35rem 0; color: #000000;">${name}</p>`;
+        });
+      }
+
+      if (ufgTech.length > 0) {
+        equipeMembersHtml += `<p style="font-family: 'Times New Roman', serif; font-size: 11pt; font-weight: bold; margin: 0.6rem 0 0.15rem 0; color: #000000;">Equipe de Técnica</p>`;
+        ufgTech.forEach(m => {
+          const name = (window.formatTeamMemberFullName ? window.formatTeamMemberFullName(m) : m.fullName) || m.name || '';
+          equipeMembersHtml += `<p style="font-family: 'Times New Roman', serif; font-size: 11pt; margin: 0 0 0.25rem 0; color: #000000;">${name}</p>`;
+        });
+      }
+
+      equipeMembersHtml += `
+          </div>
+        </div>
+      `;
+    }
+
+    if (fndeMembers.length > 0) {
+      equipeMembersHtml += `
+        <div style="margin-left: 1.25cm;">
+          <h4 style="font-family: 'Times New Roman', serif; font-size: 12pt; font-weight: bold; color: #000000; margin: 0.5rem 0;">FUNDO NACIONAL DE DESENVOLVIMENTO DA EDUCAÇÃO – FNDE</h4>
+          <div style="margin-left: 1.25cm;">
+      `;
+
+      const fndeRoles = [];
+      const fndeByRole = new Map();
+      fndeMembers.forEach(m => {
+        const r = m.role || 'Representante Técnico FNDE';
+        if (!fndeByRole.has(r)) {
+          fndeByRole.set(r, []);
+          fndeRoles.push(r);
+        }
+        fndeByRole.get(r).push(m);
+      });
+
+      fndeRoles.forEach(r => {
+        equipeMembersHtml += `<p style="font-family: 'Times New Roman', serif; font-size: 11pt; font-weight: bold; margin: 0.5rem 0 0.15rem 0; color: #000000;">${r}</p>`;
+        fndeByRole.get(r).forEach(m => {
+          const name = (window.formatTeamMemberFullName ? window.formatTeamMemberFullName(m) : m.fullName) || m.name || '';
+          equipeMembersHtml += `<p style="font-family: 'Times New Roman', serif; font-size: 11pt; margin: 0 0 0.25rem 0; color: #000000;">${name}</p>`;
+        });
+      });
+
+      equipeMembersHtml += `
+          </div>
+        </div>
+      `;
+    }
+
+    const equipeHtml = `
+      <!-- PÁGINA 3: EQUIPE PARTICIPANTE OFICIAL -->
+      <div class="report-doc-page report-equipe-page">
+        <div>
+          <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="font-family: 'Times New Roman', serif; color: #1F4E79; font-size: 18pt; font-weight: bold; margin: 0;">
+              RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}
+            </h2>
+          </div>
+          <div style="margin-bottom: auto;">
+            <h3 style="font-family: 'Times New Roman', serif; font-size: 14pt; font-weight: bold; color: #000000; margin-bottom: 1.5rem; text-align: left;">
+              EQUIPE PARTICIPANTE
+            </h3>
+            ${equipeMembersHtml}
+          </div>
+        </div>
+
+        <!-- RODAPÉ INSTITUCIONAL PADRONIZADO -->
+        <div class="report-standard-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #4D4D4D; padding-top: 6px; margin-top: 2rem;">
+          <div style="flex: 1; text-align: center; border-right: 1px solid #4D4D4D; padding-right: 12px;">
+            <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
+          </div>
+          <div style="width: 36px; text-align: center; font-family: 'Times New Roman', serif; font-size: 10pt; color: #000; padding-left: 8px;">
+            1
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 4. ÍNDICE DE FIGURAS, TABELAS E SUMÁRIO (PÁGINAS 4 E 5)
+    let indicesData = { sumarioList: [], tablesList: [], figuresList: [] };
+    if (window.reportDocxGenerator && typeof window.reportDocxGenerator.buildReportIndices === 'function') {
+      indicesData = window.reportDocxGenerator.buildReportIndices(t, metrics, {
+        fig3: true,
+        fig4: true,
+        fig5: true,
+        fig6: true,
+        fig7: true,
+        fig8: true
+      });
+    }
+    const { sumarioList, tablesList, figuresList } = indicesData;
+
+    const indicesHtml = `
+      <!-- PÁGINA 4: ÍNDICE DE FIGURAS E ÍNDICE DE TABELAS -->
+      <div class="report-doc-page report-indices-page">
+        <!-- CABEÇALHO OFICIAL PADRONIZADO -->
+        <div class="report-standard-header">
+          <div class="report-header-left">
+            <img src="visualrelatorio/cabecalho/cecate_cabecalho.png" alt="CECATE Centro-Oeste" class="report-header-logo" onerror="if(window.coverAssets?.cecateCabecalho) this.src=window.coverAssets.cecateCabecalho">
+          </div>
+          <div class="report-header-right">
+            <span class="report-header-title">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: auto; margin-top: 1rem;">
+          <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.2rem; font-family: 'Times New Roman', serif;">ÍNDICE DE FIGURAS</h2>
+          <div style="margin-bottom: 2rem;">
+            ${figuresList.map(fig => `
+              <div class="report-index-row">
+                <span class="report-index-label">${fig.label}</span>
+                <span class="report-index-dots"></span>
+                <span class="report-index-page">${fig.page}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-top: 2rem; margin-bottom: 1.2rem; font-family: 'Times New Roman', serif;">ÍNDICE DE TABELAS</h2>
+          <div>
+            ${tablesList.map(tab => `
+              <div class="report-index-row">
+                <span class="report-index-label">${tab.label}</span>
+                <span class="report-index-dots"></span>
+                <span class="report-index-page">${tab.page}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- RODAPÉ INSTITUCIONAL PADRONIZADO -->
+        <div class="report-standard-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #4D4D4D; padding-top: 6px; margin-top: 2rem;">
+          <div style="flex: 1; text-align: center; border-right: 1px solid #4D4D4D; padding-right: 12px;">
+            <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
+          </div>
+          <div style="width: 36px; text-align: center; font-family: 'Times New Roman', serif; font-size: 10pt; color: #000; padding-left: 8px;">
+            2
+          </div>
+        </div>
+      </div>
+    `;
+
+    const sumarioHtml = `
+      <!-- PÁGINA 5: SUMÁRIO OFICIAL -->
+      <div class="report-doc-page report-sumario-page">
+        <!-- CABEÇALHO OFICIAL PADRONIZADO -->
+        <div class="report-standard-header">
+          <div class="report-header-left">
+            <img src="visualrelatorio/cabecalho/cecate_cabecalho.png" alt="CECATE Centro-Oeste" class="report-header-logo" onerror="if(window.coverAssets?.cecateCabecalho) this.src=window.coverAssets.cecateCabecalho">
+          </div>
+          <div class="report-header-right">
+            <span class="report-header-title">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom: auto; margin-top: 1rem;">
+          <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem; font-family: 'Times New Roman', serif;">SUMÁRIO</h2>
+          <div style="line-height: 1.8;">
+            ${sumarioList.map(item => `
+              <div class="report-index-row" style="margin: 0.45rem 0;">
+                <span class="report-index-label" style="${item.label.startsWith('Apêndice') ? 'font-weight: 500;' : 'font-weight: bold;'}">${item.label}</span>
+                <span class="report-index-dots"></span>
+                <span class="report-index-page">${item.page}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- RODAPÉ INSTITUCIONAL PADRONIZADO -->
+        <div class="report-standard-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #4D4D4D; padding-top: 6px; margin-top: 2rem;">
+          <div style="flex: 1; text-align: center; border-right: 1px solid #4D4D4D; padding-right: 12px;">
+            <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
+          </div>
+          <div style="width: 36px; text-align: center; font-family: 'Times New Roman', serif; font-size: 10pt; color: #000; padding-left: 8px;">
+            3
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 5. Figuras fotográficas em ordem oficial
     const photos = (t.media || []).filter(m => m.type === 'photo');
     const slots = this.getStandardPhotoSlots();
 
@@ -8131,7 +8412,7 @@ class AutoReportApp {
       photosHtml = `<p style="color:var(--text-muted); font-style:italic;">Nenhum registro fotográfico anexado no momento.</p>`;
     }
 
-    // 2. Apêndices (FNDE e CECATE) com visualização das páginas dos documentos
+    // 6. Apêndices (FNDE e CECATE) com visualização das páginas dos documentos
     const fndeDocs = (t.media || []).filter(m => m.type === 'doc_fnde');
     const cecateDocs = (t.media || []).filter(m => m.type === 'doc_cecate');
 
@@ -8280,8 +8561,9 @@ class AutoReportApp {
       }
     });
 
-    container.innerHTML = coverHtml + `
-      <div class="report-doc-page">
+    // 7. CORPO TÉCNICO OFICIAL DO RELATÓRIO (PÁGINA 6 EM DIANTE)
+    const conteudoHtml = `
+      <div class="report-doc-page report-content-page">
         <!-- CABEÇALHO OFICIAL PADRONIZADO -->
         <div class="report-standard-header">
           <div class="report-header-left">
@@ -8292,15 +8574,8 @@ class AutoReportApp {
           </div>
         </div>
 
-        <!-- TÍTULO DO RELATÓRIO -->
-        <div style="text-align:center; margin: 2.5rem 0;">
-          <h1 style="font-size:20pt; margin-bottom:0.5rem; font-weight:800; color:#0f172a;">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</h1>
-          <h2 style="font-size:16pt; color:#1e3a8a; margin:0; font-weight:700;">${t.title || 'CAPACITAÇÃO EM TRANSPORTE ESCOLAR'}</h2>
-          <h3 style="font-size:13pt; color:#334155; margin-top:0.5rem; font-weight:600;">${t.polo || 'Polo Regional'} - ${t.uf || 'GO'}, ${t.datesFormatted || '2026'}</h3>
-        </div>
-
         <!-- 1. INTRODUÇÃO -->
-        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">1. INTRODUÇÃO</h3>
+        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:1.5rem;">1. INTRODUÇÃO</h3>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem; font-size:11pt; font-family:'Times New Roman', serif;">Este relatório é referente às atividades desenvolvidas no âmbito do projeto intitulado <em>"${(t.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL').toUpperCase()}",</em> processo administrativo número 23070.068031/2023-34, desenvolvido pela Universidade Federal de Goiás (UFG), por meio do Centro Colaborador de Apoio ao Transporte Escolar do Centro-Oeste (CECATE Centro-Oeste), em parceria e com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
         <p style="text-align:justify; line-height:1.6; font-size:11pt; font-family:'Times New Roman', serif;">O presente relatório apresenta a descrição pormenorizada e a análise avaliativa do processo do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado para gestores municipais e conselheiros do CACS/FUNDEB de ${munCount} municípios do Estado de ${t.uf || 'GO'}, sediado no município polo de ${t.polo || 'Município Polo'}, nas datas de ${t.datesFormatted || 'datas do curso'}.</p>
 
@@ -8446,11 +8721,14 @@ class AutoReportApp {
             <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
           </div>
           <div style="width: 36px; text-align: center; font-family: 'Times New Roman', serif; font-size: 10pt; color: #000; padding-left: 8px;">
-            1
+            4
           </div>
         </div>
       </div>
     `;
+
+    // 8. COMBINAÇÃO DE TODAS AS PÁGINAS OFICIAIS NA ORDEM EXATA DO WORD
+    container.innerHTML = coverHtml + contraCapaHtml + equipeHtml + indicesHtml + sumarioHtml + conteudoHtml;
 
     setTimeout(() => {
       this.renderReportPreviewCharts();
@@ -8642,16 +8920,11 @@ class AutoReportApp {
     if (window.coverAssets) {
       const coverFig = clone.querySelector('.cover-main-illustration');
       if (coverFig && window.coverAssets.figuradacapa) coverFig.src = window.coverAssets.figuradacapa;
-      const logoCecate = clone.querySelector('.cover-logo-cecate');
-      if (logoCecate && window.coverAssets.cecate) logoCecate.src = window.coverAssets.cecate;
-      const logoUfg = clone.querySelector('.cover-logo-ufg');
-      if (logoUfg && window.coverAssets.ufg) logoUfg.src = window.coverAssets.ufg;
-      const logoFnde = clone.querySelector('.cover-logo-fnde');
-      if (logoFnde && window.coverAssets.fnde) logoFnde.src = window.coverAssets.fnde;
-      const headerLogo = clone.querySelector('.report-header-logo');
-      if (headerLogo && window.coverAssets.cecateCabecalho) headerLogo.src = window.coverAssets.cecateCabecalho;
-      const footerBanner = clone.querySelector('.report-footer-banner');
-      if (footerBanner && window.coverAssets.rodape5Logos) footerBanner.src = window.coverAssets.rodape5Logos;
+      clone.querySelectorAll('.cover-logo-cecate').forEach(img => { if (window.coverAssets.cecate) img.src = window.coverAssets.cecate; });
+      clone.querySelectorAll('.cover-logo-ufg').forEach(img => { if (window.coverAssets.ufg) img.src = window.coverAssets.ufg; });
+      clone.querySelectorAll('.cover-logo-fnde').forEach(img => { if (window.coverAssets.fnde) img.src = window.coverAssets.fnde; });
+      clone.querySelectorAll('.report-header-logo').forEach(img => { if (window.coverAssets.cecateCabecalho) img.src = window.coverAssets.cecateCabecalho; });
+      clone.querySelectorAll('.report-footer-banner').forEach(img => { if (window.coverAssets.rodape5Logos) img.src = window.coverAssets.rodape5Logos; });
     }
 
     // Iframe isolado para impressão exclusiva do relatório

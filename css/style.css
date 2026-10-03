@@ -2317,12 +2317,71 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
   color: #0f172a;
   width: 100%;
   max-width: 820px;
-  min-height: 1100px;
+  min-height: 1140px;
   padding: 3rem 3.5rem;
+  margin: 0 auto 3rem auto;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
   font-family: 'Times New Roman', serif;
   line-height: 1.6;
   font-size: 11pt;
+  box-sizing: border-box;
+  page-break-after: always;
+  break-after: page;
+  border-radius: var(--radius-sm, 6px);
+  position: relative;
+}
+
+.report-contra-capa-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.5rem 3.5rem 2rem 3.5rem;
+}
+
+.report-equipe-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem 3.5rem 2rem 3.5rem;
+}
+
+.report-indices-page,
+.report-sumario-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.5rem 3.5rem 2rem 3.5rem;
+}
+
+/* Índices e Sumário com Linha Pontilhada Oficial */
+.report-index-row {
+  display: flex;
+  align-items: baseline;
+  margin: 0.35rem 0;
+  font-family: 'Times New Roman', serif;
+  font-size: 11pt;
+  color: #000000;
+  line-height: 1.35;
+}
+
+.report-index-label {
+  flex-shrink: 0;
+  max-width: 82%;
+  color: #000000;
+}
+
+.report-index-dots {
+  flex-grow: 1;
+  border-bottom: 1.5px dotted #000000;
+  margin: 0 0.5rem 4px 0.5rem;
+}
+
+.report-index-page {
+  flex-shrink: 0;
+  font-weight: 600;
+  text-align: right;
+  min-width: 24px;
+  color: #000000;
 }
 
 .report-doc-page p {
@@ -3271,7 +3330,7 @@ body.light-theme .team-member-editor-card .team-preview-name {
 
   .report-doc-page {
     box-shadow: none !important;
-    padding: 0 !important;
+    padding: 12mm 15mm !important;
     margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -3279,6 +3338,24 @@ body.light-theme .team-member-editor-card .team-preview-name {
     background: #ffffff !important;
     color: #0f172a !important;
     font-size: 11pt !important;
+    box-sizing: border-box !important;
+  }
+
+  .report-contra-capa-page,
+  .report-equipe-page,
+  .report-indices-page,
+  .report-sumario-page {
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 15mm 20mm !important;
+    box-sizing: border-box !important;
   }
 
   /* 7. Preservar gráficos canvas e imagens */

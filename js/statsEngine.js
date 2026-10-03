@@ -1,6 +1,6 @@
 ﻿/**
  * AutoReport CECATE - Motor de Estatísticas e Análise de Dados
- * Versão: v.3.2.2
+ * Versão: v.3.2.3
  */
 
 class StatsEngine {
@@ -219,40 +219,68 @@ class StatsEngine {
   }
 
   /**
-   * Gera o HTML da Tabela 1: Municípios Convocados
+   * Gera o HTML da Tabela 1: Municípios Convocados (Modelo Bilateral Oficial de Referência - Idêntico ao Word)
    */
   generateTable1Html(municipalities = []) {
     const sorted = [...municipalities].sort((a, b) => {
       if (a.isSede && !b.isSede) return -1;
       if (!a.isSede && b.isSede) return 1;
-      return (a.name || '').localeCompare(b.name || '');
+      return (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' });
     });
-    let rowsHtml = '';
 
-    sorted.forEach((m, idx) => {
+    if (sorted.length === 0) {
+      return `
+        <div class="table-responsive-wrapper">
+          <table class="report-data-table" style="width:100%; border-collapse:collapse; font-family:'Times New Roman', serif;">
+            <tbody>
+              <tr><td style="text-align:center; padding:1.5rem; color:var(--text-muted);">Nenhum município cadastrado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    const half = Math.ceil(sorted.length / 2);
+    const leftList = sorted.slice(0, half);
+    const rightList = sorted.slice(half);
+
+    let rowsHtml = '';
+    for (let i = 0; i < half; i++) {
+      const leftM = leftList[i];
+      const rightM = rightList[i] || null;
+
+      const leftDist = leftM.isSede ? '0,0' : (leftM.distanceKm != null ? parseFloat(leftM.distanceKm).toFixed(1).replace('.', ',') : '0,0');
+      const rightDist = rightM ? (rightM.isSede ? '0,0' : (rightM.distanceKm != null ? parseFloat(rightM.distanceKm).toFixed(1).replace('.', ',') : '0,0')) : '';
+
       rowsHtml += `
         <tr>
-          <td style="text-align:center; font-family:monospace; font-weight:700;">${m.ibgeCode || '-'}</td>
-          <td><strong>${m.name}</strong> ${m.isSede ? '<span class="nav-badge badge-amber" style="font-size:0.7rem; padding:0.1rem 0.4rem;">Sede</span>' : ''}</td>
-          <td style="text-align:center;"><span class="nav-badge badge-blue" style="font-size:0.75rem; padding:0.1rem 0.45rem;">${m.uf || 'GO'}</span></td>
-          <td style="text-align:right; font-family:monospace; font-weight:700;">${m.isSede ? '0,0 km' : `${parseFloat(m.distanceKm || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`}</td>
+          <td style="text-align:center; font-family:'Times New Roman', serif; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; padding:4px 6px;">${leftM.ibgeCode || '-'}</td>
+          <td style="text-align:left; font-family:'Times New Roman', serif; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; padding:4px 6px;">${leftM.name || ''}</td>
+          <td style="text-align:center; font-family:'Times New Roman', serif; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; padding:4px 6px;">${leftDist}</td>
+          <td style="width:16px; border:none; background:transparent;"></td>
+          <td style="text-align:center; font-family:'Times New Roman', serif; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; padding:4px 6px;">${rightM ? (rightM.ibgeCode || '-') : ''}</td>
+          <td style="text-align:left; font-family:'Times New Roman', serif; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; padding:4px 6px;">${rightM ? (rightM.name || '') : ''}</td>
+          <td style="text-align:center; font-family:'Times New Roman', serif; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; padding:4px 6px;">${rightDist}</td>
         </tr>
       `;
-    });
+    }
 
     return `
-      <div class="table-responsive-wrapper">
-        <table class="report-data-table">
+      <div class="table-responsive-wrapper" style="overflow-x:auto; margin:1rem 0;">
+        <table class="report-data-table" style="font-size:10pt; font-family:'Times New Roman', serif; width:100%; border-collapse:collapse; margin:0 auto;">
           <thead>
-            <tr>
-              <th style="width: 140px; text-align:center;">Código IBGE</th>
-              <th>Nome do Município</th>
-              <th style="width: 80px; text-align:center;">UF</th>
-              <th style="width: 160px; text-align:right;">Distância (km)</th>
+            <tr style="background:#D9D9D9;">
+              <th style="width:14%; text-align:center; background:#D9D9D9; color:#000; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; font-weight:bold; padding:5px 6px;">Código IBGE</th>
+              <th style="width:26%; text-align:center; background:#D9D9D9; color:#000; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; font-weight:bold; padding:5px 6px;">Nome do Município</th>
+              <th style="width:10%; text-align:center; background:#D9D9D9; color:#000; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; font-weight:bold; padding:5px 6px;">Distância (km)</th>
+              <th style="width:16px; border:none; background:transparent;"></th>
+              <th style="width:14%; text-align:center; background:#D9D9D9; color:#000; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; font-weight:bold; padding:5px 6px;">Código IBGE</th>
+              <th style="width:26%; text-align:center; background:#D9D9D9; color:#000; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; font-weight:bold; padding:5px 6px;">Nome do Município</th>
+              <th style="width:10%; text-align:center; background:#D9D9D9; color:#000; border-top:1px solid #000; border-bottom:1px solid #000; border-left:none; border-right:none; font-weight:bold; padding:5px 6px;">Distância (km)</th>
             </tr>
           </thead>
           <tbody>
-            ${rowsHtml || '<tr><td colspan="4" style="text-align:center;">Nenhum município cadastrado.</td></tr>'}
+            ${rowsHtml}
           </tbody>
         </table>
       </div>
