@@ -1,6 +1,6 @@
-/**
+﻿/**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.1.9
+ * Versão: v.3.2.0
  */
 
 class ReportDocxGenerator {
@@ -199,6 +199,7 @@ class ReportDocxGenerator {
         font: 'Times New Roman',
         size: 22,
         bold: true,
+        italics: true,
         color: '000000'
       });
       const captionChild = (bookmarkId && Bookmark)
@@ -222,6 +223,7 @@ class ReportDocxGenerator {
               text: 'Fonte: Elaborada pelos autores.',
               font: 'Times New Roman',
               size: 20,
+              italics: true,
               color: '000000'
             })
           ]
@@ -261,6 +263,7 @@ class ReportDocxGenerator {
         font: 'Times New Roman',
         size: 22,
         bold: true,
+        italics: true,
         color: '000000'
       });
       const captionChild = (bookmarkId && Bookmark)
@@ -305,6 +308,7 @@ class ReportDocxGenerator {
             text: sourceText || 'Fonte: Elaborada pelos autores.',
             font: 'Times New Roman',
             size: 20,
+            italics: true,
             color: '000000'
           })
         ]
@@ -948,7 +952,7 @@ class ReportDocxGenerator {
 
       docChildren.push(
         new Paragraph({
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -956,9 +960,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_intro',
-                  children: [new TextRun({ text: '1. INTRODUÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+                  children: [new TextRun({ text: '1. INTRODUÇÃO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: '1. INTRODUÇÃO', bold: true, size: 28, color: '1E3A8A' })
+              : new TextRun({ text: '1. INTRODUÇÃO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         }),
         new Paragraph({
@@ -966,7 +970,14 @@ class ReportDocxGenerator {
           spacing: { after: 180, line: 276 },
           children: [
             new TextRun({
-              text: `Este relatório é referente às atividades desenvolvidas no âmbito do projeto intitulado "${training.relatedProject || 'Fortalecendo e aprimorando as políticas públicas de transporte escolar do Brasil'}", processo administrativo número 23070.068031/2023-34, desenvolvido pela Universidade Federal de Goiás (UFG), por meio do Centro Colaborador de Apoio ao Transporte Escolar do Centro-Oeste (CECATE Centro-Oeste), em parceria e com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).`
+              text: 'Este relatório é referente às atividades desenvolvidas no âmbito do projeto intitulado '
+            }),
+            new TextRun({
+              text: `"${(training.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL').toUpperCase()}",`,
+              italics: true
+            }),
+            new TextRun({
+              text: ' processo administrativo número 23070.068031/2023-34, desenvolvido pela Universidade Federal de Goiás (UFG), por meio do Centro Colaborador de Apoio ao Transporte Escolar do Centro-Oeste (CECATE Centro-Oeste), em parceria e com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).'
             })
           ]
         }),
@@ -984,7 +995,7 @@ class ReportDocxGenerator {
       // 4. SEÇÃO 2: DADOS BÁSICOS DO CURSO & TABELAS 1, 2, 3
       docChildren.push(
         new Paragraph({
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -992,9 +1003,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_dados_basicos',
-                  children: [new TextRun({ text: '2. DADOS BÁSICOS DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
+                  children: [new TextRun({ text: '2. DADOS BÁSICOS DO CURSO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: '2. DADOS BÁSICOS DO CURSO', bold: true, size: 28, color: '1E3A8A' })
+              : new TextRun({ text: '2. DADOS BÁSICOS DO CURSO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         }),
         new Paragraph({
@@ -1038,6 +1049,8 @@ class ReportDocxGenerator {
                       text: 'Tabela 1. Municípios convocados.',
                       font: 'Times New Roman',
                       size: 22,
+                      bold: true,
+                      italics: true,
                       color: '000000'
                     })
                   ]
@@ -1046,6 +1059,8 @@ class ReportDocxGenerator {
                   text: 'Tabela 1. Municípios convocados.',
                   font: 'Times New Roman',
                   size: 22,
+                  bold: true,
+                  italics: true,
                   color: '000000'
                 })
           ]
@@ -1241,10 +1256,10 @@ class ReportDocxGenerator {
               ? new Bookmark({
                   id: 'tab_2',
                   children: [
-                    new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, color: '000000' })
+                    new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
                   ]
                 })
-              : new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, color: '000000' })
+              : new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
           ]
         })
       );
@@ -1472,7 +1487,7 @@ class ReportDocxGenerator {
 
       docChildren.push(
         new Paragraph({
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -1480,9 +1495,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_contato',
-                  children: [new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', bold: true, size: 28, color: '1E3A8A' })]
+                  children: [new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', bold: true, size: 28, color: '1E3A8A' })
+              : new TextRun({ text: '3. CONTATO COM OS MUNICÍPIOS', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         }),
         new Paragraph({
@@ -1522,10 +1537,10 @@ class ReportDocxGenerator {
               ? new Bookmark({
                   id: 'tab_3',
                   children: [
-                    new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, color: '000000' })
+                    new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
                   ]
                 })
-              : new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, color: '000000' })
+              : new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
           ]
         })
       );
@@ -1836,7 +1851,7 @@ class ReportDocxGenerator {
       // 5. SEÇÃO 4: DESENVOLVIMENTO DO CURSO & TABELA 4 & FIGURA 3
       docChildren.push(
         new Paragraph({
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -1844,9 +1859,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_desenv',
-                  children: [new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', bold: true, size: 28, color: '1E3A8A' })]
+                  children: [new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', bold: true, size: 28, color: '1E3A8A' })
+              : new TextRun({ text: '4. DESENVOLVIMENTO DO CURSO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         }),
         new Paragraph({
@@ -2018,10 +2033,10 @@ class ReportDocxGenerator {
               ? new Bookmark({
                   id: 'tab_4',
                   children: [
-                    new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, color: '000000' })
+                    new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
                   ]
                 })
-              : new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, color: '000000' })
+              : new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
           ]
         })
       );
@@ -2370,7 +2385,7 @@ class ReportDocxGenerator {
 
       docChildren.push(
         new Paragraph({
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -2378,9 +2393,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_avaliacao',
-                  children: [new TextRun({ text: '5. AVALIAÇÃO DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+                  children: [new TextRun({ text: '5. AVALIAÇÃO DA CAPACITAÇÃO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: '5. AVALIAÇÃO DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })
+              : new TextRun({ text: '5. AVALIAÇÃO DA CAPACITAÇÃO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         }),
         new Paragraph({
@@ -2475,7 +2490,7 @@ class ReportDocxGenerator {
       // 7. SEÇÃO 6: REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO
       docChildren.push(
         new Paragraph({
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -2483,9 +2498,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_fotos',
-                  children: [new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })]
+                  children: [new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', bold: true, size: 28, color: '1E3A8A' })
+              : new TextRun({ text: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         }),
         new Paragraph({
@@ -2518,7 +2533,7 @@ class ReportDocxGenerator {
       // 8. SEÇÃO 7: CONSIDERAÇÕES FINAIS
       docChildren.push(
         new Paragraph({
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -2526,9 +2541,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_consideracoes',
-                  children: [new TextRun({ text: '7. CONSIDERAÇÕES FINAIS', bold: true, size: 28, color: '1E3A8A' })]
+                  children: [new TextRun({ text: '7. CONSIDERAÇÕES FINAIS', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: '7. CONSIDERAÇÕES FINAIS', bold: true, size: 28, color: '1E3A8A' })
+              : new TextRun({ text: '7. CONSIDERAÇÕES FINAIS', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         }),
         new Paragraph({
@@ -2536,7 +2551,14 @@ class ReportDocxGenerator {
           spacing: { after: 150, line: 276 },
           children: [
             new TextRun({
-              text: `O presente relatório consubstanciou a execução técnica, operacional e pedagógica do ${ordinalNum ? `${ordinalNum} ` : ''}curso de Capacitação em Transporte Escolar (Capacitação nº ${rawNum || '16'}), realizado no polo regional de ${training.polo || 'Município Polo'}, Estado de ${ufName}, cumprindo integralmente as metas e diretrizes estabelecidas no âmbito do projeto "${training.relatedProject || 'Fortalecendo e aprimorando as políticas públicas de transporte escolar do Brasil'}" (Processo nº 23070.068031/2023-34), financiado pelo Fundo Nacional de Desenvolvimento da Educação (FNDE).`
+              text: `O presente relatório consubstanciou a execução técnica, operacional e pedagógica do ${ordinalNum ? `${ordinalNum} ` : ''}curso de Capacitação em Transporte Escolar (Capacitação nº ${rawNum || '16'}), realizado no polo regional de ${training.polo || 'Município Polo'}, Estado de ${ufName}, cumprindo integralmente as metas e diretrizes estabelecidas no âmbito do projeto `
+            }),
+            new TextRun({
+              text: `"${(training.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL').toUpperCase()}"`,
+              italics: true
+            }),
+            new TextRun({
+              text: ` (Processo nº 23070.068031/2023-34), financiado pelo Fundo Nacional de Desenvolvimento da Educação (FNDE).`
             })
           ]
         }),
@@ -2567,7 +2589,7 @@ class ReportDocxGenerator {
       // APÊNDICE I: CONVOCAÇÕES DO FNDE
       docChildren.push(
         new Paragraph({
-          spacing: { before: 500, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -2575,9 +2597,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_apendice_1',
-                  children: [new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })]
+                  children: [new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', bold: true, size: 26, color: '1E3A8A' })
+              : new TextRun({ text: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         })
       );
@@ -2622,7 +2644,7 @@ class ReportDocxGenerator {
       // APÊNDICE II: CONVOCAÇÕES DO CECATE
       docChildren.push(
         new Paragraph({
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -2630,9 +2652,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_apendice_2',
-                  children: [new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })]
+                  children: [new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', bold: true, size: 26, color: '1E3A8A' })
+              : new TextRun({ text: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         })
       );
@@ -2677,7 +2699,7 @@ class ReportDocxGenerator {
       // APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO
       docChildren.push(
         new Paragraph({
-          spacing: { before: 500, after: 200 },
+          spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
           keepNext: true,
           keepLines: true,
@@ -2685,9 +2707,9 @@ class ReportDocxGenerator {
             Bookmark
               ? new Bookmark({
                   id: 'sec_apendice_3',
-                  children: [new TextRun({ text: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', bold: true, size: 26, color: '1E3A8A' })]
+                  children: [new TextRun({ text: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })]
                 })
-              : new TextRun({ text: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', bold: true, size: 26, color: '1E3A8A' })
+              : new TextRun({ text: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', font: 'Times New Roman', bold: true, size: 32, color: '1F4E79' })
           ]
         }),
         new Paragraph({
@@ -3618,8 +3640,23 @@ class ReportDocxGenerator {
             document: {
               run: {
                 font: 'Times New Roman',
-                size: 24,
+                size: 22,
                 color: '000000'
+              },
+              paragraph: {
+                alignment: AlignmentType.JUSTIFIED,
+                spacing: { line: 276, before: 0, after: 150 }
+              }
+            },
+            heading1: {
+              run: {
+                font: 'Times New Roman',
+                size: 32,
+                bold: true,
+                color: '1F4E79'
+              },
+              paragraph: {
+                spacing: { before: 280, after: 180 }
               }
             }
           }
@@ -3789,8 +3826,22 @@ class ReportDocxGenerator {
             padding: 2.5cm;
             max-width: 800px;
             margin: auto;
+            font-size: 11pt;
           }
-          table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 11pt; }
+          .content-page h2 {
+            font-size: 16pt;
+            color: #1F4E79;
+            font-weight: bold;
+            margin-top: 2rem;
+            margin-bottom: 0.75rem;
+          }
+          .content-page p {
+            font-size: 11pt;
+            text-align: justify;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+          }
+          table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 10pt; }
           th, td { border: 1px solid #333; padding: 6px 10px; }
           th { background: #f1f5f9; }
         </style>
