@@ -1977,8 +1977,8 @@ body.light-theme .drop-zone .upload-dropzone-hint {
   background: #1e293b;
   padding: 0.85rem 1rem;
   font-weight: 700;
-  color: #f8fafc;
-  border-bottom: 2px solid #f59e0b;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-color);
   border-right: 1px solid var(--border-color);
   font-size: 0.82rem;
   letter-spacing: 0.02em;
@@ -1994,19 +1994,21 @@ body.light-theme .drop-zone .upload-dropzone-hint {
 
 .report-data-table th.th-sortable:hover {
   background: #334155 !important;
+  color: #ffffff !important;
 }
 
 .report-data-table th.th-sortable:hover .sort-icon-badge svg {
-  color: #fbbf24 !important;
+  color: #60a5fa !important;
   opacity: 1 !important;
 }
 
 body.light-theme .report-data-table th.th-sortable:hover {
   background: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
 body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
-  color: #d97706 !important;
+  color: #2563eb !important;
   opacity: 1 !important;
 }
 
@@ -2020,7 +2022,7 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
 }
 
 .report-data-table tr:hover td {
-  background: rgba(245, 158, 11, 0.04);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text-primary);
 }
 
@@ -2097,6 +2099,8 @@ body.light-theme .report-data-table th.th-sortable:hover .sort-icon-badge svg {
   display: flex;
   justify-content: center;
   overflow-y: auto;
+  max-height: 80vh;
+}
 /* ==========================================================================
    CAPA OFICIAL DO RELATÓRIO DE CAPACITAÇÃO (CECATE / UFG / FNDE)
    ========================================================================== */
@@ -2705,11 +2709,24 @@ body.light-theme .report-data-table th {
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
   border-bottom: 2px solid #cbd5e1 !important;
+  border-right: 1px solid #e2e8f0 !important;
 }
 
 body.light-theme .report-data-table td {
-  border-bottom-color: #e2e8f0 !important;
-  color: #1e293b;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  border-right: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+body.light-theme .report-data-table tr:hover td {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+body.light-theme .table-responsive-wrapper {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
 }
 
 /* Indicadores de Participação de Municípios (Tabela 4) */
