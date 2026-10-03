@@ -1,6 +1,6 @@
-﻿/**
+/**
  * AutoReport CECATE - Dados Oficiais da Equipe do Projeto (UFG & FNDE)
- * Versão: v.3.2.4
+ * Versão: v.3.2.5
  */
 
 window.OFFICIAL_PRONOUNS = [

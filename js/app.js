@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.2.4
+ * Versão: v.3.2.5
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.2.4';
+    this.version = 'v.3.2.5';
   }
 
   /**
@@ -8860,14 +8860,24 @@ class AutoReportApp {
     }
   }
 
-  printReportPDF() {
+  async printReportPDF() {
     if (!this.currentTraining) {
       this.showToast('Nenhuma capacitação selecionada.', 'warning');
       return;
     }
 
     const t = this.currentTraining;
-    this.showToast('Preparando PDF do relatório oficial... Na janela de impressão, selecione "Salvar como PDF" para gerar o documento idêntico ao Word.', 'info', 6000);
+
+    // Etapa 1: Gerar e baixar o documento Word (.docx) primeiro
+    this.showToast('Etapa 1/2: Gerando documento Word (.docx) oficial...', 'info', 4000);
+    try {
+      await this.downloadDocxReport();
+    } catch (e) {
+      console.warn('Aviso na geração prévia do Word:', e);
+    }
+
+    // Etapa 2: Notificar e preparar a visualização em PDF
+    this.showToast('Etapa 2/2: Documento Word gerado! Abrindo janela para Salvar em PDF (você também pode utilizar o arquivo "converter_word_para_pdf.bat" na pasta do sistema para conversão nativa do Word).', 'success', 8000);
 
     // Garantir renderização dos gráficos e nuvens de palavras
     this.renderReportPreviewCharts();
@@ -9815,7 +9825,7 @@ class AutoReportApp {
     });
   }
 
-  showToast(message, type = 'info') {
+  showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toast-container');
     if (!container) return;
 
@@ -9862,10 +9872,11 @@ class AutoReportApp {
     toast.innerHTML = `${iconSvg}<span style="line-height:1.4;">${cleanMessage}</span>`;
     container.appendChild(toast);
 
+    const toastDuration = typeof duration === 'number' && duration > 0 ? duration : 3500;
     setTimeout(() => {
       toast.style.opacity = '0';
       setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    }, toastDuration);
   }
 
   bindEvents() {

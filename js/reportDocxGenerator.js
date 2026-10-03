@@ -1,6 +1,6 @@
-﻿/**
+/**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.2.4
+ * Versão: v.3.2.5
  */
 
 class ReportDocxGenerator {
@@ -555,12 +555,12 @@ class ReportDocxGenerator {
   }
 
   /**
-   * Gera e dispara o download do arquivo .docx institucional formatado
+   * Gera o arquivo .docx institucional formatado e retorna o Blob binário
    */
-  async generateAndDownload(training, metrics, chartsData = {}) {
+  async generateDocxBlob(training, metrics, chartsData = {}) {
     if (!training) {
       alert('Selecione ou salve uma capacitação primeiro.');
-      return;
+      return null;
     }
 
     const {
@@ -3780,6 +3780,21 @@ class ReportDocxGenerator {
       });
 
       const blob = await Packer.toBlob(doc);
+      return blob;
+    } catch (err) {
+      console.error('Erro ao gerar documento Word:', err);
+      alert(`Erro na geração docx: ${err.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Gera e dispara o download do arquivo .docx institucional formatado
+   */
+  async generateAndDownload(training, metrics, chartsData = {}) {
+    const blob = await this.generateDocxBlob(training, metrics, chartsData);
+    if (blob) {
+      const coverInfo = this.formatCoverTrainingInfo(training);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -3789,10 +3804,8 @@ class ReportDocxGenerator {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       console.log('Download do .docx gerado com sucesso!');
-    } catch (err) {
-      console.error('Erro ao gerar documento Word:', err);
-      alert(`Erro na geração docx: ${err.message}`);
     }
+    return blob;
   }
 
   downloadHtmlReportFallback(training, metrics, chartsData = {}) {
