@@ -3684,6 +3684,56 @@ body.light-theme .mobile-menu-toggle-btn:hover {
   background: #f1f5f9 !important;
 }
 
+/* ==========================================================================
+   Etapa 8: Caixas de Comentários dos Gráficos e Nuvens de Palavras
+   ========================================================================== */
+.figure-comment-box {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.figure-comment-box:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.figure-comment-box textarea.form-control {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  transition: border-color 0.2s ease;
+}
+
+.figure-comment-box textarea.form-control:focus {
+  border-color: var(--accent-primary);
+  outline: none;
+}
+
+body.light-theme .figure-comment-box {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.light-theme .figure-comment-box textarea.form-control {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+body.light-theme .figure-comment-box textarea.form-control:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+}
+
+
 
 
 

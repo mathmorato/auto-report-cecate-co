@@ -1,6 +1,6 @@
-﻿/**
+/**
  * AutoReport CECATE - Motor de Estatísticas e Análise de Dados
- * Versão: v.3.2.0
+ * Versão: v.3.2.1
  */
 
 class StatsEngine {
@@ -655,6 +655,125 @@ class StatsEngine {
         </table>
       </div>
     `;
+  }
+
+  /**
+   * Gera o comentário padrão para cada gráfico da Etapa 8, fiel aos relatórios oficiais em 02-Relatórios exemplos
+   */
+  getDefaultEvaluationComment(figKey, training) {
+    if (!training) return '';
+    const evals = training.evaluations || [];
+    const attendance = training.attendance || [];
+    const totalResp = evals.length;
+    const critLabels = [
+      'processo de inscrição',
+      'divulgação da formação',
+      'data da formação',
+      'horário da formação',
+      'local da formação',
+      'duração da formação',
+      'conteúdo e desenvolvimento da formação'
+    ];
+
+    if (figKey === 'fig3') {
+      if (totalResp === 0) {
+        return 'A participação segundo o tipo de representação considera a totalidade dos participantes presentes entre conselheiros do CACS-FUNDEB e equipes de gestão municipal.';
+      }
+      const cacsCount = evals.filter(e => String(e.representation || '').toUpperCase().includes('CACS')).length;
+      const gestCount = totalResp - cacsCount;
+      const pctCacs = ((cacsCount / totalResp) * 100).toFixed(1).replace('.', ',');
+      const pctGest = ((gestCount / totalResp) * 100).toFixed(1).replace('.', ',');
+      const totalPresent = training.metrics?.totalPresent || (attendance.length > 0 ? attendance.length : totalResp);
+      const repLead = (totalPresent > 0 && totalResp >= totalPresent)
+        ? 'A totalidade dos participantes presentes realizou a avaliação da capacitação, assegurando representatividade integral'
+        : `Um número expressivo de participantes (${totalResp} questionários válidos) realizou a avaliação da capacitação, conferindo elevada consistência amostral`;
+      return `${repLead}. De forma geral, ${pctGest}% (${gestCount}/${totalResp}) e ${pctCacs}% (${cacsCount}/${totalResp}) dos participantes foram das gestões municipais e dos conselhos CACS-FUNDEB, respectivamente.`;
+    }
+
+    if (figKey === 'fig4') {
+      if (totalResp === 0) {
+        return 'Os resultados consolidados da avaliação do curso de capacitação serão apresentados nas Figuras 4, 5 e 6 a seguir, com distribuição de respostas em escala Likert de 1 a 5.';
+      }
+      const statsGen = this.calculateEvaluationStats(evals);
+      const pctHigh = statsGen.highRatingPercent ? Math.round(statsGen.highRatingPercent) : 90;
+      const criterionLowerShare = (statsGen.criterionDistributionPercent || []).map((p, idx) => ({
+        idx,
+        name: critLabels[idx] || this.criteriaLabels[idx],
+        lowerPct: ((p[0] || 0) + (p[1] || 0) + (p[2] || 0))
+      }));
+      criterionLowerShare.sort((a, b) => b.lowerPct - a.lowerPct);
+      const prominentLow = criterionLowerShare.filter(c => c.lowerPct > 0).slice(0, 2);
+
+      if (prominentLow.length > 0) {
+        const lowItemsStr = prominentLow.map(c => `a ${c.name}`).join(' e ');
+        return `Os resultados da avaliação do curso de capacitação são apresentados nas Figuras 4, 5 e 6. De forma geral, os conceitos 4 e 5 correspondem à expressiva maioria das respostas recebidas (cerca de ${pctHigh}% do total). No entanto, alguns itens apresentaram notas fora da tendência geral, destacando-se ${lowItemsStr}, que registraram avaliações inferiores.`;
+      }
+      return `Os resultados da avaliação do curso de capacitação são apresentados nas Figuras 4, 5 e 6. De forma geral, os conceitos 4 e 5 (Muito Bom e Excelente) correspondem à quase totalidade das respostas recebidas (${pctHigh}%), evidenciando a plena aceitação metodológica e estrutural do curso em todos os eixos avaliados.`;
+    }
+
+    if (figKey === 'fig5') {
+      const evalsCacs = evals.filter(e => String(e.representation || '').toUpperCase().includes('CACS'));
+      if (evalsCacs.length === 0) {
+        return 'Ao avaliar os resultados conforme a instituição representada, observa-se a distribuição das respostas específicas dos conselheiros do CACS-FUNDEB presentes no polo regional.';
+      }
+      const statsCacs = this.calculateEvaluationStats(evalsCacs);
+      const lowCountCacs = (statsCacs.distribution[0] || 0) + (statsCacs.distribution[1] || 0) + (statsCacs.distribution[2] || 0);
+
+      if (lowCountCacs === 0) {
+        return 'Ao avaliar os resultados conforme a instituição representada, observa-se que as tendências gerais nos itens avaliados se mantêm. Contudo, os conselheiros dos CACS apresentaram percentuais maiores de respostas com nota 4 e 5 e não apresentaram qualificações com conceitos inferiores, atestando o êxito das temáticas de fiscalização e controle social.';
+      }
+      const cacsCritLow = (statsCacs.criterionDistributionPercent || []).map((p, idx) => ({
+        idx,
+        name: critLabels[idx] || this.criteriaLabels[idx],
+        lowerPct: ((p[0] || 0) + (p[1] || 0) + (p[2] || 0))
+      })).sort((a, b) => b.lowerPct - a.lowerPct)[0];
+      return `Ao avaliar os resultados conforme a instituição representada, observa-se que as tendências gerais nos itens avaliados se mantêm. Contudo, os conselheiros dos CACS apresentaram percentuais marcadamente elevados de respostas com nota 4 e 5, com registros pontuais de conceitos inferiores concentrados no item de ${cacsCritLow ? cacsCritLow.name : 'divulgação da formação'}.`;
+    }
+
+    if (figKey === 'fig6') {
+      const evalsGest = evals.filter(e => !String(e.representation || '').toUpperCase().includes('CACS'));
+      if (evalsGest.length === 0) {
+        return 'Por outro lado, os gestores municipais apresentaram avaliações positivas, com predominância de respostas nas notas 4 e 5 na maioria dos itens avaliados.';
+      }
+      const statsGest = this.calculateEvaluationStats(evalsGest);
+      const gestPcts = (statsGest.criterionDistributionPercent || []).map(p => ((p[0] || 0) + (p[1] || 0) + (p[2] || 0)));
+      const validPcts = gestPcts.filter(p => p > 0);
+      const minP = validPcts.length > 0 ? Math.min(...validPcts).toFixed(1).replace('.', ',') : '5,0';
+      const maxP = validPcts.length > 0 ? Math.max(...validPcts).toFixed(1).replace('.', ',') : '15,0';
+      const gestCritLow = (statsGest.criterionDistributionPercent || []).map((p, idx) => ({
+        idx,
+        name: critLabels[idx] || this.criteriaLabels[idx],
+        lowerPct: ((p[0] || 0) + (p[1] || 0) + (p[2] || 0))
+      })).sort((a, b) => b.lowerPct - a.lowerPct)[0];
+
+      return `Por outro lado, os gestores municipais apresentaram avaliações positivas, com predominância de respostas na nota 4 e 5 na maioria dos itens. Ainda assim, conceitos inferiores (menor ou igual a 3) apresentam um percentual entre ${minP}% e ${maxP}%, ressaltando a ${gestCritLow ? gestCritLow.name : 'duração da formação'} que apresentou percentuais maiores das piores notas em comparação aos demais.`;
+    }
+
+    if (figKey === 'fig7') {
+      const likedTexts = evals.map(e => e.likedAspects).filter(Boolean);
+      let topStr = 'Conteúdo", "Didática", "Prática" e "Clareza';
+      if (window.wordCloudEngine && likedTexts.length > 0) {
+        const wordCounts = window.wordCloudEngine.processTextList(likedTexts);
+        const sortedWords = Object.keys(wordCounts).sort((a, b) => wordCounts[b] - wordCounts[a]);
+        const topW = sortedWords.slice(0, 3).map(w => w.charAt(0).toUpperCase() + w.slice(1));
+        if (topW.length > 0) topStr = topW.join('", "');
+      }
+      return `De forma sucinta, os resultados das respostas dissertativas quanto aos aspectos que mais agradaram aos participantes evidenciam uma percepção altamente positiva da capacitação, com destaque para termos como "${topStr}", indicando boa aceitação do curso, didática clara e pleno domínio do conteúdo pelos formadores.`;
+    }
+
+    if (figKey === 'fig8') {
+      const improveTexts = evals.map(e => e.improveAspects).filter(Boolean);
+      let topStrImp = 'Tempo", "Internet", "Duração" e "Espaço';
+      if (window.wordCloudEngine && improveTexts.length > 0) {
+        const wordCountsImp = window.wordCloudEngine.processTextList(improveTexts);
+        const sortedWordsImp = Object.keys(wordCountsImp).sort((a, b) => wordCountsImp[b] - wordCountsImp[a]);
+        const topWImp = sortedWordsImp.slice(0, 3).map(w => w.charAt(0).toUpperCase() + w.slice(1));
+        if (topWImp.length > 0) topStrImp = topWImp.join('", "');
+      }
+      return `Em contrapartida, as sugestões de melhoria concentram-se em aspectos logísticos e operacionais, sobressaindo apontamentos como "${topStrImp}", servindo como importantes subsídios para o aperfeiçoamento contínuo dos próximos encontros. Todas as respostas obtidas nesta fase estão disponíveis no Apêndice III para consulta.`;
+    }
+
+    return '';
   }
 }
 

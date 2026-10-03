@@ -1,6 +1,6 @@
-﻿/**
+/**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.2.0
+ * Versão: v.3.2.1
  */
 
 class ReportDocxGenerator {
@@ -2352,6 +2352,17 @@ class ReportDocxGenerator {
       // Figura 3: Gráfico de Participação
       // docxDeps já inicializado no topo do método generateAndDownload
       if (chartsData.fig3) {
+        const fig3Comment = (training.evaluationComments && training.evaluationComments.fig3) ||
+                            (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig3', training) : '');
+        if (fig3Comment) {
+          docChildren.push(
+            new Paragraph({
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: { before: 150, after: 150, line: 276 },
+              children: [new TextRun({ text: fig3Comment, font: 'Times New Roman', size: 22 })]
+            })
+          );
+        }
         const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação segundo o tipo de representação.', docxDeps, 'fig_3');
         if (fig3Nodes) docChildren.push(...fig3Nodes);
       }
@@ -2383,6 +2394,17 @@ class ReportDocxGenerator {
       const pctGestResp = totalResp > 0 ? ((gestRespCount / totalResp) * 100).toFixed(1).replace('.', ',') : '62,0';
       const overallMean = metrics?.evalStatsGeneral?.overallMean ? parseFloat(metrics.evalStatsGeneral.overallMean).toFixed(1).replace('.', ',') : '4,7';
 
+      const fig4Comment = (training.evaluationComments && training.evaluationComments.fig4) ||
+                          (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig4', training) : '');
+      const fig5Comment = (training.evaluationComments && training.evaluationComments.fig5) ||
+                          (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig5', training) : '');
+      const fig6Comment = (training.evaluationComments && training.evaluationComments.fig6) ||
+                          (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig6', training) : '');
+      const fig7Comment = (training.evaluationComments && training.evaluationComments.fig7) ||
+                          (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig7', training) : '');
+      const fig8Comment = (training.evaluationComments && training.evaluationComments.fig8) ||
+                          (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig8', training) : '');
+
       docChildren.push(
         new Paragraph({
           spacing: { before: 280, after: 180 },
@@ -2406,81 +2428,78 @@ class ReportDocxGenerator {
               text: 'Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert com cinco níveis qualitativos de percepção (1 - Ruim, 2 - Regular, 3 - Neutro, 4 - Muito Bom e 5 - Excelente) para avaliar os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.'
             })
           ]
-        }),
-        new Paragraph({
-          alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
-          children: [
-            new TextRun({
-              text: `A totalidade dos participantes presentes realizou a avaliação da capacitação, garantindo representatividade integral (${totalResp} questionários válidos). Em termos de distribuição institucional, ${pctCacsResp}% (${cacsRespCount}/${totalResp}) dos respondentes integraram os conselhos sociais CACS-FUNDEB e ${pctGestResp}% (${gestRespCount}/${totalResp}) pertenceram às equipes de Gestão Municipal.`
-            })
-          ]
-        }),
-        new Paragraph({
-          alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
-          children: [
-            new TextRun({
-              text: 'Os resultados consolidados da avaliação do curso de capacitação são ilustrados nas Figuras 4, 5 e 6 a seguir. De modo geral, as escolhas dos participantes concentraram-se predominantemente entre os conceitos 4 e 5 (Muito Bom e Excelente), que correspondem às notas qualitativas superiores e abrangeram a expressiva maioria das respostas recebidas. No entanto, apontamentos específicos situados fora da tendência hegemônica indicam oportunidades pontuais de aprimoramento em itens logísticos, tais como a antecedência na divulgação e adequação de horários:'
-            })
-          ]
         })
       );
 
+      // FIGURA 4
+      if (fig4Comment) {
+        docChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            spacing: { before: 150, after: 150, line: 276 },
+            children: [new TextRun({ text: fig4Comment, font: 'Times New Roman', size: 22 })]
+          })
+        );
+      }
       if (chartsData.fig4) {
         const fig4Nodes = this.createImageParagraph(chartsData.fig4, 520, 250, 'Figura 4. Avaliação da capacitação de todos os participantes.', docxDeps, 'fig_4');
         if (fig4Nodes) docChildren.push(...fig4Nodes);
       }
 
-      docChildren.push(
-        new Paragraph({
-          alignment: AlignmentType.JUSTIFIED,
-          spacing: { before: 150, after: 150, line: 276 },
-          children: [
-            new TextRun({
-              text: 'Ao analisar os resultados segundo a instituição representada, constata-se a manutenção da tendência geral de elevada aprovação. Contudo, os conselheiros dos CACS-FUNDEB apresentaram proporções ainda mais expressivas de notas máximas (conceitos 4 e 5), não registrando pontuações em faixas inferiores, o que evidencia a grande pertinência dos conteúdos de controle social trabalhados:'
-            })
-          ]
-        })
-      );
-
+      // FIGURA 5
+      if (fig5Comment) {
+        docChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            spacing: { before: 150, after: 150, line: 276 },
+            children: [new TextRun({ text: fig5Comment, font: 'Times New Roman', size: 22 })]
+          })
+        );
+      }
       if (chartsData.fig5) {
         const fig5Nodes = this.createImageParagraph(chartsData.fig5, 520, 250, 'Figura 5. Avaliação da capacitação dos conselheiros CACS.', docxDeps, 'fig_5');
         if (fig5Nodes) docChildren.push(...fig5Nodes);
       }
 
-      docChildren.push(
-        new Paragraph({
-          alignment: AlignmentType.JUSTIFIED,
-          spacing: { before: 150, after: 150, line: 276 },
-          children: [
-            new TextRun({
-              text: 'Por sua vez, os gestores municipais também manifestaram avaliações francamente positivas, com ampla predominância de respostas nas notas 4 e 5 na quase totalidade das dimensões avaliadas. Eventuais registros com conceitos inferiores concentraram-se essencialmente na duração e horário da formação, reforçando a demanda por períodos mais extensos para as oficinas práticas de preenchimento de rotas:'
-            })
-          ]
-        })
-      );
-
+      // FIGURA 6
+      if (fig6Comment) {
+        docChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            spacing: { before: 150, after: 150, line: 276 },
+            children: [new TextRun({ text: fig6Comment, font: 'Times New Roman', size: 22 })]
+          })
+        );
+      }
       if (chartsData.fig6) {
         const fig6Nodes = this.createImageParagraph(chartsData.fig6, 520, 250, 'Figura 6. Avaliação da capacitação dos gestores municipais.', docxDeps, 'fig_6');
         if (fig6Nodes) docChildren.push(...fig6Nodes);
       }
 
-      docChildren.push(
-        new Paragraph({
-          alignment: AlignmentType.JUSTIFIED,
-          spacing: { before: 150, after: 150, line: 276 },
-          children: [
-            new TextRun({
-              text: 'De forma sucinta, as Figuras 7 e 8 sintetizam os resultados das perguntas dissertativas por meio de nuvens de palavras ponderadas pela frequência semântica dos termos. As respostas evidenciam percepção extremamente favorável quanto aos facilitadores e aos tópicos trabalhados, com destaque de grande relevância para os termos "Conteúdo", "Didática", "SETE", "Prática" e "Clareza", demonstrando a efetividade metodológica da formação. Em contrapartida, as sugestões de melhoria concentraram-se em demandas de infraestrutura e ritmo, sobressaindo menções a "Tempo", "Internet" e "Mais dias de curso", servindo como subsídios prioritários para as próximas rodadas do projeto. Todas as respostas qualitativas obtidas estão disponíveis integralmente no Apêndice III para consulta:'
-            })
-          ]
-        })
-      );
-
+      // FIGURA 7
+      if (fig7Comment) {
+        docChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            spacing: { before: 150, after: 150, line: 276 },
+            children: [new TextRun({ text: fig7Comment, font: 'Times New Roman', size: 22 })]
+          })
+        );
+      }
       if (chartsData.fig7) {
         const fig7Nodes = this.createImageParagraph(chartsData.fig7, 480, 260, 'Figura 7. Aspectos que gostaram da capacitação.', docxDeps, 'fig_7');
         if (fig7Nodes) docChildren.push(...fig7Nodes);
+      }
+
+      // FIGURA 8
+      if (fig8Comment) {
+        docChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            spacing: { before: 150, after: 150, line: 276 },
+            children: [new TextRun({ text: fig8Comment, font: 'Times New Roman', size: 22 })]
+          })
+        );
       }
       if (chartsData.fig8) {
         const fig8Nodes = this.createImageParagraph(chartsData.fig8, 480, 260, 'Figura 8. Aspectos que devem melhorar da capacitação.', docxDeps, 'fig_8');

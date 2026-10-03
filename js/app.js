@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.2.0
+ * Versão: v.3.2.1
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.2.0';
+    this.version = 'v.3.2.1';
   }
 
   /**
@@ -7135,6 +7135,113 @@ class AutoReportApp {
         `;
       }
     }
+
+    this.renderFigureComments();
+  }
+
+  /**
+   * Renderiza os campos de comentários e sugestões padrão da Etapa 8 para as Figuras 3 a 8
+   */
+  renderFigureComments() {
+    if (!this.currentTraining) return;
+    if (!this.currentTraining.evaluationComments) {
+      this.currentTraining.evaluationComments = {};
+    }
+
+    const figKeys = ['fig3', 'fig4', 'fig5', 'fig6', 'fig7', 'fig8'];
+    figKeys.forEach(key => {
+      const textarea = document.getElementById(`eval-comment-${key}`);
+      const badge = document.getElementById(`eval-comment-${key}-badge`);
+      if (!textarea) return;
+
+      const savedComment = this.currentTraining.evaluationComments[key];
+      const defaultComment = window.statsEngine ? window.statsEngine.getDefaultEvaluationComment(key, this.currentTraining) : '';
+
+      if (savedComment !== undefined && savedComment !== null && savedComment.trim() !== '') {
+        textarea.value = savedComment;
+        if (savedComment.trim() === defaultComment.trim()) {
+          if (badge) {
+            badge.textContent = 'Sugestão Padrão (Exemplo Oficial)';
+            badge.style.background = 'rgba(59, 130, 246, 0.15)';
+            badge.style.color = 'var(--accent-blue-text)';
+          }
+        } else {
+          if (badge) {
+            badge.textContent = 'Comentário Personalizado';
+            badge.style.background = 'rgba(245, 158, 11, 0.15)';
+            badge.style.color = 'var(--accent-amber-text)';
+          }
+        }
+      } else {
+        // Preencher com a sugestão padrão derivada dos relatórios de exemplo
+        textarea.value = defaultComment;
+        if (badge) {
+          badge.textContent = 'Sugestão Padrão (Exemplo Oficial)';
+          badge.style.background = 'rgba(59, 130, 246, 0.15)';
+          badge.style.color = 'var(--accent-blue-text)';
+        }
+      }
+    });
+  }
+
+  /**
+   * Atualiza o comentário de uma figura da Etapa 8 quando editado pelo usuário
+   */
+  handleFigureCommentChange(figKey, value) {
+    if (!this.currentTraining) return;
+    if (!this.currentTraining.evaluationComments) {
+      this.currentTraining.evaluationComments = {};
+    }
+    this.currentTraining.evaluationComments[figKey] = value;
+
+    const badge = document.getElementById(`eval-comment-${figKey}-badge`);
+    const defaultComment = window.statsEngine ? window.statsEngine.getDefaultEvaluationComment(figKey, this.currentTraining) : '';
+
+    if (badge) {
+      if (value.trim() === defaultComment.trim()) {
+        badge.textContent = 'Sugestão Padrão (Exemplo Oficial)';
+        badge.style.background = 'rgba(59, 130, 246, 0.15)';
+        badge.style.color = 'var(--accent-blue-text)';
+      } else {
+        badge.textContent = 'Comentário Personalizado';
+        badge.style.background = 'rgba(245, 158, 11, 0.15)';
+        badge.style.color = 'var(--accent-amber-text)';
+      }
+    }
+
+    if (this._commentDebounceTimer) {
+      clearTimeout(this._commentDebounceTimer);
+    }
+    this._commentDebounceTimer = setTimeout(() => {
+      this.saveCurrentStepData();
+    }, 400);
+  }
+
+  /**
+   * Restaura o comentário de uma figura para a sugestão padrão dos relatórios de exemplo oficiais
+   */
+  restoreFigureComment(figKey) {
+    if (!this.currentTraining) return;
+    const defaultComment = window.statsEngine ? window.statsEngine.getDefaultEvaluationComment(figKey, this.currentTraining) : '';
+    if (!this.currentTraining.evaluationComments) {
+      this.currentTraining.evaluationComments = {};
+    }
+    this.currentTraining.evaluationComments[figKey] = defaultComment;
+
+    const textarea = document.getElementById(`eval-comment-${figKey}`);
+    if (textarea) {
+      textarea.value = defaultComment;
+    }
+
+    const badge = document.getElementById(`eval-comment-${figKey}-badge`);
+    if (badge) {
+      badge.textContent = 'Sugestão Padrão (Exemplo Oficial)';
+      badge.style.background = 'rgba(59, 130, 246, 0.15)';
+      badge.style.color = 'var(--accent-blue-text)';
+    }
+
+    this.saveCurrentStepData();
+    this.showToast('Comentário restaurado para a sugestão padrão dos relatórios de exemplo!', 'info');
   }
 
   renderEvaluationCharts() {
@@ -8109,6 +8216,14 @@ class AutoReportApp {
     const pctGestResp = totalResp > 0 ? ((gestRespCount / totalResp) * 100).toFixed(1).replace('.', ',') : '62,0';
     const overallMean = metrics?.evalStatsGeneral?.overallMean ? parseFloat(metrics.evalStatsGeneral.overallMean).toFixed(1).replace('.', ',') : '4,7';
 
+    // Comentários das Figuras da Etapa 8 (Fidelidade aos relatórios de exemplo e editáveis pelo usuário)
+    const fig3Comment = (t.evaluationComments && t.evaluationComments.fig3) || (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig3', t) : '');
+    const fig4Comment = (t.evaluationComments && t.evaluationComments.fig4) || (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig4', t) : '');
+    const fig5Comment = (t.evaluationComments && t.evaluationComments.fig5) || (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig5', t) : '');
+    const fig6Comment = (t.evaluationComments && t.evaluationComments.fig6) || (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig6', t) : '');
+    const fig7Comment = (t.evaluationComments && t.evaluationComments.fig7) || (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig7', t) : '');
+    const fig8Comment = (t.evaluationComments && t.evaluationComments.fig8) || (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig8', t) : '');
+
     // Tecnologias Educacionais (Figuras 1 e 2 e extras para o preview)
     const eduTech = t.educationalTech || {};
     const eduText = (eduTech.text && eduTech.text.trim()) ? eduTech.text.trim() :
@@ -8234,6 +8349,7 @@ class AutoReportApp {
         <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
 
         <!-- FIGURA 3 -->
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">${fig3Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 3. Participação segundo o tipo de representação.</p>
           <div style="max-width:520px; height:280px; position:relative; margin:auto;">
@@ -8247,10 +8363,9 @@ class AutoReportApp {
         <!-- 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8 -->
         <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert com cinco níveis qualitativos de percepção (1 - Ruim, 2 - Regular, 3 - Neutro, 4 - Muito Bom e 5 - Excelente) para avaliar os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.</p>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">A totalidade dos participantes presentes realizou a avaliação da capacitação, garantindo representatividade integral (${totalResp} questionários válidos). Em termos de distribuição institucional, ${pctCacsResp}% (${cacsRespCount}/${totalResp}) dos respondentes integraram os conselhos sociais CACS-FUNDEB e ${pctGestResp}% (${gestRespCount}/${totalResp}) pertenceram às equipes de Gestão Municipal.</p>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Os resultados consolidados da avaliação do curso de capacitação são ilustrados nas Figuras 4, 5 e 6 a seguir. De modo geral, as escolhas dos participantes concentraram-se predominantemente entre os conceitos 4 e 5 (Muito Bom e Excelente), que correspondem às notas qualitativas superiores e abrangeram a expressiva maioria das respostas recebidas. No entanto, apontamentos específicos situados fora da tendência hegemônica indicam oportunidades pontuais de aprimoramento em itens logísticos, tais como a antecedência na divulgação e adequação de horários:</p>
 
         <!-- FIGURA 4 -->
+        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">${fig4Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 4. Avaliação da capacitação de todos os participantes.</p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
@@ -8259,9 +8374,8 @@ class AutoReportApp {
           <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
         </div>
 
-        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">Ao analisar os resultados segundo a instituição representada, constata-se a manutenção da tendência geral de elevada aprovação. Contudo, os conselheiros dos CACS-FUNDEB apresentaram proporções ainda mais expressivas de notas máximas (conceitos 4 e 5), não registrando pontuações em faixas inferiores, o que evidencia a grande pertinência dos conteúdos de controle social trabalhados:</p>
-
         <!-- FIGURA 5 -->
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">${fig5Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 5. Avaliação da capacitação dos conselheiros CACS.</p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
@@ -8270,9 +8384,8 @@ class AutoReportApp {
           <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
         </div>
 
-        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">Por sua vez, os gestores municipais também manifestaram avaliações francamente positivas, com ampla predominância de respostas nas notas 4 e 5 na quase totalidade das dimensões avaliadas. Eventuais registros com conceitos inferiores concentraram-se essencialmente na duração e horário da formação, reforçando a demanda por períodos mais extensos para as oficinas práticas de preenchimento de rotas:</p>
-
         <!-- FIGURA 6 -->
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">${fig6Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 6. Avaliação da capacitação dos gestores municipais.</p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
@@ -8281,9 +8394,8 @@ class AutoReportApp {
           <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
         </div>
 
-        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">De forma sucinta, as Figuras 7 e 8 sintetizam os resultados das perguntas dissertativas por meio de nuvens de palavras ponderadas pela frequência semântica dos termos. As respostas evidenciam percepção extremamente favorável quanto aos facilitadores e aos tópicos trabalhados, com destaque de grande relevância para os termos "Conteúdo", "Didática", "SETE", "Prática" e "Clareza", demonstrando a efetividade metodológica da formação. Em contrapartida, as sugestões de melhoria concentraram-se em demandas de infraestrutura e ritmo, sobressaindo menções a "Tempo", "Internet" e "Mais dias de curso", servindo como subsídios prioritários para as próximas rodadas do projeto. Todas as respostas qualitativas obtidas estão disponíveis integralmente no Apêndice III para consulta:</p>
-
         <!-- FIGURAS 7 E 8 (NUVENS DE PALAVRAS) -->
+        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">${fig7Comment}</p>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; page-break-inside:avoid;">
           <div style="text-align:center;">
             <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.5rem;">Figura 7. Aspectos que gostaram da capacitação.</p>
@@ -8300,6 +8412,7 @@ class AutoReportApp {
             <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.4rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
           </div>
         </div>
+        <p style="text-align:justify; line-height:1.6; margin-top:0.5rem; margin-bottom:1.5rem;">${fig8Comment}</p>
 
         <!-- 6. REGISTROS FOTOGRÁFICOS -->
         <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO</h3>
