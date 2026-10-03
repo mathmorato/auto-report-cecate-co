@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.2.3
+ * Versão: v.3.2.4
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.2.3';
+    this.version = 'v.3.2.4';
   }
 
   /**
@@ -8867,7 +8867,7 @@ class AutoReportApp {
     }
 
     const t = this.currentTraining;
-    this.showToast('Preparando PDF do relatório oficial...', 'info');
+    this.showToast('Preparando PDF do relatório oficial... Na janela de impressão, selecione "Salvar como PDF" para gerar o documento idêntico ao Word.', 'info', 6000);
 
     // Garantir renderização dos gráficos e nuvens de palavras
     this.renderReportPreviewCharts();
@@ -8944,6 +8944,9 @@ class AutoReportApp {
     const cleanPolo = (t.polo || 'Polo').replace(/[^a-zA-Z0-9_-]/g, '_');
     const docTitle = `Relatorio_Capacitacao_${t.number || 'Final'}_${cleanPolo}`;
 
+    // Remover botões de download e elementos interativos do clone para impressão pura
+    clone.querySelectorAll('.btn, .no-print, a.btn').forEach(el => el.remove());
+
     const iframeDoc = printIframe.contentWindow.document;
     iframeDoc.open();
     iframeDoc.write(`<!DOCTYPE html>
@@ -8954,9 +8957,6 @@ class AutoReportApp {
   <style>
     @page {
       size: A4 portrait;
-      margin: 15mm 15mm 15mm 15mm;
-    }
-    @page:first {
       margin: 0;
     }
     * {
@@ -8972,13 +8972,16 @@ class AutoReportApp {
       font-family: 'Times New Roman', serif;
       font-size: 11pt;
       line-height: 1.6;
+      width: 210mm;
     }
+
+    /* PÁGINA 1: CAPA OFICIAL INTEGRAL */
     .report-cover-page {
       background-color: #4D4D4D !important;
       color: #FFFFFF !important;
-      width: 100% !important;
-      min-height: 297mm !important;
+      width: 210mm !important;
       height: 297mm !important;
+      min-height: 297mm !important;
       max-height: 297mm !important;
       padding: 0 !important;
       margin: 0 !important;
@@ -9093,30 +9096,163 @@ class AutoReportApp {
       width: 100%;
       gap: 1.5rem;
     }
-    .cover-logo-cecate { height: 48px; max-width: 220px; object-fit: contain; }
-    .cover-logo-ufg { height: 48px; max-width: 160px; object-fit: contain; }
-    .cover-logo-fnde { height: 48px; max-width: 200px; object-fit: contain; }
+    .cover-logo-cecate { height: 40px; max-width: 170px; object-fit: contain; }
+    .cover-logo-ufg { height: 40px; max-width: 130px; object-fit: contain; }
+    .cover-logo-fnde { height: 40px; max-width: 170px; object-fit: contain; }
 
+    /* ESTILOS DAS PÁGINAS A4 OFICIAIS */
     .report-doc-page {
       background: #ffffff !important;
       color: #0f172a !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      padding: 0 !important;
-      margin: 0 !important;
+      width: 210mm !important;
+      min-height: 297mm !important;
+      box-sizing: border-box !important;
+      position: relative !important;
+      font-family: 'Times New Roman', serif;
+      line-height: 1.6;
+      font-size: 11pt;
       box-shadow: none !important;
       border: none !important;
     }
+
+    /* PÁGINA 2: CONTRA-CAPA */
+    .report-contra-capa-page {
+      height: 297mm !important;
+      max-height: 297mm !important;
+      padding: 22mm 25mm 18mm 25mm !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      page-break-after: always !important;
+      break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    /* PÁGINA 3: EQUIPE PARTICIPANTE */
+    .report-equipe-page {
+      height: 297mm !important;
+      max-height: 297mm !important;
+      padding: 22mm 20mm 15mm 20mm !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      page-break-after: always !important;
+      break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    /* PÁGINA 4: ÍNDICES E PÁGINA 5: SUMÁRIO */
+    .report-indices-page,
+    .report-sumario-page {
+      height: 297mm !important;
+      max-height: 297mm !important;
+      padding: 18mm 20mm 15mm 20mm !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      page-break-after: always !important;
+      break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+
+    /* LINHAS PONTILHADAS DE ÍNDICES E SUMÁRIO */
+    .report-index-row {
+      display: flex !important;
+      align-items: baseline !important;
+      margin: 0.35rem 0 !important;
+      font-family: 'Times New Roman', serif !important;
+      font-size: 11pt !important;
+      color: #000000 !important;
+      line-height: 1.35 !important;
+    }
+    .report-index-label {
+      flex-shrink: 0 !important;
+      max-width: 82% !important;
+      color: #000000 !important;
+    }
+    .report-index-dots {
+      flex-grow: 1 !important;
+      border-bottom: 1.5px dotted #000000 !important;
+      margin: 0 0.5rem 4px 0.5rem !important;
+    }
+    .report-index-page {
+      flex-shrink: 0 !important;
+      font-weight: 600 !important;
+      text-align: right !important;
+      min-width: 24px !important;
+      color: #000000 !important;
+    }
+
+    /* PÁGINA 6+: CONTEÚDO TÉCNICO */
+    .report-content-page {
+      padding: 18mm 20mm 18mm 20mm !important;
+    }
+
+    /* CABEÇALHO OFICIAL PADRONIZADO */
+    .report-standard-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      border-bottom: 1px solid #4D4D4D !important;
+      padding-bottom: 6px !important;
+      margin-bottom: 1.5rem !important;
+    }
+    .report-header-left {
+      display: flex !important;
+      align-items: center !important;
+    }
+    .report-header-logo {
+      height: 28px !important;
+      max-width: 140px !important;
+      object-fit: contain !important;
+    }
+    .report-header-right {
+      text-align: right !important;
+    }
+    .report-header-title {
+      font-family: 'Times New Roman', serif !important;
+      font-size: 10pt !important;
+      font-weight: 700 !important;
+      color: #000000 !important;
+    }
+
+    /* RODAPÉ OFICIAL PADRONIZADO */
+    .report-standard-footer {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      border-top: 1px solid #4D4D4D !important;
+      padding-top: 6px !important;
+      margin-top: 2rem !important;
+    }
+    .report-footer-banner {
+      height: 24px !important;
+      max-width: 100% !important;
+      object-fit: contain !important;
+      display: inline-block !important;
+    }
+
+    /* TIPOGRAFIA E ELEMENTOS */
     h1, h2, h3, h4 {
       font-family: 'Times New Roman', serif;
       page-break-after: avoid;
       break-after: avoid;
-      color: #1e3a8a;
+    }
+    h3 {
+      font-size: 16pt;
+      font-weight: 700;
+      color: #1f4e79 !important;
     }
     p {
       margin: 0.75rem 0;
       text-align: justify;
       line-height: 1.6;
+      font-size: 11pt;
+      font-family: 'Times New Roman', serif;
+      color: #000000;
     }
     table {
       width: 100%;
@@ -9126,14 +9262,50 @@ class AutoReportApp {
       page-break-inside: avoid;
       break-inside: avoid;
     }
-    th, td {
-      border: 1px solid #475569;
-      padding: 6px 8px;
-      color: #0f172a;
+
+    /* Tabelas bilaterais ABNT */
+    .report-data-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      font-family: 'Times New Roman', serif !important;
+      font-size: 10pt !important;
+      color: #000000 !important;
     }
-    th {
+    .report-data-table th {
+      background-color: #D9D9D9 !important;
+      color: #000000 !important;
+      font-weight: bold !important;
+      border-top: 1px solid #000 !important;
+      border-bottom: 1px solid #000 !important;
+      border-left: none !important;
+      border-right: none !important;
+      padding: 5px 6px !important;
+    }
+    .report-data-table td {
+      color: #000000 !important;
+      padding: 4px 6px !important;
+      border-top: 1px solid #000 !important;
+      border-bottom: 1px solid #000 !important;
+      border-left: none !important;
+      border-right: none !important;
+    }
+    .data-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      font-family: 'Times New Roman', serif !important;
+      font-size: 10pt !important;
+    }
+    .data-table th {
       background-color: #f1f5f9 !important;
-      font-weight: bold;
+      color: #000000 !important;
+      font-weight: bold !important;
+      border: 1px solid #cbd5e1 !important;
+      padding: 6px !important;
+    }
+    .data-table td {
+      border: 1px solid #cbd5e1 !important;
+      padding: 5px !important;
+      color: #000000 !important;
     }
     img {
       max-width: 100% !important;
@@ -9142,13 +9314,17 @@ class AutoReportApp {
       break-inside: avoid;
     }
     div[style*="page-break-inside: avoid"],
-    div[style*="page-break-inside:avoid"] {
+    div[style*="page-break-inside:avoid"],
+    .appendix-document-block {
       page-break-inside: avoid !important;
       break-inside: avoid !important;
     }
     a {
       color: #1e3a8a;
       text-decoration: none;
+    }
+    .btn, .no-print {
+      display: none !important;
     }
   </style>
 </head>
@@ -9166,7 +9342,7 @@ class AutoReportApp {
         console.error('Falha ao acionar impressão via iframe:', err);
         window.print();
       }
-    }, 450);
+    }, 500);
   }
 
   async directDownloadDocx(trainingId) {
