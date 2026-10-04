@@ -1,6 +1,6 @@
-/**
+﻿/**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.2.9
+ * Versão: v.3.3.0
  */
 
 class ReportDocxGenerator {
@@ -176,7 +176,7 @@ class ReportDocxGenerator {
       height = Math.round(dims.height * scale);
     }
 
-    const { Paragraph, ImageRun, TextRun, AlignmentType, Bookmark } = docxDeps || window.docx || {};
+    const { Paragraph, ImageRun, TextRun, AlignmentType, Bookmark, SimpleField } = docxDeps || window.docx || {};
 
     const nodes = [
       new Paragraph({
@@ -194,25 +194,56 @@ class ReportDocxGenerator {
     ];
 
     if (captionText) {
-      const captionRun = new TextRun({
-        text: captionText,
-        font: 'Times New Roman',
-        size: 22,
-        bold: true,
-        italics: true,
-        color: '000000'
-      });
+      const figMatch = captionText.match(/^Figura\s*(\d+)[\.:]?(.*)$/i);
+      let captionRuns = [];
+      if (figMatch && SimpleField) {
+        const num = figMatch[1];
+        const sep = captionText.includes(':') ? ': ' : '. ';
+        const rest = figMatch[2] ? figMatch[2].replace(/^[\.:\s]+/, '') : '';
+        captionRuns = [
+          new TextRun({
+            text: 'Figura ',
+            font: 'Times New Roman',
+            size: 22,
+            bold: true,
+            italics: true,
+            color: '000000'
+          }),
+          new SimpleField('SEQ Figura \\* ARABIC', String(num)),
+          new TextRun({
+            text: sep + rest,
+            font: 'Times New Roman',
+            size: 22,
+            bold: true,
+            italics: true,
+            color: '000000'
+          })
+        ];
+      } else {
+        captionRuns = [
+          new TextRun({
+            text: captionText,
+            font: 'Times New Roman',
+            size: 22,
+            bold: true,
+            italics: true,
+            color: '000000'
+          })
+        ];
+      }
+
       const captionChild = (bookmarkId && Bookmark)
-        ? new Bookmark({ id: bookmarkId, children: [captionRun] })
-        : captionRun;
+        ? [new Bookmark({ id: bookmarkId, children: captionRuns })]
+        : captionRuns;
 
       nodes.push(
         new Paragraph({
+          style: 'Caption',
           alignment: AlignmentType.CENTER,
           spacing: { after: 40 },
           keepNext: true,
           keepLines: true,
-          children: [captionChild]
+          children: captionChild
         }),
         new Paragraph({
           alignment: AlignmentType.CENTER,
@@ -252,31 +283,62 @@ class ReportDocxGenerator {
       height = Math.round(dims.height * scale);
     }
 
-    const { Paragraph, ImageRun, TextRun, AlignmentType, Bookmark } = docxDeps || window.docx || {};
+    const { Paragraph, ImageRun, TextRun, AlignmentType, Bookmark, SimpleField } = docxDeps || window.docx || {};
 
     const nodes = [];
 
     // 1. Título / Legenda da Figura (Centralizada, Acima da Imagem - Modelo Oficial de Referência)
     if (captionText) {
-      const captionRun = new TextRun({
-        text: captionText,
-        font: 'Times New Roman',
-        size: 22,
-        bold: true,
-        italics: true,
-        color: '000000'
-      });
+      const figMatch = captionText.match(/^Figura\s*(\d+)[\.:]?(.*)$/i);
+      let captionRuns = [];
+      if (figMatch && SimpleField) {
+        const num = figMatch[1];
+        const sep = captionText.includes(':') ? ': ' : '. ';
+        const rest = figMatch[2] ? figMatch[2].replace(/^[\.:\s]+/, '') : '';
+        captionRuns = [
+          new TextRun({
+            text: 'Figura ',
+            font: 'Times New Roman',
+            size: 22,
+            bold: true,
+            italics: true,
+            color: '000000'
+          }),
+          new SimpleField('SEQ Figura \\* ARABIC', String(num)),
+          new TextRun({
+            text: sep + rest,
+            font: 'Times New Roman',
+            size: 22,
+            bold: true,
+            italics: true,
+            color: '000000'
+          })
+        ];
+      } else {
+        captionRuns = [
+          new TextRun({
+            text: captionText,
+            font: 'Times New Roman',
+            size: 22,
+            bold: true,
+            italics: true,
+            color: '000000'
+          })
+        ];
+      }
+
       const captionChild = (bookmarkId && Bookmark)
-        ? new Bookmark({ id: bookmarkId, children: [captionRun] })
-        : captionRun;
+        ? [new Bookmark({ id: bookmarkId, children: captionRuns })]
+        : captionRuns;
 
       nodes.push(
         new Paragraph({
+          style: 'Caption',
           alignment: AlignmentType.CENTER,
           spacing: { before: 200, after: 80 },
           keepNext: true,
           keepLines: true,
-          children: [captionChild]
+          children: captionChild
         })
       );
     }
@@ -1056,17 +1118,27 @@ class ReportDocxGenerator {
           ]
         }),
         new Paragraph({
+          style: 'Caption',
           alignment: AlignmentType.CENTER,
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
           children: [
-            Bookmark
+            Bookmark && SimpleField
               ? new Bookmark({
                   id: 'tab_1',
                   children: [
                     new TextRun({
-                      text: 'Tabela 1. Municípios convocados.',
+                      text: 'Tabela ',
+                      font: 'Times New Roman',
+                      size: 22,
+                      bold: true,
+                      italics: true,
+                      color: '000000'
+                    }),
+                    new SimpleField('SEQ Tabela \\* ARABIC', '1'),
+                    new TextRun({
+                      text: '. Municípios convocados.',
                       font: 'Times New Roman',
                       size: 22,
                       bold: true,
@@ -1267,16 +1339,19 @@ class ReportDocxGenerator {
           ]
         }),
         new Paragraph({
+          style: 'Caption',
           alignment: AlignmentType.CENTER,
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
           children: [
-            Bookmark
+            Bookmark && SimpleField
               ? new Bookmark({
                   id: 'tab_2',
                   children: [
-                    new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' }),
+                    new SimpleField('SEQ Tabela \\* ARABIC', '2'),
+                    new TextRun({ text: '. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
                   ]
                 })
               : new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
@@ -1549,16 +1624,19 @@ class ReportDocxGenerator {
           ]
         }),
         new Paragraph({
+          style: 'Caption',
           alignment: AlignmentType.CENTER,
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
           children: [
-            Bookmark
+            Bookmark && SimpleField
               ? new Bookmark({
                   id: 'tab_3',
                   children: [
-                    new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' }),
+                    new SimpleField('SEQ Tabela \\* ARABIC', '3'),
+                    new TextRun({ text: '. Inscritos por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
                   ]
                 })
               : new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
@@ -2046,16 +2124,19 @@ class ReportDocxGenerator {
           ]
         }),
         new Paragraph({
+          style: 'Caption',
           alignment: AlignmentType.CENTER,
           spacing: { before: 200, after: 120 },
           keepNext: true,
           keepLines: true,
           children: [
-            Bookmark
+            Bookmark && SimpleField
               ? new Bookmark({
                   id: 'tab_4',
                   children: [
-                    new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' }),
+                    new SimpleField('SEQ Tabela \\* ARABIC', '4'),
+                    new TextRun({ text: '. Participação por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
                   ]
                 })
               : new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
@@ -3501,6 +3582,8 @@ class ReportDocxGenerator {
       const { sumarioList, tablesList, figuresList } = this.buildReportIndices(training, metrics, chartsData);
 
       const indicesChildren = [];
+
+      // Título oficial do Índice de Figuras: Centralizado, Times New Roman, 16pt, Negrito, Azul #1F4E79
       indicesChildren.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
@@ -3517,51 +3600,62 @@ class ReportDocxGenerator {
         })
       );
 
-      figuresList.forEach(fig => {
-        const textRuns = [];
-        if (fig.italicWord) {
-          textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
-          textRuns.push(new TextRun({ text: fig.italicWord, font: 'Times New Roman', italics: true, size: 24, color: '000000' }));
-          if (fig.afterWord) {
-            textRuns.push(new TextRun({ text: fig.afterWord, font: 'Times New Roman', size: 24, color: '000000' }));
+      // Índice de Figuras Automático nativo do Word (TOC \c "Figura" \h \z)
+      if (TableOfContents) {
+        const tof = new TableOfContents("Índice de Figuras", {
+          captionLabelIncludingNumbers: "Figura",
+          hyperlink: true,
+          hideTabAndPageNumbersInWebView: true
+        });
+        indicesChildren.push(tof);
+      } else {
+        figuresList.forEach(fig => {
+          const textRuns = [];
+          if (fig.italicWord) {
+            textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
+            textRuns.push(new TextRun({ text: fig.italicWord, font: 'Times New Roman', italics: true, size: 24, color: '000000' }));
+            if (fig.afterWord) {
+              textRuns.push(new TextRun({ text: fig.afterWord, font: 'Times New Roman', size: 24, color: '000000' }));
+            }
+          } else {
+            textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
           }
-        } else {
-          textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
-        }
 
-        const figChildren = [];
-        if (fig.bookmarkId && InternalHyperlink) {
-          figChildren.push(
-            new InternalHyperlink({
-              anchor: fig.bookmarkId,
-              children: textRuns
+          const figChildren = [];
+          if (fig.bookmarkId && InternalHyperlink) {
+            figChildren.push(
+              new InternalHyperlink({
+                anchor: fig.bookmarkId,
+                children: textRuns
+              })
+            );
+          } else {
+            figChildren.push(...textRuns);
+          }
+
+          figChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+          if (fig.bookmarkId && SimpleField) {
+            figChildren.push(
+              new SimpleField(`PAGEREF ${fig.bookmarkId} \\h`, String(fig.page))
+            );
+          } else {
+            figChildren.push(
+              new TextRun({ text: String(fig.page), font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          indicesChildren.push(
+            new Paragraph({
+              spacing: { before: 0, after: 40 },
+              tabStops: [{ type: 'right', position: 9628 }],
+              children: figChildren
             })
           );
-        } else {
-          figChildren.push(...textRuns);
-        }
+        });
+      }
 
-        figChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
-
-        if (fig.bookmarkId && SimpleField) {
-          figChildren.push(
-            new SimpleField(`PAGEREF ${fig.bookmarkId} \\h`, String(fig.page))
-          );
-        } else {
-          figChildren.push(
-            new TextRun({ text: String(fig.page), font: 'Times New Roman', size: 24, color: '000000' })
-          );
-        }
-
-        indicesChildren.push(
-          new Paragraph({
-            spacing: { before: 0, after: 40 },
-            tabStops: [{ type: 'right', position: 9628 }],
-            children: figChildren
-          })
-        );
-      });
-
+      // Título oficial do Índice de Tabelas: Centralizado, Times New Roman, 16pt, Negrito, Azul #1F4E79
       indicesChildren.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
@@ -3578,43 +3672,53 @@ class ReportDocxGenerator {
         })
       );
 
-      tablesList.forEach(tab => {
-        const tabChildren = [];
-        if (tab.bookmarkId && InternalHyperlink) {
-          tabChildren.push(
-            new InternalHyperlink({
-              anchor: tab.bookmarkId,
-              children: [
-                new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' })
-              ]
+      // Índice de Tabelas Automático nativo do Word (TOC \c "Tabela" \h \z)
+      if (TableOfContents) {
+        const tot = new TableOfContents("Índice de Tabelas", {
+          captionLabelIncludingNumbers: "Tabela",
+          hyperlink: true,
+          hideTabAndPageNumbersInWebView: true
+        });
+        indicesChildren.push(tot);
+      } else {
+        tablesList.forEach(tab => {
+          const tabChildren = [];
+          if (tab.bookmarkId && InternalHyperlink) {
+            tabChildren.push(
+              new InternalHyperlink({
+                anchor: tab.bookmarkId,
+                children: [
+                  new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' })
+                ]
+              })
+            );
+          } else {
+            tabChildren.push(
+              new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          tabChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+          if (tab.bookmarkId && SimpleField) {
+            tabChildren.push(
+              new SimpleField(`PAGEREF ${tab.bookmarkId} \\h`, String(tab.page))
+            );
+          } else {
+            tabChildren.push(
+              new TextRun({ text: String(tab.page), font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          indicesChildren.push(
+            new Paragraph({
+              spacing: { before: 0, after: 40 },
+              tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
+              children: tabChildren
             })
           );
-        } else {
-          tabChildren.push(
-            new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' })
-          );
-        }
-
-        tabChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
-
-        if (tab.bookmarkId && SimpleField) {
-          tabChildren.push(
-            new SimpleField(`PAGEREF ${tab.bookmarkId} \\h`, String(tab.page))
-          );
-        } else {
-          tabChildren.push(
-            new TextRun({ text: String(tab.page), font: 'Times New Roman', size: 24, color: '000000' })
-          );
-        }
-
-        indicesChildren.push(
-          new Paragraph({
-            spacing: { before: 0, after: 40 },
-            tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
-            children: tabChildren
-          })
-        );
-      });
+        });
+      }
 
       // 1.4 MONTAGEM DA PÁGINA 5: SUMÁRIO (SUMÁRIO AUTOMÁTICO 2 NATIVO DO WORD)
       const sumarioChildren = [];
@@ -3843,6 +3947,78 @@ class ReportDocxGenerator {
                 tabStops: [
                   { type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }
                 ]
+              }
+            },
+            {
+              id: "TableofFigures",
+              name: "table of figures",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 24,
+                color: "000000"
+              },
+              paragraph: {
+                spacing: { before: 20, after: 60, line: 276 },
+                tabStops: [
+                  { type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }
+                ]
+              }
+            },
+            {
+              id: "ndicedeIlustraes",
+              name: "table of figures",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 24,
+                color: "000000"
+              },
+              paragraph: {
+                spacing: { before: 20, after: 60, line: 276 },
+                tabStops: [
+                  { type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }
+                ]
+              }
+            },
+            {
+              id: "Caption",
+              name: "caption",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 22,
+                bold: true,
+                italics: true,
+                color: "000000"
+              },
+              paragraph: {
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 140, after: 80 }
+              }
+            },
+            {
+              id: "Legenda",
+              name: "caption",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 22,
+                bold: true,
+                italics: true,
+                color: "000000"
+              },
+              paragraph: {
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 140, after: 80 }
               }
             }
           ]
