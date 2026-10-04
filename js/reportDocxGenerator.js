@@ -1,6 +1,6 @@
 ﻿/**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.3.1
+ * Versão: v.3.3.2
  */
 
 class ReportDocxGenerator {
@@ -3862,16 +3862,15 @@ class ReportDocxGenerator {
           });
         }
 
-        // 2. Título oficial "Sumário" do Sumário Automático 2:
-        // No Sumário Automático 2 do Word, o título fica dentro do sdtContent antes do campo dinâmico,
-        // alinhado à esquerda, azul institucional (#1F4E79), tamanho 16pt (32 dxa), negrito, estilo TOCHeading / CabealhodoSumrio
+        // 2. Título oficial "SUMÁRIO":
+        // Centralizado, azul institucional (#1F4E79), tamanho 16pt (32 dxa), negrito, estilo TOCHeading / CabealhodoSumrio
         const tocHeadingPara = new Paragraph({
           style: 'TOCHeading',
-          alignment: AlignmentType.LEFT,
+          alignment: AlignmentType.CENTER,
           spacing: { before: 240, after: 140 },
           children: [
             new TextRun({
-              text: 'Sumário',
+              text: 'SUMÁRIO',
               font: 'Times New Roman',
               bold: true,
               size: 32, // 16pt
@@ -3940,11 +3939,11 @@ class ReportDocxGenerator {
         // Fallback caso TableOfContents não esteja disponível
         sumarioChildren.push(
           new Paragraph({
-            alignment: AlignmentType.LEFT,
+            alignment: AlignmentType.CENTER,
             spacing: { before: 240, after: 140 },
             children: [
               new TextRun({
-                text: 'Sumário',
+                text: 'SUMÁRIO',
                 font: 'Times New Roman',
                 bold: true,
                 size: 32,
@@ -4042,6 +4041,7 @@ class ReportDocxGenerator {
                 color: "1F4E79"
               },
               paragraph: {
+                alignment: AlignmentType.CENTER,
                 spacing: { before: 240, after: 140 },
                 outlineLevel: 9
               }
@@ -4059,6 +4059,7 @@ class ReportDocxGenerator {
                 color: "1F4E79"
               },
               paragraph: {
+                alignment: AlignmentType.CENTER,
                 spacing: { before: 240, after: 140 },
                 outlineLevel: 9
               }
@@ -4495,7 +4496,7 @@ class ReportDocxGenerator {
         <!-- PÁGINA 5: SUMÁRIO -->
         <div class="sumario-page" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; padding: 2.5cm; box-sizing: border-box;">
           <div>
-            <h2 style="text-align: left; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem; font-family: 'Times New Roman', serif;">Sumário</h2>
+            <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem; font-family: 'Times New Roman', serif;">SUMÁRIO</h2>
             <div style="font-size: 12pt; line-height: 2;">
               ${sumarioList.map(item => `<div style="display: flex; justify-content: space-between;"><span>${item.label}</span><span>${item.page}</span></div>`).join('')}
             </div>
