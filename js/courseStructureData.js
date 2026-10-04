@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Catálogo Oficial de Estrutura de Cursos
- * Versão: v.3.3.5
+ * Versão: v.3.3.6
  */
 
 window.DEFAULT_COURSE_STRUCTURE = [

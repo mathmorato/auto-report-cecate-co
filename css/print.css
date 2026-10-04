@@ -209,7 +209,7 @@
   .report-contra-capa-page {
     height: 297mm !important;
     max-height: 297mm !important;
-    padding: 22mm 25mm 18mm 25mm !important;
+    padding: 16mm 25mm 5mm 25mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;

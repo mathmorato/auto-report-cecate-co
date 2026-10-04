@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.3.5
+ * Versão: v.3.3.6
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.3.5';
+    this.version = 'v.3.3.6';
   }
 
   /**
@@ -8127,7 +8127,7 @@ class AutoReportApp {
     const contraCapaMonthYear = this.formatContraCapaMonthYear(t);
     const contraCapaHtml = `
       <!-- PÁGINA 2: CONTRA-CAPA OFICIAL -->
-      <div class="report-doc-page report-contra-capa-page">
+      <div class="report-doc-page report-contra-capa-page" style="padding-bottom: 0.5rem !important;">
         <!-- TOPO: IDENTIFICAÇÃO DO PROJETO COM BORDA SUPERIOR -->
         <div style="border-top: 1.5px solid #595959; padding-top: 0.8rem; text-align: center;">
           <p style="font-family: 'Times New Roman', serif; font-size: 11pt; color: #000000; margin: 0; line-height: 1.4; text-transform: uppercase;">
@@ -8136,7 +8136,7 @@ class AutoReportApp {
         </div>
 
         <!-- CENTRO: IDENTIFICAÇÃO DO RELATÓRIO E TÍTULO -->
-        <div style="margin: auto 0; text-align: center; padding: 2rem 0;">
+        <div style="margin-top: 14rem; margin-bottom: auto; text-align: center; padding: 1rem 0;">
           <p style="font-family: 'Times New Roman', serif; font-size: 14pt; color: #000000; margin: 0 0 1rem 0;">
             Relatório de Atividades Nº ${coverInfo.numPadded}
           </p>
@@ -8149,14 +8149,14 @@ class AutoReportApp {
         </div>
 
         <!-- BASE: LOCALIZAÇÃO, DATA E LOGOMARCAS COM BORDA SUPERIOR -->
-        <div style="text-align: center; margin-top: auto;">
+        <div style="text-align: center; margin-top: auto; padding-bottom: 0;">
           <p style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; margin: 0 0 0.35rem 0;">
             Aparecida de Goiânia
           </p>
-          <p style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; margin: 0 0 1.75rem 0;">
+          <p style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; margin: 0 0 1.25rem 0;">
             ${contraCapaMonthYear}
           </p>
-          <div style="border-top: 1.5px solid #595959; padding-top: 1rem; display: flex; justify-content: space-around; align-items: center;">
+          <div style="border-top: 1.5px solid #595959; padding-top: 0.85rem; display: flex; justify-content: space-around; align-items: center;">
             <img src="visualrelatorio/capa/cecatefigura.svg" style="height: 38px; max-width: 140px; object-fit: contain;" alt="CECATE" class="cover-logo-cecate" onerror="if(window.coverAssets?.cecate) this.src=window.coverAssets.cecate">
             <img src="visualrelatorio/capa/ufgfigura.svg" style="height: 38px; max-width: 140px; object-fit: contain;" alt="UFG" class="cover-logo-ufg" onerror="if(window.coverAssets?.ufg) this.src=window.coverAssets.ufg">
             <img src="visualrelatorio/capa/fndefigura.svg" style="height: 38px; max-width: 140px; object-fit: contain;" alt="FNDE" class="cover-logo-fnde" onerror="if(window.coverAssets?.fnde) this.src=window.coverAssets.fnde">
@@ -9138,7 +9138,7 @@ class AutoReportApp {
     .report-contra-capa-page {
       height: 297mm !important;
       max-height: 297mm !important;
-      padding: 22mm 25mm 18mm 25mm !important;
+      padding: 16mm 25mm 5mm 25mm !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;

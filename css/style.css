@@ -2340,7 +2340,7 @@ body.light-theme .report-doc-preview-wrapper {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 2.5rem 3.5rem 2rem 3.5rem;
+  padding: 2.5rem 3.5rem 0.5rem 3.5rem;
 }
 
 .report-equipe-page {
@@ -3422,7 +3422,20 @@ body.light-theme .team-member-editor-card .team-preview-name {
     box-sizing: border-box !important;
   }
 
-  .report-contra-capa-page,
+  .report-contra-capa-page {
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    min-height: 297mm !important;
+    height: 297mm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 15mm 20mm 5mm 20mm !important;
+    box-sizing: border-box !important;
+  }
+
   .report-equipe-page,
   .report-indices-page,
   .report-sumario-page {

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.3.5
+ * Versão: v.3.3.6
  */
 
 class ReportDocxGenerator {
@@ -3240,7 +3240,7 @@ class ReportDocxGenerator {
 
       const contraCapaNumPara = new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 4600, after: 120, line: 276, lineRule: LineRuleType.AUTO },
+        spacing: { before: 8000, after: 120, line: 276, lineRule: LineRuleType.AUTO },
         children: [
           new TextRun({
             text: `Relatório de Atividades Nº ${training.number != null ? String(training.number).trim() : '16'}`,
@@ -3282,7 +3282,7 @@ class ReportDocxGenerator {
 
       const contraCapaCityPara = new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 6200, after: 60, line: 240, lineRule: LineRuleType.AUTO },
+        spacing: { before: 3100, after: 60, line: 240, lineRule: LineRuleType.AUTO },
         children: [
           new TextRun({
             text: 'Aparecida de Goiânia',
@@ -3296,7 +3296,7 @@ class ReportDocxGenerator {
 
       const contraCapaDatePara = new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 60, after: 450, line: 240, lineRule: LineRuleType.AUTO },
+        spacing: { before: 60, after: 850, line: 240, lineRule: LineRuleType.AUTO },
         children: [
           new TextRun({
             text: contraCapaMonthYear,
@@ -3329,7 +3329,7 @@ class ReportDocxGenerator {
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    spacing: { before: 140, after: 0, line: 240, lineRule: LineRuleType.AUTO },
+                    spacing: { before: 100, after: 0, line: 240, lineRule: LineRuleType.AUTO },
                     children: cecateBytes ? [
                       new ImageRun({
                         data: cecateBytes,
@@ -3346,7 +3346,7 @@ class ReportDocxGenerator {
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    spacing: { before: 140, after: 0, line: 240, lineRule: LineRuleType.AUTO },
+                    spacing: { before: 100, after: 0, line: 240, lineRule: LineRuleType.AUTO },
                     children: ufgBytes ? [
                       new ImageRun({
                         data: ufgBytes,
@@ -3363,7 +3363,7 @@ class ReportDocxGenerator {
                 children: [
                   new Paragraph({
                     alignment: AlignmentType.CENTER,
-                    spacing: { before: 140, after: 0, line: 240, lineRule: LineRuleType.AUTO },
+                    spacing: { before: 100, after: 0, line: 240, lineRule: LineRuleType.AUTO },
                     children: fndeBytes ? [
                       new ImageRun({
                         data: fndeBytes,
@@ -4212,7 +4212,7 @@ class ReportDocxGenerator {
             properties: {
               page: {
                 size: { width: PAGE_WIDTH_DXA, height: PAGE_HEIGHT_DXA },
-                margin: { top: 567, right: 1418, bottom: 400, left: 1418, header: 0, footer: 0 }
+                margin: { top: 567, right: 1418, bottom: 567, left: 1418, header: 0, footer: 0 }
               }
             },
             children: [
