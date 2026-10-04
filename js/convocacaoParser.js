@@ -1,6 +1,6 @@
 ﻿/**
  * AutoReport CECATE - Parser de Ofícios de Convocação
- * Versão: v.3.3.0
+ * Versão: v.3.3.1
  */
 
 class ConvocacaoParser {

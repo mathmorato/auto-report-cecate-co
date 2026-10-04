@@ -1,6 +1,6 @@
 ﻿/**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.3.0
+ * Versão: v.3.3.1
  */
 
 class ReportDocxGenerator {
@@ -429,8 +429,8 @@ class ReportDocxGenerator {
       return lines * 276 + before + after;
     }
 
-    const munCount = (training?.municipalities || []).length || 12;
-    const modCount = (training?.courseModules || []).length || 4;
+    const munCount = (training?.municipalities || training?.municipios || []).length || 12;
+    const modCount = (training?.courseModules || training?.modulos || []).length || 4;
     const photos = (training?.media || []).filter(m => m.type === 'photo' && m.blob);
     const fndeDocs = (training?.media || []).filter(m => m.type === 'doc_fnde');
     const cecateDocs = (training?.media || []).filter(m => m.type === 'doc_cecate');
@@ -470,17 +470,17 @@ class ReportDocxGenerator {
     // Tecnologias Educacionais
     const eduTechData = training.educationalTech || {};
     const eduFiguresData = eduTechData.figures || [];
-    const f1Data = eduFiguresData.find(f => f.id === 'fig_1') || { caption: 'Figura 1: Avaliação via ferramenta kahoot.', image: window.educationalTechAssets?.kahoot };
-    const f2Data = eduFiguresData.find(f => f.id === 'fig_2') || { caption: 'Figura 2: Avaliação via ferramenta Plickers.', image: window.educationalTechAssets?.plickers };
+    const f1Data = eduFiguresData.find(f => f.id === 'fig_1') || { caption: 'Figura 1: Avaliação via ferramenta kahoot.', image: window.educationalTechAssets?.kahoot || true };
+    const f2Data = eduFiguresData.find(f => f.id === 'fig_2') || { caption: 'Figura 2: Avaliação via ferramenta Plickers.', image: window.educationalTechAssets?.plickers || true };
 
     addElement(textBlockHeight(550), true);
 
     let pFig1 = null;
-    if (f1Data && (f1Data.image || window.educationalTechAssets?.kahoot)) {
+    if (f1Data && (f1Data.image || window.educationalTechAssets?.kahoot || true)) {
       pFig1 = addElement(6600, false, true);
     }
     let pFig2 = null;
-    if (f2Data && (f2Data.image || window.educationalTechAssets?.plickers)) {
+    if (f2Data && (f2Data.image || window.educationalTechAssets?.plickers || true)) {
       pFig2 = addElement(6600, false, true);
     }
     (eduTechData.extraFigures || []).forEach(ef => {
@@ -533,21 +533,26 @@ class ReportDocxGenerator {
     addElement(textBlockHeight(1000), true);
 
     // APÊNDICES
-    let pApendice1 = null;
+    const pApendice1 = addElement(880, false);
     if (fndeDocs.length > 0) {
-      pApendice1 = addElement(880, false);
       fndeDocs.forEach(() => addElement(7500, false));
+    } else {
+      addElement(350, true);
     }
-    let pApendice2 = null;
+
+    const pApendice2 = addElement(880, false);
     if (cecateDocs.length > 0) {
-      pApendice2 = addElement(880, false);
       cecateDocs.forEach(() => addElement(7500, false));
+    } else {
+      addElement(350, true);
     }
-    let pApendice3 = null;
+
+    const pApendice3 = addElement(880, false);
     const evalList = (training?.evaluations || []).filter(e => (e.likedAspects && e.likedAspects.trim()) || (e.improveAspects && e.improveAspects.trim()));
     if (evalList.length > 0) {
-      pApendice3 = addElement(880, false);
       addElement(1000 + evalList.length * 600, true);
+    } else {
+      addElement(350, true);
     }
 
     const sumarioList = [
@@ -557,17 +562,11 @@ class ReportDocxGenerator {
       { label: '4. DESENVOLVIMENTO DO CURSO', page: String(pDesenv), bookmarkId: 'sec_desenv' },
       { label: '5. AVALIAÇÃO DA CAPACITAÇÃO', page: String(pAvaliacao), bookmarkId: 'sec_avaliacao' },
       { label: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', page: String(pFotos), bookmarkId: 'sec_fotos' },
-      { label: '7. CONSIDERAÇÕES FINAIS', page: String(pConsideracoes), bookmarkId: 'sec_consideracoes' }
+      { label: '7. CONSIDERAÇÕES FINAIS', page: String(pConsideracoes), bookmarkId: 'sec_consideracoes' },
+      { label: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', page: String(pApendice1), bookmarkId: 'sec_apendice_1' },
+      { label: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', page: String(pApendice2), bookmarkId: 'sec_apendice_2' },
+      { label: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', page: String(pApendice3), bookmarkId: 'sec_apendice_3' }
     ];
-    if (pApendice1 != null) {
-      sumarioList.push({ label: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', page: String(pApendice1), bookmarkId: 'sec_apendice_1' });
-    }
-    if (pApendice2 != null) {
-      sumarioList.push({ label: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', page: String(pApendice2), bookmarkId: 'sec_apendice_2' });
-    }
-    if (pApendice3 != null) {
-      sumarioList.push({ label: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', page: String(pApendice3), bookmarkId: 'sec_apendice_3' });
-    }
 
     const tablesList = [
       { label: 'Tabela 1. Municípios convocados.', page: String(pTab1), bookmarkId: 'tab_1' },
@@ -578,10 +577,22 @@ class ReportDocxGenerator {
 
     const figuresList = [];
     if (pFig1 != null) {
-      figuresList.push({ label: f1Data.caption || 'Figura 1: Avaliação via ferramenta kahoot.', page: String(pFig1), bookmarkId: 'fig_1' });
+      figuresList.push({
+        label: 'Figura 1: Avaliação via ferramenta ',
+        italicWord: 'kahoot',
+        afterWord: '.',
+        page: String(pFig1),
+        bookmarkId: 'fig_1'
+      });
     }
     if (pFig2 != null) {
-      figuresList.push({ label: f2Data.caption || 'Figura 2: Avaliação via ferramenta Plickers.', page: String(pFig2), bookmarkId: 'fig_2' });
+      figuresList.push({
+        label: 'Figura 2: Avaliação via ferramenta ',
+        italicWord: 'Plickers',
+        afterWord: '.',
+        page: String(pFig2),
+        bookmarkId: 'fig_2'
+      });
     }
     (eduTechData.extraFigures || []).forEach((ef, idx) => {
       if (ef.image) {
@@ -3607,6 +3618,64 @@ class ReportDocxGenerator {
           hyperlink: true,
           hideTabAndPageNumbersInWebView: true
         });
+
+        // Pré-popular entradas calculadas dentro do sdtContent para exibição imediata e precisa da paginação
+        const figParas = [];
+        figuresList.forEach(fig => {
+          const textRuns = [];
+          if (fig.italicWord) {
+            textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
+            textRuns.push(new TextRun({ text: fig.italicWord, font: 'Times New Roman', italics: true, size: 24, color: '000000' }));
+            if (fig.afterWord) {
+              textRuns.push(new TextRun({ text: fig.afterWord, font: 'Times New Roman', size: 24, color: '000000' }));
+            }
+          } else {
+            textRuns.push(new TextRun({ text: fig.label, font: 'Times New Roman', size: 24, color: '000000' }));
+          }
+
+          const figChildren = [];
+          if (fig.bookmarkId && InternalHyperlink) {
+            figChildren.push(
+              new InternalHyperlink({
+                anchor: fig.bookmarkId,
+                children: textRuns
+              })
+            );
+          } else {
+            figChildren.push(...textRuns);
+          }
+
+          figChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+          if (fig.bookmarkId && SimpleField) {
+            figChildren.push(
+              new SimpleField(`PAGEREF ${fig.bookmarkId} \\h`, String(fig.page))
+            );
+          } else {
+            figChildren.push(
+              new TextRun({ text: String(fig.page), font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          figParas.push(
+            new Paragraph({
+              style: 'TableofFigures',
+              spacing: { before: 20, after: 40, line: 276 },
+              tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
+              children: figChildren
+            })
+          );
+        });
+
+        if (tof.root && tof.root[1] && tof.root[1].root) {
+          const content = tof.root[1];
+          const endPara = content.root.pop();
+          for (const fp of figParas) {
+            content.root.push(fp);
+          }
+          content.root.push(endPara);
+        }
+
         indicesChildren.push(tof);
       } else {
         figuresList.forEach(fig => {
@@ -3679,6 +3748,57 @@ class ReportDocxGenerator {
           hyperlink: true,
           hideTabAndPageNumbersInWebView: true
         });
+
+        // Pré-popular entradas calculadas dentro do sdtContent para exibição imediata e precisa da paginação
+        const tabParas = [];
+        tablesList.forEach(tab => {
+          const tabChildren = [];
+          if (tab.bookmarkId && InternalHyperlink) {
+            tabChildren.push(
+              new InternalHyperlink({
+                anchor: tab.bookmarkId,
+                children: [
+                  new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' })
+                ]
+              })
+            );
+          } else {
+            tabChildren.push(
+              new TextRun({ text: tab.label, font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          tabChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+          if (tab.bookmarkId && SimpleField) {
+            tabChildren.push(
+              new SimpleField(`PAGEREF ${tab.bookmarkId} \\h`, String(tab.page))
+            );
+          } else {
+            tabChildren.push(
+              new TextRun({ text: String(tab.page), font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          tabParas.push(
+            new Paragraph({
+              style: 'TableofFigures',
+              spacing: { before: 20, after: 40, line: 276 },
+              tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
+              children: tabChildren
+            })
+          );
+        });
+
+        if (tot.root && tot.root[1] && tot.root[1].root) {
+          const content = tot.root[1];
+          const endPara = content.root.pop();
+          for (const tp of tabParas) {
+            content.root.push(tp);
+          }
+          content.root.push(endPara);
+        }
+
         indicesChildren.push(tot);
       } else {
         tablesList.forEach(tab => {
@@ -3760,9 +3880,57 @@ class ReportDocxGenerator {
           ]
         });
 
-        // Inserir o título como primeiro elemento de sdtContent (toc.root[1])
+        // 3. Pré-popular entradas calculadas dentro do sdtContent para exibição imediata e precisa da paginação
+        const sumParas = [];
+        sumarioList.forEach(item => {
+          const sumChildren = [];
+          const labelText = item.label ? item.label : (item.num ? `${item.num} ${item.title}` : item.title);
+          if (item.bookmarkId && InternalHyperlink) {
+            sumChildren.push(
+              new InternalHyperlink({
+                anchor: item.bookmarkId,
+                children: [
+                  new TextRun({ text: labelText, font: 'Times New Roman', size: 24, color: '000000' })
+                ]
+              })
+            );
+          } else {
+            sumChildren.push(
+              new TextRun({ text: labelText, font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          sumChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+          if (item.bookmarkId && SimpleField) {
+            sumChildren.push(
+              new SimpleField(`PAGEREF ${item.bookmarkId} \\h`, String(item.page))
+            );
+          } else {
+            sumChildren.push(
+              new TextRun({ text: String(item.page), font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          sumParas.push(
+            new Paragraph({
+              style: 'TOC1',
+              spacing: { before: 20, after: 80, line: 276 },
+              tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
+              children: sumChildren
+            })
+          );
+        });
+
+        // Inserir o título como primeiro elemento de sdtContent (toc.root[1]) e os itens pré-populados antes do endPara
         if (toc.root && toc.root[1] && toc.root[1].root) {
-          toc.root[1].root.unshift(tocHeadingPara);
+          const content = toc.root[1];
+          content.root.unshift(tocHeadingPara);
+          const endPara = content.root.pop();
+          for (const sp of sumParas) {
+            content.root.push(sp);
+          }
+          content.root.push(endPara);
         } else {
           sumarioChildren.push(tocHeadingPara);
         }
