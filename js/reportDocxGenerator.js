@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.2.5
+ * Versão: v.3.2.8
  */
 
 class ReportDocxGenerator {
@@ -587,8 +587,13 @@ class ReportDocxGenerator {
       HeightRule: DocxHeightRule,
       TableLayoutType: DocxTableLayoutType,
       LineRuleType: DocxLineRuleType,
-      VerticalAlign: DocxVerticalAlign
+      VerticalAlign: DocxVerticalAlign,
+      TabStopType: DocxTabStopType,
+      LeaderType: DocxLeaderType,
+      TableOfContents: DocxTableOfContents
     } = window.docx || {};
+
+    const TableOfContents = DocxTableOfContents || window.docx?.TableOfContents;
 
     const VerticalAlign = DocxVerticalAlign || window.docx?.VerticalAlign || {
       BOTTOM: 'bottom',
@@ -612,6 +617,19 @@ class ReportDocxGenerator {
       EXACTLY: 'exactly',
       EXACT: 'exact',
       AUTO: 'auto'
+    };
+
+    const TabStopType = DocxTabStopType || window.docx?.TabStopType || {
+      RIGHT: 'right',
+      LEFT: 'left',
+      CENTER: 'center'
+    };
+
+    const LeaderType = DocxLeaderType || window.docx?.LeaderType || {
+      DOT: 'dot',
+      HYPHEN: 'hyphen',
+      NONE: 'none',
+      UNDERSCORE: 'underscore'
     };
 
     if (!Document) {
@@ -954,6 +972,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -997,6 +1016,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -1489,6 +1509,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -1853,6 +1874,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -2409,6 +2431,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -2511,6 +2534,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -2554,6 +2578,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -2610,6 +2635,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -2665,6 +2691,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -2720,6 +2747,7 @@ class ReportDocxGenerator {
         new Paragraph({
           spacing: { before: 280, after: 180 },
           heading: HeadingLevel.HEADING_1,
+          outlineLevel: 0,
           keepNext: true,
           keepLines: true,
           children: [
@@ -3582,7 +3610,7 @@ class ReportDocxGenerator {
         indicesChildren.push(
           new Paragraph({
             spacing: { before: 0, after: 40 },
-            tabStops: [{ type: 'right', position: 9628 }],
+            tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
             children: tabChildren
           })
         );
@@ -3590,6 +3618,8 @@ class ReportDocxGenerator {
 
       // 1.4 MONTAGEM DA PÁGINA 5: SUMÁRIO
       const sumarioChildren = [];
+
+      // Título oficial do Sumário: idêntico ao padrão institucional tradicional (Times New Roman, 16pt, Negrito, Azul Institucional #1F4E79)
       sumarioChildren.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
@@ -3606,43 +3636,111 @@ class ReportDocxGenerator {
         })
       );
 
-      sumarioList.forEach(item => {
-        const itemChildren = [];
-        if (item.bookmarkId && InternalHyperlink) {
-          itemChildren.push(
-            new InternalHyperlink({
-              anchor: item.bookmarkId,
-              children: [
-                new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
-              ]
+      // Montagem do Sumário Automático nativo do Word
+      if (TableOfContents) {
+        const toc = new TableOfContents("Sumário", {
+          headingStyleRange: "1-3",
+          hyperlink: true,
+          hideTabAndPageNumbersInWebView: true,
+          useAppliedParagraphOutlineLevel: true
+        });
+
+        // Entradas pré-populadas do sumário com guias pontilhadas oficiais (leader: 'dot'), hyperlinks e paginação calculada
+        const entryParagraphs = [];
+        sumarioList.forEach(item => {
+          const itemChildren = [];
+          if (item.bookmarkId && InternalHyperlink) {
+            itemChildren.push(
+              new InternalHyperlink({
+                anchor: item.bookmarkId,
+                children: [
+                  new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
+                ]
+              })
+            );
+          } else {
+            itemChildren.push(
+              new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          itemChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+
+          if (item.bookmarkId && SimpleField) {
+            itemChildren.push(
+              new SimpleField(`PAGEREF ${item.bookmarkId} \\h`, String(item.page))
+            );
+          } else {
+            itemChildren.push(
+              new TextRun({ text: String(item.page), font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          entryParagraphs.push(
+            new Paragraph({
+              style: 'TOC1',
+              spacing: { before: 20, after: 80 },
+              tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
+              children: itemChildren
             })
           );
+        });
+
+        // Inserir as entradas pré-populadas no sdtContent entre o início (separate) e o término (end)
+        if (toc.root && toc.root[1] && toc.root[1].root && toc.root[1].root.length >= 2) {
+          const sdtContent = toc.root[1];
+          const endParagraph = sdtContent.root.pop();
+          for (const ep of entryParagraphs) {
+            sdtContent.root.push(ep);
+          }
+          sdtContent.root.push(endParagraph);
         } else {
-          itemChildren.push(
-            new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
-          );
+          for (const ep of entryParagraphs) {
+            sumarioChildren.push(ep);
+          }
         }
 
-        itemChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
+        sumarioChildren.push(toc);
+      } else {
+        // Fallback caso TableOfContents não esteja disponível
+        sumarioList.forEach(item => {
+          const itemChildren = [];
+          if (item.bookmarkId && InternalHyperlink) {
+            itemChildren.push(
+              new InternalHyperlink({
+                anchor: item.bookmarkId,
+                children: [
+                  new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
+                ]
+              })
+            );
+          } else {
+            itemChildren.push(
+              new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
 
-        if (item.bookmarkId && SimpleField) {
-          itemChildren.push(
-            new SimpleField(`PAGEREF ${item.bookmarkId} \\h`, String(item.page))
-          );
-        } else {
-          itemChildren.push(
-            new TextRun({ text: String(item.page), font: 'Times New Roman', size: 24, color: '000000' })
-          );
-        }
+          itemChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
 
-        sumarioChildren.push(
-          new Paragraph({
-            spacing: { before: 0, after: 100 },
-            tabStops: [{ type: 'right', position: 9628 }],
-            children: itemChildren
-          })
-        );
-      });
+          if (item.bookmarkId && SimpleField) {
+            itemChildren.push(
+              new SimpleField(`PAGEREF ${item.bookmarkId} \\h`, String(item.page))
+            );
+          } else {
+            itemChildren.push(
+              new TextRun({ text: String(item.page), font: 'Times New Roman', size: 24, color: '000000' })
+            );
+          }
+
+          sumarioChildren.push(
+            new Paragraph({
+              spacing: { before: 0, after: 100 },
+              tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
+              children: itemChildren
+            })
+          );
+        });
+      }
 
       // CRIAR DOCUMENTO DOCX COM CINCO SEÇÕES OFICIAIS:
       // SEÇÃO 1: CAPA OFICIAL (PÁG 1)
@@ -3675,10 +3773,67 @@ class ReportDocxGenerator {
                 color: '1F4E79'
               },
               paragraph: {
-                spacing: { before: 280, after: 180 }
+                spacing: { before: 280, after: 180 },
+                outlineLevel: 0
               }
             }
-          }
+          },
+          paragraphStyles: [
+            {
+              id: "TOC1",
+              name: "toc 1",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 24,
+                color: "000000"
+              },
+              paragraph: {
+                spacing: { before: 20, after: 80, line: 276 },
+                tabStops: [
+                  { type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }
+                ]
+              }
+            },
+            {
+              id: "TOC2",
+              name: "toc 2",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 24,
+                color: "000000"
+              },
+              paragraph: {
+                spacing: { before: 20, after: 80, line: 276 },
+                tabStops: [
+                  { type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }
+                ]
+              }
+            },
+            {
+              id: "TOC3",
+              name: "toc 3",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 24,
+                color: "000000"
+              },
+              paragraph: {
+                spacing: { before: 20, after: 80, line: 276 },
+                tabStops: [
+                  { type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }
+                ]
+              }
+            }
+          ]
         },
         sections: [
           // SEÇÃO 1: CAPA OFICIAL INTEGRAL

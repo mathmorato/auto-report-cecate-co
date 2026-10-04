@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Geração de Gráficos (Chart.js)
- * Versão: v.3.2.5
+ * Versão: v.3.2.8
  */
 
 class ChartEngine {

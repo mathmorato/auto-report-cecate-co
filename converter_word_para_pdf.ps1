@@ -59,6 +59,17 @@ try {
         Write-Host "  -> Convertendo $($file.Name) para PDF oficial..." -NoNewline
         
         $doc = $word.Documents.Open($file.FullName, $false, $true)
+        # Atualizar automaticamente todos os sumários e campos com base nos títulos
+        try {
+            if ($doc.TablesOfContents.Count -gt 0) {
+                for ($i = 1; $i -le $doc.TablesOfContents.Count; $i++) {
+                    $doc.TablesOfContents.Item($i).Update()
+                }
+            }
+            $doc.Fields.Update()
+        } catch {
+            # Se algum campo protegido falhar, prossegue com a exportação
+        }
         # 17 = wdFormatPDF (Salvar nativamente em PDF no Word)
         $doc.SaveAs([ref]$pdfPath, [ref]17)
         $doc.Close([ref]0) # wdDoNotSaveChanges

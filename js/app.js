@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.2.5
+ * Versão: v.3.2.8
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.2.5';
+    this.version = 'v.3.2.8';
   }
 
   /**
@@ -8119,6 +8119,7 @@ class AutoReportApp {
             <img src="visualrelatorio/capa/fndefigura.svg" alt="Fundo Nacional de Desenvolvimento da Educação - FNDE" class="cover-logo-fnde" onerror="if(window.coverAssets?.fnde) this.src=window.coverAssets.fnde">
           </div>
         </div>
+        <div style="height:12px; background-color:#4D4D4D; width:100%;"></div>
       </div>
     `;
 
@@ -8564,17 +8565,38 @@ class AutoReportApp {
     // 7. CORPO TÉCNICO OFICIAL DO RELATÓRIO (PÁGINA 6 EM DIANTE)
     const conteudoHtml = `
       <div class="report-doc-page report-content-page">
-        <!-- CABEÇALHO OFICIAL PADRONIZADO -->
-        <div class="report-standard-header">
-          <div class="report-header-left">
-            <img src="visualrelatorio/cabecalho/cecate_cabecalho.png" alt="CECATE Centro-Oeste" class="report-header-logo" onerror="if(window.coverAssets?.cecateCabecalho) this.src=window.coverAssets.cecateCabecalho">
-          </div>
-          <div class="report-header-right">
-            <span class="report-header-title">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</span>
-          </div>
-        </div>
-
-        <!-- 1. INTRODUÇÃO -->
+        <table class="report-paged-body-table" style="width:100%; border-collapse:collapse; border:none; margin:0; padding:0;">
+          <thead class="report-paged-thead" style="display:table-header-group;">
+            <tr>
+              <td style="border:none; padding:0;">
+                <!-- CABEÇALHO OFICIAL PADRONIZADO REPETIDO EM TODAS AS PÁGINAS -->
+                <div class="report-standard-header" style="margin-bottom:14px;">
+                  <div class="report-header-left">
+                    <img src="visualrelatorio/cabecalho/cecate_cabecalho.png" alt="CECATE Centro-Oeste" class="report-header-logo" onerror="if(window.coverAssets?.cecateCabecalho) this.src=window.coverAssets.cecateCabecalho">
+                  </div>
+                  <div class="report-header-right">
+                    <span class="report-header-title">RELATÓRIO DE ATIVIDADES Nº ${coverInfo.numPadded}</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </thead>
+          <tfoot class="report-paged-tfoot" style="display:table-footer-group;">
+            <tr>
+              <td style="border:none; padding:0;">
+                <!-- RODAPÉ INSTITUCIONAL PADRONIZADO REPETIDO EM TODAS AS PÁGINAS -->
+                <div class="report-standard-footer" style="display:flex; align-items:center; justify-content:center; border-top:1px solid #4D4D4D; padding-top:6px; margin-top:1.25rem;">
+                  <div style="flex:1; text-align:center;">
+                    <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tfoot>
+          <tbody>
+            <tr>
+              <td style="border:none; padding:0;">
+                <!-- 1. INTRODUÇÃO -->
         <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:1.5rem;">1. INTRODUÇÃO</h3>
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem; font-size:11pt; font-family:'Times New Roman', serif;">Este relatório é referente às atividades desenvolvidas no âmbito do projeto intitulado <em>"${(t.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL').toUpperCase()}",</em> processo administrativo número 23070.068031/2023-34, desenvolvido pela Universidade Federal de Goiás (UFG), por meio do Centro Colaborador de Apoio ao Transporte Escolar do Centro-Oeste (CECATE Centro-Oeste), em parceria e com financiamento do Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
         <p style="text-align:justify; line-height:1.6; font-size:11pt; font-family:'Times New Roman', serif;">O presente relatório apresenta a descrição pormenorizada e a análise avaliativa do processo do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado para gestores municipais e conselheiros do CACS/FUNDEB de ${munCount} municípios do Estado de ${t.uf || 'GO'}, sediado no município polo de ${t.polo || 'Município Polo'}, nas datas de ${t.datesFormatted || 'datas do curso'}.</p>
@@ -8715,15 +8737,10 @@ class AutoReportApp {
         <p style="text-align:justify; line-height:1.6;">Relação completa das respostas dissertativas registradas pelos participantes no formulário de avaliação da formação, detalhando aspectos positivos e sugestões de aperfeiçoamento por município e representação institucional:</p>
         ${evalsHtml}
 
-        <!-- RODAPÉ OFICIAL PADRONIZADO -->
-        <div class="report-standard-footer" style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #4D4D4D; padding-top: 6px; margin-top: 3rem;">
-          <div style="flex: 1; text-align: center; border-right: 1px solid #4D4D4D; padding-right: 12px;">
-            <img src="visualrelatorio/rodape/rodape_5logos.png" alt="Logomarcas Institucionais" class="report-footer-banner" onerror="if(window.coverAssets?.rodape5Logos) this.src=window.coverAssets.rodape5Logos">
-          </div>
-          <div style="width: 36px; text-align: center; font-family: 'Times New Roman', serif; font-size: 10pt; color: #000; padding-left: 8px;">
-            4
-          </div>
-        </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     `;
 
@@ -8868,16 +8885,8 @@ class AutoReportApp {
 
     const t = this.currentTraining;
 
-    // Etapa 1: Gerar e baixar o documento Word (.docx) primeiro
-    this.showToast('Etapa 1/2: Gerando documento Word (.docx) oficial...', 'info', 4000);
-    try {
-      await this.downloadDocxReport();
-    } catch (e) {
-      console.warn('Aviso na geração prévia do Word:', e);
-    }
-
-    // Etapa 2: Notificar e preparar a visualização em PDF
-    this.showToast('Etapa 2/2: Documento Word gerado! Abrindo janela para Salvar em PDF (você também pode utilizar o arquivo "converter_word_para_pdf.bat" na pasta do sistema para conversão nativa do Word).', 'success', 8000);
+    // Notificar e preparar a visualização em PDF oficial idêntica ao Word
+    this.showToast('Preparando PDF oficial de alta fidelidade idêntico ao modelo Word... Na janela de impressão, selecione "Salvar como PDF".', 'info', 5000);
 
     // Garantir renderização dos gráficos e nuvens de palavras
     this.renderReportPreviewCharts();
@@ -9229,14 +9238,33 @@ class AutoReportApp {
       color: #000000 !important;
     }
 
+    /* CABEÇALHO E RODAPÉ REPETIDOS EM TODAS AS PÁGINAS DO CORPO */
+    table.report-paged-body-table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+      border: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    thead.report-paged-thead {
+      display: table-header-group !important;
+    }
+    tfoot.report-paged-tfoot {
+      display: table-footer-group !important;
+    }
+    .report-paged-body-table td {
+      border: none !important;
+      padding: 0 !important;
+    }
+
     /* RODAPÉ OFICIAL PADRONIZADO */
     .report-standard-footer {
       display: flex !important;
       align-items: center !important;
-      justify-content: space-between !important;
+      justify-content: center !important;
       border-top: 1px solid #4D4D4D !important;
       padding-top: 6px !important;
-      margin-top: 2rem !important;
+      margin-top: 1.5rem !important;
     }
     .report-footer-banner {
       height: 24px !important;
@@ -9257,12 +9285,32 @@ class AutoReportApp {
       color: #1f4e79 !important;
     }
     p {
-      margin: 0.75rem 0;
+      margin: 0.65rem 0;
       text-align: justify;
-      line-height: 1.6;
+      line-height: 1.5;
       font-size: 11pt;
       font-family: 'Times New Roman', serif;
       color: #000000;
+    }
+    .report-content-page p {
+      text-indent: 1.25cm;
+    }
+    .report-content-page p[style*="font-weight:700"],
+    .report-content-page p[style*="font-weight: 700"],
+    .report-content-page p[style*="font-style:italic"],
+    .report-content-page p[style*="font-style: italic"],
+    .report-content-page p[style*="text-align:center"],
+    .report-content-page p[style*="text-align: center"],
+    .report-content-page .no-indent,
+    .cover-top-section p,
+    .cover-central-stripe p,
+    .cover-project-section p,
+    .cover-logos-banner p,
+    .report-contra-capa-page p,
+    .report-equipe-page p,
+    .report-indices-page p,
+    .report-sumario-page p {
+      text-indent: 0 !important;
     }
     table {
       width: 100%;
