@@ -1,6 +1,6 @@
-﻿/**
+/**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.3.2
+ * Versão: v.3.3.3
  */
 
 class ReportDocxGenerator {
@@ -424,9 +424,9 @@ class ReportDocxGenerator {
       }
     }
 
-    function textBlockHeight(charCount, before = 0, after = 150) {
+    function textBlockHeight(charCount, before = 120, after = 0) {
       const lines = Math.max(1, Math.ceil(charCount / 90));
-      return lines * 276 + before + after;
+      return lines * 360 + before + after;
     }
 
     const munCount = (training?.municipalities || training?.municipios || []).length || 12;
@@ -1043,7 +1043,7 @@ class ReportDocxGenerator {
 
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -1059,7 +1059,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 180, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Este relatório é referente às atividades desenvolvidas no âmbito do projeto intitulado '
@@ -1075,7 +1075,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 200, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: `O presente relatório apresenta a descrição pormenorizada e a análise avaliativa do processo do ${ordinalNum ? `${ordinalNum} ` : ''}curso de Capacitação em Transporte Escolar (Capacitação nº ${rawNum || '16'}), realizado para gestores municipais e conselheiros do CACS/FUNDEB de ${munCountVal} municípios do Estado de ${ufName}, sediado no município polo de ${training.polo || 'Município Polo'}, nas datas de ${training.datesFormatted || 'datas do curso'}.`
@@ -1087,7 +1087,7 @@ class ReportDocxGenerator {
       // 4. SEÇÃO 2: DADOS BÁSICOS DO CURSO & TABELAS 1, 2, 3
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -1103,7 +1103,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'O curso de Capacitação em Transporte Escolar foi estruturado para alcançar o objetivo primordial de aprimorar os conhecimentos dos participantes sobre transporte escolar, apresentar os programas do governo federal, detalhar os principais aspectos de planejamento e regulação na área e capacitar tecnicamente para a utilização do Sistema Eletrônico de Gestão do Transporte Escolar (SETE).'
@@ -1112,7 +1112,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Após criteriosa avaliação pedagógica das edições anteriores, definiu-se que o curso seria realizado em formato presencial concentrado, integrando gestores e conselheiros CACS dos municípios, correspondendo a uma carga horária total de 08:00 horas. No período matutino, a capacitação foi conduzida em turma unificada, abordando fundamentos essenciais de planejamento, governança e regulação do transporte escolar. No período vespertino, a formação foi desdobrada em duas abordagens específicas conforme o público-alvo: a primeira voltada aos gestores municipais, focada no domínio prático e operacional do Sistema SETE para cadastro de rotas, alunos e escolas; e a segunda direcionada aos conselheiros do CACS/FUNDEB, orientada ao exercício das competências fiscalizatórias, controle social e emissão de relatórios de acompanhamento.'
@@ -1121,7 +1121,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: `Dada a meta de entes federados a serem atendidos durante o projeto, estabeleceu-se a oferta de duas (02) vagas para gestores municipais e duas (02) vagas para conselheiros do CACS/FUNDEB por município. No ofício de convocação foi explicitada a preferência por servidores efetivos e de carreira, com a finalidade de mitigar a perda de conhecimento técnico decorrente da rotatividade das gestões. Como critério de seleção territorial, adotou-se a menor distância rodoviária até o polo de capacitação de ${training.polo || 'Município Polo'}, priorizando os municípios mais próximos. Foram formalmente convocados ${metrics?.totalSummonedMunicipalities || munCountVal} municípios, cuja distância média percorrida foi estimada em ${metrics?.avgDistance || 0} km. A relação completa dos entes federativos convocados é apresentada na Tabela 1:`
@@ -1342,7 +1342,7 @@ class ReportDocxGenerator {
       docChildren.push(
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { before: 200, after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'A estrutura curricular do curso contempla quatro (04) módulos sequenciais, sendo os três primeiros voltados aos fundamentos gerais, programas governamentais e normativas do transporte escolar. O quarto módulo é personalizado ao perfil do participante: para os gestores, o foco é integralmente direcionado à prática intensiva no Sistema SETE ("mãos na massa"); para os conselheiros CACS, a abordagem enfatiza as atribuições legais do conselho e a consulta analítica dos dados no sistema. A distribuição temática e as cargas horárias são detalhadas na Tabela 2:'
@@ -1593,7 +1593,7 @@ class ReportDocxGenerator {
 
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -1609,7 +1609,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: `O contato com os municípios, previamente selecionados, se deu a partir de ${convocationStartDateFormatted}, mediante o encaminhamento de ofício por parte da Coordenação-Geral da Política do Transporte Escolar (CGPTE) do FNDE, tanto para os contatos das secretarias municipais de educação, como para os contatos dos CACS (Apêndice I). Neste e-mail, continha as informações essenciais para compreender o objetivo do curso, instruções necessárias para inscrições, e o formulário para a realizar as inscrições por meio de link ou QR Code correspondente.`
@@ -1618,7 +1618,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'A equipe do CECATE-CO realizou um novo encaminhamento (Apêndice II), usando informações das prefeituras e das secretarias de educação dos municípios, disponíveis nos sites oficiais das entidades. Com isso, foi realizado um novo contato, por e-mail e por telefone, sendo parcialmente exitoso (com alguns municípios não foi possível o contato).'
@@ -1627,7 +1627,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: `Ao final do processo, houve um total de ${metrics?.totalInscribed || 0} pessoas inscritas, ${metrics?.totalInscribedGestores || 0} gestores municipais e ${metrics?.totalInscribedCACS || 0} representantes dos CACS/FUNDEB. Cabe destacar que ${metrics?.totalInscribedMunicipalities || 0} municípios tiveram representantes inscritos, dos quais ${metrics?.bothCategoriesInscribedMunicipalities != null ? String(metrics.bothCategoriesInscribedMunicipalities).padStart(2, '0') : '05'} tiveram pelo menos um inscrito em cada uma das categorias (CACS e Gestores). Os detalhes por município podem ser analisados na Tabela 3.`
@@ -1961,7 +1961,7 @@ class ReportDocxGenerator {
       // 5. SEÇÃO 4: DESENVOLVIMENTO DO CURSO & TABELA 4 & FIGURA 3
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -1977,7 +1977,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Conforme estruturado na matriz formativa, o curso foi planejado e executado em quatro (04) módulos sequenciais, cumprindo rigorosamente os seguintes momentos pedagógicos:'
@@ -1986,7 +1986,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 120, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({ text: 'Primeiro momento: ', bold: true }),
             new TextRun({ text: 'acolhimento dos participantes com credenciamento e entrega de material didático (pastas com caderno de anotações e caneta institucional), seguido de momento de integração com coffee break.' })
@@ -1994,7 +1994,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 120, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({ text: 'Segundo momento: ', bold: true }),
             new TextRun({ text: 'abertura oficial com pronunciamento da coordenação do CECATE Centro-Oeste e dos representantes da Coordenação-Geral da Política do Transporte Escolar (CGPTE/FNDE), apresentando a contextualização do projeto e as metas de aprimoramento da gestão pública.' })
@@ -2002,7 +2002,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 120, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({ text: 'Terceiro momento: ', bold: true }),
             new TextRun({ text: 'espaço aberto para a apresentação individual de todos os presentes, promovendo a integração entre gestores municipais, conselheiros sociais do CACS-FUNDEB e as equipes executoras da UFG e do FNDE.' })
@@ -2010,7 +2010,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 120, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({ text: 'Quarto momento: ', bold: true }),
             new TextRun({ text: 'apresentação do Módulo 1, com o panorama histórico e situacional do Transporte Escolar no Brasil, os estudos desenvolvidos em parceria entre FNDE e instituições de ensino superior e a missão do CECATE-CO, sensibilizando para os desafios locais e trocas de experiências.' })
@@ -2018,7 +2018,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 120, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({ text: 'Quinto momento: ', bold: true }),
             new TextRun({ text: 'exposição detalhada do Módulo 2, abordando os programas federais estruturantes: o Programa Nacional de Apoio ao Transporte do Escolar (PNATE) e o Programa Caminho da Escola, explicitando normas operacionais, critérios de repasse financeiro e prestação de contas.' })
@@ -2026,7 +2026,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 120, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({ text: 'Sexto momento: ', bold: true }),
             new TextRun({ text: 'desenvolvimento do Módulo 3, com foco em aspectos de planejamento territorial, contratação de serviços, controle de custos, segurança viária e marcos regulatórios essenciais para assegurar a regularidade e eficiência do transporte escolar.' })
@@ -2034,7 +2034,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 120, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({ text: 'Sétimo momento: ', bold: true }),
             new TextRun({ text: 'execução do Módulo 4 de forma segmentada por público-alvo. Para os conselheiros do CACS/FUNDEB, detalharam-se os procedimentos fiscalizatórios, análise documental e utilização analítica do SETE para acompanhamento de rotas. Para os gestores municipais, realizou-se treinamento prático intensivo no Sistema SETE ("mãos na massa"), capacitando os servidores no cadastramento de alunos, escolas, veículos, motoristas e roteirização georreferenciada.' })
@@ -2042,7 +2042,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({ text: 'Oitavo momento: ', bold: true }),
             new TextRun({ text: 'aplicação do instrumento avaliativo da capacitação, coletando percepções técnicas e qualitativas dos participantes sobre metodologia, facilitadores, infraestrutura e conteúdos trabalhados.' })
@@ -2058,7 +2058,7 @@ class ReportDocxGenerator {
       docChildren.push(
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: eduText
@@ -2127,7 +2127,7 @@ class ReportDocxGenerator {
       docChildren.push(
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: `A participação dos municípios registrou ${metrics?.totalPresentMunicipalities || 0} municípios presentes dos ${metrics?.totalInscribedMunicipalities || metrics?.totalSummonedMunicipalities || 0} inscritos (${metrics?.participationRateMunicipalities || 0}%). Ressalta-se que ${metrics?.bothCategoriesPresentMunicipalities != null ? String(metrics.bothCategoriesPresentMunicipalities).padStart(2, '0') : '06'} municípios levaram representantes tanto do CACS-FUNDEB como da Gestão, enquanto, ${metrics?.onlyGestoresPresentMunicipalities != null ? String(metrics.onlyGestoresPresentMunicipalities).padStart(2, '0') : '03'} municípios levaram só gestores e ${metrics?.onlyCACSPresentMunicipalities === 1 ? 'um único município foi representado só pelo CACS-FUNDEB' : (metrics?.onlyCACSPresentMunicipalities > 0 ? `${metrics.onlyCACSPresentMunicipalities} municípios foram representados só pelo CACS-FUNDEB` : 'nenhum município foi representado exclusivamente por conselheiros CACS')}. Com relação ao número de pessoas que participaram, registraram-se ${metrics?.totalPresent || 0} participantes dentre os ${metrics?.totalInscribed || 0} inscritos (taxa de participação global de ${metrics?.participationRateGeneral || 0}%), sendo ${metrics?.presentCACS || 0} conselheiros do CACS-FUNDEB (${metrics?.participationRateCACS || 0}%) e ${metrics?.presentGestores || 0} gestores municipais (${metrics?.participationRateGestores || 0}%). Os detalhes dos resultados são apresentados na Tabela 4.`
@@ -2472,7 +2472,7 @@ class ReportDocxGenerator {
           docChildren.push(
             new Paragraph({
               alignment: AlignmentType.JUSTIFIED,
-              spacing: { before: 150, after: 150, line: 276 },
+              spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
               children: [new TextRun({ text: fig3Comment, font: 'Times New Roman', size: 22 })]
             })
           );
@@ -2485,7 +2485,7 @@ class ReportDocxGenerator {
       docChildren.push(
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { before: 150, after: 200, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Ao término das atividades formativas, todos os certificados oficiais de capacitação (carga horária de 08 horas) foram devidamente emitidos e remetidos para o e-mail cadastrado de cada participante por intermédio da plataforma PLATEIA da Universidade Federal de Goiás (UFG), contando com código de verificação digital e QR Code para autenticação de veracidade.'
@@ -2521,7 +2521,7 @@ class ReportDocxGenerator {
 
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -2537,7 +2537,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert com cinco níveis qualitativos de percepção (1 - Ruim, 2 - Regular, 3 - Neutro, 4 - Muito Bom e 5 - Excelente) para avaliar os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.'
@@ -2551,7 +2551,7 @@ class ReportDocxGenerator {
         docChildren.push(
           new Paragraph({
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 150, after: 150, line: 276 },
+            spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
             children: [new TextRun({ text: fig4Comment, font: 'Times New Roman', size: 22 })]
           })
         );
@@ -2566,7 +2566,7 @@ class ReportDocxGenerator {
         docChildren.push(
           new Paragraph({
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 150, after: 150, line: 276 },
+            spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
             children: [new TextRun({ text: fig5Comment, font: 'Times New Roman', size: 22 })]
           })
         );
@@ -2581,7 +2581,7 @@ class ReportDocxGenerator {
         docChildren.push(
           new Paragraph({
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 150, after: 150, line: 276 },
+            spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
             children: [new TextRun({ text: fig6Comment, font: 'Times New Roman', size: 22 })]
           })
         );
@@ -2596,7 +2596,7 @@ class ReportDocxGenerator {
         docChildren.push(
           new Paragraph({
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 150, after: 150, line: 276 },
+            spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
             children: [new TextRun({ text: fig7Comment, font: 'Times New Roman', size: 22 })]
           })
         );
@@ -2611,7 +2611,7 @@ class ReportDocxGenerator {
         docChildren.push(
           new Paragraph({
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 150, after: 150, line: 276 },
+            spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
             children: [new TextRun({ text: fig8Comment, font: 'Times New Roman', size: 22 })]
           })
         );
@@ -2624,7 +2624,7 @@ class ReportDocxGenerator {
       // 7. SEÇÃO 6: REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -2640,7 +2640,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Durante a realização da capacitação, foram registrados diversos momentos por meio de fotografias que ilustram a participação ativa dos representantes municipais e dos conselheiros do CACS-FUNDEB. As imagens capturam desde a ambientação do local, momentos de acolhimento e fala dos facilitadores, até as interações e práticas colaborativas durante as atividades formativas. Esses registros visuais não apenas documentam o evento, como também reforçam o compromisso institucional dos envolvidos com o contínuo aprimoramento da política de transporte escolar nos municípios. As fotografias servem como evidência do engajamento coletivo, memória institucional e prestação de contas das ações desenvolvidas perante o FNDE:'
@@ -2653,7 +2653,7 @@ class ReportDocxGenerator {
       if (photos.length === 0) {
         docChildren.push(
           new Paragraph({
-            spacing: { after: 150 },
+            spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
             children: [new TextRun({ text: 'Nenhum registro fotográfico anexado no momento.', italics: true, color: '64748B' })]
           })
         );
@@ -2668,7 +2668,7 @@ class ReportDocxGenerator {
       // 8. SEÇÃO 7: CONSIDERAÇÕES FINAIS
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -2684,7 +2684,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: `O presente relatório consubstanciou a execução técnica, operacional e pedagógica do ${ordinalNum ? `${ordinalNum} ` : ''}curso de Capacitação em Transporte Escolar (Capacitação nº ${rawNum || '16'}), realizado no polo regional de ${training.polo || 'Município Polo'}, Estado de ${ufName}, cumprindo integralmente as metas e diretrizes estabelecidas no âmbito do projeto `
@@ -2700,7 +2700,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Salienta-se que, de forma geral, o curso atendeu plenamente ao objetivo primordial de aprimorar os conhecimentos e habilidades técnicas de gestores municipais e conselheiros do CACS-FUNDEB, conforme atestado nos elevados índices de satisfação apurados na pesquisa avaliativa. Por outro lado, pôde-se comprovar que reforçar a convocação mediante a articulação multicanal do CECATE Centro-Oeste — combinando correspondências oficiais, contatos telefônicos diretos e mensagens em canais institucionais — revelou-se determinante para assegurar expressivo comparecimento dos entes federados convocados.'
@@ -2709,7 +2709,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 200, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Ficou igualmente evidente que a abordagem de diálogo permanente adotada consolida-se como canal imprescindível para atender às demandas de qualificação técnica continuada. Para finalizar, ressalta-se a suma importância de o processo formativo estar inserido em um ambiente que possibilite a livre e qualificada interação entre os cursistas e os formadores, proporcionando um rico espaço de compartilhamento de vivências territoriais, esclarecimento de dúvidas operacionais e retroalimentação contínua de todas as dimensões da política de transporte escolar no Brasil.'
@@ -2725,7 +2725,7 @@ class ReportDocxGenerator {
       // APÊNDICE I: CONVOCAÇÕES DO FNDE
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -2744,7 +2744,7 @@ class ReportDocxGenerator {
       if (fndeDocs.length === 0) {
         docChildren.push(
           new Paragraph({
-            spacing: { after: 200 },
+            spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
             children: [new TextRun({ text: 'Nenhum documento de convocação do FNDE anexado.', italics: true, color: '64748B' })]
           })
         );
@@ -2781,7 +2781,7 @@ class ReportDocxGenerator {
       // APÊNDICE II: CONVOCAÇÕES DO CECATE
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -2800,7 +2800,7 @@ class ReportDocxGenerator {
       if (cecateDocs.length === 0) {
         docChildren.push(
           new Paragraph({
-            spacing: { after: 200 },
+            spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
             children: [new TextRun({ text: 'Nenhuma convocação do CECATE anexada.', italics: true, color: '64748B' })]
           })
         );
@@ -2837,7 +2837,7 @@ class ReportDocxGenerator {
       // APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO
       docChildren.push(
         new Paragraph({
-          spacing: { before: 280, after: 180 },
+          spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
           keepNext: true,
@@ -2853,7 +2853,7 @@ class ReportDocxGenerator {
         }),
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
-          spacing: { after: 150, line: 276 },
+          spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
           children: [
             new TextRun({
               text: 'Apresenta-se a seguir a transcrição completa das respostas dissertativas registradas pelos participantes no formulário de avaliação da formação, detalhando os aspectos mais elogiados e as sugestões de aperfeiçoamento por município e categoria de representação institucional:'
@@ -4011,7 +4011,7 @@ class ReportDocxGenerator {
               },
               paragraph: {
                 alignment: AlignmentType.JUSTIFIED,
-                spacing: { line: 276, before: 0, after: 150 }
+                spacing: { line: 360, lineRule: LineRuleType.AUTO, before: 120, after: 0 }
               }
             },
             heading1: {
@@ -4022,7 +4022,7 @@ class ReportDocxGenerator {
                 color: '1F4E79'
               },
               paragraph: {
-                spacing: { before: 280, after: 180 },
+                spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
                 outlineLevel: 0
               }
             }
@@ -4382,7 +4382,7 @@ class ReportDocxGenerator {
           .content-page p {
             font-size: 11pt;
             text-align: justify;
-            line-height: 1.6;
+            line-height: 1.5;
             margin-bottom: 0.75rem;
           }
           table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 10pt; }
