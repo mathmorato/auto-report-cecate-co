@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.2.8
+ * Versão: v.3.2.9
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.2.8';
+    this.version = 'v.3.2.9';
   }
 
   /**
@@ -8344,11 +8344,11 @@ class AutoReportApp {
         </div>
 
         <div style="margin-bottom: auto; margin-top: 1rem;">
-          <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem; font-family: 'Times New Roman', serif;">SUMÁRIO</h2>
+          <h2 style="text-align: left; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem; font-family: 'Times New Roman', serif;">Sumário</h2>
           <div style="line-height: 1.8;">
             ${sumarioList.map(item => `
               <div class="report-index-row" style="margin: 0.45rem 0;">
-                <span class="report-index-label" style="${item.label.startsWith('Apêndice') ? 'font-weight: 500;' : 'font-weight: bold;'}">${item.label}</span>
+                <span class="report-index-label" style="${item.label.startsWith('Apêndice') || item.label.startsWith('APÊNDICE') ? 'font-weight: 500;' : 'font-weight: bold;'}">${item.label}</span>
                 <span class="report-index-dots"></span>
                 <span class="report-index-page">${item.page}</span>
               </div>

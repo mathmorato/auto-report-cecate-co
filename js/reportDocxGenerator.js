@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.2.8
+ * Versão: v.3.2.9
  */
 
 class ReportDocxGenerator {
@@ -489,22 +489,22 @@ class ReportDocxGenerator {
     }
 
     const sumarioList = [
-      { label: '1.   INTRODUÇÃO', page: String(pIntro), bookmarkId: 'sec_intro' },
-      { label: '2.   DADOS BÁSICOS DO CURSO', page: String(pDadosBasicos), bookmarkId: 'sec_dados_basicos' },
-      { label: '3.   CONTATO COM OS MUNICÍPIOS', page: String(pContato), bookmarkId: 'sec_contato' },
-      { label: '4.   DESENVOLVIMENTO DO CURSO', page: String(pDesenv), bookmarkId: 'sec_desenv' },
-      { label: '5.   AVALIAÇÃO DA CAPACITAÇÃO', page: String(pAvaliacao), bookmarkId: 'sec_avaliacao' },
-      { label: '6.   REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', page: String(pFotos), bookmarkId: 'sec_fotos' },
-      { label: '7.   CONSIDERAÇÕES FINAIS', page: String(pConsideracoes), bookmarkId: 'sec_consideracoes' }
+      { label: '1. INTRODUÇÃO', page: String(pIntro), bookmarkId: 'sec_intro' },
+      { label: '2. DADOS BÁSICOS DO CURSO', page: String(pDadosBasicos), bookmarkId: 'sec_dados_basicos' },
+      { label: '3. CONTATO COM OS MUNICÍPIOS', page: String(pContato), bookmarkId: 'sec_contato' },
+      { label: '4. DESENVOLVIMENTO DO CURSO', page: String(pDesenv), bookmarkId: 'sec_desenv' },
+      { label: '5. AVALIAÇÃO DA CAPACITAÇÃO', page: String(pAvaliacao), bookmarkId: 'sec_avaliacao' },
+      { label: '6. REGISTROS FOTOGRÁFICOS DA CAPACITAÇÃO', page: String(pFotos), bookmarkId: 'sec_fotos' },
+      { label: '7. CONSIDERAÇÕES FINAIS', page: String(pConsideracoes), bookmarkId: 'sec_consideracoes' }
     ];
     if (pApendice1 != null) {
-      sumarioList.push({ label: 'Apêndice I – Convocações do FNDE', page: String(pApendice1), bookmarkId: 'sec_apendice_1' });
+      sumarioList.push({ label: 'APÊNDICE I – CONVOCAÇÕES DO FNDE', page: String(pApendice1), bookmarkId: 'sec_apendice_1' });
     }
     if (pApendice2 != null) {
-      sumarioList.push({ label: 'Apêndice II – Convocações do CECATE', page: String(pApendice2), bookmarkId: 'sec_apendice_2' });
+      sumarioList.push({ label: 'APÊNDICE II – CONVOCAÇÕES DO CECATE', page: String(pApendice2), bookmarkId: 'sec_apendice_2' });
     }
     if (pApendice3 != null) {
-      sumarioList.push({ label: 'Apêndice III – Respostas Dissertativas da Avaliação', page: String(pApendice3), bookmarkId: 'sec_apendice_3' });
+      sumarioList.push({ label: 'APÊNDICE III – RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO', page: String(pApendice3), bookmarkId: 'sec_apendice_3' });
     }
 
     const tablesList = [
@@ -3616,27 +3616,10 @@ class ReportDocxGenerator {
         );
       });
 
-      // 1.4 MONTAGEM DA PÁGINA 5: SUMÁRIO
+      // 1.4 MONTAGEM DA PÁGINA 5: SUMÁRIO (SUMÁRIO AUTOMÁTICO 2 NATIVO DO WORD)
       const sumarioChildren = [];
 
-      // Título oficial do Sumário: idêntico ao padrão institucional tradicional (Times New Roman, 16pt, Negrito, Azul Institucional #1F4E79)
-      sumarioChildren.push(
-        new Paragraph({
-          alignment: AlignmentType.CENTER,
-          spacing: { before: 0, after: 240 },
-          children: [
-            new TextRun({
-              text: 'SUMÁRIO',
-              font: 'Times New Roman',
-              bold: true,
-              size: 32, // 16pt
-              color: '1F4E79'
-            })
-          ]
-        })
-      );
-
-      // Montagem do Sumário Automático nativo do Word
+      // Montagem do Sumário Automático 2 nativo do Word
       if (TableOfContents) {
         const toc = new TableOfContents("Sumário", {
           headingStyleRange: "1-3",
@@ -3645,64 +3628,59 @@ class ReportDocxGenerator {
           useAppliedParagraphOutlineLevel: true
         });
 
-        // Entradas pré-populadas do sumário com guias pontilhadas oficiais (leader: 'dot'), hyperlinks e paginação calculada
-        const entryParagraphs = [];
-        sumarioList.forEach(item => {
-          const itemChildren = [];
-          if (item.bookmarkId && InternalHyperlink) {
-            itemChildren.push(
-              new InternalHyperlink({
-                anchor: item.bookmarkId,
-                children: [
-                  new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
-                ]
-              })
-            );
-          } else {
-            itemChildren.push(
-              new TextRun({ text: item.label, font: 'Times New Roman', size: 24, color: '000000' })
-            );
-          }
+        // 1. Vincular à galeria oficial de Sumários do Word (Sumário Automático 2)
+        if (toc.root && toc.root[0] && toc.root[0].root) {
+          toc.root[0].root.push({
+            "w:docPartObj": [
+              { "w:docPartGallery": { _attr: { "w:val": "Table of Contents" } } },
+              { "w:docPartUnique": {} }
+            ]
+          });
+        }
 
-          itemChildren.push(new TextRun({ text: '\t', font: 'Times New Roman', size: 24, color: '000000' }));
-
-          if (item.bookmarkId && SimpleField) {
-            itemChildren.push(
-              new SimpleField(`PAGEREF ${item.bookmarkId} \\h`, String(item.page))
-            );
-          } else {
-            itemChildren.push(
-              new TextRun({ text: String(item.page), font: 'Times New Roman', size: 24, color: '000000' })
-            );
-          }
-
-          entryParagraphs.push(
-            new Paragraph({
-              style: 'TOC1',
-              spacing: { before: 20, after: 80 },
-              tabStops: [{ type: TabStopType.RIGHT || 'right', position: 9628, leader: LeaderType.DOT || 'dot' }],
-              children: itemChildren
+        // 2. Título oficial "Sumário" do Sumário Automático 2:
+        // No Sumário Automático 2 do Word, o título fica dentro do sdtContent antes do campo dinâmico,
+        // alinhado à esquerda, azul institucional (#1F4E79), tamanho 16pt (32 dxa), negrito, estilo TOCHeading / CabealhodoSumrio
+        const tocHeadingPara = new Paragraph({
+          style: 'TOCHeading',
+          alignment: AlignmentType.LEFT,
+          spacing: { before: 240, after: 140 },
+          children: [
+            new TextRun({
+              text: 'Sumário',
+              font: 'Times New Roman',
+              bold: true,
+              size: 32, // 16pt
+              color: '1F4E79'
             })
-          );
+          ]
         });
 
-        // Inserir as entradas pré-populadas no sdtContent entre o início (separate) e o término (end)
-        if (toc.root && toc.root[1] && toc.root[1].root && toc.root[1].root.length >= 2) {
-          const sdtContent = toc.root[1];
-          const endParagraph = sdtContent.root.pop();
-          for (const ep of entryParagraphs) {
-            sdtContent.root.push(ep);
-          }
-          sdtContent.root.push(endParagraph);
+        // Inserir o título como primeiro elemento de sdtContent (toc.root[1])
+        if (toc.root && toc.root[1] && toc.root[1].root) {
+          toc.root[1].root.unshift(tocHeadingPara);
         } else {
-          for (const ep of entryParagraphs) {
-            sumarioChildren.push(ep);
-          }
+          sumarioChildren.push(tocHeadingPara);
         }
 
         sumarioChildren.push(toc);
       } else {
         // Fallback caso TableOfContents não esteja disponível
+        sumarioChildren.push(
+          new Paragraph({
+            alignment: AlignmentType.LEFT,
+            spacing: { before: 240, after: 140 },
+            children: [
+              new TextRun({
+                text: 'Sumário',
+                font: 'Times New Roman',
+                bold: true,
+                size: 32,
+                color: '1F4E79'
+              })
+            ]
+          })
+        );
         sumarioList.forEach(item => {
           const itemChildren = [];
           if (item.bookmarkId && InternalHyperlink) {
@@ -3779,6 +3757,40 @@ class ReportDocxGenerator {
             }
           },
           paragraphStyles: [
+            {
+              id: "TOCHeading",
+              name: "TOC Heading",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 32,
+                bold: true,
+                color: "1F4E79"
+              },
+              paragraph: {
+                spacing: { before: 240, after: 140 },
+                outlineLevel: 9
+              }
+            },
+            {
+              id: "CabealhodoSumrio",
+              name: "TOC Heading",
+              basedOn: "Normal",
+              next: "Normal",
+              quickFormat: true,
+              run: {
+                font: "Times New Roman",
+                size: 32,
+                bold: true,
+                color: "1F4E79"
+              },
+              paragraph: {
+                spacing: { before: 240, after: 140 },
+                outlineLevel: 9
+              }
+            },
             {
               id: "TOC1",
               name: "toc 1",
@@ -4139,7 +4151,7 @@ class ReportDocxGenerator {
         <!-- PÁGINA 5: SUMÁRIO -->
         <div class="sumario-page" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; padding: 2.5cm; box-sizing: border-box;">
           <div>
-            <h2 style="text-align: center; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem;">SUMÁRIO</h2>
+            <h2 style="text-align: left; color: #1F4E79; font-size: 16pt; font-weight: bold; margin-bottom: 1.5rem; font-family: 'Times New Roman', serif;">Sumário</h2>
             <div style="font-size: 12pt; line-height: 2;">
               ${sumarioList.map(item => `<div style="display: flex; justify-content: space-between;"><span>${item.label}</span><span>${item.page}</span></div>`).join('')}
             </div>
