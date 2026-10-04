@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.3.4
+ * Versão: v.3.3.5
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.3.4';
+    this.version = 'v.3.3.5';
   }
 
   /**
@@ -8149,7 +8149,7 @@ class AutoReportApp {
         </div>
 
         <!-- BASE: LOCALIZAÇÃO, DATA E LOGOMARCAS COM BORDA SUPERIOR -->
-        <div style="text-align: center;">
+        <div style="text-align: center; margin-top: auto;">
           <p style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; margin: 0 0 0.35rem 0;">
             Aparecida de Goiânia
           </p>
