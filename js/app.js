@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.3.9
+ * Versão: v.3.4.0
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.3.9';
+    this.version = 'v.3.4.0';
   }
 
   /**
@@ -8386,9 +8386,14 @@ class AutoReportApp {
       if (p && p.blob) {
         photosHtml += `
           <div style="margin: 2rem 0; text-align: center; page-break-inside: avoid;">
-            <img src="${p.blob}" alt="${p.caption || slot.defaultCaption}" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-top: 0.6rem; text-align: center;">
-              <em>${p.caption || slot.defaultCaption}</em>
+            <p style="font-family: 'Times New Roman', serif; font-size: 11pt; color: var(--text-primary); margin-bottom: 0.5rem; text-align: center;">
+              ${p.caption || slot.defaultCaption}
+            </p>
+            <div style="text-align: center;">
+              <img src="${p.blob}" alt="${p.caption || slot.defaultCaption}" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            </div>
+            <p style="font-size: 0.82rem; font-style: italic; color: var(--text-muted); margin-top: 0.4rem; text-align: center;">
+              Fonte: Elaborada pelos autores.
             </p>
           </div>
         `;
@@ -8400,9 +8405,14 @@ class AutoReportApp {
       if (ph.blob) {
         photosHtml += `
           <div style="margin: 2rem 0; text-align: center; page-break-inside: avoid;">
-            <img src="${ph.blob}" alt="${ph.caption || 'Foto Extra'}" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary); margin-top: 0.6rem; text-align: center;">
-              <em>${ph.caption || `Figura Extra ${idx + 1}. Registro fotográfico complementar.`}</em>
+            <p style="font-family: 'Times New Roman', serif; font-size: 11pt; color: var(--text-primary); margin-bottom: 0.5rem; text-align: center;">
+              ${ph.caption || `Figura Extra ${idx + 1}. Registro fotográfico complementar.`}
+            </p>
+            <div style="text-align: center;">
+              <img src="${ph.blob}" alt="${ph.caption || 'Foto Extra'}" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); object-fit: contain; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            </div>
+            <p style="font-size: 0.82rem; font-style: italic; color: var(--text-muted); margin-top: 0.4rem; text-align: center;">
+              Fonte: Elaborada pelos autores.
             </p>
           </div>
         `;

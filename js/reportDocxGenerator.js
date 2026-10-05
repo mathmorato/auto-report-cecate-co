@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.3.9
+ * Versão: v.3.4.0
  */
 
 class ReportDocxGenerator {
@@ -159,103 +159,11 @@ class ReportDocxGenerator {
   }
 
   /**
-   * Cria parágrafo de imagem no Word garantindo proporção e evitando deformações
+   * Constrói os nós de parágrafo de uma figura conforme o padrão oficial ABNT de referência:
+   * Legenda/Título centralizado ACIMA da imagem, imagem centralizada, e Fonte centralizada ABAIXO.
    */
-  createImageParagraph(dataUrl, maxTargetWidth, maxTargetHeight, captionText, docxDeps, bookmarkId = null) {
-    const bytes = this.base64ToUint8Array(dataUrl);
-    if (!bytes) return null;
-
-    let width = maxTargetWidth || 500;
-    let height = maxTargetHeight || 300;
-
-    // Preservar aspect ratio proporcional natural da imagem
-    const dims = this.getImageDimensionsFromBytes(bytes);
-    if (dims && dims.width > 0 && dims.height > 0) {
-      const scale = Math.min(width / dims.width, height / dims.height, 1);
-      width = Math.round(dims.width * scale);
-      height = Math.round(dims.height * scale);
-    }
-
-    const { Paragraph, ImageRun, TextRun, AlignmentType, Bookmark, SimpleField } = docxDeps || window.docx || {};
-
-    const nodes = [
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 200, after: 80 },
-        keepNext: true,
-        keepLines: true,
-        children: [
-          new ImageRun({
-            data: bytes,
-            transformation: { width, height }
-          })
-        ]
-      })
-    ];
-
-    if (captionText) {
-      const figMatch = captionText.match(/^Figura\s*(\d+)[\.:]?(.*)$/i);
-      let captionRuns = [];
-      if (figMatch && SimpleField) {
-        const num = figMatch[1];
-        const sep = captionText.includes(':') ? ': ' : '. ';
-        const rest = figMatch[2] ? figMatch[2].replace(/^[\.:\s]+/, '') : '';
-        captionRuns = [
-          new TextRun({
-            text: 'Figura ',
-            font: 'Times New Roman',
-            size: 22,
-            color: '000000'
-          }),
-          new SimpleField('SEQ Figura \\* ARABIC', String(num)),
-          new TextRun({
-            text: sep + rest,
-            font: 'Times New Roman',
-            size: 22,
-            color: '000000'
-          })
-        ];
-      } else {
-        captionRuns = [
-          new TextRun({
-            text: captionText,
-            font: 'Times New Roman',
-            size: 22,
-            color: '000000'
-          })
-        ];
-      }
-
-      const captionChild = (bookmarkId && Bookmark)
-        ? [new Bookmark({ id: bookmarkId, children: captionRuns })]
-        : captionRuns;
-
-      nodes.push(
-        new Paragraph({
-          style: 'Caption',
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 40 },
-          keepNext: true,
-          keepLines: true,
-          children: captionChild
-        }),
-        new Paragraph({
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 180 },
-          keepLines: true,
-          children: [
-            new TextRun({
-              text: 'Fonte: Elaborada pelos autores.',
-              font: 'Times New Roman',
-              size: 20,
-              italics: true,
-              color: '000000'
-            })
-          ]
-        })
-      );
-    }
-    return nodes;
+  createImageParagraph(dataUrl, maxTargetWidth, maxTargetHeight, captionText, docxDeps, bookmarkId = null, sourceText = 'Fonte: Elaborada pelos autores.') {
+    return this.createFigureWithCaptionAbove(dataUrl, maxTargetWidth, maxTargetHeight, captionText, sourceText, docxDeps, bookmarkId);
   }
 
   /**
@@ -2755,7 +2663,7 @@ class ReportDocxGenerator {
           if (pages.length > 0) {
             pages.forEach((pgImg, pgIdx) => {
               const cap = pages.length > 1 ? `${d.fileName} - Página ${pgIdx + 1}` : d.fileName;
-              const imgNodes = this.createImageParagraph(pgImg, 500, 700, cap, docxDeps);
+              const imgNodes = this.createImageParagraph(pgImg, 500, 700, cap, docxDeps, null, 'Fonte: FNDE.');
               if (imgNodes) docChildren.push(...imgNodes);
             });
           } else {
@@ -2812,7 +2720,7 @@ class ReportDocxGenerator {
           if (pages.length > 0) {
             pages.forEach((pgImg, pgIdx) => {
               const cap = pages.length > 1 ? `${d.fileName} - Página ${pgIdx + 1}` : d.fileName;
-              const imgNodes = this.createImageParagraph(pgImg, 500, 700, cap, docxDeps);
+              const imgNodes = this.createImageParagraph(pgImg, 500, 700, cap, docxDeps, null, 'Fonte: CECATE-CO.');
               if (imgNodes) docChildren.push(...imgNodes);
             });
           } else {
