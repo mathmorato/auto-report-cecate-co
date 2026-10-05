@@ -2461,6 +2461,19 @@ body.light-theme .report-doc-preview-wrapper {
   background-color: #f8fafc !important;
 }
 
+/* Tabela 2 - Modelo Oficial de Referência (linhas verticais internas presentes e laterais externas abertas) */
+.report-doc-page .report-table-2 th,
+.report-doc-page .report-table-2 td {
+  border-top: 1px solid #000 !important;
+  border-bottom: 1px solid #000 !important;
+  border-right: 1px solid #000 !important;
+  border-left: none !important;
+}
+.report-doc-page .report-table-2 th:last-child,
+.report-doc-page .report-table-2 td:last-child {
+  border-right: none !important;
+}
+
 /* Tabelas de estrutura e dados comuns no relatório */
 .report-doc-page table {
   width: 100%;

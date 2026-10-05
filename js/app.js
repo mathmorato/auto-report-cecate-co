@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.3.8
+ * Versão: v.3.3.9
  */
 
 window.icons = {
@@ -19,7 +19,7 @@ window.icons = {
   stepForward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-left:5px;"><line x1="5" y1="12" x2="15" y2="12"></line><polyline points="10 7 15 12 10 17"></polyline><line x1="19" y1="5" x2="19" y2="19"></line></svg>`,
   stepBackward: `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-2px; margin-right:5px;"><line x1="5" y1="5" x2="5" y2="19"></line><line x1="19" y1="12" x2="9" y2="12"></line><polyline points="14 7 9 12 14 17"></polyline></svg>`,
   sede: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 10v2"></path><path d="M15 10v2"></path><path d="M9 14v2"></path><path d="M15 14v2"></path></svg>`,
-  rename: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></path><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg>`,
+  rename: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="2" y="5.5" width="16" height="12" rx="2.5"></rect><circle cx="6.5" cy="13" r="1.8"></circle><path d="M8.3 11.2v3.6"></path><path d="M10.3 9.2v5.6"></circle><circle cx="12.3" cy="13" r="1.8"></circle><line x1="18" y1="2.5" x2="18" y2="21.5"></line><path d="M16 2.5h4"></path><path d="M16 21.5h4"></path></svg>`,
   pin: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
   calendar: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`,
   clock: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px; margin-right:4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.3.8';
+    this.version = 'v.3.3.9';
   }
 
   /**
@@ -8528,7 +8528,7 @@ class AutoReportApp {
     if (fig1Img) {
       eduTechFiguresHtml += `
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-          <p style="font-weight:700; font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${fig1.caption || 'Figura 1: Avaliação via ferramenta kahoot.'}</p>
+          <p style="font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${fig1.caption || 'Figura 1: Avaliação via ferramenta kahoot.'}</p>
           <div style="text-align:center;">
             <img src="${fig1Img}" alt="${fig1.caption || 'Kahoot'}" style="max-width:100%; max-height:280px; border-radius:var(--radius-sm); border:1px solid var(--border-color); object-fit:contain; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
           </div>
@@ -8540,7 +8540,7 @@ class AutoReportApp {
     if (fig2Img) {
       eduTechFiguresHtml += `
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-          <p style="font-weight:700; font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${fig2.caption || 'Figura 2: Avaliação via ferramenta Plickers.'}</p>
+          <p style="font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${fig2.caption || 'Figura 2: Avaliação via ferramenta Plickers.'}</p>
           <div style="text-align:center;">
             <img src="${fig2Img}" alt="${fig2.caption || 'Plickers'}" style="max-width:100%; max-height:280px; border-radius:var(--radius-sm); border:1px solid var(--border-color); object-fit:contain; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
           </div>
@@ -8552,7 +8552,7 @@ class AutoReportApp {
       if (ef.image) {
         eduTechFiguresHtml += `
           <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-            <p style="font-weight:700; font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${ef.caption || `Figura ${3 + idx}: Avaliação via ${ef.title || 'ferramenta educacional'}.`}</p>
+            <p style="font-family:'Times New Roman', serif; font-size:11pt; margin-bottom:0.4rem; color:var(--text-primary); text-align:center;">${ef.caption || `Figura ${3 + idx}: Avaliação via ${ef.title || 'ferramenta educacional'}.`}</p>
             <div style="text-align:center;">
               <img src="${ef.image}" alt="${ef.title || 'Ferramenta'}" style="max-width:100%; max-height:280px; border-radius:var(--radius-sm); border:1px solid var(--border-color); object-fit:contain; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
             </div>
@@ -8607,12 +8607,12 @@ class AutoReportApp {
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem; font-size:11pt; font-family:'Times New Roman', serif;">Após criteriosa avaliação pedagógica das edições anteriores, definiu-se que o curso seria realizado em formato presencial concentrado, integrando gestores e conselheiros CACS dos municípios, correspondendo a uma carga horária total de 08:00 horas. No período matutino, a capacitação foi conduzida em turma unificada, abordando fundamentos essenciais de planejamento, governança e regulação do transporte escolar. No período vespertino, a formação foi desdobrada em duas abordagens específicas conforme o público-alvo: a primeira voltada aos gestores municipais, focada no domínio prático e operacional do Sistema SETE para cadastro de rotas, alunos e escolas; e a segunda direcionada aos conselheiros do CACS/FUNDEB, orientada ao exercício das competências fiscalizatórias, controle social e emissão de relatórios de acompanhamento.</p>
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem; font-size:11pt; font-family:'Times New Roman', serif;">Dada a meta de entes federados a serem atendidos durante o projeto, estabeleceu-se a oferta de duas (02) vagas para gestores municipais e duas (02) vagas para conselheiros do CACS/FUNDEB por município. No ofício de convocação foi explicitada a preferência por servidores efetivos e de carreira, com a finalidade de mitigar a perda de conhecimento técnico decorrente da rotatividade das gestões. Como critério de seleção territorial, adotou-se a menor distância rodoviária até o polo de capacitação de ${t.polo || 'Município Polo'}, priorizando os municípios mais próximos. Foram formalmente convocados ${metrics.totalSummonedMunicipalities} municípios, cuja distância média percorrida foi estimada em ${metrics.avgDistance} km. A relação completa dos entes federativos convocados é apresentada na Tabela 1:</p>
         
-        <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-top:1.25rem; margin-bottom:0.5rem;">Tabela 1. Municípios convocados.</p>
+        <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-top:1.25rem; margin-bottom:0.5rem;">Tabela 1. Municípios convocados.</p>
         ${window.statsEngine.generateTable1Html(t.municipalities || [])}
         <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
 
         <p style="text-align:justify; line-height:1.5; margin-top:1.5rem; margin-bottom:0.75rem; font-size:11pt; font-family:'Times New Roman', serif;">A estrutura curricular do curso contempla quatro (04) módulos sequenciais, sendo os três primeiros voltados aos fundamentos gerais, programas governamentais e normativas do transporte escolar. O quarto módulo é personalizado ao perfil do participante: para os gestores, o foco é integralmente direcionado à prática intensiva no Sistema SETE ("mãos na massa"); para os conselheiros CACS, a abordagem enfatiza as atribuições legais do conselho e a consulta analítica dos dados no sistema. A distribuição temática e as cargas horárias são detalhadas na Tabela 2:</p>
-        <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-top:1.25rem; margin-bottom:0.5rem;">Tabela 2. Estrutura do curso de capacitação em transporte escolar.</p>
+        <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-top:1.25rem; margin-bottom:0.5rem;">Tabela 2. Estrutura do curso de capacitação em transporte escolar.</p>
         ${window.statsEngine.generateTable2Html(t.courseModules || [])}
         <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
 
@@ -8622,7 +8622,7 @@ class AutoReportApp {
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem; font-size:11pt; font-family:'Times New Roman', serif;">De modo suplementar, a equipe técnica do CECATE Centro-Oeste realizou ampla mobilização institucional (Apêndice II), utilizando canais oficiais das administrações municipais. Foram estabelecidos contatos complementares via correio eletrônico, chamadas telefônicas e mensagens institucionais para certificar o recebimento das convocações, esclarecer dúvidas e incentivar a homologação das inscrições.</p>
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem; font-size:11pt; font-family:'Times New Roman', serif;">Ao todo, foram convocados ${metrics.totalSummonedMunicipalities} municípios com vistas a atingir a meta de ${metrics.targetParticipants || (metrics.totalSummonedMunicipalities * 4)} participantes, sendo ${metrics.targetGestores || (metrics.totalSummonedMunicipalities * 2)} gestores municipais e ${metrics.targetCACS || (metrics.totalSummonedMunicipalities * 2)} representantes do CACS. Destes, ${metrics.totalInscribedMunicipalities} municípios tiveram participantes inscritos no curso, dos quais ${metrics.bothCategoriesInscribedMunicipalities || 0} municípios inscreveram representantes de ambas as categorias, ${metrics.onlyCACSInscribedMunicipalities || 0} município(s) apenas CACS e ${metrics.onlyGestoresInscribedMunicipalities || 0} apenas gestores. No que se refere ao quantitativo de pessoas, foram inscritas ${metrics.totalInscribed} pessoas, sendo ${metrics.totalInscribedGestores} gestores e ${metrics.totalInscribedCACS} representantes do CACS. A relação dos municípios com o respectivo número de inscritos por categoria é apresentada na Tabela 3.</p>
 
-        <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-top:1.25rem; margin-bottom:0.5rem;">Tabela 3. Inscritos por município.</p>
+        <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-top:1.25rem; margin-bottom:0.5rem;">Tabela 3. Inscritos por município.</p>
         ${window.statsEngine.generateTable3Html(t.municipalities || [], metrics)}
         <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
 
@@ -8641,7 +8641,7 @@ class AutoReportApp {
         ${eduTechFiguresHtml}
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem;">A participação final dos entes federados registrou ${metrics.totalPresentMunicipalities} municípios presentes dos ${metrics.totalInscribedMunicipalities} formalmente inscritos (${metrics.participationRateMunicipalities}%). No que tange ao público participante, compareceram ${metrics.totalPresent} pessoas dentre as ${metrics.totalInscribed} inscritas, representando uma taxa de participação global de ${metrics.participationRateGeneral}%. No segmento do CACS-FUNDEB, compareceram ${metrics.presentCACS} conselheiros (${metrics.participationRateCACS}%), ao passo que na Gestão Municipal participaram ${metrics.presentGestores} técnicos (${metrics.participationRateGestores}%). A distribuição da presença por município e segmento institucional é detalhada na Tabela 4 a seguir:</p>
 
-        <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-top:1.25rem; margin-bottom:0.5rem;">Tabela 4. Participação por município.</p>
+        <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-top:1.25rem; margin-bottom:0.5rem;">Tabela 4. Participação por município.</p>
         ${window.statsEngine.generateTable4Html(t.municipalities || [], metrics)}
         <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
 
@@ -8654,7 +8654,7 @@ class AutoReportApp {
         <!-- FIGURA 3 (TÓPICO 5) -->
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem;">${fig3Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-          <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 3. Participação segundo o tipo de representação.</p>
+          <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-bottom:0.75rem;">Figura 3. Participação segundo o tipo de representação.</p>
           <div style="max-width:520px; height:280px; position:relative; margin:auto;">
             <canvas id="report-preview-fig3-canvas"></canvas>
           </div>
@@ -8664,7 +8664,7 @@ class AutoReportApp {
         <!-- FIGURA 4 -->
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">${fig4Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-          <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 4. Avaliação da capacitação de todos os participantes.</p>
+          <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-bottom:0.75rem;">Figura 4. Avaliação da capacitação de todos os participantes.</p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig4-canvas"></canvas>
           </div>
@@ -8674,7 +8674,7 @@ class AutoReportApp {
         <!-- FIGURA 5 -->
         <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">${fig5Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-          <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 5. Avaliação da capacitação dos conselheiros CACS.</p>
+          <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-bottom:0.75rem;">Figura 5. Avaliação da capacitação dos conselheiros CACS.</p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig5-canvas"></canvas>
           </div>
@@ -8684,7 +8684,7 @@ class AutoReportApp {
         <!-- FIGURA 6 -->
         <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">${fig6Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
-          <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 6. Avaliação da capacitação dos gestores municipais.</p>
+          <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-bottom:0.75rem;">Figura 6. Avaliação da capacitação dos gestores municipais.</p>
           <div style="max-width:720px; height:340px; position:relative; margin:auto;">
             <canvas id="report-preview-fig6-canvas"></canvas>
           </div>
@@ -8695,14 +8695,14 @@ class AutoReportApp {
         <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:0.75rem;">${fig7Comment}</p>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin:2rem 0; page-break-inside:avoid;">
           <div style="text-align:center;">
-            <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.5rem;">Figura 7. Aspectos que gostaram da capacitação.</p>
+            <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-bottom:0.5rem;">Figura 7. Aspectos que gostaram da capacitação.</p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <canvas id="report-preview-fig7-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
             <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.4rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
           </div>
           <div style="text-align:center;">
-            <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.5rem;">Figura 8. Aspectos que devem melhorar da capacitação.</p>
+            <p style="font-family:'Times New Roman', serif; font-size:11pt; text-align:center; margin-bottom:0.5rem;">Figura 8. Aspectos que devem melhorar da capacitação.</p>
             <div style="background:var(--bg-input); padding:0.75rem; border-radius:var(--radius-md); border:1px solid var(--border-color);">
               <canvas id="report-preview-fig8-canvas" width="550" height="320" style="max-width:100%; height:auto;"></canvas>
             </div>
@@ -8717,23 +8717,23 @@ class AutoReportApp {
         ${photosHtml}
 
         <!-- 7. CONSIDERAÇÕES FINAIS -->
-        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">7. CONSIDERAÇÕES FINAIS</h3>
+        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem; page-break-before:always;">7. CONSIDERAÇÕES FINAIS</h3>
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem;">O presente relatório consubstanciou a execução técnica, operacional e pedagógica do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado no polo regional de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, cumprindo integralmente as metas e diretrizes estabelecidas no âmbito do projeto <em>"${(t.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL').toUpperCase()}",</em> (Processo nº 23070.068031/2023-34), financiado pelo Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem;">Salienta-se que, de forma geral, o curso atendeu plenamente ao objetivo primordial de aprimorar os conhecimentos e habilidades técnicas de gestores municipais e conselheiros do CACS-FUNDEB, conforme atestado nos elevados índices de satisfação apurados na pesquisa avaliativa. Por outro lado, pôde-se comprovar que reforçar a convocação mediante a articulação multicanal do CECATE Centro-Oeste — combinando correspondências oficiais, contatos telefônicos diretos e mensagens em canais institucionais — revelou-se determinante para assegurar expressivo comparecimento dos entes federados convocados.</p>
         <p style="text-align:justify; line-height:1.5;">Ficou igualmente evidente que a abordagem de diálogo permanente adotada consolida-se como canal imprescindível para atender às demandas de qualificação técnica continuada. Para finalizar, ressalta-se a suma importância de o processo formativo estar inserido em um ambiente que possibilite a livre e qualificada interação entre os cursistas e os formadores, proporcionando um rico espaço de compartilhamento de vivências territoriais, esclarecimento de dúvidas operacionais e retroalimentação contínua de todas as dimensões da política de transporte escolar no Brasil.</p>
 
         <!-- APÊNDICE I: CONVOCAÇÕES DO FNDE -->
-        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:2px solid #1f4e79; padding-bottom:0.35rem; margin-top:3rem;">APÊNDICE I: CONVOCAÇÕES DO FNDE</h3>
+        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:2px solid #1f4e79; padding-bottom:0.35rem; margin-top:3rem; page-break-before:always;">APÊNDICE I: CONVOCAÇÕES DO FNDE</h3>
         <p style="text-align:justify; line-height:1.6;">Relação dos ofícios e convocações oficiais emitidos pelo FNDE referentes a esta capacitação:</p>
         ${fndeHtml}
 
         <!-- APÊNDICE II: CONVOCAÇÕES DO CECATE -->
-        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:2px solid #1f4e79; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE II: CONVOCAÇÕES DO CECATE</h3>
+        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:2px solid #1f4e79; padding-bottom:0.35rem; margin-top:2.5rem; page-break-before:always;">APÊNDICE II: CONVOCAÇÕES DO CECATE</h3>
         <p style="text-align:justify; line-height:1.6;">Relação dos comunicados e e-mails de convocação emitidos pela equipe técnica do CECATE-CO referentes a esta capacitação:</p>
         ${cecateHtml}
 
         <!-- APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO -->
-        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:2px solid #1f4e79; padding-bottom:0.35rem; margin-top:2.5rem;">APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO</h3>
+        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:2px solid #1f4e79; padding-bottom:0.35rem; margin-top:2.5rem; page-break-before:always;">APÊNDICE III: RESPOSTAS DISSERTATIVAS DA AVALIAÇÃO</h3>
         <p style="text-align:justify; line-height:1.6;">Relação completa das respostas dissertativas registradas pelos participantes no formulário de avaliação da formação, detalhando aspectos positivos e sugestões de aperfeiçoamento por município e representação institucional:</p>
         ${evalsHtml}
 

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.3.8
+ * Versão: v.3.3.9
  */
 
 class ReportDocxGenerator {
@@ -205,8 +205,6 @@ class ReportDocxGenerator {
             text: 'Figura ',
             font: 'Times New Roman',
             size: 22,
-            bold: true,
-            italics: true,
             color: '000000'
           }),
           new SimpleField('SEQ Figura \\* ARABIC', String(num)),
@@ -214,8 +212,6 @@ class ReportDocxGenerator {
             text: sep + rest,
             font: 'Times New Roman',
             size: 22,
-            bold: true,
-            italics: true,
             color: '000000'
           })
         ];
@@ -225,8 +221,6 @@ class ReportDocxGenerator {
             text: captionText,
             font: 'Times New Roman',
             size: 22,
-            bold: true,
-            italics: true,
             color: '000000'
           })
         ];
@@ -300,8 +294,6 @@ class ReportDocxGenerator {
             text: 'Figura ',
             font: 'Times New Roman',
             size: 22,
-            bold: true,
-            italics: true,
             color: '000000'
           }),
           new SimpleField('SEQ Figura \\* ARABIC', String(num)),
@@ -309,8 +301,6 @@ class ReportDocxGenerator {
             text: sep + rest,
             font: 'Times New Roman',
             size: 22,
-            bold: true,
-            italics: true,
             color: '000000'
           })
         ];
@@ -320,8 +310,6 @@ class ReportDocxGenerator {
             text: captionText,
             font: 'Times New Roman',
             size: 22,
-            bold: true,
-            italics: true,
             color: '000000'
           })
         ];
@@ -1150,8 +1138,6 @@ class ReportDocxGenerator {
                       text: 'Tabela ',
                       font: 'Times New Roman',
                       size: 22,
-                      bold: true,
-                      italics: true,
                       color: '000000'
                     }),
                     new SimpleField('SEQ Tabela \\* ARABIC', '1'),
@@ -1159,8 +1145,6 @@ class ReportDocxGenerator {
                       text: '. Municípios convocados.',
                       font: 'Times New Roman',
                       size: 22,
-                      bold: true,
-                      italics: true,
                       color: '000000'
                     })
                   ]
@@ -1169,8 +1153,6 @@ class ReportDocxGenerator {
                   text: 'Tabela 1. Municípios convocados.',
                   font: 'Times New Roman',
                   size: 22,
-                  bold: true,
-                  italics: true,
                   color: '000000'
                 })
           ]
@@ -1203,11 +1185,12 @@ class ReportDocxGenerator {
         right: noBorder
       };
 
-      const t2CellBorders = (isLeftmost, isRightmost) => ({
+      const t2CellBorders = (isLeftmost, isRightmost, customBorders = {}) => ({
         top: singleBorder,
         bottom: singleBorder,
-        left: noBorder,
-        right: noBorder
+        left: isLeftmost ? noBorder : singleBorder,
+        right: isRightmost ? noBorder : singleBorder,
+        ...customBorders
       });
 
       // Tabela 1 - Modelo Oficial de Referência: 2 Colunas Lado a Lado (Esquerda + Espaçador + Direita)
@@ -1367,12 +1350,12 @@ class ReportDocxGenerator {
               ? new Bookmark({
                   id: 'tab_2',
                   children: [
-                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' }),
+                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, color: '000000' }),
                     new SimpleField('SEQ Tabela \\* ARABIC', '2'),
-                    new TextRun({ text: '. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+                    new TextRun({ text: '. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, color: '000000' })
                   ]
                 })
-              : new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+              : new TextRun({ text: 'Tabela 2. Estrutura do curso de capacitação em transporte escolar.', font: 'Times New Roman', size: 22, color: '000000' })
           ]
         })
       );
@@ -1652,12 +1635,12 @@ class ReportDocxGenerator {
               ? new Bookmark({
                   id: 'tab_3',
                   children: [
-                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' }),
+                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, color: '000000' }),
                     new SimpleField('SEQ Tabela \\* ARABIC', '3'),
-                    new TextRun({ text: '. Inscritos por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+                    new TextRun({ text: '. Inscritos por município.', font: 'Times New Roman', size: 22, color: '000000' })
                   ]
                 })
-              : new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+              : new TextRun({ text: 'Tabela 3. Inscritos por município.', font: 'Times New Roman', size: 22, color: '000000' })
           ]
         })
       );
@@ -2152,12 +2135,12 @@ class ReportDocxGenerator {
               ? new Bookmark({
                   id: 'tab_4',
                   children: [
-                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' }),
+                    new TextRun({ text: 'Tabela ', font: 'Times New Roman', size: 22, color: '000000' }),
                     new SimpleField('SEQ Tabela \\* ARABIC', '4'),
-                    new TextRun({ text: '. Participação por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+                    new TextRun({ text: '. Participação por município.', font: 'Times New Roman', size: 22, color: '000000' })
                   ]
                 })
-              : new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, bold: true, italics: true, color: '000000' })
+              : new TextRun({ text: 'Tabela 4. Participação por município.', font: 'Times New Roman', size: 22, color: '000000' })
           ]
         })
       );
@@ -4173,8 +4156,6 @@ class ReportDocxGenerator {
               run: {
                 font: "Times New Roman",
                 size: 22,
-                bold: true,
-                italics: true,
                 color: "000000"
               },
               paragraph: {
@@ -4191,8 +4172,6 @@ class ReportDocxGenerator {
               run: {
                 font: "Times New Roman",
                 size: 22,
-                bold: true,
-                italics: true,
                 color: "000000"
               },
               paragraph: {

@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Motor de Estatísticas e Análise de Dados
- * Versão: v.3.3.8
+ * Versão: v.3.3.9
  */
 
 class StatsEngine {
@@ -324,7 +324,7 @@ class StatsEngine {
           rowsHtml += '<tr>';
 
           if (i === 0) {
-            rowsHtml += `<td ${maxRows > 1 ? `rowspan="${maxRows}"` : ''} style="text-align:center; font-weight:700; vertical-align:middle; background:rgba(255,255,255,0.02);">${m.moduleNumber || '01'}</td>`;
+            rowsHtml += `<td ${maxRows > 1 ? `rowspan="${maxRows}"` : ''} style="text-align:center; font-weight:700; vertical-align:middle;">${m.moduleNumber || '01'}</td>`;
           }
 
           if (g) {
@@ -352,7 +352,7 @@ class StatsEngine {
 
           // Célula do Módulo (com rowspan se houver múltiplas linhas)
           if (i === 0) {
-            rowsHtml += `<td ${maxRows > 1 ? `rowspan="${maxRows}"` : ''} style="text-align:center; font-weight:700; vertical-align:middle; background:rgba(255,255,255,0.02);">${m.moduleNumber || '01'}</td>`;
+            rowsHtml += `<td ${maxRows > 1 ? `rowspan="${maxRows}"` : ''} style="text-align:center; font-weight:700; vertical-align:middle;">${m.moduleNumber || '01'}</td>`;
           }
 
           // Coluna Temática Gestor
@@ -410,7 +410,7 @@ class StatsEngine {
 
     return `
       <div class="table-responsive-wrapper">
-        <table class="report-data-table">
+        <table class="report-data-table report-table-2">
           <thead>
             <tr>
               <th rowspan="2" style="width: 80px; text-align:center; vertical-align:middle;">Módulo</th>
