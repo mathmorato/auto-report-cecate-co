@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.3.7
+ * Versão: v.3.3.8
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.3.7';
+    this.version = 'v.3.3.8';
   }
 
   /**
@@ -8718,9 +8718,9 @@ class AutoReportApp {
 
         <!-- 7. CONSIDERAÇÕES FINAIS -->
         <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2.5rem;">7. CONSIDERAÇÕES FINAIS</h3>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">O presente relatório consubstanciou a execução técnica, operacional e pedagógica do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado no polo regional de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, cumprindo integralmente as metas e diretrizes estabelecidas no âmbito do projeto <em>"${(t.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL').toUpperCase()}",</em> (Processo nº 23070.068031/2023-34), financiado pelo Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Salienta-se que, de forma geral, o curso atendeu plenamente ao objetivo primordial de aprimorar os conhecimentos e habilidades técnicas de gestores municipais e conselheiros do CACS-FUNDEB, conforme atestado nos elevados índices de satisfação apurados na pesquisa avaliativa. Por outro lado, pôde-se comprovar que reforçar a convocação mediante a articulação multicanal do CECATE Centro-Oeste — combinando correspondências oficiais, contatos telefônicos diretos e mensagens em canais institucionais — revelou-se determinante para assegurar expressivo comparecimento dos entes federados convocados.</p>
-        <p style="text-align:justify; line-height:1.6;">Ficou igualmente evidente que a abordagem de diálogo permanente adotada consolida-se como canal imprescindível para atender às demandas de qualificação técnica continuada. Para finalizar, ressalta-se a suma importância de o processo formativo estar inserido em um ambiente que possibilite a livre e qualificada interação entre os cursistas e os formadores, proporcionando um rico espaço de compartilhamento de vivências territoriais, esclarecimento de dúvidas operacionais e retroalimentação contínua de todas as dimensões da política de transporte escolar no Brasil.</p>
+        <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem;">O presente relatório consubstanciou a execução técnica, operacional e pedagógica do curso de Capacitação em Transporte Escolar (Capacitação nº ${t.number || ''}), realizado no polo regional de ${t.polo || 'Município Polo'}, Estado de ${t.uf || 'GO'}, cumprindo integralmente as metas e diretrizes estabelecidas no âmbito do projeto <em>"${(t.relatedProject || 'FORTALECENDO E APRIMORANDO AS POLÍTICAS PÚBLICAS DE TRANSPORTE ESCOLAR DO BRASIL').toUpperCase()}",</em> (Processo nº 23070.068031/2023-34), financiado pelo Fundo Nacional de Desenvolvimento da Educação (FNDE).</p>
+        <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem;">Salienta-se que, de forma geral, o curso atendeu plenamente ao objetivo primordial de aprimorar os conhecimentos e habilidades técnicas de gestores municipais e conselheiros do CACS-FUNDEB, conforme atestado nos elevados índices de satisfação apurados na pesquisa avaliativa. Por outro lado, pôde-se comprovar que reforçar a convocação mediante a articulação multicanal do CECATE Centro-Oeste — combinando correspondências oficiais, contatos telefônicos diretos e mensagens em canais institucionais — revelou-se determinante para assegurar expressivo comparecimento dos entes federados convocados.</p>
+        <p style="text-align:justify; line-height:1.5;">Ficou igualmente evidente que a abordagem de diálogo permanente adotada consolida-se como canal imprescindível para atender às demandas de qualificação técnica continuada. Para finalizar, ressalta-se a suma importância de o processo formativo estar inserido em um ambiente que possibilite a livre e qualificada interação entre os cursistas e os formadores, proporcionando um rico espaço de compartilhamento de vivências territoriais, esclarecimento de dúvidas operacionais e retroalimentação contínua de todas as dimensões da política de transporte escolar no Brasil.</p>
 
         <!-- APÊNDICE I: CONVOCAÇÕES DO FNDE -->
         <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:2px solid #1f4e79; padding-bottom:0.35rem; margin-top:3rem;">APÊNDICE I: CONVOCAÇÕES DO FNDE</h3>

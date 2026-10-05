@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.3.7
+ * Versão: v.3.3.8
  */
 
 class ReportDocxGenerator {
@@ -537,6 +537,7 @@ class ReportDocxGenerator {
     addElement(textBlockHeight(1000), true);
 
     // APÊNDICES
+    if (currentDxa > 0) { page++; currentDxa = 0; }
     const pApendice1 = addElement(880, false);
     if (fndeDocs.length > 0) {
       fndeDocs.forEach(() => addElement(7500, false));
@@ -544,6 +545,7 @@ class ReportDocxGenerator {
       addElement(350, true);
     }
 
+    if (currentDxa > 0) { page++; currentDxa = 0; }
     const pApendice2 = addElement(880, false);
     if (cecateDocs.length > 0) {
       cecateDocs.forEach(() => addElement(7500, false));
@@ -551,6 +553,7 @@ class ReportDocxGenerator {
       addElement(350, true);
     }
 
+    if (currentDxa > 0) { page++; currentDxa = 0; }
     const pApendice3 = addElement(880, false);
     const evalList = (training?.evaluations || []).filter(e => (e.likedAspects && e.likedAspects.trim()) || (e.improveAspects && e.improveAspects.trim()));
     if (evalList.length > 0) {
@@ -2675,7 +2678,6 @@ class ReportDocxGenerator {
           spacing: { before: 240, after: 240, lineRule: LineRuleType.AUTO },
           heading: HeadingLevel.HEADING_1,
           outlineLevel: 0,
-          pageBreakBefore: true,
           keepNext: true,
           keepLines: true,
           children: [
