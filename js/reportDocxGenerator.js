@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Gerador de Relatório Institucional em Formato DOCX (Word)
- * Versão: v.3.3.6
+ * Versão: v.3.3.7
  */
 
 class ReportDocxGenerator {
@@ -493,16 +493,20 @@ class ReportDocxGenerator {
     const pTab4 = addElement(540, false, true);
     addElement(1000 + t4Half * 360 + 720 + 460, true);
 
-    // Figura 3: Gráfico de Participação
-    let pFig3 = null;
-    if (chartsData?.fig3) {
-      pFig3 = addElement(5800, false, true);
-    }
-    addElement(textBlockHeight(250, 150, 200), true); // PLATEIA
+    // Parágrafo sobre certificados na plataforma PLATEIA (Fim da Seção 4)
+    addElement(textBlockHeight(250, 150, 200), true);
 
     // 5. AVALIAÇÃO DA CAPACITAÇÃO
     const pAvaliacao = addElement(880, false);
-    addElement(textBlockHeight(500) + textBlockHeight(300), true);
+    addElement(textBlockHeight(500), true);
+
+    // Figura 3: Gráfico de Participação (Tópico 5)
+    let pFig3 = null;
+    if (chartsData?.fig3) {
+      addElement(textBlockHeight(300), true);
+      pFig3 = addElement(5800, false, true);
+    }
+    addElement(textBlockHeight(300), true);
 
     let pFig4 = null;
     if (chartsData?.fig4) pFig4 = addElement(6200, false, true);
@@ -2463,25 +2467,7 @@ class ReportDocxGenerator {
         })
       );
 
-      // Figura 3: Gráfico de Participação
-      // docxDeps já inicializado no topo do método generateAndDownload
-      if (chartsData.fig3) {
-        const fig3Comment = (training.evaluationComments && training.evaluationComments.fig3) ||
-                            (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig3', training) : '');
-        if (fig3Comment) {
-          docChildren.push(
-            new Paragraph({
-              alignment: AlignmentType.JUSTIFIED,
-              spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
-              children: [new TextRun({ text: fig3Comment, font: 'Times New Roman', size: 22 })]
-            })
-          );
-        }
-        const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação segundo o tipo de representação.', docxDeps, 'fig_3');
-        if (fig3Nodes) docChildren.push(...fig3Nodes);
-      }
-
-      // Parágrafo sobre certificados na plataforma PLATEIA
+      // Parágrafo sobre certificados na plataforma PLATEIA (Fim da Seção 4)
       docChildren.push(
         new Paragraph({
           alignment: AlignmentType.JUSTIFIED,
@@ -2494,7 +2480,7 @@ class ReportDocxGenerator {
         })
       );
 
-      // 6. SEÇÃO 5: AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8
+      // 6. SEÇÃO 5: AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 3, 4, 5, 6, 7 E 8
       const totalResp = metrics?.evalStatsGeneral?.totalResponses || 0;
       const evalsArr = training?.evaluations || [];
       let cacsRespCount = 0;
@@ -2545,6 +2531,24 @@ class ReportDocxGenerator {
           ]
         })
       );
+
+      // Figura 3: Gráfico de Participação (Tópico 5)
+      // docxDeps já inicializado no topo do método generateAndDownload
+      if (chartsData.fig3) {
+        const fig3Comment = (training.evaluationComments && training.evaluationComments.fig3) ||
+                            (window.statsEngine ? window.statsEngine.getDefaultEvaluationComment('fig3', training) : '');
+        if (fig3Comment) {
+          docChildren.push(
+            new Paragraph({
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: { before: 120, after: 0, line: 360, lineRule: LineRuleType.AUTO },
+              children: [new TextRun({ text: fig3Comment, font: 'Times New Roman', size: 22 })]
+            })
+          );
+        }
+        const fig3Nodes = this.createImageParagraph(chartsData.fig3, 480, 240, 'Figura 3. Participação segundo o tipo de representação.', docxDeps, 'fig_3');
+        if (fig3Nodes) docChildren.push(...fig3Nodes);
+      }
 
       // FIGURA 4
       if (fig4Comment) {

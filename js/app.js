@@ -1,6 +1,6 @@
 /**
  * AutoReport CECATE - Controlador Geral da Aplicação (Wizard, UI e Integração de Módulos)
- * Versão: v.3.3.6
+ * Versão: v.3.3.7
  */
 
 window.icons = {
@@ -42,7 +42,7 @@ class AutoReportApp {
     this.currentTeamFilter = 'all';
     this.currentMasterTeamFilter = 'all';
     this.memberToDelete = null;
-    this.version = 'v.3.3.6';
+    this.version = 'v.3.3.7';
   }
 
   /**
@@ -8645,7 +8645,13 @@ class AutoReportApp {
         ${window.statsEngine.generateTable4Html(t.municipalities || [], metrics)}
         <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.35rem; margin-bottom:1.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
 
-        <!-- FIGURA 3 -->
+        <p style="text-align:justify; line-height:1.5; margin-top:1.5rem; margin-bottom:1.5rem;">Ao término das atividades formativas, todos os certificados oficiais de capacitação (carga horária de 08 horas) foram devidamente emitidos e remetidos para o e-mail cadastrado de cada participante por intermédio da plataforma PLATEIA da Universidade Federal de Goiás (UFG), contando com código de verificação digital e QR Code para autenticação de veracidade.</p>
+
+        <!-- 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 3, 4, 5, 6, 7 E 8 -->
+        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
+        <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem;">Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert com cinco níveis qualitativos de percepção (1 - Ruim, 2 - Regular, 3 - Neutro, 4 - Muito Bom e 5 - Excelente) para avaliar os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.</p>
+
+        <!-- FIGURA 3 (TÓPICO 5) -->
         <p style="text-align:justify; line-height:1.5; margin-bottom:0.75rem;">${fig3Comment}</p>
         <div style="margin:2rem 0; text-align:center; page-break-inside:avoid;">
           <p style="font-family:'Times New Roman', serif; font-size:11pt; font-weight:700; font-style:italic; text-align:center; margin-bottom:0.75rem;">Figura 3. Participação segundo o tipo de representação.</p>
@@ -8654,12 +8660,6 @@ class AutoReportApp {
           </div>
           <p style="font-size:0.82rem; font-style:italic; color:var(--text-muted); margin-top:0.5rem; text-align:center;">Fonte: Elaborada pelos autores.</p>
         </div>
-
-        <p style="text-align:justify; line-height:1.6; margin-top:1.5rem; margin-bottom:1.5rem;">Ao término das atividades formativas, todos os certificados oficiais de capacitação (carga horária de 08 horas) foram devidamente emitidos e remetidos para o e-mail cadastrado de cada participante por intermédio da plataforma PLATEIA da Universidade Federal de Goiás (UFG), contando com código de verificação digital e QR Code para autenticação de veracidade.</p>
-
-        <!-- 5. AVALIAÇÃO DA CAPACITAÇÃO & FIGURAS 4, 5, 6, 7 E 8 -->
-        <h3 style="color:#1f4e79; font-size:16pt; font-family:'Times New Roman', serif; font-weight:700; border-bottom:1px solid #cbd5e1; padding-bottom:0.35rem; margin-top:2rem;">5. AVALIAÇÃO DA CAPACITAÇÃO</h3>
-        <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">Nesta edição do curso, aplicou-se o formulário padronizado de avaliação proposto pela equipe técnica do FNDE, que coleta percepções estruturadas dos cursistas. O instrumento é dividido em duas abordagens: primeiramente, uma escala psicométrica de Likert com cinco níveis qualitativos de percepção (1 - Ruim, 2 - Regular, 3 - Neutro, 4 - Muito Bom e 5 - Excelente) para avaliar os aspectos didáticos, pedagógicos, operacionais e de infraestrutura do evento; em seguida, duas perguntas dissertativas qualitativas, nas quais os participantes detalham livremente os aspectos que mais gostaram e os pontos com oportunidade de melhoria com base na experiência vivenciada.</p>
 
         <!-- FIGURA 4 -->
         <p style="text-align:justify; line-height:1.6; margin-bottom:0.75rem;">${fig4Comment}</p>
